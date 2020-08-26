@@ -66,7 +66,7 @@
  *           State migration script is available, more informations: https://wiki.z-hub.io/x/xIAa
  */
     define('STATE_MACHINE', 'FILE');
-    define('STATE_DIR', '/var/lib/grammm-sync/');
+    define('STATE_DIR', '/var/lib/gromox/grammm-sync/');
 
 /**********************************************************************************
  *  IPC - InterProcessCommunication
@@ -121,7 +121,7 @@
     $specialLogUsers = array();
 
     // Filelog settings
-    define('LOGFILEDIR', '/var/log/grammm-sync/');
+    define('LOGFILEDIR', '/var/log/gromox/');
     define('LOGFILE', LOGFILEDIR . 'grammm-sync.log');
     define('LOGERRORFILE', LOGFILEDIR . 'grammm-sync-error.log');
 
