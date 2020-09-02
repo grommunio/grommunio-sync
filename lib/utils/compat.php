@@ -135,7 +135,7 @@ if (!function_exists('memory_get_peak_usage')) {
 
 if (!function_exists('mapi_zarafa_getuser_by_name')) {
     /**
-     * Retreive the user information.
+     * Retrieve the user information.
      *
      * @param MAPIResource  $store
      * @param string        $username
