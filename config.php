@@ -33,6 +33,10 @@
     // Defines the base path on the server
     define('BASE_PATH', dirname($_SERVER['SCRIPT_FILENAME']). '/');
 
+    // FIXME: solve the including of shared files properly
+    // Defines the path to shared gromox files
+    define('GROMO_APP_PATH', '/usr/share/gromox/http/php/');
+
     // Try to set unlimited timeout
     define('SCRIPT_TIMEOUT', 0);
 
