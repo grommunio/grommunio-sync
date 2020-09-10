@@ -35,7 +35,7 @@
 
     // FIXME: solve the including of shared files properly
     // Defines the path to shared gromox files
-    define('GROMO_APP_PATH', '/usr/share/gromox/http/php/');
+    define('GROMOX_PHP_PATH', '/usr/share/gromox/http/php/');
 
     // Try to set unlimited timeout
     define('SCRIPT_TIMEOUT', 0);

@@ -37,7 +37,7 @@ if (!defined('ZPUSH_CONFIG')) define('ZPUSH_CONFIG', 'config.php');
 include_once(ZPUSH_CONFIG);
 
 // FIXME:  solve the including of shared files properly
-require_once GROMO_APP_PATH . 'lib/db.php';
+require_once GROMOX_PHP_PATH . 'lib/db.php';
 
 
     // Attempt to set maximum execution time
