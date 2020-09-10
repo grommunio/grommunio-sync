@@ -36,6 +36,9 @@ require_once 'vendor/autoload.php';
 if (!defined('ZPUSH_CONFIG')) define('ZPUSH_CONFIG', 'config.php');
 include_once(ZPUSH_CONFIG);
 
+// FIXME: this works now, but maybe we should just remove $_SERVER['PHP_AUTH_PW'] in the code
+$_SERVER['PHP_AUTH_USER'] = $_SERVER['REMOTE_USER'];
+$_SERVER['PHP_AUTH_PW'] = 'none';
 
     // Attempt to set maximum execution time
     ini_set('max_execution_time', SCRIPT_TIMEOUT);
