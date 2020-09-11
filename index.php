@@ -36,6 +36,9 @@ require_once 'vendor/autoload.php';
 if (!defined('ZPUSH_CONFIG')) define('ZPUSH_CONFIG', 'config.php');
 include_once(ZPUSH_CONFIG);
 
+// FIXME:  solve the including of shared files properly
+require_once GROMOX_PHP_PATH . 'lib/db.php';
+
 
     // Attempt to set maximum execution time
     ini_set('max_execution_time', SCRIPT_TIMEOUT);
