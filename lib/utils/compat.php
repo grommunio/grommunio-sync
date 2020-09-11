@@ -132,3 +132,29 @@ if (!function_exists('memory_get_peak_usage')) {
     }
 
 }
+
+if (!function_exists('mapi_zarafa_getuser_by_name')) {
+    /**
+     * Retrieve the user information.
+     *
+     * @param MAPIResource  $store
+     * @param string        $username
+     *
+     * @returns array
+     */
+    function mapi_zarafa_getuser_by_name($store, $username) {
+        $userInfo = get_user_info_by_name($username);
+
+        if (!is_array($userInfo)) {
+            return false;
+        }
+        return array(
+            'userid' => $userInfo['uid'],
+            'username' => $username,
+            'fullname' => $userInfo['real_name'],
+            'emailaddress' => $username,
+            'admin' => 0,
+            'nonactive' => 0,
+        );
+    }
+}
