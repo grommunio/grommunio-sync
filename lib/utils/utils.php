@@ -929,6 +929,29 @@ class Utils {
 
         return $filecontents;
     }
+
+    /**
+     * Converts a string freebusy type into a numeric status.
+     *
+     * @param string $fbType
+     *
+     * @access public
+     * @return int
+     */
+    public static function GetFbStatusFromType($fbType) {
+        switch ($fbType) {
+            case 'Free':
+                return fbFree;
+            case 'Tentative':
+                return fbTentative;
+            case 'Busy':
+                return fbBusy;
+            case 'OOF':
+                return fbOutOfOffice;
+        }
+        ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFbStatusFromType(): Unknown free busy type '%s'", $fbType));
+        return fbNoData;
+    }
 }
 
 // TODO Win1252/UTF8 functions are deprecated and will be removed sometime
