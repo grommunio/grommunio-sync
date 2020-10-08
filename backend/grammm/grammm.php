@@ -1006,6 +1006,10 @@ class BackendGrammm implements IBackend, ISearchProvider {
         $notifications = array();
         $hierarchyNotifications = array();
         $sinkresult = @mapi_sink_timedwait($this->changesSink, $timeout * 1000);
+
+        if (!is_array($sinkresult))
+            throw new StatusException("BackendGrammm->ChangesSink(): Sink returned invalid notification, aborting", SyncCollections::OBSOLETE_CONNECTION);
+
         // reverse array so that the changes on folders are before changes on messages and
         // it's possible to filter such notifications
         $sinkresult = array_reverse($sinkresult, true);
