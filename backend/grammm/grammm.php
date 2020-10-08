@@ -329,28 +329,6 @@ class BackendGrammm implements IBackend, ISearchProvider {
      * @return boolean
      */
     public function Logoff() {
-        // update if the calendar which received incoming changes
-        foreach($this->importedFolders as $folderid => $store) {
-            // open the root of the store
-            $storeprops = mapi_getprops($store, array(PR_USER_ENTRYID));
-            $root = mapi_msgstore_openentry($store);
-            if (!$root)
-                continue;
-
-            // get the entryid of the main calendar of the store and the calendar to be published
-            $rootprops = mapi_getprops($root, array(PR_IPM_APPOINTMENT_ENTRYID));
-            $entryid = mapi_msgstore_entryidfromsourcekey($store, hex2bin($folderid));
-
-            // only publish free busy for the main calendar
-            if(isset($rootprops[PR_IPM_APPOINTMENT_ENTRYID]) && $rootprops[PR_IPM_APPOINTMENT_ENTRYID] == $entryid) {
-                ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->Logoff(): Updating freebusy information on folder id '%s'", $folderid));
-                $calendar = mapi_msgstore_openentry($store, $entryid);
-
-                $pub = new FreeBusyPublish($this->session, $store, $calendar, $storeprops[PR_USER_ENTRYID]);
-                $pub->publishFB(time() - (7 * 24 * 60 * 60), time() + (6 * 30 * 24 * 60 * 60)); // publish from one week ago, 6 months ahead
-            }
-        }
-
         return true;
     }
 
