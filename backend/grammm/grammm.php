@@ -2420,6 +2420,8 @@ class BackendGrammm implements IBackend, ISearchProvider {
         $mergedFreeBusy = str_pad(fbNoData, $timeslots, fbNoData);
 
         $retval = mapi_getuseravailability($this->session, $resolveRecipient->id, $start, $end);
+        ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getAvailability(): free busy '%s'", print_r($retval, 1)));
+
         if (!empty($retval)) {
             $freebusy = json_decode($retval, true);
             // freebusy is available, assume that the user is free
@@ -2435,7 +2437,6 @@ class BackendGrammm implements IBackend, ISearchProvider {
                     $endSlot--;
                 }
                 $fbType = Utils::GetFbStatusFromType($event['BusyType']);
-                ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getAvailability(): startslot '%d', endslot '%d'", $startSlot, $endSlot));
                 for ($i = $startSlot; $i <= $endSlot && $i < $timeslots; $i++) {
                     // only set the new slot's free busy status if it's higher than the current one
                     if ($fbType > $mergedFreeBusy[$i]) {

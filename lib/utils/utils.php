@@ -940,6 +940,8 @@ class Utils {
      */
     public static function GetFbStatusFromType($fbType) {
         switch ($fbType) {
+            case 'Free':
+                return fbFree;
             case 'Tentative':
                 return fbTentative;
             case 'Busy':
