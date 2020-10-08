@@ -2408,14 +2408,6 @@ class BackendGrammm implements IBackend, ISearchProvider {
             // TODO this shouldn't happen but try to get the recipient in such a case
         }
 
-        $fbsupport = mapi_freebusysupport_open($this->session);
-        if (mapi_last_hresult()) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("BackendGrammm->getAvailability(): Unable to open free busy support (0x%08X)", mapi_last_hresult()));
-            $availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_FAILED;
-            return $availability;
-        }
-        $fbDataArray = mapi_freebusysupport_loaddata($fbsupport, array($resolveRecipient->id));
-
         $start = strtotime($resolveRecipientsOptions->availability->starttime);
         $end = strtotime($resolveRecipientsOptions->availability->endtime);
         // Each digit in the MergedFreeBusy indicates the free/busy status for the user for every 30 minute interval.
@@ -2424,80 +2416,34 @@ class BackendGrammm implements IBackend, ISearchProvider {
         if ($timeslots > self::MAXFREEBUSYSLOTS) {
             throw new StatusException("BackendGrammm->getAvailability(): the requested free busy range is too large.", SYNC_RESOLVERECIPSSTATUS_PROTOCOLERROR);
         }
+
         $mergedFreeBusy = str_pad(fbNoData, $timeslots, fbNoData);
 
-        if(is_array($fbDataArray) && !empty($fbDataArray)) {
-            foreach($fbDataArray as $fbDataUser) {
-                if ($fbDataUser == null) {
-                    ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getAvailability(): freebusy user is null for '%s'. Unable to retrieve his availability.", $resolveRecipient->displayname));
-                    continue;
+        $retval = mapi_getuseravailability($this->session, $resolveRecipient->id, $start, $end);
+        if (!empty($retval)) {
+            $freebusy = json_decode($retval, true);
+            // freebusy is available, assume that the user is free
+            $mergedFreeBusy = str_pad(fbFree, $timeslots, fbFree);
+            foreach ($freebusy['events'] as $event) {
+                // calculate which timeslot of mergedFreeBusy should be replaced.
+                $startSlot = intval(floor(($event['StartTime'] - $start) / self::HALFHOURSECONDS));
+                $endSlot = intval(floor(($event['EndTime'] - $start) / self::HALFHOURSECONDS));
+                // if event started at a multiple of half an hour from requested freebusy time and
+                // its duration is also a multiple of half an hour
+                // then it's necessary to reduce endSlot by one
+                if ((($event['StartTime'] - $start) % self::HALFHOURSECONDS == 0) && (($event['EndTime'] - $event['StartTime']) % self::HALFHOURSECONDS == 0)) {
+                    $endSlot--;
                 }
-                $rangeuser = mapi_freebusydata_getpublishrange($fbDataUser);
-                if($rangeuser == null) {
-                    ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getAvailability(): Unable to retrieve mapi_freebusydata_getpublishrange (0x%X) for '%s'", mapi_last_hresult(), $resolveRecipient->displayname));
-                    $availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_FAILED;
-                    return $availability;
-                }
-
-                // if free busy information is available for the whole requested period,
-                // assume that the user is free for the requested range.
-                if ($rangeuser['start'] <= $start && $rangeuser['end'] >= $end) {
-                    $mergedFreeBusy = str_pad(fbFree, $timeslots, fbFree);
-                }
-                // available free busy information is outside of the requested data
-                elseif ($rangeuser['end'] <= $start || $rangeuser['start'] >= $end) {
-                    $mergedFreeBusy = str_pad(fbNoData, $timeslots, fbNoData);
-                }
-                // free busy information is not available at the begin of the requested period
-                elseif ($rangeuser['start'] > $start && $rangeuser['end'] >= $end) {
-                    $missingSlots = intval(ceil(($rangeuser['start'] - $start) / self::HALFHOURSECONDS));
-                    $mergedFreeBusy = str_pad(fbNoData, $missingSlots, fbNoData) . str_pad(fbFree, ($timeslots - $missingSlots), fbFree);
-                }
-                // free busy information is not available at the end of the requested period
-                elseif ($rangeuser['start'] <= $start && $rangeuser['end'] < $end) {
-                    $missingSlots = intval(ceil(($rangeuser['end'] - $end) / self::HALFHOURSECONDS));
-                    $mergedFreeBusy = str_pad(fbFree, ($timeslots - $missingSlots), fbFree) . str_pad(fbNoData, $missingSlots, fbNoData) ;
-                }
-                // free busy information is not available at the begin and at the end of the requested period
-                else {
-                    $missingBeginSlots = intval(ceil(($rangeuser['start'] - $start) / self::HALFHOURSECONDS));
-                    $missingEndSlots = intval(ceil(($rangeuser['end'] - $end) / self::HALFHOURSECONDS));
-                    $mergedFreeBusy = str_pad(fbNoData, $missingBeginSlots, fbNoData) .
-                                        str_pad(fbFree, ($timeslots - $missingBeginSlots - $missingEndSlots), fbFree) .
-                                        str_pad(fbNoData, $missingEndSlots, fbNoData) ;
-                }
-
-                $enumblock = mapi_freebusydata_enumblocks($fbDataUser, $start, $end);
-                mapi_freebusyenumblock_reset($enumblock);
-
-                while(true) {
-                    $blocks = mapi_freebusyenumblock_next($enumblock, self::FREEBUSYENUMBLOCKS);
-                    if(!$blocks) {
-                        break;
-                    }
-
-                    foreach($blocks as $blockItem) {
-                        // calculate which timeslot of mergedFreeBusy should be replaced.
-                        $blockDuration = ($blockItem['end'] - $blockItem['start']) / self::HALFHOURSECONDS;
-                        $startSlot = intval(floor(($blockItem['start'] - $start) / self::HALFHOURSECONDS));
-                        $endSlot = intval(floor(($blockItem['end'] - $start) / self::HALFHOURSECONDS));
-                        // check if the end slot is the exact begin of the next slot from request; in such case it's necessary to reduce the endslot.
-                        if ($start + $endSlot * self::HALFHOURSECONDS == $blockItem['end'] && $endSlot > $startSlot) {
-                            $endSlot--;
-                        }
-
-                        for ($i = $startSlot; $i <= $endSlot; $i++) {
-                            // only set the new slot's free busy status if it's higher than the current one
-                            if ($blockItem['status'] > $mergedFreeBusy[$i]) {
-                                $mergedFreeBusy[$i] = $blockItem['status'];
-                            }
-                        }
+                $fbType = Utils::GetFbStatusFromType($event['BusyType']);
+                ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getAvailability(): startslot '%d', endslot '%d'", $startSlot, $endSlot));
+                for ($i = $startSlot; $i <= $endSlot && $i < $timeslots; $i++) {
+                    // only set the new slot's free busy status if it's higher than the current one
+                    if ($fbType > $mergedFreeBusy[$i]) {
+                        $mergedFreeBusy[$i] = $fbType;
                     }
                 }
             }
         }
-
-        mapi_freebusysupport_close($fbsupport);
         $availability->mergedfreebusy = $mergedFreeBusy;
         return $availability;
     }
