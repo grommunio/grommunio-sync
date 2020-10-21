@@ -125,7 +125,7 @@
     $specialLogUsers = array();
 
     // Filelog settings
-    define('LOGFILEDIR', '/var/log/gromox/');
+    define('LOGFILEDIR', '/var/log/grammm-sync/');
     define('LOGFILE', LOGFILEDIR . 'grammm-sync.log');
     define('LOGERRORFILE', LOGFILEDIR . 'grammm-sync-error.log');
 
