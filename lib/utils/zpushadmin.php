@@ -822,12 +822,13 @@ class ZPushAdmin {
     /**
      * Fixes states with usernames in different cases.
      *
-     * @param string    $username
+     * @param string    $username . Has precedence over $deviceId
+     * @param string    $deviceId
      *
      * @return boolean
      * @access public
      */
-    static public function FixStatesDifferentUsernameCases($username=false) {
+    static public function FixStatesDifferentUsernameCases($username=false, $deviceId=false) {
         $processed = 0;
         $dropedUsers = 0;
         $fixedUsers = 0;
@@ -835,6 +836,9 @@ class ZPushAdmin {
 
         if ($username) {
             $devices = self::GetUserDevices($username);
+        }
+        else if ($deviceId){
+            $devices = array($deviceId);
         }
         else {
             $devices = self::GetAllDevices();
@@ -906,18 +910,22 @@ class ZPushAdmin {
     /**
      * Fixes states of available device data to the user linking.
      *
-     * @param string    $username
+     * @param string    $username . Has precedence over $deviceId
+     * @param string    $deviceId
      *
      * @return int
      * @access public
      */
-    static public function FixStatesDeviceToUserLinking($username=false) {
+    static public function FixStatesDeviceToUserLinking($username=false, $deviceId=false) {
         $seen = 0;
         $fixed = 0;
         $processedDevices = 0;
 
         if ($username) {
             $devices = self::GetUserDevices($username);
+        }
+        else if ($deviceId){
+            $devices = array($deviceId);
         }
         else {
             $devices = self::GetAllDevices();
@@ -944,12 +952,13 @@ class ZPushAdmin {
      * Fixes states of the user linking to the states
      * and removes all obsolete states.
      *
-     * @param string    $username
+     * @param string    $username . Has precedence over $deviceId
+     * @param string    $deviceId
      *
      * @return boolean
      * @access public
      */
-    static public function FixStatesUserToStatesLinking($username=false) {
+    static public function FixStatesUserToStatesLinking($username=false, $deviceId=false) {
         $processed = 0;
         $deleted = 0;
         $processedDevices = 0;
@@ -957,6 +966,9 @@ class ZPushAdmin {
         $deletedStates = 0;
         if ($username) {
             $devices = self::GetUserDevices($username);
+        }
+        else if ($deviceId){
+            $devices = array($deviceId);
         }
         else {
             $devices = self::GetAllDevices();
@@ -1027,12 +1039,13 @@ class ZPushAdmin {
     /**
      * Fixes hierarchy states writing folderdata states.
      *
-     * @param string    $username
+     * @param string    $username . Has precedence over $deviceId
+     * @param string    $deviceId
      *
      * @access public
      * @return array(seenDevices, seenHierarchyStates, fixedHierarchyStates, usersWithoutHierarchy)
      */
-    static public function FixStatesHierarchyFolderData($username=false) {
+    static public function FixStatesHierarchyFolderData($username=false, $deviceId=false) {
         $devices = 0;
         $seen = 0;
         $nouuid = 0;
@@ -1041,6 +1054,9 @@ class ZPushAdmin {
 
         if ($username) {
             $asdevices = self::GetUserDevices($username);
+        }
+        else if ($deviceId){
+            $asdevices = array($deviceId);
         }
         else {
             $asdevices = self::GetAllDevices();
@@ -1078,6 +1094,7 @@ class ZPushAdmin {
                     }
                     catch(StateNotFoundException $snfe) {
                         $needsFixing = true;
+                        ZLog::Write(LOGLEVEL_INFO, sprintf("ZPushAdmin::FixStatesHierarchyFolderData(): device %s user '%s' needs fixing.", $devid, $username));
                     }
                     // Search all states, and find the highest counter for the hierarchy UUID
                     $allStates = ZPush::GetStateMachine()->GetAllStatesForDevice($devid);
@@ -1090,8 +1107,10 @@ class ZPushAdmin {
                     $hierarchySyncKey = StateManager::BuildStateKey($hierarchyUuid, $maxCounter);
 
                     if ($spa) {
-                        if ($spa->GetSyncKey() !== $hierarchySyncKey) {
+                        //Don't fix if $spa->GetUuidCounter() > $maxCounter
+                        if ($spa->GetSyncKey() !== $hierarchySyncKey && $spa->GetUuidCounter() < $maxCounter) {
                             $needsFixing = true;
+                            ZLog::Write(LOGLEVEL_INFO, sprintf("ZPushAdmin::FixStatesHierarchyFolderData(): device %s user '%s' needs fixing. spa->GetSyncKey()='%s' hierarchySyncKey='%s'.", $devid, $username, $spa->GetSyncKey(), $hierarchySyncKey));
                         }
                     }
                     else {
@@ -1102,7 +1121,7 @@ class ZPushAdmin {
                         // generate FOLDERDATA
                         $spa->SetSyncKey($hierarchySyncKey);
                         $spa->SetFolderId(false);
-                        ZLog::Write(LOGLEVEL_DEBUG, sprintf("ZPushAdmin::FixStatesHierarchyFolderData(): write data for %s", $spa->GetSyncKey()));
+                        ZLog::Write(LOGLEVEL_INFO, sprintf("ZPushAdmin::FixStatesHierarchyFolderData(): device %s user '%s' needs fixing. write data for %s", $devid, $username, $spa->GetSyncKey()));
                         ZPush::GetStateMachine()->SetState($spa, $device->GetDeviceId(), IStateMachine::FOLDERDATA, $hierarchyUuid);
                         $fixed++;
                     }
@@ -1116,12 +1135,13 @@ class ZPushAdmin {
     /**
      * Fixes missing flags or parentids on additional folders.
      *
-     * @param string    $username
+     * @param string    $username . Has precedence over $deviceId
+     * @param string    $deviceId
      *
      * @access public
      * @return array(seenDevices, devicesWithAdditionalFolders, fixedAdditionalFolders)
      */
-    static public function FixStatesAdditionalFolders($username=false) {
+    static public function FixStatesAdditionalFolders($username=false, $deviceId=false) {
         $devices = 0;
         $devicesWithAddFolders = 0;
         $fixed = 0;
@@ -1129,6 +1149,9 @@ class ZPushAdmin {
 
         if ($username) {
             $asdevices = self::GetUserDevices($username);
+        }
+        else if ($deviceId){
+            $asdevices = array($deviceId);
         }
         else {
             $asdevices = self::GetAllDevices();

@@ -1102,7 +1102,8 @@ class BackendGrammm implements IBackend, ISearchProvider {
                 $response->to = $to;
                 $response->status = SYNC_RESOLVERECIPSSTATUS_SUCCESS;
 
-                $recipient = $this->resolveRecipient($to, $maxAmbiguousRecipients);
+                // do not expand distlists here
+                $recipient = $this->resolveRecipient($to, $maxAmbiguousRecipients, false);
                 if (is_array($recipient) && !empty($recipient)) {
                     $response->recipientcount = 0;
                     foreach ($recipient as $entry) {
@@ -2132,11 +2133,12 @@ class BackendGrammm implements IBackend, ISearchProvider {
      *
      * @param string $to
      * @param int $maxAmbiguousRecipients
+     * @param boolean $expandDistlist
      *
      * @return SyncResolveRecipient|boolean
      */
-    private function resolveRecipient($to, $maxAmbiguousRecipients) {
-        $recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients);
+    private function resolveRecipient($to, $maxAmbiguousRecipients, $expandDistlist = true) {
+        $recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist);
 
         if ($recipient !== false) {
             return $recipient;
@@ -2156,9 +2158,10 @@ class BackendGrammm implements IBackend, ISearchProvider {
      *
      * @param string $to
      * @param int $maxAmbiguousRecipients
+     * @param boolean $expandDistlist
      * @return array|boolean
      */
-    private function resolveRecipientGAL($to, $maxAmbiguousRecipients) {
+    private function resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist = true) {
         ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrammm->resolveRecipientGAL(): Resolving recipient '%s' in GAL", $to));
         $addrbook = $this->getAddressbook();
         // FIXME: create a function to get the adressbook contentstable
@@ -2199,15 +2202,20 @@ class BackendGrammm implements IBackend, ISearchProvider {
                     continue;
                 }
                 if ($abentries[$i][PR_OBJECT_TYPE] == MAPI_DISTLIST) {
-                    // dist lists must be expanded into their members
-                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->resolveRecipientGAL(): '%s' is a dist list. Expand it to members.", $to));
-                    $distList = mapi_ab_openentry($addrbook, $abentries[$i][PR_ENTRYID]);
-                    $distListContent = mapi_folder_getcontentstable($distList);
-                    $distListMembers = mapi_table_queryallrows($distListContent, array(PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_TAGGED_X509_CERT));
-                    for ($j = 0, $nrDistListMembers = mapi_table_getrowcount($distListContent); $j < $nrDistListMembers; $j++) {
-                        ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrammm->resolveRecipientGAL(): distlist's '%s' member", $to, $distListMembers[$j][PR_DISPLAY_NAME]));
-                        $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $to, $distListMembers[$j], $nrDistListMembers);
+                    // check whether to expand dist list
+                    if ($expandDistlist) {
+                        ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->resolveRecipientGAL(): '%s' is a dist list. Expand it to members.", $to));
+                        $distList = mapi_ab_openentry($addrbook, $abentries[$i][PR_ENTRYID]);
+                        $distListContent = mapi_folder_getcontentstable($distList);
+                        $distListMembers = mapi_table_queryallrows($distListContent, array(PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_TAGGED_X509_CERT));
+                        for ($j = 0, $nrDistListMembers = mapi_table_getrowcount($distListContent); $j < $nrDistListMembers; $j++) {
+                            ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrammm->resolveRecipientGAL(): distlist's '%s' member", $to, $distListMembers[$j][PR_DISPLAY_NAME]));
+                            $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $to, $distListMembers[$j], $nrDistListMembers);
+                        }
                     }
+                    else {
+                        ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->resolveRecipientGAL(): '%s' is a dist list, but return it as is.", $to));
+                        $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $abentries[$i][PR_SMTP_ADDRESS], $abentries[$i]);
                 }
                 elseif ($abentries[$i][PR_OBJECT_TYPE] == MAPI_MAILUSER) {
                     $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $abentries[$i][PR_SMTP_ADDRESS], $abentries[$i]);
