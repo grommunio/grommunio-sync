@@ -756,7 +756,6 @@ class ZPush {
      */
     static public function PrintGrammmSyncLegal($message = "", $additionalMessage = "") {
         ZLog::Write(LOGLEVEL_DEBUG,"ZPush::PrintGrammmSyncLegal()");
-        $grammmsync_version = @constant('GRAMMSYNC_VERSION');
 
         if ($message)
             $message = "<h3>". $message . "</h3>";
@@ -772,7 +771,6 @@ class ZPush {
         <body>
         <font face="verdana">
         <h2>Grammm-Sync - Open Source ActiveSync</h2>
-        <b>Version $grammmsync_version</b><br>
         $message $additionalMessage
         <br><br>
         More information about Grammm can be found at:<br>
