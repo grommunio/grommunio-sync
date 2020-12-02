@@ -72,7 +72,7 @@
  *           State migration script is available, more informations: https://wiki.z-hub.io/x/xIAa
  */
     define('STATE_MACHINE', 'FILE');
-    define('STATE_DIR', '/var/lib/gromox/grammm-sync/');
+    define('STATE_DIR', '/var/lib/grammm-sync/');
 
 /**********************************************************************************
  *  IPC - InterProcessCommunication
