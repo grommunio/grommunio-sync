@@ -2216,6 +2216,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
                     else {
                         ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->resolveRecipientGAL(): '%s' is a dist list, but return it as is.", $to));
                         $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $abentries[$i][PR_SMTP_ADDRESS], $abentries[$i]);
+                    }
                 }
                 elseif ($abentries[$i][PR_OBJECT_TYPE] == MAPI_MAILUSER) {
                     $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $abentries[$i][PR_SMTP_ADDRESS], $abentries[$i]);
