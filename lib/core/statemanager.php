@@ -1,43 +1,19 @@
 <?php
-/***********************************************
-* File      :   statemanager.php
-* Project   :   Grammm-Sync
-* Descr     :   The StateManager uses a IStateMachine
-*               implementation to save data.
-*               SyncKey's are of the form {UUID}N, in
-*               which UUID is allocated during the
-*               first sync, and N is incremented
-*               for each request to 'GetNewSyncKey()'.
-*               A sync state is simple an opaque
-*               string value that can differ
-*               for each backend used - normally
-*               a list of items as the backend has
-*               sent them to the PIM. The backend
-*               can then use this backend
-*               information to compute the increments
-*               with current data.
-*               See FileStateMachine and IStateMachine
-*               for additional information.
-*
-* Created   :   26.12.2011
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * The StateManager uses a IStateMachine implementation to save data. SyncKey's
+ * are of the form {UUID}N, in which UUID is allocated during the first sync,
+ * and N is incremented for each request to 'GetNewSyncKey()'. A sync state is
+ * simple an opaque string value that can differ for each backend used -
+ * normally a list of items as the backend has sent them to the PIM. The
+ * backend can then use this backend information to compute the increments with
+ * current data.
+ *
+ * See FileStateMachine and IStateMachine for additional information.
+ */
 
 class StateManager {
     const FIXEDHIERARCHYCOUNTER = 99999;

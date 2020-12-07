@@ -1,28 +1,11 @@
 <?php
-/***********************************************
- * File      :   syslog.php
- * Project   :   Grammm-Sync
- * Descr     :   Logging functionalities
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
  *
- * Created   :   13.11.2015
- *
- * Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License, version 3,
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
- * Consult LICENSE file for details
- ************************************************/
+ * Logging functionalities
+ */
 
 class Syslog extends Log {
 

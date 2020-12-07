@@ -1,34 +1,14 @@
 <?php
-/***********************************************
-* File      :   mapiphpwrapper.php
-* Project   :   Grammm-Sync
-* Descr     :   The ICS importer is very MAPI specific
-*               and needs to be wrapped, because we
-*               want all MAPI code to be separate from
-*               the rest of grammm-sync. To do so all
-*               MAPI dependency are removed in this class.
-*               All the other importers are based on
-*               IChanges, not MAPI.
-*
-* Created   :   14.02.2011
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * The ICS importer is very MAPI specific and needs to be wrapped, because we
+ * want all MAPI code to be separate from the rest of grammm-sync. To do so all
+ * MAPI dependency are removed in this class. All the other importers are based
+ * on IChanges, not MAPI.
+ */
 
 /**
  * This is the PHP wrapper which strips MAPI information from

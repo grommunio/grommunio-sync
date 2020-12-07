@@ -1,5 +1,7 @@
 <?php
 /**
+ * SPDX-License-Identifier: BSD-3-Clause
+ *
  * RFC 822 Email address list validation Utility
  *
  * PHP version 5

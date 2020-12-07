@@ -1,36 +1,22 @@
 <?php
-/***********************************************
-* File      :   synccollections.php
-* Project   :   Grammm-Sync
-* Descr     :   This is basically a list of synched folders with it's
-*               respective SyncParameters, while some additional parameters
-*               which are not stored there can be kept here.
-*               The class also provides CheckForChanges which is basically
-*               a loop through all collections checking for changes.
-*               SyncCollections is used for Sync (with and without heartbeat)
-*               and Ping connections.
-*               To check for changes in Heartbeat and Ping requeste the same
-*               sync states as for the default synchronization are used.
-*
-* Created   :   06.01.2012
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * This is basically a list of synched folders with its respective
+ * SyncParameters, while some additional parameters which are not stored
+ * there can be kept here.
+ *
+ * The class also provides CheckForChanges which is basically a loop through
+ * all collections checking for changes.
+ *
+ * SyncCollections is used for Sync (with and without heartbeat)
+ * and Ping connections.
+ *
+ * To check for changes in Heartbeat and Ping requeste the same
+ * sync states as for the default synchronization are used.
+ */
 
 class SyncCollections implements Iterator {
     const ERROR_NO_COLLECTIONS = 1;

@@ -1,40 +1,19 @@
 <?php
-/***********************************************
-* File      :   istatemachine.php
-* Project   :   Grammm-Sync
-* Descr     :   Interface called from the Device and
-*               StateManager to save states for a user/device/folder.
- *              Grammm-Sync implements the FileStateMachine which
- *              saves states to disk.
- *              Backends provide their own IStateMachine
- *              implementation of this interface and return
- *              an IStateMachine instance with IBackend->GetStateMachine().
- *              Old sync states are not deleted until a new sync state
- *              is requested.
- *              At that moment, the PIM is apparently requesting an update
- *              since sync key X, so any sync states before X are already on
- *              the PIM, and can therefore be removed. This algorithm should be
- *              automatically enforced by the IStateMachine implementation.
-*
-* Created   :   02.01.2012
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * Interface called from the Device and StateManager to save states for a
+ * user/device/folder. grammm-sync implements the FileStateMachine which saves
+ * states to disk. Backends provide their own IStateMachine implementation of
+ * this interface and return an IStateMachine instance with
+ * IBackend->GetStateMachine(). Old sync states are not deleted until a new
+ * sync state is requested. At that moment, the PIM is apparently requesting an
+ * update since sync key X, so any sync states before X are already on the PIM,
+ * and can therefore be removed. This algorithm should be automatically
+ * enforced by the IStateMachine implementation.
+ */
 
 interface IStateMachine {
     const DEFTYPE = "";

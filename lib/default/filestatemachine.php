@@ -1,32 +1,12 @@
 <?php
-/***********************************************
-* File      :   filestatemachine.php
-* Project   :   Grammm-Sync
-* Descr     :   This class handles state requests;
-*               Each Import/Export mechanism can
-*               store its own state information,
-*               which is stored through the
-*               state machine.
-*
-* Created   :   01.10.2007
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * This class handles state requests; Each Import/Export mechanism can store
+ * its own state information, which is stored through the state machine.
+ */
 
 class FileStateMachine implements IStateMachine {
     const SUPPORTED_STATE_VERSION = IStateMachine::STATEVERSION_02;

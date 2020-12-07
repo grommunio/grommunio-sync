@@ -1,42 +1,18 @@
 <?php
-/***********************************************
-* File      :   backend.php
-* Project   :   Grammm-Sync
-* Descr     :   This is what C++ people
-*               (and PHP5) would call an
-*               abstract class. The
-*               backend module itself is
-*               responsible for converting any
-*               necessary types and formats.
-*
-*               If you wish to implement a new
-*               backend, all you need to do is
-*               to subclass the following class
-*               (or implement an IBackend)
-*               and place the subclassed file in
-*               the backend/yourBackend directory. You can
-*               then use your backend by
-*               specifying it in the config.php file
-*
-* Created   :   01.10.2007
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * This is what C++ people (and PHP5) would call an abstract class. The
+ * backend module itself is responsible for converting any necessary types
+ * and formats.
+ *
+ * If you wish to implement a new backend, all you need to do is to subclass
+ * the following class (or implement an IBackend) and place the subclassed file
+ * in the backend/yourBackend directory. You can then use your backend by
+ * specifying it in the config.php file.
+ */
 
 abstract class Backend implements IBackend {
     protected $permanentStorage;

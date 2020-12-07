@@ -1,33 +1,13 @@
 <?php
-/***********************************************
-* File      :   syncobjects.php
-* Project   :   Grammm-Sync
-* Descr     :   Defines general behavoir of sub-WBXML
-*               entities (Sync* objects) that can be parsed
-*               directly (as a stream) from WBXML.
-*               They are automatically decoded
-*               according to $mapping by the Streamer,
-*               and the Sync WBXML mappings.
-*
-* Created   :   01.10.2007
-*
-* Copyright 2007 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * Defines general behavoir of sub-WBXML entities (Sync* objects) that can be
+ * parsed directly (as a stream) from WBXML. They are automatically decoded
+ * according to $mapping by the Streamer and the Sync WBXML mappings.
+ */
 
 abstract class SyncObject extends Streamer {
     const STREAMER_CHECKS = 6;

@@ -1,32 +1,13 @@
 #!/usr/bin/env php
 <?php
-/***********************************************
-* File      :   listfolders.php
-* Project   :   Grammm-Sync
-* Descr     :   This is a small command line
-*               tool to list folders of a user
-*               store or public folder available
-*               for synchronization.
-*
-* Created   :   06.05.2011
-*
-* Copyright 2007 - 2013, 2015 - 2016 Zarafa Deutschland GmbH
-* Copyright 2020 Grammm GmbH
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License, version 3,
-* as published by the Free Software Foundation.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-* Consult LICENSE file for details
-************************************************/
+/*
+ * SPDX-License-Identifier: AGPL-3.0-only
+ * SPDX-FileCopyrightText: Copyright 2007-2013,2015-2016 Zarafa Deutschland GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ *
+ * This is a small command line tool to list folders of a user store or public
+ * folder available for synchronization.
+ */
 
 if (CheckMapiExtVersion('8.0.0')) {
     define('MAPI_SERVER', 'default:');
