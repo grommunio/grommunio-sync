@@ -905,12 +905,12 @@ define('PR_EMS_AB_THUMBNAIL_PHOTO'                    ,mapi_prop_tag(PT_BINARY, 
 
 define('PR_EC_ARCHIVE_SERVERS'                        ,mapi_prop_tag(PT_MV_TSTRING,  0x67c4));
 
-/* Grammm contacts provider properties */
+/* grammm contacts provider properties */
 define('PR_ZC_CONTACT_STORE_ENTRYIDS'                 ,mapi_prop_tag(PT_MV_BINARY,   0x6711));
 define('PR_ZC_CONTACT_FOLDER_ENTRYIDS'                ,mapi_prop_tag(PT_MV_BINARY,   0x6712));
 define('PR_ZC_CONTACT_FOLDER_NAMES'                   ,mapi_prop_tag(PT_MV_TSTRING,  0x6713));
 
-/* Grammm specific properties for optimization of imap functionality */
+/* grammm specific properties for optimization of imap functionality */
 define('PR_EC_IMAP_EMAIL'                             ,mapi_prop_tag(PT_BINARY,      0x678C)); //the complete rfc822 email
 define('PR_EC_IMAP_EMAIL_SIZE'                        ,mapi_prop_tag(PT_LONG,        0x678D));
 define('PR_EC_IMAP_BODY'                              ,mapi_prop_tag(PT_STRING8,     0x678E)); //simplified bodystructure (mostly unused by clients)

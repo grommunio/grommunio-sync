@@ -98,7 +98,7 @@ define('NOERROR'                                         ,0);
 
 // The following codes don't use make_mapi_e because they are in the 0x000FF000 range,
 // but we cannot use the HEX value as would make most sense as that would break in 64bit PHP
-// (Grammm will return a negative value, but PHP would convert this define into a positive
+// (grammm will return a negative value, but PHP would convert this define into a positive
 // value). Hence we declare the value exactly as we need it as integer and bypass the
 // 32bit/64bit hell.
 define('MAPI_E_CALL_FAILED'                              ,(int)-2147467259); // 0x80004005

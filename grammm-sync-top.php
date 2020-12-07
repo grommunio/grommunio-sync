@@ -62,7 +62,7 @@ require_once 'vendor/autoload.php';
             system("stty sane");
         }
         else
-            echo "Grammm-Sync interprocess communication (IPC) is not available or TopCollector is disabled.\n";
+            echo "grammm-sync interprocess communication (IPC) is not available or TopCollector is disabled.\n";
     }
     catch (ZPushException $zpe) {
         fwrite(STDERR, get_class($zpe) . ": ". $zpe->getMessage() . "\n");
@@ -73,7 +73,7 @@ require_once 'vendor/autoload.php';
 
 
 /************************************************
- * Grammm-Sync-Top
+ * grammm-sync-top
  */
 class ZPushTop {
     // show options
@@ -133,7 +133,7 @@ class ZPushTop {
     }
 
     /**
-     * Requests data from the running Grammm-Sync processes
+     * Requests data from the running grammm-sync processes
      *
      * @access private
      * @return
@@ -150,7 +150,7 @@ class ZPushTop {
     }
 
     /**
-     * Main loop of Grammm-Sync-top
+     * Main loop of grammm-sync-top
      * Runs until termination is requested
      *
      * @access public
@@ -302,9 +302,9 @@ class ZPushTop {
     private function scrOverview() {
         $linesAvail = $this->scrSize['height'] - 8;
         $lc = 1;
-        $this->scrPrintAt($lc,0, "\033[1mGrammm-Sync top live statistics\033[0m\t\t\t\t\t". @strftime("%d/%m/%Y %T")."\n"); $lc++;
+        $this->scrPrintAt($lc,0, "\033[1mgrammm-sync-top live statistics\033[0m\t\t\t\t\t". @strftime("%d/%m/%Y %T")."\n"); $lc++;
 
-        $this->scrPrintAt($lc,0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\tGrammm-Sync:   %s ",count($this->activeConn),count($this->activeUsers), $this->getVersion())); $lc++;
+        $this->scrPrintAt($lc,0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\tgrammm-sync:   %s ",count($this->activeConn),count($this->activeUsers), $this->getVersion())); $lc++;
         $this->scrPrintAt($lc,0, sprintf("Push connections: %d\t\t\t\tDevices: %d\tPHP-MAPI: %s", $this->pushConn, count($this->activeDevices),phpversion("mapi"))); $lc++;
         $this->scrPrintAt($lc,0, sprintf("                                                Hosts:\t %d", count($this->activeHosts))); $lc++;
         $lc++;
@@ -538,7 +538,7 @@ class ZPushTop {
                     else {
                         $this->doingTail = true;
                         $this->scrClear();
-                        $this->scrPrintAt(1,0,$this->scrAsBold("Press CTRL+C to return to Grammm-Sync-Top\n\n"));
+                        $this->scrPrintAt(1,0,$this->scrAsBold("Press CTRL+C to return to grammm-sync-top\n\n"));
                         $secondary = "";
                         if (isset($cmds[1])) $secondary =  " -n 200 | grep ".escapeshellarg($cmds[1]);
                         system('bash -c "tail -f '. LOGFILE . $secondary . '" > `tty`');
@@ -555,7 +555,7 @@ class ZPushTop {
                     else {
                         $this->doingTail = true;
                         $this->scrClear();
-                        $this->scrPrintAt(1,0,$this->scrAsBold("Press CTRL+C to return to Grammm-Sync-Top\n\n"));
+                        $this->scrPrintAt(1,0,$this->scrAsBold("Press CTRL+C to return to grammm-sync-top\n\n"));
                         $secondary = "";
                         if (isset($cmds[1])) $secondary =  " -n 200 | grep ".escapeshellarg($cmds[1]);
                         system('bash -c "tail -f '. LOGERRORFILE . $secondary . '" > `tty`');
@@ -599,9 +599,9 @@ class ZPushTop {
      */
     public function UsageInstructions() {
         $help = "Usage:\n\tgrammm-sync-top.php\n\n" .
-                "  Grammm-Sync-Top is a live top-like overview of what Grammm-Sync is doing. It does not have specific command line options.\n\n".
-                "  When Grammm-Sync-Top is running you can specify certain actions and options which can be executed (listed below).\n".
-                "  This help information can also be shown inside Grammm-Sync-Top by hitting 'help' or 'h'.\n\n";
+                "  grammm-sync-top is a live top-like overview of what grammm-sync is doing. It does not have specific command line options.\n\n".
+                "  When grammm-sync-top is running you can specify certain actions and options which can be executed (listed below).\n".
+                "  This help information can also be shown inside grammm-sync-top by hitting 'help' or 'h'.\n\n";
         $scrhelp = $this->scrHelp();
         unset($scrhelp[0]);
 
@@ -620,10 +620,10 @@ class ZPushTop {
     private function scrHelp() {
         $h = array();
         $secs = $this->helpexpire - $this->currenttime;
-        $h[] = "Actions supported by Grammm-Sync-Top (help page still displayed for ".$secs."secs)";
+        $h[] = "Actions supported by grammm-sync-top (help page still displayed for ".$secs."secs)";
         $h[] = "  ".$this->scrAsBold("Action")."\t\t".$this->scrAsBold("Comment");
         $h[] = "  ".$this->scrAsBold("h")." or ".$this->scrAsBold("help")."\t\tDisplays this information.";
-        $h[] = "  ".$this->scrAsBold("q").", ".$this->scrAsBold("quit")." or ".$this->scrAsBold(":q")."\t\tExits Grammm-Sync-Top.";
+        $h[] = "  ".$this->scrAsBold("q").", ".$this->scrAsBold("quit")." or ".$this->scrAsBold(":q")."\t\tExits grammm-sync-top.";
         $h[] = "  ".$this->scrAsBold("w")." or ".$this->scrAsBold("wide")."\t\tTries not to truncate data. Automatically done if more than 180 columns available.";
         $h[] = "  ".$this->scrAsBold("f:VAL")." or ".$this->scrAsBold("filter:VAL")."\tOnly display connections which contain VAL. This value is case-insensitive.";
         $h[] = "  ".$this->scrAsBold("f:")." or ".$this->scrAsBold("filter:")."\t\tWithout a search word: resets the filter.";
@@ -707,7 +707,7 @@ class ZPushTop {
     }
 
     /**
-     * Returns the version of the current Grammm-Sync installation
+     * Returns the version of the current grammm-sync installation
      *
      * @access private
      * @return string

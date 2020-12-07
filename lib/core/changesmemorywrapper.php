@@ -273,7 +273,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
         // load into memory
         else {
             if (isset($folder->serverid)) {
-                // The Grammm HierarchyExporter exports all kinds of changes for folders (e.g. update no. of unread messages in a folder).
+                // The grammm HierarchyExporter exports all kinds of changes for folders (e.g. update no. of unread messages in a folder).
                 // These changes are not relevant for the mobiles, as something changes but the relevant displayname and parentid
                 // stay the same. These changes will be dropped and are not sent!
                 if ($folder->equals($this->GetFolder($folder->serverid), false, true)) {

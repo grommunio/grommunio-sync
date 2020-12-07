@@ -931,7 +931,7 @@ class Mail_RFC822 {
         }
     }
     /**
-     * Grammm-sync helper for error logging
+     * grammm-sync helper for error logging
      * removing PEAR dependency
      *
      * @param  string  debug message

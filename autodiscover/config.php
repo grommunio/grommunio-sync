@@ -52,7 +52,7 @@
      * This is not always possible as the username might have a different
      * schema than email address. Configure this parameter to match your
      * username settings.
-     * @see https://wiki.z-hub.io/display/ZP/Configuring+Grammm-Sync+Autodiscover#ConfiguringGrammm-SyncAutodiscover-Configuration
+     * @see https://wiki.z-hub.io/display/ZP/Configuring+Z-Push+Autodiscover#ConfiguringZ-PushAutodiscover-Configuration
      * @see https://jira.z-hub.io/browse/ZP-1209
      *
      * Possible values:

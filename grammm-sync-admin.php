@@ -68,7 +68,7 @@ require_once 'vendor/autoload.php';
 
 
 /************************************************
- * Grammm-Sync-Admin CLI
+ * grammm-sync-Admin CLI
  */
 class ZPushAdminCLI {
     const COMMAND_SHOWALLDEVICES = 1;
@@ -812,7 +812,7 @@ class ZPushAdminCLI {
            echo sprintf("State data of device '%s' of user '%s' removed: %s", self::$device, self::$user, ($stat)?'OK':ZLog::GetLastMessage(LOGLEVEL_ERROR)). "\n";
 
         if (ZPushAdmin::$status == ZPushAdmin::STATUS_DEVICE_SYNCED_AFTER_DAYSOLD) {
-            print("Some devices might not have been removed because of --days-old parameter. Check Grammm-Sync log file for more details.\n");
+            print("Some devices might not have been removed because of --days-old parameter. Check the grammm-sync log file for more details.\n");
         }
     }
 

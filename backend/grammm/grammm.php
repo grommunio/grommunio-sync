@@ -73,7 +73,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
     const HALFHOURSECONDS = 1800;
 
     /**
-     * Constructor of the Grammm Backend
+     * Constructor of the grammm Backend
      *
      * @access public
      */
@@ -129,7 +129,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
     }
 
     /**
-     * Authenticates the user with the configured Grammm server
+     * Authenticates the user with the configured grammm server
      *
      * @param string        $username
      * @param string        $domain
@@ -161,7 +161,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
         try {
             // check if notifications are available in php-mapi
             if(function_exists('mapi_feature') && mapi_feature('LOGONFLAGS')) {
-                // send Grammm-Sync version and user agent to ZCP - ZP-589
+                // send grammm-sync version and user agent to ZCP - ZP-589
                 if (Utils::CheckMapiExtVersion('7.2.0')) {
                     $zpush_version = 'Grammm-Sync_' . @constant('GRAMMSYNC_VERSION');
                     $user_agent = (Request::GetDeviceID()) ? ZPush::GetDeviceManager()->GetUserAgent() : "unknown";
@@ -849,7 +849,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
 
         // Process the meeting response. We don't have to send the actual meeting response
         // e-mail, because the device will send it itself. This seems not to be the case
-        // anymore for the ios devices since at least version 12.4. Grammm-Sync will send the
+        // anymore for the ios devices since at least version 12.4. grammm-sync will send the
         // accepted email in such a case.
         // @see https://jira.z-hub.io/browse/ZP-1524
         $sendresponse = false;
@@ -939,7 +939,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
      * Indicates if the backend has a ChangesSink.
      * A sink is an active notification mechanism which does not need polling.
      * Since Zarafa 7.0.5 such a sink is available.
-     * The Grammm backend uses this method to initialize the sink with mapi.
+     * The grammm backend uses this method to initialize the sink with mapi.
      *
      * @access public
      * @return boolean
@@ -1371,7 +1371,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
                 array(
                     FUZZYLEVEL      => FL_PREFIX,
                     ULPROPTAG       => PR_DISPLAY_NAME,
-                    VALUE           => array(PR_DISPLAY_NAME=>"Grammm-Sync Search Folder ".$pid)
+                    VALUE           => array(PR_DISPLAY_NAME=>"grammm-sync Search Folder ".$pid)
                 )
             ),
             TBL_BATCH);
@@ -1933,7 +1933,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
      */
     private function settingsRightsManagementTemplates(&$rmTemplates) {
         /* Currently there is no information rights management feature in
-         * Grammm backend, so just return the status and empty
+         * the grammm backend, so just return the status and empty
          * SyncRightsManagementTemplates tag.
          * Once it's available, it would be something like:
 
@@ -2060,7 +2060,7 @@ class BackendGrammm implements IBackend, ISearchProvider {
      * @return mapiFolderObject
      */
     private function createSearchFolder($searchFolderRoot) {
-        $folderName = "Grammm-Sync Search Folder ".@getmypid();
+        $folderName = "grammm-sync Search Folder ".@getmypid();
         $searchFolders = mapi_folder_gethierarchytable($searchFolderRoot);
         $restriction = array(
             RES_CONTENT,
@@ -2480,10 +2480,10 @@ class BackendGrammm implements IBackend, ISearchProvider {
     }
 
     /**
-     * Checks if the user is not disabled for Grammm-Sync.
+     * Checks if the user is not disabled for grammm-sync.
      *
      * @access private
-     * @throws FatalException if user is disabled for Grammm-Sync
+     * @throws FatalException if user is disabled for grammm-sync
      *
      * @return boolean
      */
@@ -2500,10 +2500,10 @@ class BackendGrammm implements IBackend, ISearchProvider {
             // Checks for deviceId present in zarafaDisabledFeatures LDAP array attribute. Check is performed case insensitive.
             $deviceIdDisabled = ( ($deviceId !==null) && in_array($deviceId, array_map('strtolower', $enabledFeatures[PR_EC_DISABLED_FEATURES])) )? true : false;
             if ($mobileDisabled) {
-                throw new FatalException("User is disabled for Grammm-Sync.");
+                throw new FatalException("User is disabled for grammm-sync.");
             }
             elseif ($deviceIdDisabled) {
-                throw new FatalException(sprintf("User has deviceId %s disabled for usage with Grammm-Sync.", $deviceId));
+                throw new FatalException(sprintf("User has deviceId %s disabled for usage with grammm-sync.", $deviceId));
             }
         }
         return true;

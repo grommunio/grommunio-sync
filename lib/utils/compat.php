@@ -29,7 +29,7 @@ if (!function_exists('apache_request_headers')) {
       * When using other webservers or using php as cgi in apache
       * the function apache_request_headers() is not available.
       * This function parses the environment variables to extract
-      * the necessary headers for Grammm-Sync
+      * the necessary headers for grammm-sync
       */
     function apache_request_headers() {
         $headers = array();

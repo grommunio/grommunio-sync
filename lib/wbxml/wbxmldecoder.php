@@ -194,7 +194,7 @@ class WBXMLDecoder extends WBXMLDefs {
             ZLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementEndTag(): unmatched WBXML tag: '%s' type '%s' flags '%s'", ((isset($element[EN_TAG]))?$element[EN_TAG]:""), ((isset($element[EN_TYPE]))?$element[EN_TYPE]:""), ((isset($element[EN_FLAGS]))?$element[EN_FLAGS]:"")));
 
             $bt = debug_backtrace();
-            ZLog::Write(LOGLEVEL_ERROR, sprintf("WBXMLDecoder->getElementEndTag(): could not read end tag in '%s'. Please enable the LOGLEVEL_WBXML and send the log to the Grammm-Sync dev team.", $bt[0]["file"] . ":" . $bt[0]["line"]));
+            ZLog::Write(LOGLEVEL_ERROR, sprintf("WBXMLDecoder->getElementEndTag(): could not read end tag in '%s'. Please enable the LOGLEVEL_WBXML and send the log to the grammm-sync dev team.", $bt[0]["file"] . ":" . $bt[0]["line"]));
 
             // log the remaining wbxml content
             $this->ungetElement($element);

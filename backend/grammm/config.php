@@ -43,7 +43,7 @@ define('READ_ONLY_NOTIFY_LOST_DATA', true);
 // String to mark the data changed by the user (that he is trying to save)
 define('READ_ONLY_NOTIFY_YOURDATA', 'Your data');
 // Email template to be sent to the user
-define('READ_ONLY_NOTIFY_SUBJECT', "Grammm-Sync: Writing operation not permitted - data reset");
+define('READ_ONLY_NOTIFY_SUBJECT', "grammm-sync: Writing operation not permitted - data reset");
 define('READ_ONLY_NOTIFY_BODY', <<<END
 Dear **USERFULLNAME**,
 
@@ -58,7 +58,7 @@ Below is a copy of the data you tried to save. If you want your changes to be st
 If you have questions about this email, please contact your e-mail administrator.
 
 Sincerely,
-Your Grammm-Sync system
+Your grammm-sync system
 END
          );
 // Format of the **DATE** and **TIME** placeholders - more information on formats, see http://php.net/manual/en/function.strftime.php

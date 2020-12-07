@@ -41,7 +41,7 @@
     define('SCRIPT_TIMEOUT', 0);
 
     // This should be solved on THE webserver level if there are proxies
-    // between mobile client and Grammm-Sync.
+    // between mobile client and grammm-sync.
     // Use a custom header to determinate the remote IP of a client.
     // By default, the server provided REMOTE_ADDR is used. If the header here set
     // is available, the provided value will be used, else REMOTE_ADDR is maintained.
@@ -56,7 +56,7 @@
     /*
      * Whether to use the complete email address as a login name
      * (e.g. user@company.com) or the username only (user).
-     * This is required for Grammm-Sync to work properly after autodiscover.
+     * This is required for grammm-sync to work properly after autodiscover.
      * Possible values:
      *   false - use the username only.
      *   true  - string the mobile sends as username, e.g. full email address (default).
@@ -80,7 +80,7 @@
  *  Is either provided by using shared memory on a single host or
  *  using the memcache provider for multi-host environments.
  *  When another implementation should be used, the class can be set here explicitly.
- *  If empty Grammm-Sync will try to use available providers.
+ *  If empty grammm-sync will try to use available providers.
 
  *  Possible values:
  *  IpcSharedMemoryProvider - default. Requires grammm-sync-ipc-sharedmemory package.
@@ -204,7 +204,7 @@
     // Maximum amount of items to be synchronized per request.
     // Normally this value is requested by the mobile. Common values are 5, 25, 50 or 100.
     // Exporting too much items can cause mobile timeout on busy systems.
-    // Grammm-Sync will use the lowest provided value, either set here or by the mobile.
+    // grammm-sync will use the lowest provided value, either set here or by the mobile.
     // MS Outlook 2013+ request up to 512 items to accelerate the sync process.
     // If you detect high load (also on subsystems) you could try a lower setting.
     // max: 512 - value used if mobile does not limit amount of items
@@ -215,7 +215,7 @@
     // it means the property's value will be deleted on the server.
     // However some devices do not send a list of supported properties. It is then impossible
     // to tell if a property was deleted or it was not set at all if it does not appear in Sync.
-    // This parameter defines Grammm-Sync behaviour during Sync if a device does not issue a list with
+    // This parameter defines grammm-sync behaviour during Sync if a device does not issue a list with
     // supported properties.
     // See also https://jira.z-hub.io/browse/ZP-302.
     // Possible values:
@@ -231,7 +231,7 @@
     define('SYNC_CONTACTS_MAXPICTURESIZE', 5242880);
 
     // Over the WebserviceUsers command it is possible to retrieve a list of all
-    // known devices and users on this Grammm-Sync system. The authenticated user needs to have
+    // known devices and users on this grammm-sync system. The authenticated user needs to have
     // admin rights and a public folder must exist.
     // In multicompany environments this enable an admin user of any company to retrieve
     // this full list, so this feature is disabled by default. Enable with care.
@@ -273,7 +273,7 @@
 
     // Time in seconds the device should wait whenever the service is unavailable,
     // e.g. when a backend service is unavailable.
-    // Grammm-Sync sends a "Retry-After" header in the response with the here defined value.
+    // grammm-sync sends a "Retry-After" header in the response with the here defined value.
     // It is up to the device to respect or not this directive so even if this option is set,
     // the device might not wait requested time frame.
     // Number of seconds before retry, to disable set to: false
@@ -313,7 +313,7 @@
  *
  *  To synchronize a folder, add a section setting all parameters as below:
  *      store:      the ressource where the folder is located.
- *                  Grammm users use 'SYSTEM' for the 'Public Folder'
+ *                  grammm users use 'SYSTEM' for the 'Public Folder'
  *      folderid:   folder id of the folder to be synchronized
  *      name:       name to be displayed on the mobile device
  *      type:       supported types are:
@@ -328,14 +328,14 @@
  *                      DeviceManager::FLD_FLAGS_SENDASOWNER
  *                          When replying in this folder, automatically do Send-As
  *                      DeviceManager::FLD_FLAGS_NOREADONLYNOTIFY
- *                          If set, Grammm-Sync won't send notification emails for changes
+ *                          If set, grammm-sync won't send notification emails for changes
  *                          if the folder is read-only
  *
  *  Additional notes:
- *  - on Grammm systems use backend/grammm/listfolders.php script to get a list
+ *  - on grammm systems, use backend/grammm/listfolders.php script to get a list
  *    of available folders
  *
- *  - all Grammm-Sync users must have at least reading permissions so the configured
+ *  - all grammm-sync users must have at least reading permissions so the configured
  *    folders can be synchronized to the mobile. Else they are ignored.
  *
  *  - this feature is only partly suitable for multi-tenancy environments,

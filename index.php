@@ -71,7 +71,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // Check required GET parameters
         if(Request::IsMethodPOST() && (Request::GetCommandCode() === false || !Request::GetDeviceID() || !Request::GetDeviceType()))
-            throw new FatalException("Requested the Grammm-Sync URL without the required GET parameters");
+            throw new FatalException("Requested the grammm-sync URL without the required GET parameters");
 
         // Load the backend
         $backend = ZPush::GetBackend();
@@ -90,7 +90,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // Do the actual processing of the request
         if (Request::IsMethodGET())
-            throw new NoPostRequestException("This is the Grammm-Sync location and can only be accessed by Microsoft ActiveSync-capable devices", NoPostRequestException::GET_REQUEST);
+            throw new NoPostRequestException("This is the grammm-sync location and can only be accessed by Microsoft ActiveSync-capable devices", NoPostRequestException::GET_REQUEST);
 
         // Do the actual request
         header(ZPush::GetServerHeader());
@@ -124,7 +124,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
         // TODO check $len when streaming more data (e.g. Attachments), as the data will be send chunked
         ZPush::GetDeviceManager()->SentData($len);
 
-        // Unfortunately, even though Grammm-Sync can stream the data to the client
+        // Unfortunately, even though grammm-sync can stream the data to the client
         // with a chunked encoding, using chunked encoding breaks the progress bar
         // on the PDA. So the data is de-chunk here, written a content-length header and
         // data send as a 'normal' packet. If the output packet exceeds 1MB (see ob_start)

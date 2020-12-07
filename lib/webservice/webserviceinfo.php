@@ -55,13 +55,13 @@ class WebserviceInfo {
     }
 
     /**
-     * Returns the Grammm-Sync version.
+     * Returns the grammm-sync version.
      *
      * @access public
      * @return string
      */
     public function About() {
-        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning Grammm-Sync version '%s'", @constant('GRAMMSYNC_VERSION')));
+        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning grammm-sync version '%s'", @constant('GRAMMSYNC_VERSION')));
         return @constant('GRAMMSYNC_VERSION');
     }
 

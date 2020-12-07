@@ -744,7 +744,7 @@ class ZPush {
     }
 
     /**
-     * Prints the Grammm-Sync legal header to STDOUT
+     * Prints the grammm-sync legal header to STDOUT
      * Using this breaks ActiveSync synchronization if wbxml is expected
      *
      * @param string $message               (opt) message to be displayed
@@ -766,15 +766,15 @@ class ZPush {
         print <<<END
         <html>
         <header>
-        <title>Grammm-Sync ActiveSync</title>
+        <title>grammm-sync ActiveSync</title>
         </header>
         <body>
         <font face="verdana">
-        <h2>Grammm-Sync - Open Source ActiveSync</h2>
+        <h2>grammm-sync - Open Source ActiveSync</h2>
         $message $additionalMessage
         <br><br>
-        More information about Grammm can be found at:<br>
-        <a href="http://grammm.com/">Grammm-Sync homepage</a><br>
+        More information about grammm can be found
+        <a href="http://grammm.com/">at the grammm-sync homepage</a><br>
         </font>
         </body>
         </html>
@@ -782,7 +782,7 @@ END;
     }
 
     /**
-     * Indicates the latest AS version supported by Grammm-Sync
+     * Indicates the latest AS version supported by grammm-sync
      *
      * @access public
      * @return string

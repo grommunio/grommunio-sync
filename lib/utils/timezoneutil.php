@@ -1195,7 +1195,7 @@ class TimezoneUtil {
                 break;
             }
         }
-        ZLog::Write(LOGLEVEL_ERROR, sprintf("TimezoneUtil::guessTZNameFromPHPName() no compatible timezone found for '%s'. Returning 'GMT Standard Time'. Please contact the Grammm-Sync dev team.", $phpname));
+        ZLog::Write(LOGLEVEL_ERROR, sprintf("TimezoneUtil::guessTZNameFromPHPName() no compatible timezone found for '%s'. Returning 'GMT Standard Time'. Please contact the grammm-sync dev team.", $phpname));
         return self::$mstzones["085"][0];
     }
 

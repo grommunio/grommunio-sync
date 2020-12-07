@@ -151,7 +151,7 @@ class TopCollector extends InterProcessData {
             }
             // end exclusive block
             if (!$ok) {
-                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to shared memory. Grammm-Sync top will not display this data.");
+                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to shared memory. grammm-sync top will not display this data.");
                 return false;
             }
         }

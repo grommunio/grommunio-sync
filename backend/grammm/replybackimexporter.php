@@ -551,7 +551,7 @@ class ReplyBackImExporter implements IImportChanges, IExportChanges {
 
         // build a simple mime message
         $toEmail = $userinfo['emailaddress'];
-        $mail  = "From: Grammm-Sync <no-reply>\r\n";
+        $mail  = "From: grammm-sync <no-reply@invalid>\r\n";
         $mail .= "To: $toEmail\r\n";
         $mail .= "Content-Type: text/plain; charset=utf-8\r\n";
         $mail .= "Subject: ". @constant('READ_ONLY_NOTIFY_SUBJECT'). "\r\n\r\n";

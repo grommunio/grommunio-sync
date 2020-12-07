@@ -74,7 +74,7 @@ abstract class Backend implements IBackend {
 
     /**
      * Indicates which AS version is supported by the backend.
-     * By default AS version 2.5 (ASV_25) is returned (Grammm-Sync 1 standard).
+     * By default, AS version 2.5 (ASV_25) is returned (Z-Push 1 standard).
      * Subclasses can overwrite this method to set another AS version
      *
      * @access public

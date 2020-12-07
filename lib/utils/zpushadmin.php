@@ -37,7 +37,7 @@ class ZPushAdmin {
     public static $userDevices;
 
     /**
-     * List devices known to Grammm-Sync.
+     * List devices known to grammm-sync.
      * If no user is given, all devices are listed
      *
      * @param string    $user       devices of that user, if false all devices of all users
@@ -50,7 +50,7 @@ class ZPushAdmin {
     }
 
     /**
-     * List users of a device known to Grammm-Sync.
+     * List users of a device known to grammm-sync.
      *
      * @param string    $devid      users of that device
      *

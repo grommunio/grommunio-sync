@@ -588,7 +588,7 @@ class Request {
     }
 
     /**
-     * Indicates if Grammm-Sync was called with a POST request
+     * Indicates if grammm-sync was called with a POST request
      *
      * @access public
      * @return boolean
@@ -598,7 +598,7 @@ class Request {
     }
 
     /**
-     * Indicates if Grammm-Sync was called with a GET request
+     * Indicates if grammm-sync was called with a GET request
      *
      * @access public
      * @return boolean
@@ -608,7 +608,7 @@ class Request {
     }
 
     /**
-     * Indicates if Grammm-Sync was called with a OPTIONS request
+     * Indicates if grammm-sync was called with a OPTIONS request
      *
      * @access public
      * @return boolean
