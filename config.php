@@ -47,33 +47,6 @@
     define('USE_FULLEMAIL_FOR_LOGIN', true);
 
 /**********************************************************************************
- * StateMachine setting
- *
- * These StateMachines can be used:
- *   FILE  - FileStateMachine (default). Needs STATE_DIR set as well.
- *   SQL   - SqlStateMachine has own configuration file. STATE_DIR is ignored.
- *           State migration script is available, more informations: https://wiki.z-hub.io/x/xIAa
- */
-    define('STATE_MACHINE', 'FILE');
-    define('STATE_DIR', '/var/lib/grammm-sync/');
-
-/**********************************************************************************
- *  IPC - InterProcessCommunication
- *
- *  Is either provided by using shared memory on a single host or
- *  using the memcache provider for multi-host environments.
- *  When another implementation should be used, the class can be set here explicitly.
- *  If empty grammm-sync will try to use available providers.
-
- *  Possible values:
- *  IpcSharedMemoryProvider - default. Requires grammm-sync-ipc-sharedmemory package.
- *  IpcMemcachedProvider    - requires grammm-sync-ipc-memcached package. It is necessary to set up
- *                            memcached server before (it won't be installed by grammm-sync-ipc-memcached).
- *  IpcWincacheProvider     - for windows systems.
- */
-    define('IPC_PROVIDER', '');
-
-/**********************************************************************************
  *  Logging settings
  *
  *  The LOGBACKEND specifies where the logs are sent to.
@@ -132,7 +105,7 @@
  *  Mobile settings
  */
     // Device Provisioning
-    define('PROVISIONING', true);
+    define('PROVISIONING', false);
 
     // This option allows the 'loose enforcement' of the provisioning policies for older
     // devices which don't support provisioning (like WM 5 and HTC Android Mail) - dw2412 contribution

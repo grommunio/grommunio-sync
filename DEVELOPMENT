@@ -2,3 +2,6 @@ After creating a new file or removing an existing one you must refresh the autol
 
 curl -sS https://getcomposer.org/installer | php
 php composer.phar dump-autoload -o
+
+
+zypper in php7-redis

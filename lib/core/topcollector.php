@@ -10,8 +10,8 @@
  */
 
 class TopCollector extends InterProcessData {
-    const ENABLEDAT = 2;
-    const TOPDATA = 3;
+    const ENABLEDAT = "grammm-sync:topenabledat";
+    const TOPDATA = "grammm-sync:topdata";
     const ENABLED_CACHETIME = 5; // how often in seconds to check the ipc provider if it has data for the TopCollector
 
     protected $preserved;
@@ -73,20 +73,13 @@ class TopCollector extends InterProcessData {
      * @return boolean  indicating if it was set to collect before
      */
     public function CollectData($stop = false) {
-        $wasEnabled = false;
+        $wasEnabled = ($this->hasData(self::ENABLEDAT)) ? $this->getData(self::ENABLEDAT) : false;
 
-        // exclusive block
-        if ($this->blockMutex()) {
-            $wasEnabled = ($this->hasData(self::ENABLEDAT)) ? $this->getData(self::ENABLEDAT) : false;
+        $time = time();
+        if ($stop === true) $time = 0;
 
-            $time = time();
-            if ($stop === true) $time = 0;
-
-            if (! $this->setData($time, self::ENABLEDAT))
-                return false;
-            $this->releaseMutex();
-        }
-        // end exclusive block
+        if (! $this->setData($time, self::ENABLEDAT))
+            return false;
 
         return $wasEnabled;
     }
@@ -119,21 +112,10 @@ class TopCollector extends InterProcessData {
             $this->preserved[] = $addinfo;
 
         if ($this->isEnabled()) {
-            $ok = false;
-            // exclusive block
-            if ($this->blockMutex()) {
-                $topdata = ($this->hasData(self::TOPDATA)) ? $this->getData(self::TOPDATA): array();
-
-                $this->checkArrayStructure($topdata);
-
-                // update
-                $topdata[self::$devid][self::$user][self::$pid] = $this->latest;
-                $ok = $this->setData($topdata, self::TOPDATA);
-                $this->releaseMutex();
-            }
-            // end exclusive block
+            // use the pid as subkey
+            $ok = $this->setDeviceUserData(self::TOPDATA, $this->latest, self::$devid, self::$user, self::$pid);
             if (!$ok) {
-                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to shared memory. grammm-sync top will not display this data.");
+                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to redis. grammm-sync top will not display this data.");
                 return false;
             }
         }
@@ -147,16 +129,7 @@ class TopCollector extends InterProcessData {
      * @return array
      */
     public function ReadLatest() {
-        $topdata = array();
-
-        // exclusive block
-        if ($this->blockMutex()) {
-            $topdata = ($this->hasData(self::TOPDATA)) ? $this->getData(self::TOPDATA) : array();
-            $this->releaseMutex();
-        }
-        // end exclusive block
-
-        return $topdata;
+        return $this->getAllDeviceUserData(self::TOPDATA);
     }
 
     /**
@@ -172,39 +145,21 @@ class TopCollector extends InterProcessData {
         if ($all == false && time() % 10 != 0 )
             return true;
 
-        $stat = false;
-
-        // exclusive block
-        if ($this->blockMutex()) {
-            if ($all == true) {
-                $topdata = array();
-            }
-            else {
-                $topdata = ($this->hasData(self::TOPDATA)) ? $this->getData(self::TOPDATA) : array();
-
-                $toClear = array();
-                foreach ($topdata as $devid=>$users) {
-                    foreach ($users as $user=>$pids) {
-                        foreach ($pids as $pid=>$line) {
-                            // remove everything which terminated for 20 secs or is not updated for more than 120 secs
-                            if (($line["ended"] != 0 && time() - $line["ended"] > 20) ||
-                                time() - $line["update"] > 120) {
-                                $toClear[] = array($devid, $user, $pid);
-                            }
-                        }
-                    }
-                }
-                foreach ($toClear as $tc) {
-                    unset($topdata[$tc[0]][$tc[1]][$tc[2]]);
-                }
-            }
-
-            $stat = $this->setData($topdata, self::TOPDATA);
-            $this->releaseMutex();
+        if ($all == true) {
+            $this->getRedis()->delKey(self::TOPDATA);
         }
-        // end exclusive block
+        else {
+            foreach ($this->getRawDeviceUserData(self::TOPDATA) as $compKey => $rawline) {
+                $line = json_decode($rawline, true);
+                // remove everything which terminated for 20 secs or is not updated for more than 120 secs
+                if (($line["ended"] != 0 && time() - $line["ended"] > 20) ||
+                    time() - $line["update"] > 120) {
+                        $this->getRedis()->get()->hDel(self::TOPDATA, $compKey);
+                }
+            }
+        }
 
-        return $stat;
+        return true;
     }
 
     /**
@@ -241,8 +196,9 @@ class TopCollector extends InterProcessData {
      */
     public function ReInitIPC() {
         $status = parent::ReInitIPC();
+        return $status;
         if (!status) {
-            $this->SetData(array(), self::TOPDATA);
+            $this->getRedis()->delKey(self::TOPDATA);
         }
         return $status;
     }
@@ -265,25 +221,5 @@ class TopCollector extends InterProcessData {
         return $this->enabled;
     }
 
-    /**
-     * Builds an array structure for the top data
-     *
-     * @param array $topdata    reference to the topdata array
-     *
-     * @access private
-     * @return
-     */
-    private function checkArrayStructure(&$topdata) {
-        if (!isset($topdata) || !is_array($topdata))
-            $topdata = array();
 
-        if (!isset($topdata[self::$devid]))
-            $topdata[self::$devid] = array();
-
-        if (!isset($topdata[self::$devid][self::$user]))
-            $topdata[self::$devid][self::$user] = array();
-
-        if (!isset($topdata[self::$devid][self::$user][self::$pid]))
-            $topdata[self::$devid][self::$user][self::$pid] = array();
-    }
 }

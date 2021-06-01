@@ -161,6 +161,7 @@ class ZPush {
     static private $backend;
     static private $addSyncFolders;
     static private $policies;
+    static private $redis;
 
 
     /**
@@ -315,6 +316,7 @@ class ZPush {
             throw new FatalMisconfigurationException("The FILE_STATE_WRITE_SLEEP value must be a number higher than 0.");
         }
 
+        // TODO: check redis configuration
         return true;
     }
 
@@ -407,25 +409,7 @@ class ZPush {
     static public function GetStateMachine() {
         if (!isset(ZPush::$stateMachine)) {
             // the backend could also return an own IStateMachine implementation
-            $backendStateMachine = self::GetBackend()->GetStateMachine();
-
-            // if false is returned, use the default StateMachine
-            if ($backendStateMachine !== false) {
-                ZLog::Write(LOGLEVEL_DEBUG, "Backend implementation of IStateMachine: ".get_class($backendStateMachine));
-                if (in_array('IStateMachine', class_implements($backendStateMachine)))
-                    ZPush::$stateMachine = $backendStateMachine;
-                else
-                    throw new FatalNotImplementedException("State machine returned by the backend does not implement the IStateMachine interface!");
-            }
-            else {
-                // Initialize the default StateMachine
-                if (defined('STATE_MACHINE') && STATE_MACHINE == 'SQL') {
-                    ZPush::$stateMachine = new SqlStateMachine();
-                }
-                else {
-                    ZPush::$stateMachine = new FileStateMachine();
-                }
-            }
+            ZPush::$stateMachine = self::GetBackend()->GetStateMachine();
 
             if (ZPush::$stateMachine->GetStateVersion() !== ZPush::GetLatestStateVersion()) {
                 if (class_exists("TopCollector")) self::GetTopCollector()->AnnounceInformation("Run migration script!", true);
@@ -433,6 +417,20 @@ class ZPush {
             }
         }
         return ZPush::$stateMachine;
+    }
+
+
+    /**
+     * Returns the Redis object
+     *
+     * @access public
+     * @return object Redis
+     */
+    static public function GetRedis() {
+        if (!isset(ZPush::$redis))
+            ZPush::$redis = new RedisConnection();
+
+        return ZPush::$redis;
     }
 
     /**

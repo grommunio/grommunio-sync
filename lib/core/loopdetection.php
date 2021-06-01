@@ -12,8 +12,8 @@
  */
 
 class LoopDetection extends InterProcessData {
-    const INTERPROCESSLD = "ipldkey";
-    const BROKENMSGS = "bromsgs";
+    const INTERPROCESSLD = "processstack";
+    const BROKENMSGS = "brokenmsgs";
     static private $processident;
     static private $processentry;
     private $ignore_messageid;
@@ -29,7 +29,7 @@ class LoopDetection extends InterProcessData {
     public function __construct() {
         // initialize super parameters
         $this->allocate = 1024000; // 1 MB
-        $this->type = 1337;
+        $this->type = "grammm-sync:loopdetection";
         parent::__construct();
 
         $this->ignore_messageid = false;
@@ -343,13 +343,11 @@ class LoopDetection extends InterProcessData {
     private function updateProcessStack() {
         // initialize params
         $this->initializeParams();
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
 
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, self::INTERPROCESSLD);
-
-            $stack = $loopdata[self::$devid][self::$user][self::INTERPROCESSLD];
+        $ok = false;
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($stack, $stackRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, self::INTERPROCESSLD, true);
 
             // insert/update current process entry
             $nstack = array();
@@ -373,14 +371,14 @@ class LoopDetection extends InterProcessData {
                 $nstack = array_slice($nstack, -10, 10);
 
             // update loop data
-            $loopdata[self::$devid][self::$user][self::INTERPROCESSLD] = $nstack;
-            $ok = $this->setData($loopdata);
-
-            $this->releaseMutex();
+            $ok = $this->setDeviceUserData($this->type, $nstack, parent::$devid, parent::$user, self::INTERPROCESSLD, $doCas="replace", $stackRaw);
+            if (!$ok) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->updateProcessStack(): CAS failed on try %d!", $tryCount));
+                usleep(100000);
+                $tryCount++;
+            }
         }
-        // end exclusive block
-
-        return true;
+        return $ok;
     }
 
     /**
@@ -392,21 +390,7 @@ class LoopDetection extends InterProcessData {
     private function getProcessStack() {
         // initialize params
         $this->initializeParams();
-        $stack = array();
-
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, self::INTERPROCESSLD);
-
-            $stack = $loopdata[self::$devid][self::$user][self::INTERPROCESSLD];
-
-            $this->releaseMutex();
-        }
-        // end exclusive block
-
-        return $stack;
+        return $this->getDeviceUserData($this->type, parent::$devid, parent::$user, self::INTERPROCESSLD);
     }
 
     /**
@@ -439,24 +423,21 @@ class LoopDetection extends InterProcessData {
 
         // initialize params
         $this->initializeParams();
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $brokenkey);
-
-            $brokenmsgs = $loopdata[self::$devid][self::$user][$brokenkey];
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($brokenmsgs, $brokenmsgsRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
 
             $brokenmsgs[$id] = array('uuid' => $this->broken_message_uuid, 'counter' => $this->broken_message_counter);
             ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->SetBrokenMessage('%s', '%s'): tracking broken message", $folderid, $id));
 
             // update data
-            $loopdata[self::$devid][self::$user][$brokenkey] = $brokenmsgs;
-            $ok = $this->setData($loopdata);
-
-            $this->releaseMutex();
+            $ok = $this->setDeviceUserData($this->type, $brokenmsgs, parent::$devid, parent::$user, $brokenkey, $doCas="replace", $brokenmsgsRaw);
+            if (!$ok) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->SetBrokenMessage(): CAS failed on try %d!", $tryCount));
+                usleep(100000);
+                $tryCount++;
+            }
         }
-        // end exclusive block
 
         return $ok;
     }
@@ -481,15 +462,16 @@ class LoopDetection extends InterProcessData {
 
         // initialize params
         $this->initializeParams();
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
 
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $brokenkey);
+        $ok = false;
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($brokenmsgs, $brokenmsgsRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
 
-            $brokenmsgs = $loopdata[self::$devid][self::$user][$brokenkey];
-
-            if (!empty($brokenmsgs)) {
+            if (empty($brokenmsgs)) {
+                break;
+            }
+            else {
                 foreach ($brokenmsgs as $id => $data) {
                     // previously broken message was sucessfully synced!
                     if ($data['uuid'] == $this->broken_message_uuid && $data['counter'] < $this->broken_message_counter) {
@@ -509,20 +491,22 @@ class LoopDetection extends InterProcessData {
                     unset($brokenmsgs[$id]);
                 }
 
-                if (empty($brokenmsgs) && isset($loopdata[self::$devid][self::$user][$brokenkey])) {
-                    unset($loopdata[self::$devid][self::$user][$brokenkey]);
+                if (empty($brokenmsgs)) {
+                    $this->delDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey);
                     ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->GetSyncedButBeforeIgnoredMessages('%s'): removed folder from tracking of ignored messages", $folderid));
+                    break;
                 }
                 else {
                     // update data
-                    $loopdata[self::$devid][self::$user][$brokenkey] = $brokenmsgs;
+                    $ok = $this->setDeviceUserData($this->type, $brokenmsgs, parent::$devid, parent::$user, $brokenkey, $doCas="replace", $brokenmsgsRaw);
+                    if (!$ok) {
+                        ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->GetSyncedButBeforeIgnoredMessages(): CAS failed on try %d!", $tryCount));
+                        usleep(100000);
+                        $tryCount++;
+                    }
                 }
-                $ok = $this->setData($loopdata);
             }
-
-            $this->releaseMutex();
         }
-        // end exclusive block
 
         return $okIds;
     }
@@ -545,12 +529,10 @@ class LoopDetection extends InterProcessData {
 
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->SetSyncStateUsage(): uuid: %s  counter: %d", $uuid, $counter));
 
-        // exclusive block
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $folderid);
-            $current = $loopdata[self::$devid][self::$user][$folderid];
+        $ok = false;
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
             if (!isset($current["uuid"])) {
                 $current["uuid"] = $uuid;
@@ -566,12 +548,13 @@ class LoopDetection extends InterProcessData {
             $current["usage"] = $counter;
 
             // update loop data
-            $loopdata[self::$devid][self::$user][$folderid] = $current;
-            $ok = $this->setData($loopdata);
-
-            $this->releaseMutex();
+            $ok = $this->setDeviceUserData($this->type, $current, parent::$devid, parent::$user, $folderid, $doCas="replace", $currentRaw);
+            if (!$ok) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->SetSyncStateUsage(): CAS failed on try %d!", $tryCount));
+                usleep(100000);
+                $tryCount++;
+            }
         }
-        // end exclusive block
     }
 
     /**
@@ -592,40 +575,30 @@ class LoopDetection extends InterProcessData {
 
         $obsolete = false;
 
-        // exclusive block
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-            $this->releaseMutex();
-            // end exclusive block
+        $current = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid);
 
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $folderid);
-
-            $current = $loopdata[self::$devid][self::$user][$folderid];
-
-            if (!empty($current)) {
-                if (!isset($current["uuid"]) || $current["uuid"] != $uuid) {
-                    ZLog::Write(LOGLEVEL_DEBUG, "LoopDetection->IsSyncStateObsolete(): yes, uuid changed or not set");
-                    $obsolete = true;
-                }
-                else {
-                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IsSyncStateObsolete(): check folderid: '%s' uuid '%s' counter: %d - last counter: %d with %d queued",
-                            $folderid, $uuid, $counter, $current["count"], $current["queued"]));
-
-                    if ($current["uuid"] == $uuid && (
-                            $current["count"] > $counter ||
-                            ($current["count"] == $counter && $current["queued"] > 0) ||
-                            (isset($current["usage"]) && $current["usage"] >= $counter)
-                          )) {
-                        $usage = isset($current["usage"]) ? sprintf(" - counter %d already expired",$current["usage"]) : "";
-                        ZLog::Write(LOGLEVEL_DEBUG, "LoopDetection->IsSyncStateObsolete(): yes, counter already processed". $usage);
-                        $obsolete = true;
-                    }
-                }
+        if (!empty($current)) {
+            if (!isset($current["uuid"]) || $current["uuid"] != $uuid) {
+                ZLog::Write(LOGLEVEL_DEBUG, "LoopDetection->IsSyncStateObsolete(): yes, uuid changed or not set");
+                $obsolete = true;
             }
             else {
-                ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IsSyncStateObsolete(): check folderid: '%s' uuid '%s' counter: %d - no data found: not obsolete", $folderid, $uuid, $counter));
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IsSyncStateObsolete(): check folderid: '%s' uuid '%s' counter: %d - last counter: %d with %d queued",
+                        $folderid, $uuid, $counter, $current["count"], $current["queued"]));
+
+                if ($current["uuid"] == $uuid && (
+                        $current["count"] > $counter ||
+                        ($current["count"] == $counter && $current["queued"] > 0) ||
+                        (isset($current["usage"]) && $current["usage"] >= $counter)
+                        )) {
+                    $usage = isset($current["usage"]) ? sprintf(" - counter %d already expired",$current["usage"]) : "";
+                    ZLog::Write(LOGLEVEL_DEBUG, "LoopDetection->IsSyncStateObsolete(): yes, counter already processed". $usage);
+                    $obsolete = true;
+                }
             }
+        }
+        else {
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IsSyncStateObsolete(): check folderid: '%s' uuid '%s' counter: %d - no data found: not obsolete", $folderid, $uuid, $counter));
         }
 
         return $obsolete;
@@ -678,14 +651,10 @@ class LoopDetection extends InterProcessData {
 
         $loop = false;
 
-        // exclusive block
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $folderid);
-
-            $current = $loopdata[self::$devid][self::$user][$folderid];
+        $ok = false;
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
             // completely new/unknown UUID
             if (empty($current))
@@ -817,10 +786,12 @@ class LoopDetection extends InterProcessData {
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): loop data: loopcount(%d), maxCount(%d), queued(%d), ignored(%s)", $current['loopcount'], $current['maxCount'], $current['queued'], (isset($current['ignored'])?$current['ignored']:'false')));
 
             // update loop data
-            $loopdata[self::$devid][self::$user][$folderid] = $current;
-            $ok = $this->setData($loopdata);
-
-            $this->releaseMutex();
+            $ok = $this->setDeviceUserData($this->type, $current, parent::$devid, parent::$user, $folderid, $doCas="replace", $currentRaw);
+            if (!$ok) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->Detect(): CAS failed on try %d!", $tryCount));
+                usleep(100000);
+                $tryCount++;
+            }
         }
         // end exclusive block
 
@@ -867,14 +838,10 @@ class LoopDetection extends InterProcessData {
         // we update the potential broken id message so we loop count the same message
 
         $changedData = false;
-        // exclusive block
-        if ($this->blockMutex()) {
-            $loopdata = ($this->hasData()) ? $this->getData() : array();
-
-            // check and initialize the array structure
-            $this->checkArrayStructure($loopdata, $folderid);
-
-            $current = $loopdata[self::$devid][self::$user][$folderid];
+        $ok = false;
+        $tryCount = 1;
+        while(! $ok && $tryCount < 5) {
+            list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
             // we found our broken message!
             if ($realBroken) {
@@ -884,10 +851,11 @@ class LoopDetection extends InterProcessData {
 
                 // check if this message was broken before - here we know that it still is and remove it from the tracking
                 $brokenkey = self::BROKENMSGS ."-". $folderid;
-                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
-                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
-                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
-                }
+                // TODO: this is currently not supported here! It's in a different structure now!
+//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
+//                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
+//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
+//                }
             }
             // not the broken message yet
             else {
@@ -908,15 +876,17 @@ class LoopDetection extends InterProcessData {
                 }
             }
 
-            // update loop data
-            if ($changedData == true) {
-                $loopdata[self::$devid][self::$user][$folderid] = $current;
-                $ok = $this->setData($loopdata);
+            if ($changedData !== true) {
+                break;
             }
-
-            $this->releaseMutex();
+            // update loop data
+            $ok = $this->setDeviceUserData($this->type, $current, parent::$devid, parent::$user, $folderid, $doCas="replace", $currentRaw);
+            if (!$ok) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->Detect(): CAS failed on try %d!", $tryCount));
+                usleep(100000);
+                $tryCount++;
+            }
         }
-        // end exclusive block
 
         if ($realBroken)
             ZPush::GetTopCollector()->AnnounceInformation("Broken message ignored", true);
@@ -936,7 +906,7 @@ class LoopDetection extends InterProcessData {
     public function ClearData($user = false, $devid = false) {
         $stat = true;
         $ok = false;
-
+        // TODO: implement this
         // exclusive block
         if ($this->blockMutex()) {
             $loopdata = ($this->hasData()) ? $this->getData() : array();
@@ -972,6 +942,9 @@ class LoopDetection extends InterProcessData {
      * @access public
      */
     public function GetCachedData($user, $devid) {
+        // not implemented (also nowhere used apparently)
+        return false;
+
         // exclusive block
         if ($this->blockMutex()) {
             $loopdata = ($this->hasData()) ? $this->getData() : array();
@@ -984,25 +957,4 @@ class LoopDetection extends InterProcessData {
         return false;
     }
 
-    /**
-     * Builds an array structure for the loop detection data
-     *
-     * @param array $loopdata    reference to the topdata array
-     *
-     * @access private
-     * @return
-     */
-    private function checkArrayStructure(&$loopdata, $folderid) {
-        if (!isset($loopdata) || !is_array($loopdata))
-            $loopdata = array();
-
-        if (!isset($loopdata[self::$devid]))
-            $loopdata[self::$devid] = array();
-
-        if (!isset($loopdata[self::$devid][self::$user]))
-            $loopdata[self::$devid][self::$user] = array();
-
-        if (!isset($loopdata[self::$devid][self::$user][$folderid]))
-            $loopdata[self::$devid][self::$user][$folderid] = array();
-    }
 }

@@ -53,3 +53,5 @@ define('READ_ONLY_NOTIFY_TIME_FORMAT', "%H:%M:%S");
 // When configuring $additionalFolders it is possible to use DeviceManager::FLD_FLAGS_NOREADONLYNOTIFY in the flags bitmask
 // in order to prevent the notifications as well.
 define('READ_ONLY_NONOTIFY', '');
+
+define('STORE_STATE_FOLDER', 'GS-SyncState');

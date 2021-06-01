@@ -5,7 +5,9 @@
  * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
  *
  * This is a backend for grammm. It is an implementation of IBackend and also
- * implements ISearchProvider to search in the grammm system.
+ * implements ISearchProvider to search in the grammm system. The backend
+ * implements IStateMachine as well to save the devices' information in the
+ * user's store and extends InterProcessData to access Redis.
  */
 
 // config file
@@ -28,7 +30,7 @@ include_once('backend/grammm/mapi/mapiguid.php');
 //setlocale to UTF-8 in order to support properties containing Unicode characters
 setlocale(LC_CTYPE, "en_US.UTF-8");
 
-class BackendGrammm implements IBackend, ISearchProvider {
+class BackendGrammm extends InterProcessData implements IBackend, ISearchProvider, IStateMachine  {
     private $mainUser;
     private $session;
     private $defaultstore;
@@ -73,19 +75,26 @@ class BackendGrammm implements IBackend, ISearchProvider {
         $this->session = false;
         $this->folderStatCache = array();
         $this->impersonateUser = false;
+        $this->stateFolder = null;
 
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm using PHP-MAPI version: %s - PHP version: %s", phpversion("mapi"), phpversion()));
         GrammmChangesWrapper::SetBackend($this);
+
+        # Interprocessdata
+        $this->allocate = 0;
+        $this->type = "grammm-sync:userdevices";
+        $this->userDeviceData = "grammm-sync:userdevicedata";
+        parent::__construct();
     }
 
     /**
      * Indicates which StateMachine should be used
      *
      * @access public
-     * @return boolean      BackendGrammm uses the default FileStateMachine
+     * @return boolean      BackendGrammm uses own state machine
      */
     public function GetStateMachine() {
-        return false;
+        return $this;
     }
 
     /**
@@ -139,13 +148,15 @@ class BackendGrammm implements IBackend, ISearchProvider {
             $defaultUser = $this->mainUser;
         }
 
+        $deviceId = Request::GetDeviceID();
+
         try {
             // check if notifications are available in php-mapi
             if(function_exists('mapi_feature') && mapi_feature('LOGONFLAGS')) {
                 // send grammm-sync version and user agent to ZCP - ZP-589
                 if (Utils::CheckMapiExtVersion('7.2.0')) {
                     $zpush_version = 'Grammm-Sync_' . @constant('GRAMMSYNC_VERSION');
-                    $user_agent = (Request::GetDeviceID()) ? ZPush::GetDeviceManager()->GetUserAgent() : "unknown";
+                    $user_agent = ($deviceId) ? ZPush::GetDeviceManager()->GetUserAgent() : "unknown";
                     $this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0, $zpush_version, $user_agent);
                 }
                 else {
@@ -199,6 +210,9 @@ class BackendGrammm implements IBackend, ISearchProvider {
 
         // check if this is a Zarafa 7 store with unicode support
         MAPIUtils::IsUnicodeStore($this->store);
+
+        // open the state folder
+        $this->getStateFolder($deviceId);
         return true;
     }
 
@@ -1561,6 +1575,385 @@ class BackendGrammm implements IBackend, ISearchProvider {
                 Utils::PrintAsString($userDetails['fullname']), Utils::PrintAsString($userDetails['emailaddress']), $storesize, $foldercount));
 
         return $userStoreInfo;
+    }
+
+    /**----------------------------------------------------------------------------------------------------------
+     * Implementation of the IStateMachine interface
+     */
+
+    /**
+     * Gets a hash value indicating the latest dataset of the named
+     * state with a specified key and counter.
+     * If the state is changed between two calls of this method
+     * the returned hash should be different
+     *
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key                (opt)
+     * @param string    $counter            (opt)
+     *
+     * @access public
+     * @return string
+     * @throws StateNotFoundException
+     */
+    public function GetStateHash($devid, $type, $key = false, $counter = false) {
+        $stateMessage = $this->getStateMessage($devid, $type, $key);
+        $stateMessageProps = mapi_getprops($stateMessage, [PR_LAST_MODIFICATION_TIME]);
+        if (isset($stateMessageProps[PR_LAST_MODIFICATION_TIME])) {
+            return $stateMessageProps[PR_LAST_MODIFICATION_TIME];
+        }
+        return "0";
+    }
+
+    /**
+     * Gets a state for a specified key and counter.
+     * This method sould call IStateMachine->CleanStates()
+     * to remove older states (same key, previous counters)
+     *
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key                (opt)
+     * @param string    $counter            (opt)
+     * @param string    $cleanstates        (opt)
+     *
+     * @access public
+     * @return mixed
+     * @throws StateNotFoundException, StateInvalidException, UnavailableException
+     */
+    public function GetState($devid, $type, $key = false, $counter = false, $cleanstates = true) {
+        if ($counter && $cleanstates) {
+            $this->CleanStates($devid, $type, $key, $counter);
+        }
+        $stateMessage = $this->getStateMessage($devid, $type, $key);
+        $state = base64_decode(MAPIUtils::readPropStream($stateMessage, PR_BODY));
+        if ($state && $state[1] === ':') {
+            $unserializedState = unserialize($state);
+        }
+        return isset($unserializedState) && is_object($unserializedState) ? $unserializedState : $state;
+    }
+
+    /**
+     * Writes ta state to for a key and counter
+     *
+     * @param mixed     $state
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key                (opt)
+     * @param int       $counter            (opt)
+     *
+     * @access public
+     * @return boolean
+     * @throws StateInvalidException, UnavailableException
+     */
+    public function SetState($state, $devid, $type, $key = false, $counter = false) {
+        return $this->setStateMessage($state, $devid, $type, $key, $counter);
+    }
+
+    /**
+     * Cleans up all older states.
+     * If called with a $counter, all states previous state counter can be removed.
+     * If additionally the $thisCounterOnly flag is true, only that specific counter will be removed.
+     * If called without $counter, all keys (independently from the counter) can be removed.
+     *
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key
+     * @param string    $counter            (opt)
+     * @param string    $thisCounterOnly    (opt) if provided, the exact counter only will be removed
+     *
+     * @access public
+     * @return
+     * @throws StateInvalidException
+     */
+    public function CleanStates($devid, $type, $key, $counter = false, $thisCounterOnly = false) {
+        // TODO: implement
+    }
+
+    /**
+     * Links a user to a device
+     *
+     * @param string    $username
+     * @param string    $devid
+     *
+     * @access public
+     * @return boolean     indicating if the user was added or not (existed already)
+     */
+    public function LinkUserDevice($username, $devid) {
+        $device = [$devid => time()];
+        $this->setDeviceUserData($this->type, $device, $username, -1, $subkey=-1, $doCas="merge");
+        return false;
+    }
+
+    /**
+     * Unlinks a device from a user
+     *
+     * @param string    $username
+     * @param string    $devid
+     *
+     * @access public
+     * @return boolean
+     */
+    public function UnLinkUserDevice($username, $devid) {
+        //TODO: Implement
+        return false;
+    }
+
+    /**
+     * Returns an array with all device ids for a user.
+     * If no user is set, all device ids should be returned
+     *
+     * @param string    $username   (opt)
+     *
+     * @access public
+     * @return array
+     */
+    public function GetAllDevices($username = false) {
+
+    }
+
+    /**
+     * Returns the current version of the state files
+     * grammm:  This is not relevant atm. IStateMachine::STATEVERSION_02 will match ZPush::GetLatestStateVersion().
+     *          If it might be required to update states in the future, this could be implemented on a store level,
+     *          where states are then migrated "on-the-fly"
+     *          or
+     *          in a global settings where all states in all stores are migrated once.
+     *
+     * @access public
+     * @return int
+     */
+    public function GetStateVersion() {
+        return IStateMachine::STATEVERSION_02;
+    }
+
+    /**
+     * Sets the current version of the state files
+     *
+     * @param int       $version            the new supported version
+     *
+     * @access public
+     * @return boolean
+     */
+    public function SetStateVersion($version) {
+        return true;
+    }
+
+    /**
+     * Returns all available states for a device id
+     *
+     * @param string    $devid              the device id
+     *
+     * @access public
+     * @return array(mixed)
+     */
+    public function GetAllStatesForDevice($devid) {
+
+    }
+
+    /**
+     * Returns MAPIFolder object which contains the state information.
+     * Creates this folder if it is not available yet.
+     *
+     * @param string    $devid              the device id
+     *
+     * @access private
+     * @return MAPIFolder
+     */
+    private function getStateFolder($devid) {
+        // Try to get the state folder id from redis
+        if (!$this->stateFolder) {
+            $folderentryid = $this->getDeviceUserData($this->userDeviceData, $devid, $this->mainUser, "statefolder");
+            if ($folderentryid) {
+                $this->stateFolder = mapi_msgstore_openentry($this->store, hex2bin($folderentryid));
+            }
+        }
+
+        // fallback code
+        if (!$this->stateFolder) {
+            ZLog::Write(LOGLEVEL_INFO, sprintf("BackendGrammm->getStateFolder(): state folder not set. Use fallback"));
+            $rootfolder = mapi_msgstore_openentry($this->store);
+            $hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
+            $restriction = $this->getStateFolderRestriction($devid);
+            // restrict the hierarchy to the grammm-sync search folder only
+            mapi_table_restrict($hierarchy, $restriction);
+            $rowCnt = mapi_table_getrowcount($hierarchy);
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->getStateFolder(): found %d device state folders", $rowCnt));
+            if ($rowCnt == 1) {
+                $hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
+                $this->stateFolder = mapi_msgstore_openentry($this->store, $hierarchyRows[0][PR_ENTRYID]);
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->getStateFolder(): %s", bin2hex($hierarchyRows[0][PR_ENTRYID])));
+                // put found id in redis
+                if ($devid) {
+                    $this->setDeviceUserData($this->userDeviceData, bin2hex($hierarchyRows[0][PR_ENTRYID]), $devid, $this->mainUser, "statefolder");
+                }
+            }
+            elseif ($rowCnt == 0) {
+                // legacy code: create the hidden state folder and the device subfolder
+                // this should happen when the user configures the device (autodiscover or first sync if no autodiscover)
+
+                $hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
+                $restriction = $this->getStateFolderRestriction(STORE_STATE_FOLDER);
+                mapi_table_restrict($hierarchy, $restriction);
+                $rowCnt = mapi_table_getrowcount($hierarchy);
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->getStateFolder(): found %d store state folders", $rowCnt));
+                if ($rowCnt == 1) {
+                    $hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
+                    $stateFolder = mapi_msgstore_openentry($this->store, $hierarchyRows[0][PR_ENTRYID]);
+                }
+                elseif ($rowCnt == 0) {
+                    $stateFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
+                    mapi_setprops($stateFolder, array(PR_ATTR_HIDDEN => true));
+                }
+                else {
+                    // TODO: handle this
+                }
+                if (isset($stateFolder) && $stateFolder) {
+                    $this->stateFolder = mapi_folder_createfolder($stateFolder, $devid, "");
+                    mapi_setprops($this->stateFolder, array(PR_ATTR_HIDDEN => true));
+                    // we don't cache the entryid in redis, because this will happen on the next request anyway
+                }
+                else {
+                    // TODO: unable to create state folder - throw exception
+                }
+            }
+            else {
+                // This case is rather unlikely that there would be several
+                // hidden folders having PR_DISPLAY_NAME the same as device id.
+
+                // TODO: get the hierarchy table again, get entry id of STORE_STATE_FOLDER
+                // and compare it to the parent id of those folders.
+            }
+        }
+        return $this->stateFolder;
+    }
+
+    /**
+     * Returns the associated MAPIMessage which contains the state information.
+     *
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key                (opt)
+     *
+     * @access private
+     * @return MAPIMessage
+     * @throws StateNotFoundException
+     */
+    private function getStateMessage($devid, $type, $key) {
+        if (!$this->stateFolder) {
+            $this->getStateFolder(Request::GetDeviceID());
+            if (!$this->stateFolder) {
+                throw new StateNotFoundException(sprintf("BackendGrammm->getStateMessage(): Could not locate the state folder for device '%s'",
+                    $devid));
+            }
+        }
+        $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
+        $restriction = $this->getStateMessageRestriction($messageName);
+        $stateFolderContents = mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
+        mapi_table_restrict($stateFolderContents, $restriction);
+        $rowCnt = mapi_table_getrowcount($stateFolderContents);
+        if ($rowCnt == 1) {
+            $stateFolderRows = mapi_table_queryrows($stateFolderContents, [PR_ENTRYID], 0, 1);
+            return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
+        }
+        throw new StateNotFoundException(sprintf("BackendGrammm->getStateMessage(): Could not locate the state message '%s'",
+            $messageName));
+    }
+
+    /**
+     * Writes ta state to for a key and counter
+     *
+     * @param mixed     $state
+     * @param string    $devid              the device id
+     * @param string    $type               the state type
+     * @param string    $key                (opt)
+     * @param int       $counter            (opt)
+     *
+     * @access public
+     * @return boolean
+     * @throws StateInvalidException, UnavailableException
+     */
+    private function setStateMessage($state, $devid, $type, $key = false, $counter = false) {
+        if (!$this->stateFolder) {
+            throw new StateNotFoundException(sprintf("BackendGrammm->setStateMessage(): Could not locate the state folder for device '%s'", $devid));
+        }
+        try {
+            $stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
+        }
+        catch (StateNotFoundException $e) {
+            // if message is not available, try to create a new one
+            $stateMessage = mapi_folder_createmessage($this->stateFolder, MAPI_ASSOCIATED);
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->setStateMessage(): mapi_folder_createmessage 0x%08X", mapi_last_hresult()));
+
+            $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrammm->setStateMessage(): creating new state message '%s'", $messageName));
+            mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrammmState']);
+        }
+        if (isset($stateMessage)) {
+            $encodedState = is_object($state) || is_array($state) ? serialize($state) : $state;
+            $encodedState = base64_encode($encodedState);
+            $encodedStateLength = strlen($encodedState);
+            mapi_setprops($stateMessage, [PR_LAST_VERB_EXECUTED => is_int($counter) ? $counter : 0]);
+            $stream = mapi_openproperty($stateMessage, PR_BODY, IID_IStream, STGM_DIRECT, MAPI_CREATE | MAPI_MODIFY);
+            mapi_stream_setsize($stream, $encodedStateLength);
+            mapi_stream_write($stream, $encodedState);
+            mapi_stream_commit($stream);
+            mapi_savechanges($stateMessage);
+
+            $stat = mapi_stream_stat($stream);
+
+            return $encodedStateLength;
+        }
+        return false;
+    }
+
+    /**
+     * Returns the restriction for the state folder name.
+     *
+     * @param string    $folderName         the state folder name
+     *
+     * @access private
+     * @return array
+     */
+    private function getStateFolderRestriction($folderName) {
+        return [RES_AND, [
+            [   RES_PROPERTY,
+                [   RELOP => RELOP_EQ,
+                    ULPROPTAG => PR_DISPLAY_NAME,
+                    VALUE => $folderName
+                ],
+            ],
+            [   RES_PROPERTY,
+                [   RELOP => RELOP_EQ,
+                    ULPROPTAG => PR_ATTR_HIDDEN,
+                    VALUE => true
+                ],
+            ]
+        ]];
+    }
+
+    /**
+     * Returns the restriction for the associated message in the state folder.
+     *
+     * @param string    $messageName        the message name
+     *
+     * @access private
+     * @return array
+     */
+    private function getStateMessageRestriction($messageName) {
+        return [RES_AND, [
+            [   RES_PROPERTY,
+                [   RELOP => RELOP_EQ,
+                    ULPROPTAG => PR_DISPLAY_NAME,
+                    VALUE => $messageName
+                ],
+            ],
+            [   RES_PROPERTY,
+                [   RELOP => RELOP_EQ,
+                    ULPROPTAG => PR_MESSAGE_CLASS,
+                    VALUE => 'IPM.Note.GrammmState'
+                ],
+            ]
+        ]];
     }
 
     /**----------------------------------------------------------------------------------------------------------
