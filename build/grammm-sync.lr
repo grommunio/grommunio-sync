@@ -1,6 +1,6 @@
 /var/log/grammm-sync/*.log {
 	size 1k
-	create gromox gromox
+	su gromox gromox
 	compress
 	rotate 4
 }
