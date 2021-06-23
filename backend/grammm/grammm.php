@@ -83,7 +83,7 @@ class BackendGrammm extends InterProcessData implements IBackend, ISearchProvide
         # Interprocessdata
         $this->allocate = 0;
         $this->type = "grammm-sync:userdevices";
-        $this->userDeviceData = "grammm-sync:userdevicedata";
+        $this->userDeviceData = "grammm-sync:statefoldercache";
         parent::__construct();
     }
 
