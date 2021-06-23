@@ -337,17 +337,4 @@ abstract class Backend implements IBackend {
         }
     }
 
-    /**
-     * Returns the policy name for the user.
-     * If the backend returns false, the 'default' policy is used.
-     * If the backend returns any other name than 'default' the policygroup with
-     * that name (defined in the policies.ini file) will be applied for this user.
-     *
-     * @access public
-     * @return string|boolean
-     */
-    public function GetUserPolicyName() {
-        return false;
-    }
-
 }

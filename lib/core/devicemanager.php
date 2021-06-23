@@ -284,9 +284,9 @@ class DeviceManager {
      * @return SyncProvisioning
      */
     public function GetProvisioningObject($logPolicies = false) {
-        $policyName = $this->getPolicyName();
-        $p = SyncProvisioning::GetObjectWithPolicies($this->getProvisioningPolicies($policyName), $logPolicies);
-        $p->PolicyName = $policyName;
+        $policies = array();
+        // TODO: retrieve policies from backend
+        $p = SyncProvisioning::GetObjectWithPolicies($policies, $logPolicies);
         return $p;
     }
 
@@ -327,11 +327,10 @@ class DeviceManager {
      * @access public
      * @return void
      */
-    public function SavePolicyHashAndName($provisioning) {
-        // save policies' hash and name
-        $this->device->SetPolicyname($provisioning->PolicyName);
+    public function SavePolicyHash($provisioning) {
+        // save policies' hash
         $this->device->SetPolicyhash($provisioning->GetPolicyHash());
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SavePolicyHashAndName(): Set policy: %s with hash: %s", $this->device->GetPolicyname(), $this->device->GetPolicyhash()));
+        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SavePolicyHash(): Set policy with hash: %s", $this->device->GetPolicyhash()));
     }
 
 
@@ -1147,43 +1146,6 @@ class DeviceManager {
      */
     private function getLatestFolder() {
         return $this->latestFolder;
-    }
-
-    /**
-     * Loads Provisioning policies from the policies file.
-     *
-     * @param string    $policyName     The name of the policy
-     *
-     * @access private
-     * @return array
-     */
-    private function getProvisioningPolicies($policyName) {
-        $policies = ZPush::GetPolicies();
-
-        if (!isset($policies[$policyName]) && $policyName != ASDevice::DEFAULTPOLICYNAME) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("The '%s' policy is configured, but it is not available in the policies' file. Please check %s file. Loading default policy.", $policyName, PROVISIONING_POLICYFILE));
-            return $policies[ASDevice::DEFAULTPOLICYNAME];
-        }
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->getProvisioningPolicies(): loaded '%s' policy.", $policyName));
-
-        // Always load default policies, so that if a policy extends a default policy it doesn't have to copy all the values
-        if ($policyName != ASDevice::DEFAULTPOLICYNAME) {
-            $policies[$policyName] = array_replace_recursive($policies[ASDevice::DEFAULTPOLICYNAME], $policies[$policyName]);
-        }
-        return $policies[$policyName];
-    }
-
-    /**
-     * Gets the policy name set in the backend or in device data.
-     *
-     * @access private
-     * @return string
-     */
-    private function getPolicyName() {
-        $policyName = ZPush::GetBackend()->GetUserPolicyName();
-        $policyName = ((!empty($policyName) && $policyName !== false) ? $policyName : ASDevice::DEFAULTPOLICYNAME);
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->getPolicyName(): determined policy name: '%s'", $policyName));
-        return $policyName;
     }
 
     /**

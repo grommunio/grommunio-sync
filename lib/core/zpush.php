@@ -257,20 +257,6 @@ class ZPush {
             date_default_timezone_set('Europe/Amsterdam');
         }
 
-        // check if Provisioning is enabled and the default policies are available
-        if (PROVISIONING) {
-            if (file_exists(REAL_BASE_PATH . PROVISIONING_POLICYFILE)) {
-                $policyfile = REAL_BASE_PATH . PROVISIONING_POLICYFILE;
-            }
-            else {
-                $policyfile = PROVISIONING_POLICYFILE;
-            }
-            ZPush::$policies = parse_ini_file($policyfile, true);
-            if (!isset(ZPush::$policies['default'])) {
-                throw new FatalMisconfigurationException(sprintf("Your policies' configuration file doesn't contain the required [default] section. Please check the '%s' file.", $policyfile));
-            }
-        }
-
         if (defined('USE_X_FORWARDED_FOR_HEADER')) {
             ZLog::Write(LOGLEVEL_INFO, "The configuration parameter 'USE_X_FORWARDED_FOR_HEADER' was deprecated in favor of 'USE_CUSTOM_REMOTE_IP_HEADER'. Please update your configuration.");
         }
@@ -951,13 +937,4 @@ END;
         return $defcapa;
     }
 
-    /**
-     * Returns the available provisioning policies.
-     *
-     * @return array
-     */
-    static public function GetPolicies() {
-        // TODO another policy providers might be available, e.g. for sqlstatemachine
-        return ZPush::$policies;
-    }
 }

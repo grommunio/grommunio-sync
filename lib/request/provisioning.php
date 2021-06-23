@@ -203,7 +203,7 @@ class Provisioning extends RequestProcessor {
                             if (!$prov->Check())
                                 throw new FatalException("Invalid policies!");
 
-                            self::$deviceManager->SavePolicyHashAndName($prov);
+                            self::$deviceManager->SavePolicyHash($prov);
                             $prov->Encode(self::$encoder);
                         self::$encoder->endTag();
                     }
