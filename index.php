@@ -59,7 +59,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // check the provisioning information
         if (PROVISIONING === true && Request::IsMethodPOST() && ZPush::CommandNeedsProvisioning(Request::GetCommandCode()) &&
-            ((Request::WasPolicyKeySent() && Request::GetPolicyKey() == 0) || ZPush::GetDeviceManager()->ProvisioningRequired(Request::GetPolicyKey())) &&
+            ((Request::WasPolicyKeySent() && Request::GetPolicyKey() == 0) || ZPush::GetProvisioningManager()->ProvisioningRequired(Request::GetPolicyKey())) &&
             (LOOSE_PROVISIONING === false ||
             (LOOSE_PROVISIONING === true && Request::WasPolicyKeySent())))
             //TODO for AS 14 send a wbxml response
@@ -78,15 +78,15 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         if (RequestProcessor::isUserAuthenticated()) {
             header("X-Grammm-Sync-Version: ". @constant('GRAMMSYNC_VERSION'));
-        }
 
-        // announce the supported AS versions (if not already sent to device)
-        if (ZPush::GetDeviceManager()->AnnounceASVersion()) {
-            $versions = ZPush::GetSupportedProtocolVersions(true);
-            ZLog::Write(LOGLEVEL_INFO, sprintf("Announcing latest AS version to device: %s", $versions));
-            header("X-MS-RP: ". $versions);
+            // announce the supported AS versions (if not already sent to device)
+            if (ZPush::GetDeviceManager()->AnnounceASVersion()) {
+                $versions = ZPush::GetSupportedProtocolVersions(true);
+                ZLog::Write(LOGLEVEL_INFO, sprintf("Announcing latest AS version to device: %s", $versions));
+                header("X-MS-RP: ". $versions);
+            }
+            
         }
-
         RequestProcessor::Initialize();
         RequestProcessor::HandleRequest();
 
@@ -103,7 +103,9 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // log amount of data transferred
         // TODO check $len when streaming more data (e.g. Attachments), as the data will be send chunked
-        ZPush::GetDeviceManager()->SentData($len);
+        if (ZPush::GetDeviceManager(false)) {
+            ZPush::GetDeviceManager()->SentData($len);
+        }
 
         // Unfortunately, even though grammm-sync can stream the data to the client
         // with a chunked encoding, using chunked encoding breaks the progress bar

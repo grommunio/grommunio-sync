@@ -245,7 +245,7 @@ class SyncCollections implements Iterator {
 
         $this->collections[$spa->GetFolderId()] = $spa;
 
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->AddCollection(): Folder id '%s' : ref. PolicyKey '%s', ref. Lifetime '%s', last sync at '%s'", $spa->GetFolderId(), $spa->GetReferencePolicyKey(), $spa->GetReferenceLifetime(), $spa->GetLastSyncTime()));
+        ZLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->AddCollection(): Folder id '%s' : ref. Lifetime '%s', last sync at '%s'", $spa->GetFolderId(), $spa->GetReferenceLifetime(), $spa->GetLastSyncTime()));
         if ($spa->HasLastSyncTime() && $spa->GetLastSyncTime() > $this->lastSyncTime) {
             $this->lastSyncTime = $spa->GetLastSyncTime();
 
@@ -538,7 +538,7 @@ class SyncCollections implements Iterator {
 
             // Check if provisioning is necessary
             // if a PolicyKey was sent use it. If not, compare with the ReferencePolicyKey
-            if (PROVISIONING === true && $policyKey !== false && ZPush::GetDeviceManager()->ProvisioningRequired($policyKey, true, false))
+            if (PROVISIONING === true && $policyKey !== false && ZPush::GetProvisioningManager()->ProvisioningRequired($policyKey, true, false))
                 // the hierarchysync forces provisioning
                 throw new StatusException("SyncCollections->CheckForChanges(): Policies or PolicyKey changed. Provisioning required.", self::ERROR_WRONG_HIERARCHY);
 

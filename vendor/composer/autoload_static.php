@@ -74,6 +74,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'Ping' => __DIR__ . '/../..' . '/lib/request/ping.php',
         'PingTracking' => __DIR__ . '/../..' . '/lib/core/pingtracking.php',
         'Provisioning' => __DIR__ . '/../..' . '/lib/request/provisioning.php',
+        'ProvisioningManager' => __DIR__ . '/../..' . '/lib/core/provisioningmanager.php',
         'ProvisioningRequiredException' => __DIR__ . '/../..' . '/lib/exceptions/provisioningrequiredexception.php',
         'Recurrence' => __DIR__ . '/../..' . '/backend/grammm/mapi/class.recurrence.php',
         'RedisConnection' => __DIR__ . '/../..' . '/lib/core/redisconnection.php',

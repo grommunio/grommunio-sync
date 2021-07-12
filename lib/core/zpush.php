@@ -157,6 +157,7 @@ class ZPush {
     static private $stateMachine;
     static private $searchProvider;
     static private $deviceManager;
+    static private $provisioningManager;
     static private $topCollector;
     static private $backend;
     static private $addSyncFolders;
@@ -427,6 +428,20 @@ class ZPush {
      */
     static public function GetLatestStateVersion() {
         return self::STATE_VERSION;
+    }
+
+    /**
+     * Returns the ProvisioningManager object
+     *
+     * @access public
+     * @return object ProvisioningManager
+     */
+    static public function GetProvisioningManager() {
+        if (!isset(self::$provisioningManager)) {
+            self::$provisioningManager = new ProvisioningManager();
+        }
+
+        return self::$provisioningManager;
     }
 
     /**

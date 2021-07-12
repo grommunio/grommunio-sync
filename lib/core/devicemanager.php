@@ -4,12 +4,15 @@
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
  * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
  *
- * Manages device relevant data, provisioning, loop detection and device
- * states. The DeviceManager uses a IStateMachine implementation with
+ * Manages device relevant data, loop detection and device states. 
+ * The DeviceManager uses a IStateMachine implementation with
  * IStateMachine::DEVICEDATA to save device relevant data.
+ * 
+ * In order to update device information in redis, DeviceManager 
+ * implements InterProcessData.
  */
 
-class DeviceManager {
+class DeviceManager extends InterProcessData {
     // broken message indicators
     const MSG_BROKEN_UNKNOWN = 1;
     const MSG_BROKEN_CAUSINGLOOP = 2;
@@ -55,15 +58,20 @@ class DeviceManager {
     public function __construct() {
         $this->statemachine = ZPush::GetStateMachine();
         $this->deviceHash = false;
-        $this->devid = Request::GetDeviceID();
         $this->saveDevice = true;
         $this->windowSize = array();
         $this->latestFolder = false;
         $this->hierarchySyncRequired = false;
 
+        // initialize InterProcess parameters
+        $this->allocate = 0;
+        $this->type = "grammm-sync:devicesuser";
+        parent::__construct();
+        parent::initializeParams();
+
         // only continue if deviceid is set
-        if ($this->devid) {
-            $this->device = new ASDevice($this->devid, Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
+        if (self::$devid) {
+            $this->device = new ASDevice(self::$devid, Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
             $this->loadDeviceData();
 
             ZPush::GetTopCollector()->SetUserAgent($this->device->GetDeviceUserAgent());
@@ -146,12 +154,16 @@ class DeviceManager {
             try {
                 // check if this is the first time the device data is saved and it is authenticated. If so, link the user to the device id
                 if ($this->device->IsNewDevice() && RequestProcessor::isUserAuthenticated()) {
-                    ZLog::Write(LOGLEVEL_INFO, sprintf("Linking device ID '%s' to user '%s'", $this->devid, $this->device->GetDeviceUser()));
-                    $this->statemachine->LinkUserDevice($this->device->GetDeviceUser(), $this->devid);
+                    ZLog::Write(LOGLEVEL_INFO, sprintf("Linking device ID '%s' to user '%s'", self::$devid, $this->device->GetDeviceUser()));
+                    $this->statemachine->LinkUserDevice($this->device->GetDeviceUser(), self::$devid);
                 }
 
                 if (RequestProcessor::isUserAuthenticated() || $this->device->GetForceSave() ) {
-                    $this->statemachine->SetState($data, $this->devid, IStateMachine::DEVICEDATA);
+                    $this->statemachine->SetState($data, self::$devid, IStateMachine::DEVICEDATA);
+
+                    // update deviceuser stat in redis as well
+                    // TODO: remove serialize($data) here
+                    $this->setDeviceUserData($this->type, array(self::$user => serialize($data)), self::$devid, -1, -1); //, $doCas="merge");
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->Save(): Device data saved");
                 }
             }
@@ -210,129 +222,6 @@ class DeviceManager {
         }
         return true;
     }
-
-    /**----------------------------------------------------------------------------------------------------------
-     * Provisioning operations
-     */
-
-    /**
-     * Checks if the sent policykey matches the latest policykey
-     * saved for the device
-     *
-     * @param string        $policykey
-     * @param boolean       $noDebug        (opt) by default, debug message is shown
-     * @param boolean       $checkPolicies  (opt) by default check if the provisioning policies changed
-     *
-     * @access public
-     * @return boolean
-     */
-    public function ProvisioningRequired($policykey, $noDebug = false, $checkPolicies = true) {
-        $this->loadDeviceData();
-
-        // check if a remote wipe is required
-        if ($this->device->GetWipeStatus() > SYNC_PROVISION_RWSTATUS_OK) {
-            ZLog::Write(LOGLEVEL_INFO, sprintf("DeviceManager->ProvisioningRequired('%s'): YES, remote wipe requested", $policykey));
-            return true;
-        }
-
-        $p = ( ($this->device->GetWipeStatus() != SYNC_PROVISION_RWSTATUS_NA && $policykey != $this->device->GetPolicyKey()) ||
-              Request::WasPolicyKeySent() && $this->device->GetPolicyKey() == ASDevice::UNDEFINED );
-
-        if (!$noDebug || $p)
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->ProvisioningRequired('%s') saved device key '%s': %s", $policykey, $this->device->GetPolicyKey(), Utils::PrintAsString($p)));
-
-        if ($checkPolicies) {
-            $policyHash = $this->GetProvisioningObject()->GetPolicyHash();
-            if ($this->device->hasPolicyhash() && $this->device->getPolicyhash() != $policyHash) {
-                $p = true;
-                ZLog::Write(LOGLEVEL_INFO, sprintf("DeviceManager->ProvisioningRequired(): saved policy hash '%s' changed '%s'. Provisioning required.", $this->device->getPolicyhash(), $policyHash));
-            }
-        }
-
-        return $p;
-    }
-
-    /**
-     * Generates a new Policykey
-     *
-     * @access public
-     * @return int
-     */
-    public function GenerateProvisioningPolicyKey() {
-        return mt_rand(100000000, 999999999);
-    }
-
-    /**
-     * Attributes a provisioned policykey to a device
-     *
-     * @param int           $policykey
-     *
-     * @access public
-     * @return boolean      status
-     */
-    public function SetProvisioningPolicyKey($policykey) {
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SetPolicyKey('%s')", $policykey));
-        return $this->device->SetPolicyKey($policykey);
-    }
-
-    /**
-     * Builds a Provisioning SyncObject with policies
-     *
-     * @param boolean   $logPolicies  optional, determines if the policies and values should be logged. Default: false
-     *
-     * @access public
-     * @return SyncProvisioning
-     */
-    public function GetProvisioningObject($logPolicies = false) {
-        $policies = array();
-        // TODO: retrieve policies from backend
-        $p = SyncProvisioning::GetObjectWithPolicies($policies, $logPolicies);
-        return $p;
-    }
-
-    /**
-     * Returns the status of the remote wipe policy
-     *
-     * @access public
-     * @return int          returns the current status of the device - SYNC_PROVISION_RWSTATUS_*
-     */
-    public function GetProvisioningWipeStatus() {
-        return $this->device->GetWipeStatus();
-    }
-
-    /**
-     * Updates the status of the remote wipe
-     *
-     * @param int           $status - SYNC_PROVISION_RWSTATUS_*
-     *
-     * @access public
-     * @return boolean      could fail if trying to update status to a wipe status which was not requested before
-     */
-    public function SetProvisioningWipeStatus($status) {
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SetProvisioningWipeStatus() change from '%d' to '%d'",$this->device->GetWipeStatus(), $status));
-
-        if ($status > SYNC_PROVISION_RWSTATUS_OK && !($this->device->GetWipeStatus() > SYNC_PROVISION_RWSTATUS_OK)) {
-            ZLog::Write(LOGLEVEL_ERROR, "Not permitted to update remote wipe status to a higher value as remote wipe was not initiated!");
-            return false;
-        }
-        $this->device->SetWipeStatus($status);
-        return true;
-    }
-
-    /**
-     * Saves the policy hash and name in device's state.
-     *
-     * @param SyncProvisioning  $provisioning
-     *
-     * @access public
-     * @return void
-     */
-    public function SavePolicyHash($provisioning) {
-        // save policies' hash
-        $this->device->SetPolicyhash($provisioning->GetPolicyHash());
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SavePolicyHash(): Set policy with hash: %s", $this->device->GetPolicyhash()));
-    }
-
 
     /**----------------------------------------------------------------------------------------------------------
      * LEGACY AS 1.0 and WRAPPER operations
@@ -1027,11 +916,11 @@ class DeviceManager {
         if (!Request::IsValidDeviceID())
             return false;
         try {
-            $deviceHash = $this->statemachine->GetStateHash($this->devid, IStateMachine::DEVICEDATA);
+            $deviceHash = $this->statemachine->GetStateHash(self::$devid, IStateMachine::DEVICEDATA);
             if ($deviceHash != $this->deviceHash) {
                 if ($this->deviceHash)
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->loadDeviceData(): Device data was changed, reloading");
-                $this->device->SetData($this->statemachine->GetState($this->devid, IStateMachine::DEVICEDATA));
+                $this->device->SetData($this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA));
                 $this->deviceHash = $deviceHash;
             }
         }
@@ -1183,6 +1072,6 @@ class DeviceManager {
      * @return string
      */
     public function GetDevid() {
-        return $this->devid;
+        return self::$devid;
     }
 }

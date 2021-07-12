@@ -67,6 +67,7 @@ return array(
     'Ping' => $baseDir . '/lib/request/ping.php',
     'PingTracking' => $baseDir . '/lib/core/pingtracking.php',
     'Provisioning' => $baseDir . '/lib/request/provisioning.php',
+    'ProvisioningManager' => $baseDir . '/lib/core/provisioningmanager.php',
     'ProvisioningRequiredException' => $baseDir . '/lib/exceptions/provisioningrequiredexception.php',
     'Recurrence' => $baseDir . '/backend/grammm/mapi/class.recurrence.php',
     'RedisConnection' => $baseDir . '/lib/core/redisconnection.php',
