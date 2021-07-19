@@ -16,7 +16,6 @@ class ASDevice extends StateObject {
     const FOLDERSUPPORTEDFIELDS = 3;
     const FOLDERSYNCSTATUS = 4;
     const FOLDERBACKENDID = 5;
-    const DEFAULTPOLICYNAME = 'default';
 
     // expected values for not set member variables
     protected $unsetdata = array(
@@ -30,7 +29,6 @@ class ASDevice extends StateObject {
                                     'lastupdatetime' => 0,
                                     'conversationmode' => false,
                                     'policyhash' => false,
-                                    'policyname' => self::DEFAULTPOLICYNAME,
                                     'policykey' => self::UNDEFINED,
                                     'forcesave' => false,
                                     'asversion' => false,

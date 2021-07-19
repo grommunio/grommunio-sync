@@ -72,7 +72,7 @@ abstract class RequestProcessor {
      */
     static public function Initialize() {
         self::$backend = ZPush::GetBackend();
-        self::$deviceManager = ZPush::GetDeviceManager();
+        self::$deviceManager = ZPush::GetDeviceManager(false);
         self::$topCollector = ZPush::GetTopCollector();
 
         if (!ZPush::CommandNeedsPlainInput(Request::GetCommandCode()))

@@ -458,8 +458,6 @@ define("SYNC_PROVISION_UNAPPROVEDINROMAPPLIST", "Provision:UnapprovedInROMApplic
 define("SYNC_PROVISION_APPNAME", "Provision:ApplicationName"); // Since AS 12.1
 define("SYNC_PROVISION_APPROVEDAPPLIST", "Provision:ApprovedApplicationList"); // Since AS 12.1
 define("SYNC_PROVISION_HASH", "Provision:Hash"); // Since AS 12.1
-// only for internal use - never to be streamed to the mobile
-define("SYNC_PROVISION_POLICYNAME", "Provision:PolicyName");
 
 // Code Page 15: Search, all AS versions
 define("SYNC_SEARCH_SEARCH", "Search:Search");

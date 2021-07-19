@@ -157,6 +157,7 @@ class ZPush {
     static private $stateMachine;
     static private $searchProvider;
     static private $deviceManager;
+    static private $provisioningManager;
     static private $topCollector;
     static private $backend;
     static private $addSyncFolders;
@@ -255,20 +256,6 @@ class ZPush {
         }
         else if(!ini_get('date.timezone')) {
             date_default_timezone_set('Europe/Amsterdam');
-        }
-
-        // check if Provisioning is enabled and the default policies are available
-        if (PROVISIONING) {
-            if (file_exists(REAL_BASE_PATH . PROVISIONING_POLICYFILE)) {
-                $policyfile = REAL_BASE_PATH . PROVISIONING_POLICYFILE;
-            }
-            else {
-                $policyfile = PROVISIONING_POLICYFILE;
-            }
-            ZPush::$policies = parse_ini_file($policyfile, true);
-            if (!isset(ZPush::$policies['default'])) {
-                throw new FatalMisconfigurationException(sprintf("Your policies' configuration file doesn't contain the required [default] section. Please check the '%s' file.", $policyfile));
-            }
         }
 
         if (defined('USE_X_FORWARDED_FOR_HEADER')) {
@@ -441,6 +428,20 @@ class ZPush {
      */
     static public function GetLatestStateVersion() {
         return self::STATE_VERSION;
+    }
+
+    /**
+     * Returns the ProvisioningManager object
+     *
+     * @access public
+     * @return object ProvisioningManager
+     */
+    static public function GetProvisioningManager() {
+        if (!isset(self::$provisioningManager)) {
+            self::$provisioningManager = new ProvisioningManager();
+        }
+
+        return self::$provisioningManager;
     }
 
     /**
@@ -951,13 +952,4 @@ END;
         return $defcapa;
     }
 
-    /**
-     * Returns the available provisioning policies.
-     *
-     * @return array
-     */
-    static public function GetPolicies() {
-        // TODO another policy providers might be available, e.g. for sqlstatemachine
-        return ZPush::$policies;
-    }
 }

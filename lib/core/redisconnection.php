@@ -48,9 +48,14 @@ EOF;
             ZLog::Write(LOGLEVEL_ERROR, sprintf("%s->getKey(): ", get_class($this), $e->getMessage()));
         }
     }
-    function setKey($key, $value) {
+    function setKey($key, $value, $ttl=-1) {
         try {
-            return $this->redisObj->set($key, $value);
+            if ($ttl > 0) {
+                return $this->redisObj->setEx($key, $ttl, $value);
+            }
+            else {
+                return $this->redisObj->set($key, $value);
+            }
         }
         catch(Exception $e) {
             ZLog::Write(LOGLEVEL_ERROR, sprintf("%s->setKey(): ", get_class($this), $e->getMessage()));

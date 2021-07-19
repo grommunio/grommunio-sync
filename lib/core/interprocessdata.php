@@ -166,8 +166,8 @@ abstract class InterProcessData {
      * @access protected
      * @return boolean
      */
-    protected function setData($data, $id = 2) {
-        return $this->ipcProvider ? $this->ipcProvider->setKey($id, json_encode($data)) : false;
+    protected function setData($data, $id = 2, $ttl=-1) {
+        return $this->ipcProvider ? $this->ipcProvider->setKey($id, json_encode($data), $ttl) : false;
     }
 
 
@@ -300,7 +300,7 @@ abstract class InterProcessData {
         return $this->ipcProvider->get()->hGetAll($key);
     }
 
-    private function getComposedKey($key1, $key2, $key3) {
+    protected function getComposedKey($key1, $key2, $key3=-1) {
         $_k = $key1;
         if ($key2 > -1) {
             $_k .="|-|". $key2;

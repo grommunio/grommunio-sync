@@ -21,7 +21,7 @@ class Provisioning extends RequestProcessor {
         $status = SYNC_PROVISION_STATUS_SUCCESS;
         $policystatus = SYNC_PROVISION_POLICYSTATUS_SUCCESS;
 
-        $rwstatus = self::$deviceManager->GetProvisioningWipeStatus();
+        $rwstatus = ZPush::GetProvisioningManager()->GetProvisioningWipeStatus();
         $rwstatusWiped = false;
         $deviceInfoSet = false;
 
@@ -122,7 +122,8 @@ class Provisioning extends RequestProcessor {
                     $deviceinformation = new SyncDeviceInformation();
                     $deviceinformation->Decode(self::$decoder);
                     $deviceinformation->Status = SYNC_SETTINGSSTATUS_SUCCESS;
-                    self::$deviceManager->SaveDeviceInformation($deviceinformation);
+                    // for this operation the device manager is available
+                    ZPush::GetDeviceManager()->SaveDeviceInformation($deviceinformation);
                     if (!self::$decoder->getElementEndTag())  // SYNC_SETTINGS_SET
                         return false;
                     if (!self::$decoder->getElementEndTag())  // SYNC_SETTINGS_DEVICEINFORMATION
@@ -146,18 +147,8 @@ class Provisioning extends RequestProcessor {
 
         self::$encoder->StartWBXML();
 
-        //set the new final policy key in the device manager
-        // START ADDED dw2412 Android provisioning fix
-        if (!$phase2) {
-            $policykey = self::$deviceManager->GenerateProvisioningPolicyKey();
-            self::$deviceManager->SetProvisioningPolicyKey($policykey);
-            self::$topCollector->AnnounceInformation("Policies deployed", true);
-        }
-        else {
-            // just create a temporary key (i.e. iPhone OS4 Beta does not like policykey 0 in response)
-            $policykey = self::$deviceManager->GenerateProvisioningPolicyKey();
-        }
-        // END ADDED dw2412 Android provisioning fix
+        // just create a temporary key (i.e. iPhone OS4 Beta does not like policykey 0 in response)
+        $policykey = ZPush::GetProvisioningManager()->GenerateProvisioningPolicyKey();
 
         self::$encoder->startTag(SYNC_PROVISION_PROVISION);
         {
@@ -199,11 +190,11 @@ class Provisioning extends RequestProcessor {
                         self::$encoder->startTag(SYNC_PROVISION_EASPROVISIONDOC);
 
                             // get the provisioning object and log the loaded policy values
-                            $prov = self::$deviceManager->GetProvisioningObject(true);
+                            $prov = ZPush::GetProvisioningManager()->GetProvisioningObject(true);
                             if (!$prov->Check())
                                 throw new FatalException("Invalid policies!");
 
-                            self::$deviceManager->SavePolicyHashAndName($prov);
+                            ZPush::GetProvisioningManager()->SavePolicyHash($prov);
                             $prov->Encode(self::$encoder);
                         self::$encoder->endTag();
                     }
@@ -220,10 +211,16 @@ class Provisioning extends RequestProcessor {
             self::$encoder->endTag(); //policies
         }
 
+        //set the new final policy key in the provisioning manager
+        if (!$phase2) {
+            ZPush::GetProvisioningManager()->SetProvisioningPolicyKey($policykey);
+            self::$topCollector->AnnounceInformation("Policies deployed", true);
+        }
+
         //wipe data if a higher RWSTATUS is requested
         if ($rwstatus > SYNC_PROVISION_RWSTATUS_OK && $policystatus === SYNC_PROVISION_POLICYSTATUS_SUCCESS) {
             self::$encoder->startTag(SYNC_PROVISION_REMOTEWIPE, false, true);
-            self::$deviceManager->SetProvisioningWipeStatus(($rwstatusWiped)?SYNC_PROVISION_RWSTATUS_WIPED:SYNC_PROVISION_RWSTATUS_REQUESTED);
+            ZPush::GetProvisioningManager()->SetProvisioningWipeStatus(($rwstatusWiped)?SYNC_PROVISION_RWSTATUS_WIPED:SYNC_PROVISION_RWSTATUS_REQUESTED);
             self::$topCollector->AnnounceInformation(sprintf("Remote wipe %s", ($rwstatusWiped)?"executed":"requested"), true);
         }
 

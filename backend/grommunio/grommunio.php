@@ -83,7 +83,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         # Interprocessdata
         $this->allocate = 0;
         $this->type = "grommunio-sync:userdevices";
-        $this->userDeviceData = "grommunio-sync:userdevicedata";
+        $this->userDeviceData = "grommunio-sync:statefoldercache";
         parent::__construct();
     }
 
@@ -1136,20 +1136,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         $r = new SyncResolveRecipients();
         $r->status = SYNC_RESOLVERECIPSSTATUS_PROTOCOLERROR;
         return $r;
-    }
-
-    /**
-     * Returns the policy name for the user.
-     * If the backend returns false, the 'default' policy is used.
-     * If the backend returns any other name than 'default' the policygroup with
-     * that name (defined in the policies.ini file) will be applied for this user.
-     *
-     * @access public
-     * @return string|boolean
-     */
-    public function GetUserPolicyName() {
-        // TODO: get the user's policy from the users' directory
-        return false;
     }
 
     /**----------------------------------------------------------------------------------------------------------
