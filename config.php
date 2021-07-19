@@ -113,6 +113,9 @@
     // true - allow older devices, but enforce policies on devices which support it
     define('LOOSE_PROVISIONING', false);
 
+    // Retrive polcies for a user from admin API using the following endpoint
+    define('ADMIN_API_POLICY_ENDPOINT', 'http://127.0.0.1:8080/api/v1/service/syncPolicy/');
+
     // Default conflict preference
     // Some devices allow to set if the server or PIM (mobile)
     // should win in case of a synchronization conflict
