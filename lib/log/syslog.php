@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Logging functionalities
  */
@@ -90,7 +90,7 @@ class Syslog extends Log {
 
     /**
      * Return the full program name for syslog.
-     * The name can be grammm-sync/core or grammm-sync/{backend} where backend is the backend that initiated the log.
+     * The name can be grommunio-sync/core or grommunio-sync/{backend} where backend is the backend that initiated the log.
      *
      * @access protected
      * @return string
@@ -118,7 +118,7 @@ class Syslog extends Log {
     }
 
     /**
-     * Maps the grammm-sync loglevel with those of syslog.
+     * Maps the grommunio-sync loglevel with those of syslog.
      *
      * @access protected
      * @param int $loglevel

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Provides general information for an authenticated user.
  */
@@ -37,14 +37,14 @@ class WebserviceInfo {
     }
 
     /**
-     * Returns the grammm-sync version.
+     * Returns the grommunio-sync version.
      *
      * @access public
      * @return string
      */
     public function About() {
-        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning grammm-sync version '%s'", @constant('GRAMMSYNC_VERSION')));
-        return @constant('GRAMMSYNC_VERSION');
+        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning grommunio-sync version '%s'", @constant('GROMMUNIOSYNC_VERSION')));
+        return @constant('GROMMUNIOSYNC_VERSION');
     }
 
     /**

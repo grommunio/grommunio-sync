@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Help function for files
  */
@@ -12,7 +12,7 @@ if (!function_exists('apache_request_headers')) {
       * When using other webservers or using php as cgi in apache
       * the function apache_request_headers() is not available.
       * This function parses the environment variables to extract
-      * the necessary headers for grammm-sync
+      * the necessary headers for grommunio-sync
       */
     function apache_request_headers() {
         $headers = array();

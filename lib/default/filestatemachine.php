@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * This class handles state requests; Each Import/Export mechanism can store
  * its own state information, which is stored through the state machine.
@@ -14,8 +14,8 @@ class FileStateMachine implements IStateMachine {
 
     private $userfilename;
     private $settingsfilename;
-    private $statefiles; // List of the state files. Used by grammm-sync-admin and scripts.
-    private $devicedatafiles; // List of the device data files. Used by grammm-sync-admin and scripts.
+    private $statefiles; // List of the state files.
+    private $devicedatafiles; // List of the device data files.
     private $pattern; // State pattern for glob()
 
     /**

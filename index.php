@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * This is the entry point through which all requests are processed.
  */
@@ -33,7 +33,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
         ZLog::Write(LOGLEVEL_DEBUG,"-------- Start");
         ZLog::Write(LOGLEVEL_DEBUG,
                 sprintf("cmd='%s' devType='%s' devId='%s' getUser='%s' from='%s' version='%s' method='%s'",
-                        Request::GetCommand(), Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(), @constant('GRAMMSYNC_VERSION'), Request::GetMethod() ));
+                        Request::GetCommand(), Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(), @constant('GROMMUNIOSYNC_VERSION'), Request::GetMethod() ));
 
         // always request the authorization header
         if (! Request::HasAuthenticationInfo() || !Request::GetGETUser())
@@ -52,7 +52,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // Check required GET parameters
         if(Request::IsMethodPOST() && (Request::GetCommandCode() === false || !Request::GetDeviceID() || !Request::GetDeviceType()))
-            throw new FatalException("Requested the grammm-sync URL without the required GET parameters");
+            throw new FatalException("Requested the grommunio-sync URL without the required GET parameters");
 
         // Load the backend
         $backend = ZPush::GetBackend();
@@ -71,13 +71,14 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         // Do the actual processing of the request
         if (Request::IsMethodGET())
-            throw new NoPostRequestException("This is the grammm-sync location and can only be accessed by Microsoft ActiveSync-capable devices", NoPostRequestException::GET_REQUEST);
+            throw new NoPostRequestException("This is the grommunio-sync location and can only be accessed by Microsoft ActiveSync-capable devices", NoPostRequestException::GET_REQUEST);
 
         // Do the actual request
         header(ZPush::GetServerHeader());
 
         if (RequestProcessor::isUserAuthenticated()) {
-            header("X-Grammm-Sync-Version: ". @constant('GRAMMSYNC_VERSION'));
+            header("X-Grommunio-Sync-Version: ". @constant('GROMMUNIOSYNC_VERSION'));
+        }
 
             // announce the supported AS versions (if not already sent to device)
             if (ZPush::GetDeviceManager()->AnnounceASVersion()) {
@@ -85,7 +86,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
                 ZLog::Write(LOGLEVEL_INFO, sprintf("Announcing latest AS version to device: %s", $versions));
                 header("X-MS-RP: ". $versions);
             }
-            
+
         }
         RequestProcessor::Initialize();
         RequestProcessor::HandleRequest();
@@ -107,7 +108,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
             ZPush::GetDeviceManager()->SentData($len);
         }
 
-        // Unfortunately, even though grammm-sync can stream the data to the client
+        // Unfortunately, even though grommunio-sync can stream the data to the client
         // with a chunked encoding, using chunked encoding breaks the progress bar
         // on the PDA. So the data is de-chunk here, written a content-length header and
         // data send as a 'normal' packet. If the output packet exceeds 1MB (see ob_start)
@@ -138,7 +139,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
             if (Request::GetUserAgent())
                 ZLog::Write(LOGLEVEL_INFO, sprintf("User-agent: '%s'", Request::GetUserAgent()));
             if (!headers_sent() && $nopostex->showLegalNotice())
-                ZPush::PrintGrammmSyncLegal('GET not supported', $nopostex->getMessage());
+                ZPush::PrintGrommunioSyncLegal('GET not supported', $nopostex->getMessage());
         }
     }
 
@@ -174,7 +175,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
             // some devices send unauthorized OPTIONS requests
             // and don't expect anything in the response body
             if (Request::IsMethodGET()) {
-                ZPush::PrintGrammmSyncLegal($exclass, sprintf('<pre>%s</pre>',$ex->getMessage()));
+                ZPush::PrintGrommunioSyncLegal($exclass, sprintf('<pre>%s</pre>',$ex->getMessage()));
             }
 
             // log the failed login attemt e.g. for fail2ban
@@ -194,7 +195,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
             $cmdinfo = (Request::GetCommand())? sprintf(" processing command <i>%s</i>", Request::GetCommand()): "";
             $extrace = $ex->getTrace();
             $trace = (!empty($extrace))? "\n\nTrace:\n". print_r($extrace,1):"";
-            ZPush::PrintGrammmSyncLegal($exclass . $cmdinfo, sprintf('<pre>%s</pre>',$ex->getMessage() . $trace));
+            ZPush::PrintGrommunioSyncLegal($exclass . $cmdinfo, sprintf('<pre>%s</pre>',$ex->getMessage() . $trace));
         }
 
         // Announce exception to process loop detection
@@ -215,7 +216,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
                     Request::GetCommand(), Utils::FormatBytes(memory_get_peak_usage(false)), Utils::FormatBytes(memory_get_peak_usage(true)),
                     number_format(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 2),
                     Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(),
-                    RequestProcessor::GetWaitTime(), @constant('GRAMMSYNC_VERSION'), Request::GetMethod(), http_response_code() ));
+                    RequestProcessor::GetWaitTime(), @constant('GROMMUNIOSYNC_VERSION'), Request::GetMethod(), http_response_code() ));
 
     ZLog::Write(LOGLEVEL_DEBUG, "-------- End");
 

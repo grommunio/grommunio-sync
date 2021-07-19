@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Class to generate AS compatible timezone information
  */
@@ -1115,7 +1115,7 @@ class TimezoneUtil {
     /**
      * Sets the timezone name by matching data from the offset (bias etc)
      *
-     * @param array     $offset         a grammm-sync timezone array
+     * @param array     $offset         a grommunio-sync timezone array
      *
      * @access public
      * @return array
@@ -1134,7 +1134,7 @@ class TimezoneUtil {
     /**
      * Tries to find a timezone using the Bias and other offset parameters
      *
-     * @param array     $offset         a grammm-sync timezone array
+     * @param array     $offset         a grommunio-sync timezone array
      *
      * @access public
      * @return string
@@ -1178,7 +1178,7 @@ class TimezoneUtil {
                 break;
             }
         }
-        ZLog::Write(LOGLEVEL_ERROR, sprintf("TimezoneUtil::guessTZNameFromPHPName() no compatible timezone found for '%s'. Returning 'GMT Standard Time'. Please contact the grammm-sync dev team.", $phpname));
+        ZLog::Write(LOGLEVEL_ERROR, sprintf("TimezoneUtil::guessTZNameFromPHPName() no compatible timezone found for '%s'. Returning 'GMT Standard Time'. Please contact the grommunio dev team.", $phpname));
         return self::$mstzones["085"][0];
     }
 

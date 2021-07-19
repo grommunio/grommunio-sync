@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Manages device relevant data, loop detection and device states. 
  * The DeviceManager uses a IStateMachine implementation with
@@ -341,11 +341,11 @@ class DeviceManager extends InterProcessData {
         foreach($this->device->GetAdditionalFolders() as $df) {
             if (!isset($df['flags'])) {
                 $df['flags'] = 0;
-                ZLog::Write(LOGLEVEL_WARN, sprintf("DeviceManager->GetAdditionalUserSyncFolders(): Additional folder '%s' has no flags. Please run 'grammm-sync-admin -a fixstates' to fix this issue.", $df['name']));
+                ZLog::Write(LOGLEVEL_WARN, sprintf("DeviceManager->GetAdditionalUserSyncFolders(): Additional folder '%s' has no flags.", $df['name']));
             }
             if (!isset($df['parentid'])) {
                 $df['parentid'] = '0';
-                ZLog::Write(LOGLEVEL_WARN, sprintf("DeviceManager->GetAdditionalUserSyncFolders(): Additional folder '%s' has no parentid. Please run 'grammm-sync-admin -a fixstates' to fix this issue.", $df['name']));
+                ZLog::Write(LOGLEVEL_WARN, sprintf("DeviceManager->GetAdditionalUserSyncFolders(): Additional folder '%s' has no parentid.", $df['name']));
             }
 
             $folder = $this->BuildSyncFolderObject($df['store'], $df['folderid'], $df['parentid'], $df['name'], $df['type'], $df['flags'], DeviceManager::FLD_ORIGIN_SHARED);
