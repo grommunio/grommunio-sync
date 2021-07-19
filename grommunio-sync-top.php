@@ -695,7 +695,7 @@ class ZPushTop {
      * @return string
      */
     private function getVersion() {
-        return GRAMMSYNC_VERSION;
+        return GROMMUNIOSYNC_VERSION;
     }
 
     /**

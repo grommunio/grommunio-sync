@@ -33,7 +33,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
         ZLog::Write(LOGLEVEL_DEBUG,"-------- Start");
         ZLog::Write(LOGLEVEL_DEBUG,
                 sprintf("cmd='%s' devType='%s' devId='%s' getUser='%s' from='%s' version='%s' method='%s'",
-                        Request::GetCommand(), Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(), @constant('GRAMMSYNC_VERSION'), Request::GetMethod() ));
+                        Request::GetCommand(), Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(), @constant('GROMMUNIOSYNC_VERSION'), Request::GetMethod() ));
 
         // always request the authorization header
         if (! Request::HasAuthenticationInfo() || !Request::GetGETUser())
@@ -77,7 +77,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
         header(ZPush::GetServerHeader());
 
         if (RequestProcessor::isUserAuthenticated()) {
-            header("X-Grommunio-Sync-Version: ". @constant('GRAMMSYNC_VERSION'));
+            header("X-Grommunio-Sync-Version: ". @constant('GROMMUNIOSYNC_VERSION'));
         }
 
         // announce the supported AS versions (if not already sent to device)
@@ -213,7 +213,7 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
                     Request::GetCommand(), Utils::FormatBytes(memory_get_peak_usage(false)), Utils::FormatBytes(memory_get_peak_usage(true)),
                     number_format(microtime(true) - $_SERVER["REQUEST_TIME_FLOAT"], 2),
                     Request::GetDeviceType(), Request::GetDeviceID(), Request::GetGETUser(), Request::GetRemoteAddr(),
-                    RequestProcessor::GetWaitTime(), @constant('GRAMMSYNC_VERSION'), Request::GetMethod(), http_response_code() ));
+                    RequestProcessor::GetWaitTime(), @constant('GROMMUNIOSYNC_VERSION'), Request::GetMethod(), http_response_code() ));
 
     ZLog::Write(LOGLEVEL_DEBUG, "-------- End");
 
