@@ -1,2 +1,2 @@
 <?php
-define("GRAMMSYNC_VERSION", "__VERSION__");
+define("GROMMUNIOSYNC_VERSION", "__VERSION__");

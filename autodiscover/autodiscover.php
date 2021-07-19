@@ -26,7 +26,7 @@ class ZPushAutodiscover {
     public static function DoZPushAutodiscover() {
         self::CheckConfig();
         ZLog::Write(LOGLEVEL_DEBUG, '-------- Start ZPushAutodiscover');
-        ZLog::Write(LOGLEVEL_INFO, sprintf("grommunio-sync version='%s'", @constant('GRAMMSYNC_VERSION')));
+        ZLog::Write(LOGLEVEL_INFO, sprintf("grommunio-sync version='%s'", @constant('GROMMUNIOSYNC_VERSION')));
         // TODO use filterevilinput?
         if (!isset(self::$instance)) {
             self::$instance = new ZPushAutodiscover();

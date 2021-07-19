@@ -43,8 +43,8 @@ class WebserviceInfo {
      * @return string
      */
     public function About() {
-        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning grommunio-sync version '%s'", @constant('GRAMMSYNC_VERSION')));
-        return @constant('GRAMMSYNC_VERSION');
+        ZLog::Write(LOGLEVEL_INFO, sprintf("WebserviceInfo->About(): returning grommunio-sync version '%s'", @constant('GROMMUNIOSYNC_VERSION')));
+        return @constant('GROMMUNIOSYNC_VERSION');
     }
 
     /**
