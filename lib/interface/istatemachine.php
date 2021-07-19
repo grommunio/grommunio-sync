@@ -2,10 +2,10 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Interface called from the Device and StateManager to save states for a
- * user/device/folder. grammm-sync implements the FileStateMachine which saves
+ * user/device/folder. grommunio-sync implements the FileStateMachine which saves
  * states to disk. Backends provide their own IStateMachine implementation of
  * this interface and return an IStateMachine instance with
  * IBackend->GetStateMachine(). Old sync states are not deleted until a new

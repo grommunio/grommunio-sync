@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Class that collect changes in memory
  */
@@ -256,7 +256,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
         // load into memory
         else {
             if (isset($folder->serverid)) {
-                // The grammm HierarchyExporter exports all kinds of changes for folders (e.g. update no. of unread messages in a folder).
+                // The grommunio HierarchyExporter exports all kinds of changes for folders (e.g. update no. of unread messages in a folder).
                 // These changes are not relevant for the mobiles, as something changes but the relevant displayname and parentid
                 // stay the same. These changes will be dropped and are not sent!
                 if ($folder->equals($this->GetFolder($folder->serverid), false, true)) {

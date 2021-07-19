@@ -178,7 +178,7 @@ class Mail_RFC822 {
         }
 
         if (isset($address))        $this->address        = $address;
-        // grammm-sync addition
+        // grommunio-sync addition
         if (strlen(trim($this->address)) == 0) return array();
         if (isset($default_domain)) $this->default_domain = $default_domain;
         if (isset($nest_groups))    $this->nestGroups     = $nest_groups;
@@ -650,7 +650,7 @@ class Mail_RFC822 {
             $phrase     = trim($name);
             $route_addr = trim(substr($mailbox, strlen($name.'<'), -1));
 
-            //grammm-sync fix for umlauts and other special chars
+            //grommunio-sync fix for umlauts and other special chars
             if (substr($phrase, 0, 1) != '"' && substr($phrase, -1) != '"') {
                 $phrase = '"'.$phrase.'"';
             }
@@ -933,7 +933,7 @@ class Mail_RFC822 {
         }
     }
     /**
-     * grammm-sync helper for error logging
+     * grommunio-sync helper for error logging
      * removing PEAR dependency
      *
      * @param  string  debug message

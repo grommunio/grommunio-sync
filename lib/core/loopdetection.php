@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Detects an outgoing loop by looking if subsequent requests do try to get
  * changes for the same sync key. If more than once a synckey is requested,
@@ -29,7 +29,7 @@ class LoopDetection extends InterProcessData {
     public function __construct() {
         // initialize super parameters
         $this->allocate = 1024000; // 1 MB
-        $this->type = "grammm-sync:loopdetection";
+        $this->type = "grommunio-sync:loopdetection";
         parent::__construct();
 
         $this->ignore_messageid = false;
@@ -309,7 +309,7 @@ class LoopDetection extends InterProcessData {
             if (!isset($se['end']) && $se['cc'] != ZPush::COMMAND_PING && !isset($se['push']) ) {
                 // there is no end time
                 ZLog::Write(LOGLEVEL_ERROR, sprintf("LoopDetection->ProcessLoopDetectionPreviousConnectionFailed(): Command '%s' at %s with pid '%d' terminated unexpectedly or is still running.", Utils::GetCommandFromCode($se['cc']), Utils::GetFormattedTime($se['time']), $se['pid']));
-                ZLog::Write(LOGLEVEL_ERROR, "Please check your logs for this PID and errors like PHP-Fatals or Apache segmentation faults and report your results to the grammm-sync dev team.");
+                ZLog::Write(LOGLEVEL_ERROR, "Please check your logs for this PID and errors like PHP-Fatals or Apache segmentation faults and report your results to the grommunio dev team.");
             }
         }
     }

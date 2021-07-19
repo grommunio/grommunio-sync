@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Administration tasks for users and devices
  */
@@ -20,7 +20,7 @@ class ZPushAdmin {
     public static $userDevices;
 
     /**
-     * List devices known to grammm-sync.
+     * List devices known to grommunio-sync.
      * If no user is given, all devices are listed
      *
      * @param string    $user       devices of that user, if false all devices of all users
@@ -33,7 +33,7 @@ class ZPushAdmin {
     }
 
     /**
-     * List users of a device known to grammm-sync.
+     * List users of a device known to grommunio-sync.
      *
      * @param string    $devid      users of that device
      *
@@ -203,7 +203,7 @@ class ZPushAdmin {
 
 
     /**
-     * Removes device details from the grammm-sync directory.
+     * Removes device details from the grommunio-sync directory.
      * If device id is not set, all devices of a user are removed.
      * If the user is not set, the details of the device (independently if used by several users) is removed.
      * Device id or user must be set!

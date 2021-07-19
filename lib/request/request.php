@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * This class checks and processes all incoming data of the request.
  */
@@ -570,7 +570,7 @@ class Request {
     }
 
     /**
-     * Indicates if grammm-sync was called with a POST request
+     * Indicates if grommunio-sync was called with a POST request
      *
      * @access public
      * @return boolean
@@ -580,7 +580,7 @@ class Request {
     }
 
     /**
-     * Indicates if grammm-sync was called with a GET request
+     * Indicates if grommunio-sync was called with a GET request
      *
      * @access public
      * @return boolean
@@ -590,7 +590,7 @@ class Request {
     }
 
     /**
-     * Indicates if grammm-sync was called with a OPTIONS request
+     * Indicates if grommunio-sync was called with a OPTIONS request
      *
      * @access public
      * @return boolean

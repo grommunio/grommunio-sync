@@ -1,7 +1,7 @@
 <?php
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
- * SPDX-FileCopyrightText: Copyright 2021 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2021 grommunio GmbH
  *
  * Redis Connection Class
  * CAS inspiration: https://github.com/WeihanLi/WeihanLi.Redis/blob/dev/src/WeihanLi.Redis/RedisExtensions.cs

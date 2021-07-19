@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Autodiscover configuration file
  */
@@ -10,8 +10,8 @@
  *  Default settings
  */
 
-    // Replace grammm.example.com with your grammm-sync's host name and uncomment the line below.
-    // define('GRAMMM_HOST', 'grammm.example.com');
+    // Replace grommunio.example.com with your grommunio-sync's host name and uncomment the line below.
+    // define('GROMMUNIO_HOST', 'grommunio.example.com');
 
     // Defines the default time zone, change e.g. to "Europe/London" if necessary
     define('TIMEZONE', '');
@@ -70,7 +70,7 @@
 
     define('LOGBACKEND', 'filelog');
 
-    define('LOGFILEDIR', '/var/log/grammm-sync/');
+    define('LOGFILEDIR', '/var/log/grommunio-sync/');
     define('LOGFILE', LOGFILEDIR . 'autodiscover.log');
     define('LOGERRORFILE', LOGFILEDIR . 'autodiscover-error.log');
     define('LOGLEVEL', LOGLEVEL_INFO);
@@ -83,7 +83,7 @@
     // Syslog port
     define('LOG_SYSLOG_PORT', 514);
     // Program showed in the syslog. Useful if you have more than one instance login to the same syslog
-    define('LOG_SYSLOG_PROGRAM', 'grammm-sync-autodiscover');
+    define('LOG_SYSLOG_PROGRAM', 'grommunio-sync-autodiscover');
     // Syslog facility - use LOG_USER when running on Windows
     define('LOG_SYSLOG_FACILITY', LOG_LOCAL0);
 /**********************************************************************************

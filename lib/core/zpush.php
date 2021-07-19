@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Core functionalities
  */
@@ -69,7 +69,7 @@ class ZPush {
     const STATE_VERSION = IStateMachine::STATEVERSION_02;
 
     static private $autoloadBackendPreference = array(
-                    "BackendGrammm",
+                    "BackendGrommunio",
                     "BackendCombined",
                     "BackendIMAP",
                     "BackendVCardDir",
@@ -211,7 +211,7 @@ class ZPush {
             }
 
             if (!defined('LOG_SYSLOG_PROGRAM')) {
-                define('LOG_SYSLOG_PROGRAM', 'grammm-sync');
+                define('LOG_SYSLOG_PROGRAM', 'grommunio-sync');
             }
 
             if (!is_numeric(LOG_SYSLOG_PORT)) {
@@ -725,7 +725,7 @@ class ZPush {
     }
 
     /**
-     * Prints the grammm-sync legal header to STDOUT
+     * Prints the grommunio-sync legal header to STDOUT
      * Using this breaks ActiveSync synchronization if wbxml is expected
      *
      * @param string $message               (opt) message to be displayed
@@ -735,8 +735,8 @@ class ZPush {
      * @return
      *
      */
-    static public function PrintGrammmSyncLegal($message = "", $additionalMessage = "") {
-        ZLog::Write(LOGLEVEL_DEBUG,"ZPush::PrintGrammmSyncLegal()");
+    static public function PrintGrommunioSyncLegal($message = "", $additionalMessage = "") {
+        ZLog::Write(LOGLEVEL_DEBUG,"ZPush::PrintGrommunioSyncLegal()");
 
         if ($message)
             $message = "<h3>". $message . "</h3>";
@@ -747,15 +747,15 @@ class ZPush {
         print <<<END
         <html>
         <header>
-        <title>grammm-sync ActiveSync</title>
+        <title>grommunio-sync ActiveSync</title>
         </header>
         <body>
         <font face="verdana">
-        <h2>grammm-sync - Open Source ActiveSync</h2>
+        <h2>grommunio-sync - Open Source ActiveSync</h2>
         $message $additionalMessage
         <br><br>
-        More information about grammm can be found
-        <a href="http://grammm.com/">at the grammm-sync homepage</a><br>
+        More information about grommunio can be found
+        <a href="https://grommunio.com/">at the grommunio homepage</a><br>
         </font>
         </body>
         </html>
@@ -763,7 +763,7 @@ END;
     }
 
     /**
-     * Indicates the latest AS version supported by grammm-sync
+     * Indicates the latest AS version supported by grommunio-sync
      *
      * @access public
      * @return string

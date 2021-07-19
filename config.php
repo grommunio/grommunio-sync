@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Main configuration file
  */
@@ -24,7 +24,7 @@
     define('SCRIPT_TIMEOUT', 0);
 
     // This should be solved on THE webserver level if there are proxies
-    // between mobile client and grammm-sync.
+    // between mobile client and grommunio-sync.
     // Use a custom header to determinate the remote IP of a client.
     // By default, the server provided REMOTE_ADDR is used. If the header here set
     // is available, the provided value will be used, else REMOTE_ADDR is maintained.
@@ -39,7 +39,7 @@
     /*
      * Whether to use the complete email address as a login name
      * (e.g. user@company.com) or the username only (user).
-     * This is required for grammm-sync to work properly after autodiscover.
+     * This is required for grommunio-sync to work properly after autodiscover.
      * Possible values:
      *   false - use the username only.
      *   true  - string the mobile sends as username, e.g. full email address (default).
@@ -83,9 +83,9 @@
     $specialLogUsers = array();
 
     // Filelog settings
-    define('LOGFILEDIR', '/var/log/grammm-sync/');
-    define('LOGFILE', LOGFILEDIR . 'grammm-sync.log');
-    define('LOGERRORFILE', LOGFILEDIR . 'grammm-sync-error.log');
+    define('LOGFILEDIR', '/var/log/grommunio-sync/');
+    define('LOGFILE', LOGFILEDIR . 'grommunio-sync.log');
+    define('LOGERRORFILE', LOGFILEDIR . 'grommunio-sync-error.log');
 
     // Syslog settings
     // false will log to local syslog, otherwise put the remote syslog IP here
@@ -93,7 +93,7 @@
     // Syslog port
     define('LOG_SYSLOG_PORT', 514);
     // Program showed in the syslog. Useful if you have more than one instance login to the same syslog
-    define('LOG_SYSLOG_PROGRAM', 'grammm-sync');
+    define('LOG_SYSLOG_PROGRAM', 'grommunio-sync');
     // Syslog facility - use LOG_USER when running on Windows
     define('LOG_SYSLOG_FACILITY', LOG_LOCAL0);
 
@@ -114,7 +114,7 @@
     define('LOOSE_PROVISIONING', false);
 
     // The file containing the policies' settings.
-    // Set a full path or relative to the grammm-sync main directory
+    // Set a full path or relative to the grommunio-sync main directory
     define('PROVISIONING_POLICYFILE', 'policies.ini');
 
     // Default conflict preference
@@ -160,7 +160,7 @@
     // Maximum amount of items to be synchronized per request.
     // Normally this value is requested by the mobile. Common values are 5, 25, 50 or 100.
     // Exporting too much items can cause mobile timeout on busy systems.
-    // grammm-sync will use the lowest provided value, either set here or by the mobile.
+    // grommunio-sync will use the lowest provided value, either set here or by the mobile.
     // MS Outlook 2013+ request up to 512 items to accelerate the sync process.
     // If you detect high load (also on subsystems) you could try a lower setting.
     // max: 512 - value used if mobile does not limit amount of items
@@ -171,7 +171,7 @@
     // it means the property's value will be deleted on the server.
     // However some devices do not send a list of supported properties. It is then impossible
     // to tell if a property was deleted or it was not set at all if it does not appear in Sync.
-    // This parameter defines grammm-sync behaviour during Sync if a device does not issue a list with
+    // This parameter defines grommunio-sync behaviour during Sync if a device does not issue a list with
     // supported properties.
     // See also https://jira.z-hub.io/browse/ZP-302.
     // Possible values:
@@ -187,7 +187,7 @@
     define('SYNC_CONTACTS_MAXPICTURESIZE', 5242880);
 
     // Over the WebserviceUsers command it is possible to retrieve a list of all
-    // known devices and users on this grammm-sync system. The authenticated user needs to have
+    // known devices and users on this grommunio-sync system. The authenticated user needs to have
     // admin rights and a public folder must exist.
     // In multicompany environments this enable an admin user of any company to retrieve
     // this full list, so this feature is disabled by default. Enable with care.
@@ -229,7 +229,7 @@
 
     // Time in seconds the device should wait whenever the service is unavailable,
     // e.g. when a backend service is unavailable.
-    // grammm-sync sends a "Retry-After" header in the response with the here defined value.
+    // grommunio-sync sends a "Retry-After" header in the response with the here defined value.
     // It is up to the device to respect or not this directive so even if this option is set,
     // the device might not wait requested time frame.
     // Number of seconds before retry, to disable set to: false
@@ -239,7 +239,7 @@
  *  Backend settings
  */
     // The backend data provider.
-    define('BACKEND_PROVIDER', 'BackendGrammm');
+    define('BACKEND_PROVIDER', 'BackendGrommunio');
 
 /**********************************************************************************
  *  Search provider settings
@@ -265,11 +265,11 @@
  *
  *  This feature is supported only by certain devices, like iPhones.
  *  Check the compatibility list for supported devices:
- *      https://grammm.com/
+ *      https://grommunio.com/
  *
  *  To synchronize a folder, add a section setting all parameters as below:
  *      store:      the ressource where the folder is located.
- *                  grammm users use 'SYSTEM' for the 'Public Folder'
+ *                  grommunio users use 'SYSTEM' for the 'Public Folder'
  *      folderid:   folder id of the folder to be synchronized
  *      name:       name to be displayed on the mobile device
  *      type:       supported types are:
@@ -284,14 +284,14 @@
  *                      DeviceManager::FLD_FLAGS_SENDASOWNER
  *                          When replying in this folder, automatically do Send-As
  *                      DeviceManager::FLD_FLAGS_NOREADONLYNOTIFY
- *                          If set, grammm-sync won't send notification emails for changes
+ *                          If set, grommunio-sync won't send notification emails for changes
  *                          if the folder is read-only
  *
  *  Additional notes:
- *  - on grammm systems, use backend/grammm/listfolders.php script to get a list
+ *  - on grommunio systems, use backend/grommunio/listfolders.php script to get a list
  *    of available folders
  *
- *  - all grammm-sync users must have at least reading permissions so the configured
+ *  - all grommunio-sync users must have at least reading permissions so the configured
  *    folders can be synchronized to the mobile. Else they are ignored.
  *
  *  - this feature is only partly suitable for multi-tenancy environments,

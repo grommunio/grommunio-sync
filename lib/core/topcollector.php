@@ -2,16 +2,16 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Available everywhere to collect data which could be displayed in
- * grammm-sync-top the 'persistent' flag should be used with care, so
+ * grommunio-sync-top the 'persistent' flag should be used with care, so
  * there is not too much information
  */
 
 class TopCollector extends InterProcessData {
-    const ENABLEDAT = "grammm-sync:topenabledat";
-    const TOPDATA = "grammm-sync:topdata";
+    const ENABLEDAT = "grommunio-sync:topenabledat";
+    const TOPDATA = "grommunio-sync:topdata";
     const ENABLED_CACHETIME = 5; // how often in seconds to check the ipc provider if it has data for the TopCollector
 
     protected $preserved;
@@ -115,7 +115,7 @@ class TopCollector extends InterProcessData {
             // use the pid as subkey
             $ok = $this->setDeviceUserData(self::TOPDATA, $this->latest, self::$devid, self::$user, self::$pid);
             if (!$ok) {
-                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to redis. grammm-sync top will not display this data.");
+                ZLog::Write(LOGLEVEL_WARN, "TopCollector::AnnounceInformation(): could not write to redis. grommunio-sync top will not display this data.");
                 return false;
             }
         }

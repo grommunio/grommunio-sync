@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  */
 
 class PingTracking extends InterProcessData {
@@ -15,7 +15,7 @@ class PingTracking extends InterProcessData {
     public function __construct() {
         // initialize super parameters
         $this->allocate = 0;
-        $this->type = "grammm-sync:pingtracking";
+        $this->type = "grommunio-sync:pingtracking";
         parent::__construct();
 
         $this->initPing();

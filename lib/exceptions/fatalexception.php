@@ -2,8 +2,8 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
- * Main class for fatal grammm-Sync exceptions execution stops
+ * Main class for fatal grommunio-Sync exceptions execution stops
  */
 class FatalException extends ZPushException {}

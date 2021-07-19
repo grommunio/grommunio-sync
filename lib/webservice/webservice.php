@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Provides an interface for administration tasks over a webservice
  */
@@ -30,7 +30,7 @@ class Webservice {
         }
 
         // initialize non-wsdl soap server
-        $this->server = new SoapServer(null, array('uri' => "http://grammm.com/webservice"));
+        $this->server = new SoapServer(null, array('uri' => "http://grommunio.com/webservice"));
 
         // the webservice command is handled by its class
         if ($commandCode == ZPush::COMMAND_WEBSERVICE_DEVICE) {

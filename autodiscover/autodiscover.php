@@ -2,9 +2,9 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
- * The autodiscover service for grammm-sync.
+ * The autodiscover service for grommunio-sync.
  */
 
 require_once '../vendor/autoload.php';
@@ -26,7 +26,7 @@ class ZPushAutodiscover {
     public static function DoZPushAutodiscover() {
         self::CheckConfig();
         ZLog::Write(LOGLEVEL_DEBUG, '-------- Start ZPushAutodiscover');
-        ZLog::Write(LOGLEVEL_INFO, sprintf("grammm-sync version='%s'", @constant('GRAMMSYNC_VERSION')));
+        ZLog::Write(LOGLEVEL_INFO, sprintf("grommunio-sync version='%s'", @constant('GRAMMSYNC_VERSION')));
         // TODO use filterevilinput?
         if (!isset(self::$instance)) {
             self::$instance = new ZPushAutodiscover();
@@ -43,7 +43,7 @@ class ZPushAutodiscover {
                 }
             }
             if (!headers_sent()) {
-                ZPush::PrintGrammmSyncLegal('GET not supported');
+                ZPush::PrintGrommunioSyncLegal('GET not supported');
             }
             ZLog::Write(LOGLEVEL_DEBUG, '-------- End ZPushAutodiscover');
             exit(1);
@@ -224,7 +224,7 @@ class ZPushAutodiscover {
      */
     private function createResponse($email, $userFullname) {
         $xml = file_get_contents('response.xml');
-        $zpushHost = defined('GRAMMM_HOST') ? GRAMMM_HOST : ( $_SERVER['HTTP_HOST'] ? : $_SERVER['SERVER_NAME']);
+        $zpushHost = defined('GROMMUNIO_HOST') ? GROMMUNIO_HOST : ( $_SERVER['HTTP_HOST'] ? : $_SERVER['SERVER_NAME']);
         $serverUrl = "https://" . $zpushHost . "/Microsoft-Server-ActiveSync";
         ZLog::Write(LOGLEVEL_INFO, sprintf("ZPushAutodiscover->createResponse(): server URL: '%s'", $serverUrl));
         $response = new SimpleXMLElement($xml);
@@ -325,7 +325,7 @@ class ZPushAutodiscover {
             }
 
             if (!defined('LOG_SYSLOG_PROGRAM')) {
-                define('LOG_SYSLOG_PROGRAM', 'grammm-sync-autodiscover');
+                define('LOG_SYSLOG_PROGRAM', 'grommunio-sync-autodiscover');
             }
 
             if (!is_numeric(LOG_SYSLOG_PORT)) {
