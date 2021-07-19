@@ -113,10 +113,6 @@
     // true - allow older devices, but enforce policies on devices which support it
     define('LOOSE_PROVISIONING', false);
 
-    // The file containing the policies' settings.
-    // Set a full path or relative to the grommunio-sync main directory
-    define('PROVISIONING_POLICYFILE', 'policies.ini');
-
     // Default conflict preference
     // Some devices allow to set if the server or PIM (mobile)
     // should win in case of a synchronization conflict

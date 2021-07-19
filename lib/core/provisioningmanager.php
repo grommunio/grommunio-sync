@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2021 grammm GmbH
+ * SPDX-FileCopyrightText: Copyright 2021 grommunio GmbH
  *
  * Bundled Provisioning code.
  */
@@ -19,7 +19,7 @@ class ProvisioningManager extends InterProcessData {
     private $loadtime = 0;
 
     private $deviceManager = false;
-    
+
     /**
      * Constructor
      *
@@ -28,12 +28,12 @@ class ProvisioningManager extends InterProcessData {
     public function __construct() {
         // initialize super parameters
         $this->allocate = 0;
-        $this->type = "grammm-sync:provisioningcache";
+        $this->type = "grommunio-sync:provisioningcache";
         parent::__construct();
         // initialize params
         $this->initializeParams();
-        
-        $this->typePolicyCacheId = sprintf("grammm-sync:policycache-%s", self::$user);
+
+        $this->typePolicyCacheId = sprintf("grommunio-sync:policycache-%s", self::$user);
 
         // TODO: check wipe is requested
 
@@ -150,7 +150,7 @@ class ProvisioningManager extends InterProcessData {
      * @return boolean      status
      */
     public function SetProvisioningPolicyKey($policykey) {
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("DeviceManager->SetPolicyKey('%s')", $policykey));
+        ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetPolicyKey('%s')", $policykey));
         $this->policyKey = $policykey;
         $this->updatePolicyCache();
         return true;
@@ -210,7 +210,7 @@ class ProvisioningManager extends InterProcessData {
         // save policies' hash
         $this->policyHash = $provisioning->GetPolicyHash();
         $this->updatePolicyCache();
-        
+
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SavePolicyHash(): Set policy with hash: %s", $this->policyHash));
     }
 

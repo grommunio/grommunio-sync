@@ -41,7 +41,7 @@ class PingTracking extends InterProcessData {
         // initialize params
         $this->initializeParams();
         // need microtime as connections sometimes start at the same second
-        self::$start = microtime(TRUE);
+        self::$start = microtime(true);
         $pingtracking = array("pid:".self::$pid => self::$start);
         return $this->setDeviceUserData($this->type, $pingtracking, self::$devid, self::$user, $subkey=-1, $doCas="merge");
     }

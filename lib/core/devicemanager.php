@@ -4,11 +4,11 @@
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
  * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
- * Manages device relevant data, loop detection and device states. 
+ * Manages device relevant data, loop detection and device states.
  * The DeviceManager uses a IStateMachine implementation with
  * IStateMachine::DEVICEDATA to save device relevant data.
- * 
- * In order to update device information in redis, DeviceManager 
+ *
+ * In order to update device information in redis, DeviceManager
  * implements InterProcessData.
  */
 
@@ -65,7 +65,7 @@ class DeviceManager extends InterProcessData {
 
         // initialize InterProcess parameters
         $this->allocate = 0;
-        $this->type = "grammm-sync:devicesuser";
+        $this->type = "grommunio-sync:devicesuser";
         parent::__construct();
         parent::initializeParams();
 
