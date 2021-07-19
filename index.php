@@ -78,7 +78,6 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
 
         if (RequestProcessor::isUserAuthenticated()) {
             header("X-Grommunio-Sync-Version: ". @constant('GROMMUNIOSYNC_VERSION'));
-        }
 
             // announce the supported AS versions (if not already sent to device)
             if (ZPush::GetDeviceManager()->AnnounceASVersion()) {
@@ -86,8 +85,8 @@ require_once GROMOX_PHP_PATH . 'lib/db.php';
                 ZLog::Write(LOGLEVEL_INFO, sprintf("Announcing latest AS version to device: %s", $versions));
                 header("X-MS-RP: ". $versions);
             }
-
         }
+
         RequestProcessor::Initialize();
         RequestProcessor::HandleRequest();
 
