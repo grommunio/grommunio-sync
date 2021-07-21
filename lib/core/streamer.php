@@ -9,7 +9,7 @@
  * set/read the object variables of the subclass according to the mappings
  */
 
-class Streamer implements Serializable {
+class Streamer implements Serializable, JsonSerializable {
     const STREAMER_VAR = 1;
     const STREAMER_ARRAY = 2;
     const STREAMER_TYPE = 3;
@@ -417,6 +417,48 @@ class Streamer implements Serializable {
             $streamerVars[] = $v[self::STREAMER_VAR];
         }
         return $streamerVars;
+    }
+
+    /**
+     * JsonSerializable interface method
+     *
+     * Serializes the object to a value that can be serialized natively by json_encode()
+     *
+     * @access public
+     * @return array
+     */
+    public function jsonSerialize() {
+        $data = [];
+        foreach ($this->mapping as $k => $v) {
+            if (isset($this->{$v[self::STREAMER_VAR]})) {
+                $data[$v[self::STREAMER_VAR]] = $this->{$v[self::STREAMER_VAR]};
+            }
+        }
+        return [
+            'gsSyncStateClass'  => get_class($this),
+            'data'              => $data,
+        ];
+    }
+
+    /**
+     * Restores the object from a value provided by json_decode
+     *
+     * @param $stdObj   stdClass Object
+     *
+     * @access public
+     * @return void
+     */
+    public function jsonDeserialize($stdObj) {
+        foreach($stdObj->data as $k => $v) {
+            if (is_object($v) && isset($v->gsSyncStateClass)) {
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("Streamer->jsonDeserialize(): top class '%s'", $v->gsSyncStateClass));
+                $this->$k = new $v->gsSyncStateClass;
+                $this->$k->jsonDeserialize($v);
+            }
+            else {
+                $this->$k = $v;
+            }
+        }
     }
 
     /**----------------------------------------------------------------------------------------------------------
