@@ -162,8 +162,7 @@ class DeviceManager extends InterProcessData {
                     $this->statemachine->SetState($data, self::$devid, IStateMachine::DEVICEDATA);
 
                     // update deviceuser stat in redis as well
-                    // TODO: remove serialize($data) here
-                    $this->setDeviceUserData($this->type, array(self::$user => serialize($data)), self::$devid, -1, -1); //, $doCas="merge");
+                    $this->setDeviceUserData($this->type, array(self::$user => $data), self::$devid, -1, -1); //, $doCas="merge");
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->Save(): Device data saved");
                 }
             }
