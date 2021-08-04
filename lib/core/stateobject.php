@@ -7,7 +7,7 @@
  * Simple data object with some PHP magic
  */
 
-class StateObject implements Serializable {
+class StateObject implements Serializable, JsonSerializable {
     private $SO_internalid;
     protected $data = array();
     protected $unsetdata = array();
@@ -47,6 +47,11 @@ class StateObject implements Serializable {
      */
     public function SetDataArray($data, $markAsChanged = false) {
         $this->data = $data;
+        if (isset($this->data['contentdata']) && is_array($this->data['contentdata'])) {
+            // ASDevice contendata is array of stdClass objects,
+            // but we need an array of arrays
+            $this->data['contentdata'] = json_decode(json_encode($this->data['contentdata']), true);
+        }
         $this->changed = $markAsChanged;
     }
 
@@ -231,5 +236,61 @@ class StateObject implements Serializable {
      */
     public static function ThrowStateInvalidException() {
         throw new StateInvalidException("Unserialization failed as class was not found or not compatible");
+    }
+
+
+    /**
+     * JsonSerializable interface method
+     *
+     * Serializes the object to a value that can be serialized natively by json_encode()
+     *
+     * @access public
+     * @return array
+     */
+    public function jsonSerialize() {
+        return [
+            'gsSyncStateClass'  => get_class($this),
+            'data'              => $this->data,
+        ];
+    }
+
+    /**
+     * Restores the object from a value provided by json_decode
+     *
+     * @param $stdObj   stdClass Object
+     *
+     * @access public
+     * @return void
+     */
+    public function jsonDeserialize($stdObj) {
+        foreach($stdObj->data as $prop => $val) {
+            if (is_object($val) && isset($val->gsSyncStateClass)) {
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): top class '%s'", $val->gsSyncStateClass));
+                $this->data[$prop] = new $val->gsSyncStateClass;
+                $this->data[$prop]->jsonDeserialize($val);
+            }
+            else if (is_object($val)) {
+                // json_decode converts arrays into objects, convert them back to arrays
+                $this->data[$prop] = [];
+                foreach ($val as $k => $v) {
+                    if (is_object($v) && isset($v->gsSyncStateClass)) {
+                        ZLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): sub class '%s'", $v->gsSyncStateClass));
+                        if (strcasecmp($v->gsSyncStateClass, "ASDevice") == 0) {
+                            $this->data[$prop][$k] = new ASDevice(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
+                        }
+                        else {
+                            $this->data[$prop][$k] = new $v->gsSyncStateClass;
+                        }
+                        $this->data[$prop][$k]->jsonDeserialize($v);
+                    }
+                    else {
+                        $this->data[$prop][$k] = $v;
+                    }
+                }
+            }
+            else {
+                $this->data[$prop] = $val;
+            }
+        }
     }
 }

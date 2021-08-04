@@ -1612,10 +1612,16 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         }
         $stateMessage = $this->getStateMessage($devid, $type, $key);
         $state = base64_decode(MAPIUtils::readPropStream($stateMessage, PR_BODY));
-        if ($state && $state[1] === ':') {
-            $unserializedState = unserialize($state);
+
+        if ($state && $state[0] === '{') {
+            $jsonDec = json_decode($state);
+            if (isset($jsonDec->gsSyncStateClass)) {
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->GetState(): top class '%s'", $jsonDec->gsSyncStateClass));
+                $gsObj = new $jsonDec->gsSyncStateClass;
+                $gsObj->jsonDeserialize($jsonDec);
+            }
         }
-        return isset($unserializedState) && is_object($unserializedState) ? $unserializedState : $state;
+        return isset($gsObj) && is_object($gsObj) ? $gsObj : $state;
     }
 
     /**
@@ -1746,6 +1752,10 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @return MAPIFolder
      */
     private function getStateFolder($devid) {
+        // Options request doesn't send device id
+        if (strlen($devid) == 0) {
+            return false;
+        }
         // Try to get the state folder id from redis
         if (!$this->stateFolder) {
             $folderentryid = $this->getDeviceUserData($this->userDeviceData, $devid, $this->mainUser, "statefolder");
@@ -1875,8 +1885,16 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrommunioState']);
         }
         if (isset($stateMessage)) {
-            $encodedState = is_object($state) || is_array($state) ? serialize($state) : $state;
-            $encodedState = base64_encode($encodedState);
+            $jsonEncodedState = is_object($state) || is_array($state) ? json_encode($state, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE) : $state;
+
+            $jsonDec = json_decode($jsonEncodedState);
+
+            if (isset($jsonDec->gsSyncStateClass)) {
+                $gsObj = new $jsonDec->gsSyncStateClass;
+                $gsObj->jsonDeserialize($jsonDec);
+            }
+
+            $encodedState = base64_encode($jsonEncodedState);
             $encodedStateLength = strlen($encodedState);
             mapi_setprops($stateMessage, [PR_LAST_VERB_EXECUTED => is_int($counter) ? $counter : 0]);
             $stream = mapi_openproperty($stateMessage, PR_BODY, IID_IStream, STGM_DIRECT, MAPI_CREATE | MAPI_MODIFY);
