@@ -47,7 +47,7 @@ class StateObject implements Serializable, JsonSerializable {
      */
     public function SetDataArray($data, $markAsChanged = false) {
         $this->data = $data;
-        if (is_array($this->data['contentdata'])) {
+        if (isset($this->data['contentdata']) && is_array($this->data['contentdata'])) {
             // ASDevice contendata is array of stdClass objects,
             // but we need an array of arrays
             $this->data['contentdata'] = json_decode(json_encode($this->data['contentdata']), true);
