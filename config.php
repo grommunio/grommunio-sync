@@ -105,7 +105,7 @@
  *  Mobile settings
  */
     // Device Provisioning
-    define('PROVISIONING', false);
+    define('PROVISIONING', true);
 
     // This option allows the 'loose enforcement' of the provisioning policies for older
     // devices which don't support provisioning (like WM 5 and HTC Android Mail) - dw2412 contribution
