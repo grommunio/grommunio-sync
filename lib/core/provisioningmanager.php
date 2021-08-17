@@ -56,7 +56,7 @@ class ProvisioningManager extends InterProcessData {
             // failed to retrieve: use default "empty" policy
             if (!$policies) {
                 // failed to retrieve: use default "empty" policy
-                $this->policies = array();
+                $policies = array();
             }
             $this->policies = $policies;
             // cache policies for 24h
