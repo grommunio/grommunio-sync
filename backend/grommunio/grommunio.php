@@ -1619,6 +1619,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->GetState(): top class '%s'", $jsonDec->gsSyncStateClass));
                 $gsObj = new $jsonDec->gsSyncStateClass;
                 $gsObj->jsonDeserialize($jsonDec);
+                $gsObj->postUnserialize();
             }
         }
         return isset($gsObj) && is_object($gsObj) ? $gsObj : $state;

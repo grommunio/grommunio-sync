@@ -139,6 +139,10 @@ class StateObject implements Serializable, JsonSerializable {
         $operator = substr($name, 0,3);
         $var = substr($name,3);
 
+        if ($name == "postunserialize") {
+            return $this->postUnserialize();
+        }
+
         if ($operator == "set" && count($arguments) == 1){
             $this->$var = $arguments[0];
             return true;
@@ -268,6 +272,7 @@ class StateObject implements Serializable, JsonSerializable {
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): top class '%s'", $val->gsSyncStateClass));
                 $this->data[$prop] = new $val->gsSyncStateClass;
                 $this->data[$prop]->jsonDeserialize($val);
+                $this->data[$prop]->postUnserialize();
             }
             else if (is_object($val)) {
                 // json_decode converts arrays into objects, convert them back to arrays
@@ -282,6 +287,7 @@ class StateObject implements Serializable, JsonSerializable {
                             $this->data[$prop][$k] = new $v->gsSyncStateClass;
                         }
                         $this->data[$prop][$k]->jsonDeserialize($v);
+                        $this->data[$prop][$k]->postUnserialize();
                     }
                     else {
                         $this->data[$prop][$k] = $v;
