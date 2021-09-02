@@ -2626,7 +2626,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         // check if there's a contact with the given email address
         $root = mapi_msgstore_openentry($this->defaultstore);
         if (!$root) {
-            ZLog::Write(LOGLEVEL_ERROR, sprintf("BackendGrommunio->resolveRecipientContact(): Unable to open default store: 0x%X", mapi_last_hresult));
+            ZLog::Write(LOGLEVEL_ERROR, sprintf("BackendGrommunio->resolveRecipientContact(): Unable to open default store: 0x%X", mapi_last_hresult()));
         }
         $rootprops = mapi_getprops($root, array(PR_IPM_CONTACT_ENTRYID));
         $contacts = $this->getContactsFromFolder($this->defaultstore, $rootprops[PR_IPM_CONTACT_ENTRYID], $to);
