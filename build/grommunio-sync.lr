@@ -1,6 +1,6 @@
 /var/log/grommunio-sync/*.log {
 	size 1k
-	su gromox gromox
+	su grosync grosync
 	compress
 	rotate 4
 }
