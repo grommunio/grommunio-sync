@@ -1583,11 +1583,14 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @throws StateNotFoundException
      */
     public function GetStateHash($devid, $type, $key = false, $counter = false) {
-        $stateMessage = $this->getStateMessage($devid, $type, $key);
-        $stateMessageProps = mapi_getprops($stateMessage, [PR_LAST_MODIFICATION_TIME]);
-        if (isset($stateMessageProps[PR_LAST_MODIFICATION_TIME])) {
-            return $stateMessageProps[PR_LAST_MODIFICATION_TIME];
+        try {
+            $stateMessage = $this->getStateMessage($devid, $type, $key);
+            $stateMessageProps = mapi_getprops($stateMessage, [PR_LAST_MODIFICATION_TIME]);
+            if (isset($stateMessageProps[PR_LAST_MODIFICATION_TIME])) {
+                return $stateMessageProps[PR_LAST_MODIFICATION_TIME];
+            }
         }
+        catch (StateNotFoundException $e) { }
         return "0";
     }
 
@@ -1805,7 +1808,9 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                     // TODO: handle this
                 }
                 if (isset($stateFolder) && $stateFolder) {
-                    $this->stateFolder = mapi_folder_createfolder($stateFolder, $devid, "");
+                    $devStateFolder = mapi_folder_createfolder($stateFolder, $devid, "");
+                    $devStateFolderProps = mapi_getprops($devStateFolder);
+                    $this->stateFolder = mapi_msgstore_openentry($this->store, $devStateFolderProps[PR_ENTRYID]);
                     mapi_setprops($this->stateFolder, array(PR_ATTR_HIDDEN => true));
                     // we don't cache the entryid in redis, because this will happen on the next request anyway
                 }
@@ -1840,17 +1845,19 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             $this->getStateFolder(Request::GetDeviceID());
             if (!$this->stateFolder) {
                 throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state folder for device '%s'",
-                    $devid));
+                $devid));
             }
         }
         $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
         $restriction = $this->getStateMessageRestriction($messageName);
         $stateFolderContents = mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
-        mapi_table_restrict($stateFolderContents, $restriction);
-        $rowCnt = mapi_table_getrowcount($stateFolderContents);
-        if ($rowCnt == 1) {
-            $stateFolderRows = mapi_table_queryrows($stateFolderContents, [PR_ENTRYID], 0, 1);
-            return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
+        if ($stateFolderContents) {
+            mapi_table_restrict($stateFolderContents, $restriction);
+            $rowCnt = mapi_table_getrowcount($stateFolderContents);
+            if ($rowCnt == 1) {
+                $stateFolderRows = mapi_table_queryrows($stateFolderContents, [PR_ENTRYID], 0, 1);
+                return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
+            }
         }
         throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state message '%s'",
             $messageName));
