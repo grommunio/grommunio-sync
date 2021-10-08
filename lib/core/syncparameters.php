@@ -410,7 +410,8 @@ class SyncParameters extends StateObject {
             return parent::__call($name, $arguments);
         }
 
-        return $this->contentParameters[$this->currentCPO]->__call($name, $arguments);
+        $cpo = $this->normalizeType($this->currentCPO);
+        return $this->contentParameters[$cpo]->__call($name, $arguments);
     }
 
 
