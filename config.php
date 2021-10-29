@@ -114,7 +114,10 @@
     define('LOOSE_PROVISIONING', false);
 
     // Retrive polcies for a user from admin API using the following endpoint
-    define('ADMIN_API_POLICY_ENDPOINT', 'http://127.0.0.1:8080/api/v1/service/syncPolicy/');
+    define('ADMIN_API_POLICY_ENDPOINT', 'http://[::1]:8080/api/v1/service/syncPolicy/');
+
+    // Retrieve and update remote wipe status for a user and device from admin API using the following endpoint
+    define('ADMIN_API_WIPE_ENDPOINT', 'http://[::1]:8080/api/v1/service/wipe/');
 
     // Default conflict preference
     // Some devices allow to set if the server or PIM (mobile)

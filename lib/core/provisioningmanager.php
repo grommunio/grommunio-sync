@@ -35,7 +35,10 @@ class ProvisioningManager extends InterProcessData {
 
         $this->typePolicyCacheId = sprintf("grommunio-sync:policycache-%s", self::$user);
 
-        // TODO: check wipe is requested
+        // Remote wipe requested ?
+        // If there is an entry in the provisioningcache for this user+device we assume that there is **NO** remote wipe requested.
+        // If a device is to be remotewipe'd, the entry from the provisioningcache will be removed by the admin api.
+        // This will trigger a provisioning operation and retrieve the status via GetProvisioningWipeStatus().
 
         // get provisioning data from redis
         $p = $this->getData($this->typePolicyCacheId);
@@ -153,7 +156,9 @@ class ProvisioningManager extends InterProcessData {
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetPolicyKey('%s')", $policykey));
         $this->policyKey = $policykey;
         $this->updatePolicyCache();
-        return true;
+
+        // tell the Admin API that the policies were successfully deployed
+        return $this->SetProvisioningWipeStatus(SYNC_PROVISION_RWSTATUS_OK);
     }
 
     /**
@@ -175,7 +180,25 @@ class ProvisioningManager extends InterProcessData {
      * @return int          returns the current status of the device - SYNC_PROVISION_RWSTATUS_*
      */
     public function GetProvisioningWipeStatus() {
-        return SYNC_PROVISION_RWSTATUS_NA;
+        $status = SYNC_PROVISION_RWSTATUS_NA;
+
+        // retrieve the WIPE STATUS from the Admin API
+        $api_response = file_get_contents(ADMIN_API_WIPE_ENDPOINT . self::$user ."?devices=". self::$devid);
+        if ($api_response) {
+            $data = json_decode($api_response, true);
+            if (isset($data['data'][self::$devid]["status"])) {
+                    $status = $data['data'][self::$devid]["status"];
+                    // reset status to pending if it was already executed
+                    if ($status >= SYNC_PROVISION_RWSTATUS_PENDING) {
+                        ZLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): REMOTE WIPE due for user '%s' on device '%s' - status: '%s'",  self::$user, self::$devid, $status));
+                        $status = SYNC_PROVISION_RWSTATUS_PENDING;
+                    }
+                    else {
+                        ZLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): no remote wipe pending - status: '%s'", $status));
+                    }
+            }
+        }
+        return $status;
     }
 
     /**
@@ -187,15 +210,24 @@ class ProvisioningManager extends InterProcessData {
      * @return boolean      could fail if trying to update status to a wipe status which was not requested before
      */
     public function SetProvisioningWipeStatus($status) {
-        ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetProvisioningWipeStatus() change from '%d' to '%d'", $this->wipeStatus, $status));
-
-        if ($status > SYNC_PROVISION_RWSTATUS_OK && !($this->wipeStatus > SYNC_PROVISION_RWSTATUS_OK)) {
-            ZLog::Write(LOGLEVEL_ERROR, "Not permitted to update remote wipe status to a higher value as remote wipe was not initiated!");
-            return false;
-        }
-
-        // TODO: implement saving wipe status
-        return true;
+        ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetProvisioningWipeStatus() set to '%d'", $status));
+        $opts = array('http' =>
+            array(
+                'method' => 'POST',
+                'header' => 'Content-Type: application/json',
+                'ignore_errors' => true,
+                'content' => json_encode(
+                    array(
+                        'remoteIP' => Request::GetRemoteAddr(),
+                        'status' => $status,
+                        'time' => time()
+                    )
+                )
+            )
+        );
+        $ret = file_get_contents(ADMIN_API_WIPE_ENDPOINT . self::$user ."?devices=". self::$devid, false, stream_context_create($opts));
+        ZLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetProvisioningWipeStatus() admin API response: %s", trim(Utils::PrintAsString($ret))));
+        return strpos($http_response_header[0], "201") !== false;
     }
 
     /**

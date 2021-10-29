@@ -24,9 +24,10 @@ class Provisioning extends RequestProcessor {
         $rwstatus = ZPush::GetProvisioningManager()->GetProvisioningWipeStatus();
         $rwstatusWiped = false;
         $deviceInfoSet = false;
+        $wipeRequest = ! ($rwstatus < SYNC_PROVISION_RWSTATUS_PENDING);
 
         // if this is a regular provisioning require that an authenticated remote user
-        if ($rwstatus < SYNC_PROVISION_RWSTATUS_PENDING) {
+        if (! $wipeRequest) {
             ZLog::Write(LOGLEVEL_DEBUG, "RequestProcessor::HandleProvision(): Forcing delayed Authentication");
             self::Authenticate();
         }
@@ -122,8 +123,13 @@ class Provisioning extends RequestProcessor {
                     $deviceinformation = new SyncDeviceInformation();
                     $deviceinformation->Decode(self::$decoder);
                     $deviceinformation->Status = SYNC_SETTINGSSTATUS_SUCCESS;
-                    // for this operation the device manager is available
-                    ZPush::GetDeviceManager()->SaveDeviceInformation($deviceinformation);
+                    if (! $wipeRequest) {
+                        // for this operation the device manager is available
+                        ZPush::GetDeviceManager()->SaveDeviceInformation($deviceinformation);
+                    }
+                    else {
+                        ZLog::Write(LOGLEVEL_DEBUG, "Ignoring incoming device information as WIPE is due.");
+                    }
                     if (!self::$decoder->getElementEndTag())  // SYNC_SETTINGS_SET
                         return false;
                     if (!self::$decoder->getElementEndTag())  // SYNC_SETTINGS_DEVICEINFORMATION
@@ -212,7 +218,7 @@ class Provisioning extends RequestProcessor {
         }
 
         //set the new final policy key in the provisioning manager
-        if (!$phase2) {
+        if (!$phase2 && ! $wipeRequest) {
             ZPush::GetProvisioningManager()->SetProvisioningPolicyKey($policykey);
             self::$topCollector->AnnounceInformation("Policies deployed", true);
         }
