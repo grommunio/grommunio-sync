@@ -605,4 +605,14 @@ abstract class SyncObject extends Streamer {
         }
         return $val;
     }
+
+    /**
+     * Called after the SyncObject was unserialized
+     *
+     * @access public
+     * @return boolean
+     */
+    public function postUnserialize() {
+        return true;
+    }
 }

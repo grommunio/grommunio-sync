@@ -7,10 +7,10 @@
  * HierarchyCache implementation
  */
 
-class HierarchyCache {
-    private $changed = false;
-    protected $cacheById;
-    private $cacheByIdOld;
+class HierarchyCache extends StateObject {
+    protected $changed = false;
+    protected $data;
+    private $dataOld;
 
     /**
      * Constructor of the HierarchyCache
@@ -19,8 +19,8 @@ class HierarchyCache {
      * @return
      */
     public function __construct() {
-        $this->cacheById = array();
-        $this->cacheByIdOld = $this->cacheById;
+        $this->data = array();
+        $this->dataOld = $this->data;
         $this->changed = true;
     }
 
@@ -35,13 +35,14 @@ class HierarchyCache {
     }
 
     /**
-     * Copy current CacheById to memory
+     * Copy current data to memory
      *
      * @access public
      * @return boolean
      */
     public function CopyOldState() {
-        $this->cacheByIdOld = $this->cacheById;
+        $this->dataOld = $this->data;
+        $this->changed = false;
         return true;
     }
 
@@ -56,11 +57,11 @@ class HierarchyCache {
      * @return SyncObject/boolean       false if not found
      */
     public function GetFolder($serverid, $oldState = false) {
-        if (!$oldState && array_key_exists($serverid, $this->cacheById)) {
-            return $this->cacheById[$serverid];
+        if (!$oldState && array_key_exists($serverid, $this->data)) {
+            return $this->data[$serverid];
         }
-        else if ($oldState && array_key_exists($serverid, $this->cacheByIdOld)) {
-            return $this->cacheByIdOld[$serverid];
+        else if ($oldState && array_key_exists($serverid, $this->dataOld)) {
+            return $this->dataOld[$serverid];
         }
         return false;
     }
@@ -78,13 +79,13 @@ class HierarchyCache {
 
         // on update the $folder does most of the times not contain a type
         // we copy the value in this case to the new $folder object
-        if (isset($this->cacheById[$folder->serverid]) && (!isset($folder->type) || $folder->type == false) && isset($this->cacheById[$folder->serverid]->type)) {
-            $folder->type = $this->cacheById[$folder->serverid]->type;
+        if (isset($this->data[$folder->serverid]) && (!isset($folder->type) || $folder->type == false) && isset($this->data[$folder->serverid]->type)) {
+            $folder->type = $this->data[$folder->serverid]->type;
             ZLog::Write(LOGLEVEL_DEBUG, sprintf("HierarchyCache: AddFolder() is an update: used type '%s' from old object", $folder->type));
         }
 
         // add/update
-        $this->cacheById[$folder->serverid] = $folder;
+        $this->data[$folder->serverid] = $folder;
         $this->changed = true;
 
         return true;
@@ -102,7 +103,7 @@ class HierarchyCache {
         $ftype = $this->GetFolder($serverid);
 
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("HierarchyCache: DelFolder() serverid: '%s' - type: '%s'", $serverid, $ftype->type));
-        unset($this->cacheById[$serverid]);
+        unset($this->data[$serverid]);
         $this->changed = true;
         return true;
     }
@@ -119,7 +120,7 @@ class HierarchyCache {
         if (!is_array($folders))
             return false;
 
-        $this->cacheById = array();
+        $this->data = array();
 
         foreach ($folders as $folder) {
             if (!isset($folder->type))
@@ -139,9 +140,9 @@ class HierarchyCache {
      */
     public function ExportFolders($oldstate = false) {
         if ($oldstate === false)
-            return $this->cacheById;
+            return $this->data;
         else
-            return $this->cacheByIdOld;
+            return $this->dataOld;
     }
 
     /**
@@ -151,8 +152,8 @@ class HierarchyCache {
      * @return array        with SyncFolder objects
      */
     public function GetDeletedFolders() {
-        // diffing the OldCacheById with CacheById we know if folders were deleted
-        return array_diff_key($this->cacheByIdOld, $this->cacheById);
+        // diffing the Olddata with data we know if folders were deleted
+        return array_diff_key($this->dataOld, $this->data);
     }
 
     /**
@@ -162,7 +163,7 @@ class HierarchyCache {
      * @return string
      */
     public function GetStat() {
-        return sprintf("HierarchyCache is %s - Cached objects: %d", ((isset($this->cacheById))?"up":"down"), ((isset($this->cacheById))?count($this->cacheById):"0"));
+        return sprintf("HierarchyCache is %s - Cached objects: %d", ((isset($this->data))?"up":"down"), ((isset($this->data))?count($this->data):"0"));
     }
 
     /**
@@ -173,8 +174,8 @@ class HierarchyCache {
      */
     public function StripData() {
         unset($this->changed);
-        unset($this->cacheByIdOld);
-        foreach ($this->cacheById as $id => $folder) {
+        unset($this->dataOld);
+        foreach ($this->data as $id => $folder) {
             $folder->StripData();
         }
         return true;
@@ -188,7 +189,7 @@ class HierarchyCache {
      * @return array
      */
     public function __sleep() {
-        return array("cacheById");
+        return array("data");
     }
 
 }
