@@ -385,7 +385,7 @@ class StateManager {
         if ($savedUuid) {
             ZLog::Write(LOGLEVEL_DEBUG, sprintf("StateManager::UnLinkState('%s'): saved state '%s' will be deleted.", $folderid, $savedUuid));
             ZPush::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::DEFTYPE, $savedUuid, self::FIXEDHIERARCHYCOUNTER *2);
-            ZPush::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FOLDERDATA, $savedUuid); // CPO
+            ZPush::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FOLDERDATA, $savedUuid, false, true); // CPO
             ZPush::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FAILSAVE, $savedUuid, self::FIXEDHIERARCHYCOUNTER *2);
             ZPush::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, $savedUuid, self::FIXEDHIERARCHYCOUNTER *2);
 

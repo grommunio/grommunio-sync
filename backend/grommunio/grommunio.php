@@ -1584,7 +1584,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      */
     public function GetStateHash($devid, $type, $key = false, $counter = false) {
         try {
-            $stateMessage = $this->getStateMessage($devid, $type, $key);
+            $stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
             $stateMessageProps = mapi_getprops($stateMessage, [PR_LAST_MODIFICATION_TIME]);
             if (isset($stateMessageProps[PR_LAST_MODIFICATION_TIME])) {
                 return $stateMessageProps[PR_LAST_MODIFICATION_TIME];
@@ -1612,8 +1612,12 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     public function GetState($devid, $type, $key = false, $counter = false, $cleanstates = true) {
         if ($counter && $cleanstates) {
             $this->CleanStates($devid, $type, $key, $counter);
+            // also clean Failsave state for previous counter
+            if ($key == false) {
+                $this->CleanStates($devid, $type, IStateMachine::FAILSAVE, $counter);
+            }
         }
-        $stateMessage = $this->getStateMessage($devid, $type, $key);
+        $stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
         $state = base64_decode(MAPIUtils::readPropStream($stateMessage, PR_BODY));
 
         if ($state && $state[0] === '{') {
@@ -1662,7 +1666,29 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @throws StateInvalidException
      */
     public function CleanStates($devid, $type, $key, $counter = false, $thisCounterOnly = false) {
-        // TODO: implement
+        if (!$this->stateFolder) {
+            $this->getStateFolder($devid);
+            if (!$this->stateFolder) {
+                throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state folder for device '%s'",
+                $devid));
+            }
+        }
+        $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
+        $restriction = $this->getStateMessageRestriction($messageName, $counter, $thisCounterOnly);
+        $stateFolderContents = mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
+        if ($stateFolderContents) {
+            mapi_table_restrict($stateFolderContents, $restriction);
+            $rowCnt = mapi_table_getrowcount($stateFolderContents);
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->CleanStates(): Found %d states to clean (%s)", $rowCnt, $messageName));
+            if ($rowCnt > 0) {
+                $rows = mapi_table_queryallrows($stateFolderContents, [PR_ENTRYID]);
+                $entryids = [];
+                foreach($rows as $row) {
+                    $entryids[] = $row[PR_ENTRYID];
+                }
+                mapi_folder_deletemessages($this->stateFolder, $entryids, DELETE_HARD_DELETE);
+            }
+        }
     }
 
     /**
@@ -1835,12 +1861,14 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @param string    $devid              the device id
      * @param string    $type               the state type
      * @param string    $key                (opt)
+     * @param string    $counter            state counter
+
      *
      * @access private
      * @return MAPIMessage
      * @throws StateNotFoundException
      */
-    private function getStateMessage($devid, $type, $key) {
+    private function getStateMessage($devid, $type, $key, $counter) {
         if (!$this->stateFolder) {
             $this->getStateFolder(Request::GetDeviceID());
             if (!$this->stateFolder) {
@@ -1849,7 +1877,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             }
         }
         $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
-        $restriction = $this->getStateMessageRestriction($messageName);
+        $restriction = $this->getStateMessageRestriction($messageName, $counter, true);
         $stateFolderContents = mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
         if ($stateFolderContents) {
             mapi_table_restrict($stateFolderContents, $restriction);
@@ -1859,8 +1887,8 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                 return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
             }
         }
-        throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state message '%s'",
-            $messageName));
+        throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state message '%s-%s'",
+            $messageName, Utils::PrintAsString($counter)));
     }
 
     /**
@@ -1889,18 +1917,11 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->setStateMessage(): mapi_folder_createmessage 0x%08X", mapi_last_hresult()));
 
             $messageName = rtrim((($key !== false) ? $key."-" : "") . (($type !== "") ? $type : ""), "-");
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->setStateMessage(): creating new state message '%s'", $messageName));
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->setStateMessage(): creating new state message '%s-%d'", $messageName, is_int($counter) ? $counter : 0));
             mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrommunioState']);
         }
         if (isset($stateMessage)) {
             $jsonEncodedState = is_object($state) || is_array($state) ? json_encode($state, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE) : $state;
-
-            $jsonDec = json_decode($jsonEncodedState);
-
-            if (isset($jsonDec->gsSyncStateClass)) {
-                $gsObj = new $jsonDec->gsSyncStateClass;
-                $gsObj->jsonDeserialize($jsonDec);
-            }
 
             $encodedState = base64_encode($jsonEncodedState);
             $encodedStateLength = strlen($encodedState);
@@ -1910,8 +1931,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             mapi_stream_write($stream, $encodedState);
             mapi_stream_commit($stream);
             mapi_savechanges($stateMessage);
-
-            $stat = mapi_stream_stat($stream);
 
             return $encodedStateLength;
         }
@@ -1947,11 +1966,13 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * Returns the restriction for the associated message in the state folder.
      *
      * @param string    $messageName        the message name
+     * @param string    $counter            counter
+     * @param string    $thisCounterOnly    (opt) if provided, restrict to the exact counter
      *
      * @access private
      * @return array
      */
-    private function getStateMessageRestriction($messageName) {
+    private function getStateMessageRestriction($messageName, $counter, $thisCounterOnly = false) {
         return [RES_AND, [
             [   RES_PROPERTY,
                 [   RELOP => RELOP_EQ,
@@ -1963,6 +1984,12 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                 [   RELOP => RELOP_EQ,
                     ULPROPTAG => PR_MESSAGE_CLASS,
                     VALUE => 'IPM.Note.GrommunioState'
+                ],
+            ],
+            [   RES_PROPERTY,
+                [   RELOP => $thisCounterOnly ? RELOP_EQ : RELOP_LT,
+                    ULPROPTAG => PR_LAST_VERB_EXECUTED,
+                    VALUE => $counter
                 ],
             ]
         ]];
