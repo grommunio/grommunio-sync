@@ -445,6 +445,6 @@ class SyncParameters extends StateObject {
         $availableCPO = $this->normalizeType(self::DEFAULTOPTIONS);
         $this->UseCPO($availableCPO);
 
-        return true;
+        return parent::postUnserialize();
     }
 }

@@ -68,10 +68,12 @@ class DeviceManager extends InterProcessData {
         $this->type = "grommunio-sync:devicesuser";
         parent::__construct();
         parent::initializeParams();
+        $this->stateManager = new StateManager();
 
         // only continue if deviceid is set
         if (self::$devid) {
-            $this->device = new ASDevice(self::$devid, Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
+            $this->device = new ASDevice();
+            $this->device->Initialize(self::$devid, Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
             $this->loadDeviceData();
 
             ZPush::GetTopCollector()->SetUserAgent($this->device->GetDeviceUserAgent());
@@ -83,9 +85,6 @@ class DeviceManager extends InterProcessData {
         $this->loopdetection->ProcessLoopDetectionInit();
         $this->loopdetection->ProcessLoopDetectionPreviousConnectionFailed();
 
-        $this->stateManager = new StateManager();
-        $this->stateManager->SetDevice($this->device);
-
         $this->additionalFoldersHash = $this->getAdditionalFoldersHash();
     }
 
@@ -94,9 +93,10 @@ class DeviceManager extends InterProcessData {
      * @param ASDevice $asDevice
      */
     public function SetDevice($asDevice) {
+        // TODO: this is broken and callers should be removed/updated. ASDevice is now always overwritten.
         $this->device = $asDevice;
         $this->loadDeviceData();
-        $this->stateManager->SetDevice($this->device);
+        //$this->stateManager->SetDevice($this->device);
     }
 
     /**
@@ -147,8 +147,7 @@ class DeviceManager extends InterProcessData {
         $this->device->SetASVersion(Request::GetProtocolVersion());
 
         // data to be saved
-        $data = $this->device->GetData();
-        if ($data && Request::IsValidDeviceID() && $this->saveDevice) {
+        if ($this->device->IsDataChanged() && Request::IsValidDeviceID() && $this->saveDevice) {
             ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->Save(): Device data changed");
 
             try {
@@ -159,10 +158,12 @@ class DeviceManager extends InterProcessData {
                 }
 
                 if (RequestProcessor::isUserAuthenticated() || $this->device->GetForceSave() ) {
-                    $this->statemachine->SetState($data, self::$devid, IStateMachine::DEVICEDATA);
+                    $this->device->lastupdatetime = time();
+                    $this->device->StripData();
+                    $this->statemachine->SetState($this->device, self::$devid, IStateMachine::DEVICEDATA);
 
                     // update deviceuser stat in redis as well
-                    $this->setDeviceUserData($this->type, array(self::$user => $data), self::$devid, -1, -1); //, $doCas="merge");
+                    $this->setDeviceUserData($this->type, array(self::$user => $this->device), self::$devid, -1, $doCas="merge");
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->Save(): Device data saved");
                 }
             }
@@ -758,10 +759,10 @@ class DeviceManager extends InterProcessData {
         $currentStatus = $this->device->GetFolderSyncStatus($folderid);
 
         // status available or just initialized
-        if (isset($currentStatus[ASDevice::FOLDERSYNCSTATUS]) || $statusflag == self::FLD_SYNC_INITIALIZED) {
+        if (isset($currentStatus->{ASDevice::FOLDERSYNCSTATUS}) || $statusflag == self::FLD_SYNC_INITIALIZED) {
             // only update if there is a change
-            if ((!$currentStatus || $statusflag !== $currentStatus[ASDevice::FOLDERSYNCSTATUS]) && $statusflag != self::FLD_SYNC_COMPLETED) {
-                $this->device->SetFolderSyncStatus($folderid, array(ASDevice::FOLDERSYNCSTATUS => $statusflag));
+            if ((!$currentStatus || $statusflag !== $currentStatus->{ASDevice::FOLDERSYNCSTATUS}) && $statusflag != self::FLD_SYNC_COMPLETED) {
+                $this->device->SetFolderSyncStatus($folderid, $statusflag);
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("SetFolderSyncStatus(): set %s for %s", $statusflag, $folderid));
             }
             // if completed, remove the status
@@ -786,9 +787,9 @@ class DeviceManager extends InterProcessData {
         $currentStatus = $this->device->GetFolderSyncStatus($folderid);
 
         // status available ?
-        $hasStatus = isset($currentStatus[ASDevice::FOLDERSYNCSTATUS]);
+        $hasStatus = isset($currentStatus->{ASDevice::FOLDERSYNCSTATUS});
         if ($hasStatus) {
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("HasFolderSyncStatus(): saved folder status for %s: %s", $folderid, $currentStatus[ASDevice::FOLDERSYNCSTATUS]));
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("HasFolderSyncStatus(): saved folder status for %s: %s", $folderid, $currentStatus->{ASDevice::FOLDERSYNCSTATUS}));
         }
 
         return $hasStatus;
@@ -919,8 +920,26 @@ class DeviceManager extends InterProcessData {
             if ($deviceHash != $this->deviceHash) {
                 if ($this->deviceHash)
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->loadDeviceData(): Device data was changed, reloading");
-                $this->device->SetData($this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA));
+                $device = $this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA);
+                // TODO: case should be removed when removing ASDevice backwards compatibility
+                // fallback for old Z-Push like devicedata
+                if (($device instanceof StateObject) && isset($device->devices) && is_array($device->devices)) {
+                    ZLog::Write(LOGLEVEL_INFO, "Found old style device, converting...");
+                    list ($_deviceuser, $_domain) =  Utils::SplitDomainUser(Request::GetGETUser());
+                    if (!isset($device->data->devices[$_deviceuser])) {
+                        ZLog::Write(LOGLEVEL_INFO, "Using old style device for this request and updating when concluding");
+                        $device = $device->devices[$_deviceuser];
+                        $device->lastupdatetime = time();
+                    }
+                    else {
+                        ZLog::Write(LOGLEVEL_WARN, sprintf("Could not find '%s' in device state. Dropping previous device state!", $_deviceuser));
+                        return;
+                    }
+                }
+                $this->device = $device;
+                $this->device->LoadedDevice();
                 $this->deviceHash = $deviceHash;
+                $this->stateManager->SetDevice($this->device);
             }
         }
         catch (StateNotFoundException $snfex) {

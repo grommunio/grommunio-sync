@@ -39,7 +39,6 @@ class ASDevice extends StateObject {
                                     'syncfiltertype' => false,
                                 );
 
-    static private $loadedData;
     protected $newdevice;
     protected $hierarchyCache;
     protected $ignoredMessageIds;
@@ -48,109 +47,22 @@ class ASDevice extends StateObject {
     /**
      * AS Device constructor
      *
-     * @param string        $devid
-     * @param string        $devicetype
-     * @param string        $getuser
-     * @param string        $useragent
-     *
      * @access public
      * @return
      */
-    public function __construct($devid, $devicetype, $getuser, $useragent) {
-        $this->deviceid = $devid;
-        $this->devicetype = $devicetype;
-        list ($this->deviceuser, $this->domain) =  Utils::SplitDomainUser($getuser);
-        $this->useragent = $useragent;
+    public function __construct() {
         $this->firstsynctime = time();
         $this->newdevice = true;
         $this->ignoredMessageIds = array();
         $this->backend2folderidCache = false;
     }
 
-    /**
-     * initializes the ASDevice with previousily saved data
-     *
-     * @param mixed     $stateObject        the StateObject containing the device data
-     * @param boolean   $semanticUpdate     indicates if data relevant for all users should be cross checked (e.g. wipe requests)
-     *
-     * @access public
-     * @return
-     */
-    public function SetData($stateObject, $semanticUpdate = true) {
-        if (!($stateObject instanceof StateObject) || !isset($stateObject->devices) || !is_array($stateObject->devices)) return;
-
-        // is information about this device & user available?
-        if (isset($stateObject->devices[$this->deviceuser]) && $stateObject->devices[$this->deviceuser] instanceof ASDevice) {
-            // overwrite local data with data from the saved object
-            $this->SetDataArray($stateObject->devices[$this->deviceuser]->GetDataArray());
-            $this->newdevice = false;
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("ASDevice data loaded for user: '%s'", $this->deviceuser));
-        }
-
-        // check if RWStatus from another user on same device may require action
-        if ($semanticUpdate && count($stateObject->devices) > 1) {
-            foreach ($stateObject->devices as $user=>$asuserdata) {
-                if ($user == $this->user) continue;
-
-                // another user has a required action on this device
-                if (isset($asuserdata->wipeStatus) && $asuserdata->wipeStatus > SYNC_PROVISION_RWSTATUS_OK) {
-                    ZLog::Write(LOGLEVEL_INFO, sprintf("User '%s' has requested a remote wipe for this device on '%s'", $asuserdata->wipeRequestBy, strftime("%Y-%m-%d %H:%M", $asuserdata->wipeRequestOn)));
-
-                    // reset status to PENDING if wipe was executed before
-                    $this->wipeStatus =  ($asuserdata->wipeStatus & SYNC_PROVISION_RWSTATUS_WIPED)?SYNC_PROVISION_RWSTATUS_PENDING:$asuserdata->wipeStatus;
-                    $this->wipeRequestBy =  $asuserdata->wipeRequestBy;
-                    $this->wipeRequestOn =  $asuserdata->wipeRequestOn;
-                    $this->wipeActionOn = $asuserdata->wipeActionOn;
-                    break;
-                }
-            }
-        }
-
-        self::$loadedData = $stateObject;
-        $this->changed = false;
-    }
-
-    /**
-     * Returns the current AS Device in it's StateObject
-     * If the data was not changed, it returns false (no need to update any data)
-     *
-     * @access public
-     * @return array/boolean
-     */
-    public function GetData() {
-        if (! $this->changed)
-            return false;
-
-        // device was updated
-        $this->lastupdatetime = time();
-        unset($this->ignoredMessageIds);
-        unset($this->backend2folderidCache);
-
-        if (!isset(self::$loadedData) || !isset(self::$loadedData->devices) || !is_array(self::$loadedData->devices)) {
-            self::$loadedData = new StateObject();
-            $devices = array();
-        }
-        else
-            $devices = self::$loadedData->devices;
-
-        $devices[$this->deviceuser] = $this;
-
-        // check if RWStatus has to be updated so it can be updated for other users on same device
-        if (isset($this->wipeStatus) && $this->wipeStatus > SYNC_PROVISION_RWSTATUS_OK) {
-            foreach ($devices as $user=>$asuserdata) {
-                if ($user == $this->deviceuser) continue;
-                if (isset($this->wipeStatus))       $asuserdata->wipeStatus     = $this->wipeStatus;
-                if (isset($this->wipeRequestBy))    $asuserdata->wipeRequestBy  = $this->wipeRequestBy;
-                if (isset($this->wipeRequestOn))    $asuserdata->wipeRequestOn  = $this->wipeRequestOn;
-                if (isset($this->wipeActionOn))     $asuserdata->wipeActionOn   = $this->wipeActionOn;
-                $devices[$user] = $asuserdata;
-
-                ZLog::Write(LOGLEVEL_DEBUG, sprintf("Updated remote wipe status for user '%s' on the same device", $user));
-            }
-        }
-        self::$loadedData->devices = $devices;
-        return self::$loadedData;
-    }
+    public function Initialize($devid, $devicetype, $getuser, $useragent) {
+        $this->deviceid = $devid;
+        $this->devicetype = $devicetype;
+        list ($this->deviceuser, $this->domain) =  Utils::SplitDomainUser($getuser);
+        $this->useragent = $useragent;
+    } 
 
    /**
      * Removes internal data from the object, so this data can not be exposed.
@@ -200,6 +112,15 @@ class ASDevice extends StateObject {
         return (isset($this->newdevice) && $this->newdevice === true);
     }
 
+    /**
+     * Marked as loaded device
+     *
+     * @access public
+     * @return boolean
+     */
+    public function LoadedDevice() {
+        $this->newdevice = false;
+    }
 
     /**----------------------------------------------------------------------------------------------------------
      * Non-standard Getter and Setter
@@ -250,53 +171,11 @@ class ASDevice extends StateObject {
             if (! in_array(array(true, $this->useragent), $a)) {
                 $a[] = array(time(), $this->useragent);
                 $this->useragentHistory = $a;
+                $this->changed = true;
             }
         }
         $this->useragent = $useragent;
         return true;
-    }
-
-   /**
-     * Sets the current remote wipe status
-     *
-     * @param int       $status
-     * @param string    $requestedBy
-     * @access public
-     * @return int
-     */
-    public function SetWipeStatus($status, $requestedBy = false) {
-        // force saving the updated information if there was a transition between the wiping status
-        if ($this->wipeStatus > SYNC_PROVISION_RWSTATUS_OK && $status > SYNC_PROVISION_RWSTATUS_OK)
-            $this->forceSave = true;
-
-        if ($requestedBy != false) {
-            $this->wipeRequestedBy = $requestedBy;
-            $this->wipeRequestedOn = time();
-        }
-        else {
-            $this->wipeActionOn = time();
-        }
-
-        $this->wipeStatus = $status;
-
-        if ($this->wipeStatus > SYNC_PROVISION_RWSTATUS_PENDING)
-            ZLog::Write(LOGLEVEL_INFO, sprintf("ASDevice id '%s' was %s remote wiped on %s. Action requested by user '%s' on %s",
-                                        $this->deviceid, ($this->wipeStatus == SYNC_PROVISION_RWSTATUS_REQUESTED ? "requested to be": "sucessfully"),
-                                        strftime("%Y-%m-%d %H:%M", $this->wipeActionOn), $this->wipeRequestedBy, strftime("%Y-%m-%d %H:%M", $this->wipeRequestedOn)));
-    }
-
-   /**
-     * Sets the deployed policy key
-     *
-     * @param int       $policykey
-     *
-     * @access public
-     * @return
-     */
-    public function SetPolicyKey($policykey) {
-        $this->policykey = $policykey;
-        if ($this->GetWipeStatus() == SYNC_PROVISION_RWSTATUS_NA)
-            $this->wipeStatus = SYNC_PROVISION_RWSTATUS_OK;
     }
 
     /**
@@ -333,6 +212,7 @@ class ASDevice extends StateObject {
             $msges = $this->ignoredMessages;
             $msges[] = $ignoredMessage;
             $this->ignoredMessages = $msges;
+            $this->changed = true;
 
             return true;
         }
@@ -340,6 +220,7 @@ class ASDevice extends StateObject {
             $msges = $this->ignoredMessages;
             $msges[] = $ignoredMessage;
             $this->ignoredMessages = $msges;
+            $this->changed = true;
             ZLog::Write(LOGLEVEL_WARN, "ASDevice->AddIgnoredMessage(): added message has no folder/id");
             return true;
         }
@@ -388,6 +269,7 @@ class ASDevice extends StateObject {
                     }
                 }
                 $this->ignoredMessages = $newMessages;
+                $this->changed = true;
             }
         }
 
@@ -506,8 +388,8 @@ class ASDevice extends StateObject {
         if ($folderid === false) {
             return (isset($this->hierarchyUuid) && $this->hierarchyUuid !== self::UNDEFINED) ? $this->hierarchyUuid : false;
         }
-        else if (isset($this->contentData[$folderid][self::FOLDERUUID])) {
-            return $this->contentData[$folderid][self::FOLDERUUID];
+        else if (isset($this->contentData[$folderid]->{self::FOLDERUUID})) {
+            return $this->contentData[$folderid]->{self::FOLDERUUID};
         }
         return false;
     }
@@ -532,23 +414,29 @@ class ASDevice extends StateObject {
                 $this->ignoredMessages = array();
                 $this->backend2folderidCache = false;
             }
+            $this->changed = true;
         }
         else {
-
             $contentData = $this->contentData;
-            if (!isset($contentData[$folderid]) || !is_array($contentData[$folderid]))
-                $contentData[$folderid] = array();
+
+            if (!isset($contentData[$folderid])) {
+                $contentData[$folderid] = new stdClass();
+            }
 
             // check if the foldertype is set. This has to be available at this point, as generated during the first HierarchySync
-            if (!isset($contentData[$folderid][self::FOLDERTYPE]))
+            if (!isset($contentData[$folderid]->{self::FOLDERTYPE})) {
                 return false;
+            }
 
-            if ($uuid)
-                $contentData[$folderid][self::FOLDERUUID] = $uuid;
-            else
-                $contentData[$folderid][self::FOLDERUUID] = false;
+            if ($uuid) {
+                $contentData[$folderid]->{self::FOLDERUUID} = $uuid;
+            }
+            else {
+                $contentData[$folderid]->{self::FOLDERUUID} = false;
+            }
 
             $this->contentData = $contentData;
+            $this->changed = true;
         }
     }
 
@@ -561,8 +449,8 @@ class ASDevice extends StateObject {
      * @return int/boolean  returns false if the type is not set
      */
     public function GetFolderType($folderid) {
-        if (isset($this->contentData[$folderid][self::FOLDERTYPE])) {
-            return $this->contentData[$folderid][self::FOLDERTYPE];
+        if (isset($this->contentData[$folderid]->{self::FOLDERTYPE})) {
+            return $this->contentData[$folderid]->{self::FOLDERTYPE};
         }
         return false;
     }
@@ -579,11 +467,13 @@ class ASDevice extends StateObject {
     public function SetFolderType($folderid, $foldertype) {
         $contentData = $this->contentData;
 
-        if (!isset($contentData[$folderid]) || !is_array($contentData[$folderid]))
-            $contentData[$folderid] = array();
-        if (!isset($contentData[$folderid][self::FOLDERTYPE]) || $contentData[$folderid][self::FOLDERTYPE] != $foldertype ) {
-            $contentData[$folderid][self::FOLDERTYPE] = $foldertype;
+        if (!isset($contentData[$folderid])) {
+            $contentData[$folderid] = new stdClass();
+        }
+        if (!isset($contentData[$folderid]->{self::FOLDERTYPE}) || $contentData[$folderid]->{self::FOLDERTYPE} != $foldertype ) {
+            $contentData[$folderid]->{self::FOLDERTYPE} = $foldertype;
             $this->contentData = $contentData;
+            $this->changed = true;
             return true;
         }
         return false;
@@ -598,8 +488,8 @@ class ASDevice extends StateObject {
      * @return int/boolean  returns false if the type is not set
      */
     public function GetFolderBackendId($folderid) {
-        if (isset($this->contentData[$folderid][self::FOLDERBACKENDID])) {
-            return $this->contentData[$folderid][self::FOLDERBACKENDID];
+        if (isset($this->contentData[$folderid]->{self::FOLDERBACKENDID})) {
+            return $this->contentData[$folderid]->{self::FOLDERBACKENDID};
         }
         return false;
     }
@@ -619,11 +509,13 @@ class ASDevice extends StateObject {
         }
 
         $contentData = $this->contentData;
-        if (!isset($contentData[$folderid]) || !is_array($contentData[$folderid]))
-            $contentData[$folderid] = array();
-        if (!isset($contentData[$folderid][self::FOLDERBACKENDID]) || $contentData[$folderid][self::FOLDERBACKENDID] != $backendfolderid ) {
-            $contentData[$folderid][self::FOLDERBACKENDID] = $backendfolderid;
+        if (!isset($contentData[$folderid])) {
+            $contentData[$folderid] = new stdClass();
+        }
+        if (!isset($contentData[$folderid]->{self::FOLDERBACKENDID}) || $contentData[$folderid]->{self::FOLDERBACKENDID} != $backendfolderid ) {
+            $contentData[$folderid]->{self::FOLDERBACKENDID} = $backendfolderid;
             $this->contentData = $contentData;
+            $this->changed = true;
 
             // update the reverse cache as well
             if (is_array($this->backend2folderidCache)) {
@@ -655,8 +547,8 @@ class ASDevice extends StateObject {
         if ($this->backend2folderidCache === false) {
             $this->backend2folderidCache = array();
             foreach ($this->contentData as $folderid => $data) {
-                if (isset($data[self::FOLDERBACKENDID])) {
-                    $this->backend2folderidCache[$data[self::FOLDERBACKENDID]] = $folderid;
+                if (isset($data->{self::FOLDERBACKENDID})) {
+                    $this->backend2folderidCache[$data->{self::FOLDERBACKENDID}] = $folderid;
                 }
             }
 
@@ -676,7 +568,7 @@ class ASDevice extends StateObject {
             // the short-id is only used if the folder is being synchronized (in contentdata) - else any chached (temporarily) ids are NOT used
             else {
                 foreach ($this->contentData as $folderid => $data) {
-                    if (isset($data[self::FOLDERBACKENDID]) && $data[self::FOLDERBACKENDID] == $backendid) {
+                    if (isset($data->{self::FOLDERBACKENDID}) && $data->{self::FOLDERBACKENDID} == $backendid) {
                         ZLog::Write(LOGLEVEL_DEBUG, sprintf("ASDevice->GetFolderIdForBackendId(): found backendid in contentdata but with different folder type. Lookup '%s' - synchronized id '%s'", $folderOrigin, $folderid));
                         return $folderid;
                     }
@@ -713,7 +605,7 @@ class ASDevice extends StateObject {
             return false;
         }
         foreach ($this->contentData as $folderid => $data) {
-            if (isset($data[self::FOLDERBACKENDID])) {
+            if (isset($data->{self::FOLDERBACKENDID})) {
                 return true;
             }
         }
@@ -731,10 +623,10 @@ class ASDevice extends StateObject {
      */
     public function GetSupportedFields($folderid) {
         if (isset($this->contentData) && isset($this->contentData[$folderid]) &&
-            isset($this->contentData[$folderid][self::FOLDERUUID]) && $this->contentData[$folderid][self::FOLDERUUID] !== false &&
-            isset($this->contentData[$folderid][self::FOLDERSUPPORTEDFIELDS]) )
+            isset($this->contentData[$folderid]->{self::FOLDERUUID}) && $this->contentData[$folderid]->{self::FOLDERUUID} !== false &&
+            isset($this->contentData[$folderid]->{self::FOLDERSUPPORTEDFIELDS}) )
 
-            return $this->contentData[$folderid][self::FOLDERSUPPORTEDFIELDS];
+            return $this->contentData[$folderid]->{self::FOLDERSUPPORTEDFIELDS};
 
         return false;
     }
@@ -750,11 +642,12 @@ class ASDevice extends StateObject {
      */
     public function SetSupportedFields($folderid, $fieldlist) {
         $contentData = $this->contentData;
-        if (!isset($contentData[$folderid]) || !is_array($contentData[$folderid]))
-            $contentData[$folderid] = array();
-
-        $contentData[$folderid][self::FOLDERSUPPORTEDFIELDS] = $fieldlist;
+        if (!isset($contentData[$folderid])) {
+            $contentData[$folderid] = new stdClass();
+        }
+        $contentData[$folderid]->{self::FOLDERSUPPORTEDFIELDS} = $fieldlist;
         $this->contentData = $contentData;
+        $this->changed = true;
         return true;
     }
 
@@ -767,10 +660,10 @@ class ASDevice extends StateObject {
      * @return mixed/boolean        false means the status is not available
      */
     public function GetFolderSyncStatus($folderid) {
-        if (isset($this->contentData[$folderid][self::FOLDERUUID], $this->contentData[$folderid][self::FOLDERSYNCSTATUS]) &&
-                $this->contentData[$folderid][self::FOLDERUUID] !== false) {
+        if (isset($this->contentData[$folderid]->{self::FOLDERUUID}, $this->contentData[$folderid]->{self::FOLDERSYNCSTATUS}) &&
+                $this->contentData[$folderid]->{self::FOLDERUUID} !== false) {
 
-            return $this->contentData[$folderid][self::FOLDERSYNCSTATUS];
+            return $this->contentData[$folderid]->{self::FOLDERSYNCSTATUS};
         }
 
         return false;
@@ -787,17 +680,18 @@ class ASDevice extends StateObject {
      */
     public function SetFolderSyncStatus($folderid, $status) {
         $contentData = $this->contentData;
-        if (!isset($contentData[$folderid]) || !is_array($contentData[$folderid]))
-            $contentData[$folderid] = array();
-
-        if ($status !== false) {
-            $contentData[$folderid][self::FOLDERSYNCSTATUS] = $status;
+        if (!isset($contentData[$folderid])) {
+            $contentData[$folderid] = new stdClass();
         }
-        else if (isset($contentData[$folderid][self::FOLDERSYNCSTATUS])) {
-            unset($contentData[$folderid][self::FOLDERSYNCSTATUS]);
+        if ($status !== false) {
+            $contentData[$folderid]->{self::FOLDERSYNCSTATUS} = $status;
+        }
+        else if (isset($contentData[$folderid]->{self::FOLDERSYNCSTATUS})) {
+            unset($contentData[$folderid]->{self::FOLDERSYNCSTATUS});
         }
 
         $this->contentData = $contentData;
+        $this->changed = true;
         return true;
     }
 
@@ -917,6 +811,7 @@ class ASDevice extends StateObject {
                             'flags'     => $flags,
                          );
         $this->additionalfolders = $af;
+        $this->changed = true;
 
         // generate an interger folderid for it
         $id = $this->GetFolderIdForBackendId($folderid, true, DeviceManager::FLD_ORIGIN_SHARED, $name);
@@ -976,6 +871,7 @@ class ASDevice extends StateObject {
         $af[$folderid]['flags'] = $flags;
         $af[$folderid]['parentid'] = $parentid;
         $this->additionalfolders = $af;
+        $this->changed = true;
 
         return true;
     }
@@ -1002,6 +898,7 @@ class ASDevice extends StateObject {
         $af = $this->additionalfolders;
         unset($af[$folderid]);
         $this->additionalfolders = $af;
+        $this->changed = true;
         return true;
     }
 
@@ -1037,6 +934,7 @@ class ASDevice extends StateObject {
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("ASDevice->SetAdditionalFolderList(): cleared additional folder lists of store '%s', total %d folders, kept %d and removed %d", $store, count($this->additionalfolders), count($newAF), count($noDupsCheck)));
         // set remaining additional folders
         $this->additionalfolders = $newAF;
+        $this->changed = true;
 
         // transform our array in a key/value array where folderids are keys and do some basic checks
         $toOrder = array();
@@ -1127,7 +1025,7 @@ class ASDevice extends StateObject {
         $cnt = 0;
         // Collision avoiding. Append an increasing number to the string to hash
         // until there aren't any collisions. Probably a smaller number is also sufficient.
-        while ((isset($this->contentData[$folderId]) || in_array($folderId, $this->backend2folderidCache, true)) && $cnt < 10000) {
+        while ((isset($this->contentData[$folderId]) || (is_array($this->backend2folderidCache) && in_array($folderId, $this->backend2folderidCache, true))) && $cnt < 10000) {
             $folderId = substr($folderOrigin . dechex(crc32($backendid . $folderName . $cnt++)), 0, 6);
             ZLog::Write(LOGLEVEL_WARN, sprintf("ASDevice->generateFolderHash(): collision avoiding nr %05d. Generated hash: '%s'", $cnt, $folderId));
         }

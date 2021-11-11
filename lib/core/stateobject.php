@@ -27,35 +27,6 @@ class StateObject implements Serializable, JsonSerializable {
     }
 
     /**
-     * Returns the internal array which contains all data of this object
-     *
-     * @access public
-     * @return array
-     */
-    public function GetDataArray() {
-        return $this->data;
-    }
-
-    /**
-     * Sets the internal array which contains all data of this object
-     *
-     * @param array     $data           the data to be written
-     * @param boolean   $markAsChanged  (opt) indicates if the object should be marked as "changed", default false
-     *
-     * @access public
-     * @return array
-     */
-    public function SetDataArray($data, $markAsChanged = false) {
-        $this->data = $data;
-        if (isset($this->data['contentdata']) && is_array($this->data['contentdata'])) {
-            // ASDevice contendata is array of stdClass objects,
-            // but we need an array of arrays
-            $this->data['contentdata'] = json_decode(json_encode($this->data['contentdata']), true);
-        }
-        $this->changed = $markAsChanged;
-    }
-
-    /**
      * Indicates if the data contained in this object was modified
      *
      * @access public
@@ -229,6 +200,7 @@ class StateObject implements Serializable, JsonSerializable {
      * @return boolean
      */
     protected function postUnserialize() {
+        $this->changed = false;
         return true;
     }
 
@@ -280,6 +252,7 @@ class StateObject implements Serializable, JsonSerializable {
                 foreach ($val as $k => $v) {
                     if (is_object($v) && isset($v->gsSyncStateClass)) {
                         ZLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): sub class '%s'", $v->gsSyncStateClass));
+                        // TODO: case should be removed when removing ASDevice backwards compatibility
                         if (strcasecmp($v->gsSyncStateClass, "ASDevice") == 0) {
                             $this->data[$prop][$k] = new ASDevice(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
                         }
