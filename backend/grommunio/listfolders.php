@@ -100,7 +100,7 @@ function listfolders_zarafa_admin_setup ($mapi, $user, $pass, $sslcert_file, $ss
     $storeslist = @mapi_table_queryallrows($stores);
     $adminStore = @mapi_openmsgstore($session, $storeslist[0][PR_ENTRYID]);
 
-    $zarafauserinfo = @mapi_zarafa_getuser_by_name($adminStore, $user);
+    $zarafauserinfo['admin'] = 1;
     $admin = (isset($zarafauserinfo['admin']) && $zarafauserinfo['admin'])?true:false;
 
     if (!$stores || !$storeslist || !$adminStore || !$admin) {

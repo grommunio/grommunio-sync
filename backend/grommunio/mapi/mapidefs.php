@@ -463,7 +463,7 @@ define('RESTRICTION'                             ,10);       // RES_COMMENT and 
 
 /* GUID's for PR_MDB_PROVIDER */
 define("ZARAFA_SERVICE_GUID"                     ,makeGuid("{3C253DCA-D227-443C-94FE-425FAB958C19}"));    // default store
-define("ZARAFA_STORE_PUBLIC_GUID"                ,makeGuid("{D47F4A09-D3BD-493C-B2FC-3C90BBCB48D4}"));    // public store
+define("ZARAFA_STORE_PUBLIC_GUID"                ,makeGuid("{70FAB278-F7AF-CD11-9BC8-00AA002FC45A}"));    // public store
 define("ZARAFA_STORE_DELEGATE_GUID"              ,makeGuid("{7C7C1085-BC6D-4E53-9DAB-8A53F8DEF808}"));    // other store
 define('ZARAFA_STORE_ARCHIVER_GUID'              ,makeGuid("{BC8953AD-2E3F-4172-9404-896FF459870F}"));    // archive store
 
