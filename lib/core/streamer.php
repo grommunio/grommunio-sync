@@ -472,7 +472,7 @@ class Streamer implements Serializable, JsonSerializable {
      *  exchange' depends on this quirk. So we have to send a different date type depending on where
      * it's used. Sigh.
      *
-     * @param long  $ts
+     * @param int  $ts
      * @param int   $type
      *
      * @access private
@@ -483,6 +483,8 @@ class Streamer implements Serializable, JsonSerializable {
             return gmstrftime("%Y%m%dT%H%M%SZ", $ts);
         else if($type == self::STREAMER_TYPE_DATE_DASHES)
             return gmstrftime("%Y-%m-%dT%H:%M:%S.000Z", $ts);
+        // fallback to dashes (should never be reached)
+        return gmstrftime("%Y-%m-%dT%H:%M:%S.000Z", $ts);
     }
 
     /**

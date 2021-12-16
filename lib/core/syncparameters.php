@@ -132,6 +132,7 @@ class SyncParameters extends StateObject {
         $this->counterconfirmed = false;
         $this->confirmationChanged = true;
         $this->synckeyChanged = true;
+        return true;
     }
 
     /**

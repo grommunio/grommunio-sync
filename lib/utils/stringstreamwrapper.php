@@ -15,6 +15,7 @@ class StringStreamWrapper {
     private $position;
     private $stringlength;
     private $truncateHtmlSafe;
+    private $context;
 
     /**
      * Opens the stream

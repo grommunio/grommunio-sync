@@ -314,6 +314,7 @@ abstract class Log {
             case LOGLEVEL_DEVICEID:     return "[DEVICEID]"; break;
             case LOGLEVEL_WBXMLSTACK:   return "[WBXMLSTACK]"; break;
         }
+        return "";
     }
 
     /**

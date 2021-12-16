@@ -120,6 +120,7 @@ class ASDevice extends StateObject {
      */
     public function LoadedDevice() {
         $this->newdevice = false;
+        return true;
     }
 
     /**----------------------------------------------------------------------------------------------------------
@@ -438,6 +439,7 @@ class ASDevice extends StateObject {
             $this->contentData = $contentData;
             $this->changed = true;
         }
+        return true;
     }
 
    /**

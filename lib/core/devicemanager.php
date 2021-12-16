@@ -125,6 +125,7 @@ class DeviceManager extends InterProcessData {
         // TODO save this somewhere
         $this->incomingData = Request::GetContentLength();
         $this->outgoingData = $datacounter;
+        return true;
     }
 
     /**
@@ -815,6 +816,7 @@ class DeviceManager extends InterProcessData {
      */
     public function SetFolderSyncComplete($complete, $user = false, $devid = false) {
         $this->device->SetFolderSyncComplete($complete);
+        return true;
     }
 
     /**
@@ -896,7 +898,7 @@ class DeviceManager extends InterProcessData {
      */
     public function GetFolderIdForBackendId($backendid, $generateNewIdIfNew = false, $folderOrigin = self::FLD_ORIGIN_USER, $folderName = null) {
         if (!in_array($folderOrigin, array(DeviceManager::FLD_ORIGIN_CONFIG, DeviceManager::FLD_ORIGIN_GAB, DeviceManager::FLD_ORIGIN_SHARED, DeviceManager::FLD_ORIGIN_USER, DeviceManager::FLD_ORIGIN_IMPERSONATED))) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("ASDevice->GetFolderIdForBackendId(): folder type '%' is unknown in DeviceManager", $folderOrigin));
+            ZLog::Write(LOGLEVEL_WARN, sprintf("ASDevice->GetFolderIdForBackendId(): folder type '%s' is unknown in DeviceManager", $folderOrigin));
         }
         return $this->device->GetFolderIdForBackendId($backendid, $generateNewIdIfNew, $folderOrigin, $folderName);
     }

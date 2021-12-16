@@ -108,5 +108,6 @@ class SyncNote extends SyncObject {
             $this->categories[] = self::$colors[$this->Color];
             return true;
         }
+        return false;
     }
 }

@@ -17,8 +17,7 @@ class ProvisioningManager extends InterProcessData {
     private $policyHash = ASDevice::UNDEFINED;
     private $updatetime = 0;
     private $loadtime = 0;
-
-    private $deviceManager = false;
+    private $typePolicyCacheId = false;
 
     /**
      * Constructor

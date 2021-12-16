@@ -13,6 +13,7 @@ class ImportChangesStream implements IImportChanges {
     private $seenObjects;
     private $importedMsgs;
     private $checkForIgnoredMessages;
+    private $classAsString;
 
     /**
      * Constructor of the StreamImporter

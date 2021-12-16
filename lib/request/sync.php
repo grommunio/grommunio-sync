@@ -1378,7 +1378,7 @@ class Sync extends RequestProcessor {
     private function importMessage($spa, &$actiondata, $todo, $message, $clientid, $serverid, $foldertype, $messageCount) {
         // the importer needs to be available!
         if ($this->importer == false)
-            throw StatusException("Sync->importMessage(): importer not available", SYNC_STATUS_SERVERERROR);
+            throw new StatusException("Sync->importMessage(): importer not available", SYNC_STATUS_SERVERERROR);
 
         // mark this state as used, e.g. for HeartBeat
         self::$deviceManager->SetHeartbeatStateIntegrity($spa->GetFolderId(), $spa->GetUuid(), $spa->GetUuidCounter());

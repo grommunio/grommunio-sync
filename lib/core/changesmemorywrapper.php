@@ -146,6 +146,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
      */
     public function SetDestinationImporter(&$importer) {
         $this->destinationImporter = $importer;
+        return true;
     }
 
     /**

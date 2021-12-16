@@ -382,6 +382,7 @@ class ZPush {
 
         // get the statemachine, which will also try to load the backend.. This could throw errors
         self::GetStateMachine();
+        return true;
     }
 
     /**

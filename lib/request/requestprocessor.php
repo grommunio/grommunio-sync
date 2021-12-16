@@ -108,6 +108,7 @@ abstract class RequestProcessor {
             // Log 4 KB in the happy case
             ZLog::Write(LOGLEVEL_WBXML, "WBXML-IN : ". Request::GetInputAsBase64(4096), false);
         }
+        return true;
     }
 
     /**
