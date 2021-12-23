@@ -753,45 +753,6 @@ class Utils {
     }
 
     /**
-     * Safely write data to disk, using an unique tmp file (concurrent write),
-     * and using rename for atomicity. It also calls FixFileOwner to prevent
-     * ownership/rights problems when running as root
-     *
-     * If you use SafePutContents, you can safely use file_get_contents
-     * (you will always read a fully written file)
-     *
-     * @param string $filename
-     * @param string $data
-     * @return boolean|int
-     */
-    public static function SafePutContents($filename, $data) {
-        //put the 'tmp' as a prefix (and not suffix) so all glob call will not see temp files
-        $tmp = dirname($filename).DIRECTORY_SEPARATOR.'tmp-'.getmypid().'-'.basename($filename);
-
-        //number of attempts
-        $attempts = (defined('FILE_STATE_ATTEMPTS') ? FILE_STATE_ATTEMPTS : 3);
-        //ms to sleep between attempts
-        $sleep_time = (defined('FILE_STATE_SLEEP') ? FILE_STATE_SLEEP : 100);
-        $i = 1;
-        while (($i <= $attempts) && (($bytes = file_put_contents($tmp, $data)) === false)) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->SafePutContents: Failed on writing data in tmp - attempt: %d - filename: %s", $i, $tmp));
-            $i++;
-            usleep($sleep_time * 1000);
-        }
-        if ($bytes !== false){
-            self::FixFileOwner($tmp);
-            $i = 1;
-            while (($i <= $attempts) && (($res = rename($tmp, $filename)) !== true)) {
-                ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->SafePutContents: Failed on rename - attempt: %d - filename: %s", $i, $tmp));
-                $i++;
-                usleep($sleep_time * 1000);
-            }
-            if ($res !== true) $bytes = false;
-        }
-        return $bytes;
-    }
-
-    /**
      * Format bytes to a more human readable value.
      * @param int $bytes
      * @param int $precision
