@@ -607,7 +607,7 @@ class Request {
      * @return boolean       false if invalid
      */
     static public function IsValidDeviceID() {
-        if (self::GetDeviceID() === "validate" || self::GetDeviceID() === "webservice")
+        if (self::GetDeviceID() === "validate")
             return false;
         else
             return true;

@@ -143,13 +143,8 @@ return array(
     'WBXMLDefs' => $baseDir . '/lib/wbxml/wbxmldefs.php',
     'WBXMLEncoder' => $baseDir . '/lib/wbxml/wbxmlencoder.php',
     'WBXMLException' => $baseDir . '/lib/exceptions/wbxmlexception.php',
-    'Webservice' => $baseDir . '/lib/webservice/webservice.php',
-    'WebserviceDevice' => $baseDir . '/lib/webservice/webservicedevice.php',
-    'WebserviceInfo' => $baseDir . '/lib/webservice/webserviceinfo.php',
-    'WebserviceUsers' => $baseDir . '/lib/webservice/webserviceusers.php',
     'ZLog' => $baseDir . '/lib/core/zlog.php',
     'ZPush' => $baseDir . '/lib/core/zpush.php',
-    'ZPushAdmin' => $baseDir . '/lib/utils/zpushadmin.php',
     'ZPushAutodiscover' => $baseDir . '/autodiscover/autodiscover.php',
     'ZPushException' => $baseDir . '/lib/exceptions/zpushexception.php',
 );

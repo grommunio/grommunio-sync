@@ -150,13 +150,8 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'WBXMLDefs' => __DIR__ . '/../..' . '/lib/wbxml/wbxmldefs.php',
         'WBXMLEncoder' => __DIR__ . '/../..' . '/lib/wbxml/wbxmlencoder.php',
         'WBXMLException' => __DIR__ . '/../..' . '/lib/exceptions/wbxmlexception.php',
-        'Webservice' => __DIR__ . '/../..' . '/lib/webservice/webservice.php',
-        'WebserviceDevice' => __DIR__ . '/../..' . '/lib/webservice/webservicedevice.php',
-        'WebserviceInfo' => __DIR__ . '/../..' . '/lib/webservice/webserviceinfo.php',
-        'WebserviceUsers' => __DIR__ . '/../..' . '/lib/webservice/webserviceusers.php',
         'ZLog' => __DIR__ . '/../..' . '/lib/core/zlog.php',
         'ZPush' => __DIR__ . '/../..' . '/lib/core/zpush.php',
-        'ZPushAdmin' => __DIR__ . '/../..' . '/lib/utils/zpushadmin.php',
         'ZPushAutodiscover' => __DIR__ . '/../..' . '/autodiscover/autodiscover.php',
         'ZPushException' => __DIR__ . '/../..' . '/lib/exceptions/zpushexception.php',
     );

@@ -36,9 +36,6 @@ abstract class InterProcessData {
             // ZP-987: use an own mutex + storage key for each device on non-shared-memory IPC
             // this method is not suitable for the TopCollector atm
             $type = Request::GetDeviceID();
-            if ($type === "webservice") {
-                $type .= '-' . Request::GetAuthUser();
-            }
             $this->ipcProvider = ZPush::GetRedis();
         }
         catch (Exception $e) {

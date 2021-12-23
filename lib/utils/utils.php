@@ -473,11 +473,6 @@ class Utils {
             case ZPush::COMMAND_DELETECOLLECTION:     return 'DeleteCollection';
             case ZPush::COMMAND_MOVECOLLECTION:       return 'MoveCollection';
             case ZPush::COMMAND_NOTIFY:               return 'Notify';
-
-            // Webservice commands
-            case ZPush::COMMAND_WEBSERVICE_DEVICE:    return 'WebserviceDevice';
-            case ZPush::COMMAND_WEBSERVICE_USERS:     return 'WebserviceUsers';
-            case ZPush::COMMAND_WEBSERVICE_INFO:      return 'WebserviceInfo';
         }
         return false;
     }
@@ -518,11 +513,6 @@ class Utils {
             case 'DeleteCollection':     return ZPush::COMMAND_DELETECOLLECTION;
             case 'MoveCollection':       return ZPush::COMMAND_MOVECOLLECTION;
             case 'Notify':               return ZPush::COMMAND_NOTIFY;
-
-            // Webservice commands
-            case 'WebserviceDevice':     return ZPush::COMMAND_WEBSERVICE_DEVICE;
-            case 'WebserviceUsers':      return ZPush::COMMAND_WEBSERVICE_USERS;
-            case 'WebserviceInfo':       return ZPush::COMMAND_WEBSERVICE_INFO;
         }
         return false;
     }

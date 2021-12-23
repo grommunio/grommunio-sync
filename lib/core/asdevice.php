@@ -699,6 +699,8 @@ class ASDevice extends StateObject {
 
     /**----------------------------------------------------------------------------------------------------------
      * Additional Folders operations
+      TODO: All these methods are not being used in the code currently and could be removed at a later point if this
+      functionality is not being made available anymore.
      */
 
     /**
@@ -722,6 +724,7 @@ class ASDevice extends StateObject {
      * @access public
      * @return array|false Returns a list of properties. Else false if folder id is unknown.
      */
+    // TODO: not used
     public function GetAdditionalFolder($folderid) {
         // check if the $folderid is one of our own - this will in mostly NOT be the case, so we do not log here
         if (!isset($this->additionalfolders[$folderid])) {
@@ -745,6 +748,7 @@ class ASDevice extends StateObject {
      * @access public
      * @return boolean
      */
+    // TODO: not used
     public function AddAdditionalFolder($store, $folderid, $name, $type, $flags, $parentid = 0, $checkDups = true) {
         // check if a folderid and name were sent
         if (!$folderid || !$name) {
@@ -833,6 +837,7 @@ class ASDevice extends StateObject {
      * @access public
      * @return boolean
      */
+    // TODO: not used
     public function EditAdditionalFolder($folderid, $name, $flags, $parentid = 0, $checkDups = true) {
         // check if a folderid and name were sent
         if (!$folderid || !$name) {
@@ -884,6 +889,7 @@ class ASDevice extends StateObject {
      * @access public
      * @return boolean
      */
+    // TODO: not used
     public function RemoveAdditionalFolder($folderid) {
         // check if a folderid were sent
         if (!$folderid) {
@@ -921,6 +927,7 @@ class ASDevice extends StateObject {
      * @access public
      * @return boolean
      */
+    // TODO: not used
     public function SetAdditionalFolderList($store, $folders) {
         // remove all folders already shared for this store
         $newAF = array();
@@ -988,6 +995,7 @@ class ASDevice extends StateObject {
      * @param array $orderedFolders     the ordered array
      * @param string $parentid          the parentid to start with, if not set '0' (main folders) is used.
      */
+    // TODO: not used
     private function orderAdditionalFoldersHierarchically(&$toOrderFolders, &$orderedFolders, $parentid = '0') {
         $stepInto = array();
         // loop through the remaining folders that need to be ordered
@@ -1005,6 +1013,10 @@ class ASDevice extends StateObject {
             $this->orderAdditionalFoldersHierarchically($toOrderFolders, $orderedFolders, $fid);
         }
     }
+
+    /**----------------------------------------------------------------------------------------------------------
+     * Additional Folders operations - END
+     */
 
     /**
      * Generates the AS folder hash from the backend folder id, type and name.

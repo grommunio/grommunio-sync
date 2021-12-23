@@ -1721,19 +1721,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     }
 
     /**
-     * Returns an array with all device ids for a user.
-     * If no user is set, all device ids should be returned
-     *
-     * @param string    $username   (opt)
-     *
-     * @access public
-     * @return array
-     */
-    public function GetAllDevices($username = false) {
-
-    }
-
-    /**
      * Returns the current version of the state files
      * grommunio:  This is not relevant atm. IStateMachine::STATEVERSION_02 will match ZPush::GetLatestStateVersion().
      *          If it might be required to update states in the future, this could be implemented on a store level,

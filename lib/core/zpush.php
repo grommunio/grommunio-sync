@@ -11,7 +11,7 @@ class ZPush {
     const UNAUTHENTICATED = 1;
     const UNPROVISIONED = 2;
     const NOACTIVESYNCCOMMAND = 3;
-    const WEBSERVICECOMMAND = 4;
+    const WEBSERVICECOMMAND = 4;    // DEPRECATED
     const HIERARCHYCOMMAND = 5;
     const PLAININPUT = 6;
     const REQUESTHANDLER = 7;
@@ -60,11 +60,6 @@ class ZPush {
     const COMMAND_MOVECOLLECTION = -4;
     const COMMAND_NOTIFY = -5;
 
-    // Webservice commands
-    const COMMAND_WEBSERVICE_DEVICE = -100;
-    const COMMAND_WEBSERVICE_USERS = -101;
-    const COMMAND_WEBSERVICE_INFO = -102;
-
     // Latest supported State version
     const STATE_VERSION = IStateMachine::STATEVERSION_02;
 
@@ -110,10 +105,6 @@ class ZPush {
                     self::COMMAND_NOTIFY            => array(self::ASV_1,  self::REQUESTHANDLER => "Notify"),                                           // deprecated & not implemented
                     self::COMMAND_ITEMOPERATIONS    => array(self::ASV_12, self::REQUESTHANDLER => "ItemOperations"),
                     self::COMMAND_SETTINGS          => array(self::ASV_12, self::REQUESTHANDLER => "Settings"),
-
-                    self::COMMAND_WEBSERVICE_DEVICE => array(self::REQUESTHANDLER => "Webservice", self::PLAININPUT, self::NOACTIVESYNCCOMMAND, self::WEBSERVICECOMMAND),
-                    self::COMMAND_WEBSERVICE_USERS  => array(self::REQUESTHANDLER => "Webservice", self::PLAININPUT, self::NOACTIVESYNCCOMMAND, self::WEBSERVICECOMMAND),
-                    self::COMMAND_WEBSERVICE_INFO   => array(self::REQUESTHANDLER => "Webservice", self::PLAININPUT, self::NOACTIVESYNCCOMMAND, self::WEBSERVICECOMMAND),
             );
 
 
@@ -458,21 +449,6 @@ class ZPush {
             ZPush::$deviceManager = new DeviceManager();
 
         return ZPush::$deviceManager;
-    }
-
-    /**
-     * Load another device in the DeviceManager and return it.
-     *
-     * @param ASDevice $asDevice
-     * @param boolean $initialize - default: true
-     * @return DeviceManager
-     */
-    static public function GetDeviceManagerWithDevice($asDevice, $initialize = true) {
-        $dm = ZPush::GetDeviceManager($initialize);
-        if ($dm) {
-            $dm->SetDevice($asDevice);
-        }
-        return $dm;
     }
 
     /**
@@ -853,10 +829,7 @@ END;
             throw new FatalNotImplementedException(sprintf("Command '%s' has no request handler or class", Utils::GetCommandFromCode($commandCode)));
 
         $class = self::$supportedCommands[$commandCode][self::REQUESTHANDLER];
-        if ($class == "Webservice")
-            $handlerclass = REAL_BASE_PATH . "lib/webservice/webservice.php";
-        else
-            $handlerclass = REAL_BASE_PATH . "lib/request/" . strtolower($class) . ".php";
+        $handlerclass = REAL_BASE_PATH . "lib/request/" . strtolower($class) . ".php";
 
         if (is_file($handlerclass))
             include($handlerclass);

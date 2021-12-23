@@ -28,7 +28,7 @@ class FileLog extends Log {
      */
     private function getLogToUserFile() {
         if ($this->log_to_user_file === false) {
-            if (in_array(strtolower($this->GetDevid()), ['','webservice','validate'])) {
+            if (in_array(strtolower($this->GetDevid()), ['','validate'])) {
                 $this->setLogToUserFile(preg_replace('/[^a-z0-9]/', '_', strtolower($this->GetAuthUser())) . '.log');
             }
             else {
