@@ -5,8 +5,7 @@
  * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
  * Interface called from the Device and StateManager to save states for a
- * user/device/folder. grommunio-sync implements the FileStateMachine which saves
- * states to disk. Backends provide their own IStateMachine implementation of
+ * user/device/folder. Backends provide their own IStateMachine implementation of
  * this interface and return an IStateMachine instance with
  * IBackend->GetStateMachine(). Old sync states are not deleted until a new
  * sync state is requested. At that moment, the PIM is apparently requesting an

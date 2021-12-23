@@ -23,7 +23,6 @@ return array(
     'FatalMisconfigurationException' => $baseDir . '/lib/exceptions/fatalmisconfigurationexception.php',
     'FatalNotImplementedException' => $baseDir . '/lib/exceptions/fatalnotimplementedexception.php',
     'FileLog' => $baseDir . '/lib/log/filelog.php',
-    'FileStateMachine' => $baseDir . '/lib/default/filestatemachine.php',
     'FolderChange' => $baseDir . '/lib/request/folderchange.php',
     'FolderSync' => $baseDir . '/lib/request/foldersync.php',
     'FreeBusyPublish' => $baseDir . '/backend/grommunio/mapi/class.freebusypublish.php',

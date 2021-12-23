@@ -30,7 +30,6 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'FatalMisconfigurationException' => __DIR__ . '/../..' . '/lib/exceptions/fatalmisconfigurationexception.php',
         'FatalNotImplementedException' => __DIR__ . '/../..' . '/lib/exceptions/fatalnotimplementedexception.php',
         'FileLog' => __DIR__ . '/../..' . '/lib/log/filelog.php',
-        'FileStateMachine' => __DIR__ . '/../..' . '/lib/default/filestatemachine.php',
         'FolderChange' => __DIR__ . '/../..' . '/lib/request/folderchange.php',
         'FolderSync' => __DIR__ . '/../..' . '/lib/request/foldersync.php',
         'FreeBusyPublish' => __DIR__ . '/../..' . '/backend/grommunio/mapi/class.freebusypublish.php',

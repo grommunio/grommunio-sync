@@ -12,7 +12,7 @@
  * backend can then use this backend information to compute the increments with
  * current data.
  *
- * See FileStateMachine and IStateMachine for additional information.
+ * See IStateMachine for additional information.
  */
 
 class StateManager {
