@@ -152,7 +152,6 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'WBXMLException' => __DIR__ . '/../..' . '/lib/exceptions/wbxmlexception.php',
         'ZLog' => __DIR__ . '/../..' . '/lib/core/zlog.php',
         'ZPush' => __DIR__ . '/../..' . '/lib/core/zpush.php',
-        'ZPushAutodiscover' => __DIR__ . '/../..' . '/autodiscover/autodiscover.php',
         'ZPushException' => __DIR__ . '/../..' . '/lib/exceptions/zpushexception.php',
     );
 

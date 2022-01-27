@@ -145,6 +145,5 @@ return array(
     'WBXMLException' => $baseDir . '/lib/exceptions/wbxmlexception.php',
     'ZLog' => $baseDir . '/lib/core/zlog.php',
     'ZPush' => $baseDir . '/lib/core/zpush.php',
-    'ZPushAutodiscover' => $baseDir . '/autodiscover/autodiscover.php',
     'ZPushException' => $baseDir . '/lib/exceptions/zpushexception.php',
 );
