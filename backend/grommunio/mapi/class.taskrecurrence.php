@@ -11,7 +11,7 @@
          * Timezone info which is always false for task
          */
         var $tz = false;
-        
+
         private $action;
 
         function __construct($store, $message)
