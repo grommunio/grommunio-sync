@@ -129,19 +129,4 @@ class ContentParameters extends StateObject {
         }
         return array_keys($this->bodypartpref);
     }
-
-    /**
-     * Called before the StateObject is serialized
-     *
-     * @access protected
-     * @return boolean
-     */
-    protected function preSerialize() {
-        parent::preSerialize();
-
-        if ($this->changed === true && $this->synckeyChanged)
-            $this->lastsynctime = time();
-
-        return true;
-    }
 }
