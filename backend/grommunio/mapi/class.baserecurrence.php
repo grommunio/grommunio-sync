@@ -559,8 +559,7 @@
 
         /**
          * Saves the recurrence data to the recurrence property
-         * @param array $properties the recurrence data.
-         * @return string binary string
+         * @return void
          */
         function saveRecurrence()
         {

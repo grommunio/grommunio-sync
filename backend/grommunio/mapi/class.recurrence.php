@@ -679,7 +679,7 @@
          * @param array $exception_props the exception data (like any other MAPI appointment)
          * @param array $exception_recips list of recipients
          * @param mapi_message $copy_attach_from mapi message from which attachments should be copied
-         * @return array properties of the exception
+         * @return void
          */
         function createExceptionAttachment($exception_props, $exception_recips = array(), $copy_attach_from = false)
         {

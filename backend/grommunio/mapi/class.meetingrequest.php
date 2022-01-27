@@ -100,6 +100,17 @@ class Meetingrequest {
      */
     var $errorSetResource;
 
+    private $proptags;
+    private $store;
+    private $message;
+    private $session;
+    private $meetingTimeInfo;
+    private $enableDirectBooking;
+    private $includesResources;
+    private $nonAcceptingResources;
+    private $recipientDisplayname;
+
+
     /**
      * Constructor
      *

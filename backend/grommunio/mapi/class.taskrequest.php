@@ -77,6 +77,11 @@
     define('ICON_TASK_ASSIGNER', 0x00000503);
 
     class TaskRequest {
+        private $props;
+        private $store;
+        private $message;
+        private $session;
+        private $taskCommentsInfo;
 
         // All recipient properties
         var $recipProps = Array(
@@ -731,6 +736,7 @@
             } else if($props[$this->props['complete']]) {
                 $this->sendResponse(tdmtTaskUpd, _("Task Completed:") . " ");
             }
+            return true;
         }
 
         /**
@@ -1205,7 +1211,7 @@
                                                 $this->props['status'] => 2,
                                                 $this->props['percent_complete'] => 1));
 
-            $this->doUpdate();
+            return $this->doUpdate();
         }
 
         /**
