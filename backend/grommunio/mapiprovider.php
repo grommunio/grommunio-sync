@@ -252,9 +252,9 @@ class MAPIProvider {
                     $attendee->email = w2u($row[PR_EMAIL_ADDRESS]);
                 //if address type is ZARAFA, the PR_EMAIL_ADDRESS contains username
                 elseif ($row[PR_ADDRTYPE] == "ZARAFA") {
-                    $userinfo = @mapi_zarafa_getuser_by_name($this->store, $row[PR_EMAIL_ADDRESS]);
-                    if (is_array($userinfo) && isset($userinfo["emailaddress"])) {
-                        $attendee->email = w2u($userinfo["emailaddress"]);
+                    $userinfo = @nsp_getuserinfo($row[PR_EMAIL_ADDRESS]);
+                    if (is_array($userinfo) && isset($userinfo["primary_email"])) {
+                        $attendee->email = w2u($userinfo["primary_email"]);
                     }
                     // if the user was not found, do a fallback to PR_SEARCH_KEY
                     // @see https://jira.z-hub.io/browse/ZP-1178
@@ -295,10 +295,10 @@ class MAPIProvider {
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getAppointment: adding ourself as an attendee for iOS6 workaround"));
                 $attendee = new SyncAttendee();
 
-                $meinfo = mapi_zarafa_getuser_by_name($this->store, Request::GetUser());
+                $meinfo = nsp_getuserinfo(Request::GetUser());
 
                 if (is_array($meinfo)) {
-                    $attendee->email = w2u($meinfo["emailaddress"]);
+                    $attendee->email = w2u($meinfo["primary_email"]);
                     $attendee->name = w2u($meinfo["fullname"]);
                     $attendee->attendeetype = MAPI_TO;
 
@@ -312,10 +312,10 @@ class MAPIProvider {
         // the user is the owner or it will not work properly with android devices
         // @see https://jira.z-hub.io/browse/ZP-1020
         if(isset($messageprops[$appointmentprops["meetingstatus"]]) && $messageprops[$appointmentprops["meetingstatus"]] == olNonMeeting && empty($message->attendees)) {
-            $meinfo = mapi_zarafa_getuser_by_name($this->store, Request::GetUser());
+            $meinfo = nsp_getuserinfo(Request::GetUser());
 
             if (is_array($meinfo)) {
-                $message->organizeremail = w2u($meinfo["emailaddress"]);
+                $message->organizeremail = w2u($meinfo["primary_email"]);
                 $message->organizername = w2u($meinfo["fullname"]);
                 ZLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): setting ourself as the organizer for an appointment without attendees.");
             }
@@ -1755,7 +1755,7 @@ class MAPIProvider {
         $p = array( $taskprops["owner"]);
         $owner = $this->getProps($mapimessage, $p);
         if (!isset($owner[$taskprops["owner"]])) {
-            $userinfo = mapi_zarafa_getuser_by_name($this->store, Request::GetUser());
+            $userinfo = nsp_getuserinfo(Request::GetUser());
             if(mapi_last_hresult() == NOERROR && isset($userinfo["fullname"])) {
                 $props[$taskprops["owner"]] = $userinfo["fullname"];
             }
@@ -2256,9 +2256,9 @@ class MAPIProvider {
         if($addrtype == "SMTP" && isset($props[PR_EMAIL_ADDRESS]))
             return $props[PR_EMAIL_ADDRESS];
         elseif ($addrtype == "ZARAFA" && isset($props[PR_EMAIL_ADDRESS])) {
-            $userinfo = mapi_zarafa_getuser_by_name($this->store, $props[PR_EMAIL_ADDRESS]);
-            if (is_array($userinfo) && isset($userinfo["emailaddress"]))
-                return $userinfo["emailaddress"];
+            $userinfo = nsp_getuserinfo($props[PR_EMAIL_ADDRESS]);
+            if (is_array($userinfo) && isset($userinfo["primary_email"]))
+                return $userinfo["primary_email"];
         }
 
         return "";

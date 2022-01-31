@@ -275,7 +275,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                             ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->Setup(): Checking for secretary ACLs on root folder of impersonated store '%s': '%s'", $user, Utils::PrintAsString($rights)));
                         }
                         else {
-                            $zarafauserinfo = @mapi_zarafa_getuser_by_name($this->defaultstore, $this->mainUser);
+                            $zarafauserinfo = @nsp_getuserinfo($this->mainUser);
                             $rights = (isset($zarafauserinfo['admin']) && $zarafauserinfo['admin'])?true:false;
                             ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->Setup(): Checking for admin ACLs on store '%s': '%s'", $user, Utils::PrintAsString($rights)));
                         }
@@ -1412,8 +1412,8 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      */
     public function GetUserDetails($username) {
         ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrommunio->GetUserDetails for '%s'.", $username));
-        $zarafauserinfo = @mapi_zarafa_getuser_by_name($this->store, $username);
-        $userDetails['emailaddress'] = (isset($zarafauserinfo['emailaddress']) && $zarafauserinfo['emailaddress']) ? $zarafauserinfo['emailaddress'] : false;
+        $zarafauserinfo = @nsp_getuserinfo($username);
+        $userDetails['emailaddress'] = (isset($zarafauserinfo['primary_email']) && $zarafauserinfo['primary_email']) ? $zarafauserinfo['primary_email'] : false;
         $userDetails['fullname'] = (isset($zarafauserinfo['fullname']) && $zarafauserinfo['fullname']) ? $zarafauserinfo['fullname'] : false;
         return $userDetails;
     }
@@ -2303,23 +2303,23 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             ZLog::Write(LOGLEVEL_ERROR, "BackendGrommunio->settingsUserInformation(): The store or user are not available for getting user information");
             return false;
         }
-        $user = mapi_zarafa_getuser_by_name($this->defaultstore, $this->mainUser);
+        $user = nsp_getuserinfo($this->mainUser);
         if ($user != false) {
             $userinformation->Status = SYNC_SETTINGSSTATUS_USERINFO_SUCCESS;
             if (Request::GetProtocolVersion() >= 14.1) {
                 $account = new SyncAccount();
                 $emailaddresses = new SyncEmailAddresses();
-                $emailaddresses->smtpaddress[] = $user["emailaddress"];
-                $emailaddresses->primarysmtpaddress = $user["emailaddress"];
+                $emailaddresses->smtpaddress[] = $user["primary_email"];
+                $emailaddresses->primarysmtpaddress = $user["primary_email"];
                 $account->emailaddresses = $emailaddresses;
                 $userinformation->accounts[] = $account;
             }
             else {
-                $userinformation->emailaddresses[] = $user["emailaddress"];
+                $userinformation->emailaddresses[] = $user["primary_email"];
             }
             return true;
         }
-        ZLog::Write(LOGLEVEL_ERROR, sprintf("BackendGrommunio->settingsUserInformation(): Getting user information failed: mapi_zarafa_getuser_by_name(%X)", mapi_last_hresult()));
+        ZLog::Write(LOGLEVEL_ERROR, sprintf("BackendGrommunio->settingsUserInformation(): Getting user information failed: nsp_getuserinfo(%X)", mapi_last_hresult()));
         return false;
     }
 
