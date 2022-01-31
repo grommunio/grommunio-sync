@@ -184,13 +184,6 @@
     // default: 5242880 - 5 MB default max photo size in bytes
     define('SYNC_CONTACTS_MAXPICTURESIZE', 5242880);
 
-    // Over the WebserviceUsers command it is possible to retrieve a list of all
-    // known devices and users on this grommunio-sync system. The authenticated user needs to have
-    // admin rights and a public folder must exist.
-    // In multicompany environments this enable an admin user of any company to retrieve
-    // this full list, so this feature is disabled by default. Enable with care.
-    define('ALLOW_WEBSERVICE_USERS_ACCESS', false);
-
     // Users with many folders can use the 'partial foldersync' feature, where the server
     // actively stops processing the folder list if it takes too long. Other requests are
     // then redirected to the FolderSync to synchronize the remaining items.
