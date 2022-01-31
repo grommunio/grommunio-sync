@@ -767,7 +767,7 @@ class MAPIProvider {
                 }
 
                 $mapiattach = mapi_message_openattach($mapimessage, $row[PR_ATTACH_NUM]);
-                $attachprops = mapi_getprops($mapiattach, array(PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_W, PR_ATTACH_MIME_TAG, PR_ATTACH_MIME_TAG_W, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_DISPLAY_NAME_W, PR_ATTACH_SIZE));
+                $attachprops = mapi_getprops($mapiattach, array(PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_W, PR_ATTACH_MIME_TAG, PR_ATTACH_MIME_TAG_W, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_DISPLAY_NAME_W, PR_ATTACH_SIZE, PR_ATTACH_FLAGS));
                 if ((isset($attachprops[PR_ATTACH_MIME_TAG]) && strpos(strtolower($attachprops[PR_ATTACH_MIME_TAG]), 'signed') !== false) ||
                     (isset($attachprops[PR_ATTACH_MIME_TAG_W]) && strpos(strtolower($attachprops[PR_ATTACH_MIME_TAG_W]), 'signed') !== false)) {
                     continue;
@@ -776,7 +776,8 @@ class MAPIProvider {
                 // the displayname is handled equaly for all AS versions
                 $attach->displayname = w2u((isset($attachprops[PR_ATTACH_LONG_FILENAME])) ? $attachprops[PR_ATTACH_LONG_FILENAME] : ((isset($attachprops[PR_ATTACH_FILENAME])) ? $attachprops[PR_ATTACH_FILENAME] : ((isset($attachprops[PR_DISPLAY_NAME])) ? $attachprops[PR_DISPLAY_NAME] : "attachment.bin")));
                 // fix attachment name in case of inline images
-                if ($attach->displayname == "inline.txt" && (isset($attachprops[PR_ATTACH_MIME_TAG]) || $attachprops[PR_ATTACH_MIME_TAG_W])) {
+                if (($attach->displayname == "inline.txt" && (isset($attachprops[PR_ATTACH_MIME_TAG]) || $attachprops[PR_ATTACH_MIME_TAG_W])) ||
+                (substr_compare($attach->displayname, "attachment", 0, 10, true) === 0 && substr_compare($attach->displayname, ".dat", -4, 4, true) === 0)) {
                     $mimetype = (isset($attachprops[PR_ATTACH_MIME_TAG])) ? $attachprops[PR_ATTACH_MIME_TAG]:$attachprops[PR_ATTACH_MIME_TAG_W];
                     $mime = explode("/", $mimetype);
 
@@ -818,6 +819,10 @@ class MAPIProvider {
                         $attach->contentid = $attachprops[PR_ATTACH_CONTENT_ID_W];
 
                     if (isset($attachprops[PR_ATTACHMENT_HIDDEN]) && $attachprops[PR_ATTACHMENT_HIDDEN]) $attach->isinline = 1;
+
+                    if (isset($attach->contentid, $attachprops[PR_ATTACH_FLAGS]) && $attachprops[PR_ATTACH_FLAGS] & 4) {
+                        $attach->isinline = 1;
+                    }
 
                     if(!isset($message->asattachments))
                         $message->asattachments = array();
