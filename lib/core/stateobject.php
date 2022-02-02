@@ -7,7 +7,7 @@
  * Simple data object with some PHP magic
  */
 
-class StateObject implements JsonSerializable {
+class StateObject implements Serializable, JsonSerializable {
     private $SO_internalid;
     protected $data = array();
     protected $unsetdata = array();
@@ -147,6 +147,50 @@ class StateObject implements JsonSerializable {
         }
 
         throw new FatalNotImplementedException(sprintf("StateObject->__call('%s'): not implemented. op: {%s} args: %d", $name, $operator, count($arguments)));
+    }
+
+    /**
+     * Method to serialize a StateObject
+     *
+     * @access public
+     * @return array
+     */
+    public function serialize() {
+        // perform tasks just before serialization
+        $this->preSerialize();
+
+        return serialize(array($this->SO_internalid,$this->data));
+    }
+
+    /**
+     * Method to unserialize a StateObject
+     *
+     * @access public
+     * @return array
+     * @throws StateInvalidException
+     */
+    public function unserialize($data) {
+        // throw a StateInvalidException if unserialize fails
+        ini_set('unserialize_callback_func', 'StateObject::ThrowStateInvalidException');
+
+        list($this->SO_internalid, $this->data) = unserialize($data);
+
+        // perform tasks just after unserialization
+        $this->postUnserialize();
+        return true;
+    }
+
+    /**
+     * Called before the StateObject is serialized
+     *
+     * @access protected
+     * @return boolean
+     */
+    protected function preSerialize() {
+        // make sure the object has an id before serialization
+        $this->GetID();
+
+        return true;
     }
 
     /**
