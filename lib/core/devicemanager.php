@@ -935,12 +935,17 @@ class DeviceManager extends InterProcessData {
                     }
                     else {
                         ZLog::Write(LOGLEVEL_WARN, sprintf("Could not find '%s' in device state. Dropping previous device state!", $_deviceuser));
-                        return;
                     }
                 }
-                $this->device = $device;
-                $this->device->LoadedDevice();
-                $this->deviceHash = $deviceHash;
+                if (method_exists($device, 'LoadedDevice')) {
+                    ZLog::Write(LOGLEVEL_WARN, sprintf("devicehash %s", $deviceHash));
+                    $this->device = $device;
+                    $this->device->LoadedDevice();
+                    $this->deviceHash = $deviceHash;
+                }
+                else {
+                    ZLog::Write(LOGLEVEL_WARN, "Loaded device is not a device object. Dropping new laoded state and keeping initialized object!");
+                }
                 $this->stateManager->SetDevice($this->device);
             }
         }
@@ -983,7 +988,16 @@ class DeviceManager extends InterProcessData {
         $brokenMessage->reasonCode = $reason;
         $brokenMessage->reasonString = 'unknown cause';
         $brokenMessage->timestamp = time();
-        $brokenMessage->asobject = $message;
+        $info = "";
+        if (isset($message->subject))
+            $info .= sprintf("Subject: '%s'", $message->subject);
+        if (isset($message->fileas))
+            $info .= sprintf("FileAs: '%s'", $message->fileas);
+        if (isset($message->from))
+            $info .= sprintf(" - From: '%s'", $message->from);
+        if (isset($message->starttime))
+            $info .= sprintf(" - On: '%s'", strftime("%Y-%m-%d %H:%M", $message->starttime));
+        $brokenMessage->info = $info;
         $brokenMessage->reasonString = ZLog::GetLastMessage(LOGLEVEL_WARN);
 
         $this->device->AddIgnoredMessage($brokenMessage);

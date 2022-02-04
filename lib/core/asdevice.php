@@ -62,7 +62,7 @@ class ASDevice extends StateObject {
         $this->devicetype = $devicetype;
         list ($this->deviceuser, $this->domain) =  Utils::SplitDomainUser($getuser);
         $this->useragent = $useragent;
-    } 
+    }
 
    /**
      * Removes internal data from the object, so this data can not be exposed.
@@ -79,18 +79,6 @@ class ASDevice extends StateObject {
         unset($this->newdevice);
         unset($this->ignoredMessageIds);
         $this->backend2folderidCache = false;
-
-        if (isset($this->ignoredmessages) && is_array($this->ignoredmessages)) {
-            $imessages = $this->ignoredmessages;
-            $unserializedMessage = array();
-            foreach ($imessages as $im) {
-                $im->asobject = unserialize($im->asobject);
-                $im->asobject->StripData();
-                $unserializedMessage[] = $im;
-            }
-            $this->ignoredmessages = $unserializedMessage;
-        }
-
 
         if (!$stripHierarchyCache && $this->hierarchyCache !== false && $this->hierarchyCache instanceof ChangesMemoryWrapper) {
             $this->hierarchyCache->StripData();
@@ -191,15 +179,11 @@ class ASDevice extends StateObject {
         // we should have all previousily ignored messages in an id array
         if (count($this->ignoredMessages) != count($this->ignoredMessageIds)) {
             foreach($this->ignoredMessages as $oldMessage) {
-                if (!isset($this->ignoredMessageIds[$oldMessage->folderid]))
-                    $this->ignoredMessageIds[$oldMessage->folderid] = array();
-                $this->ignoredMessageIds[$oldMessage->folderid][] = $oldMessage->id;
+                if (!isset($this->ignoredMessageIds[$oldMessage->data->folderid]))
+                    $this->ignoredMessageIds[$oldMessage->data->folderid] = array();
+                $this->ignoredMessageIds[$oldMessage->data->folderid][] = $oldMessage->id;
             }
         }
-
-        // serialize the AS object - if available
-        if (isset($ignoredMessage->asobject))
-            $ignoredMessage->asobject = serialize($ignoredMessage->asobject);
 
         // try not to add the same message several times
         if (isset($ignoredMessage->folderid) && isset($ignoredMessage->id)) {
@@ -240,9 +224,9 @@ class ASDevice extends StateObject {
         // we should have all previousily ignored messages in an id array
         if (count($this->ignoredMessages) != count($this->ignoredMessageIds)) {
             foreach($this->ignoredMessages as $oldMessage) {
-                if (!isset($this->ignoredMessageIds[$oldMessage->folderid]))
-                    $this->ignoredMessageIds[$oldMessage->folderid] = array();
-                $this->ignoredMessageIds[$oldMessage->folderid][] = $oldMessage->id;
+                if (!isset($this->ignoredMessageIds[$oldMessage->data->folderid]))
+                    $this->ignoredMessageIds[$oldMessage->data->folderid] = array();
+                $this->ignoredMessageIds[$oldMessage->data->folderid][] = $oldMessage->data->id;
             }
         }
 
@@ -290,9 +274,9 @@ class ASDevice extends StateObject {
         // we should have all previousily ignored messages in an id array
         if (count($this->ignoredMessages) != count($this->ignoredMessageIds)) {
             foreach($this->ignoredMessages as $oldMessage) {
-                if (!isset($this->ignoredMessageIds[$oldMessage->folderid]))
-                    $this->ignoredMessageIds[$oldMessage->folderid] = array();
-                $this->ignoredMessageIds[$oldMessage->folderid][] = $oldMessage->id;
+                if (!isset($this->ignoredMessageIds[$oldMessage->data->folderid]))
+                    $this->ignoredMessageIds[$oldMessage->data->folderid] = array();
+                $this->ignoredMessageIds[$oldMessage->data->folderid][] = $oldMessage->data->id;
             }
         }
 
