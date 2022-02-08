@@ -1873,6 +1873,9 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                 $stateFolderRows = mapi_table_queryrows($stateFolderContents, [PR_ENTRYID], 0, 1);
                 return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
             }
+            elseif($rowCnt > 1) {
+                ZLog::Write(LOGLEVEL_WARN, sprintf("BackendGrommunio->getStateMessage(): Found several (%d) states for '%s'", $rowCnt, $messageName));
+            }
         }
         throw new StateNotFoundException(sprintf("BackendGrommunio->getStateMessage(): Could not locate the state message '%s-%s'",
             $messageName, Utils::PrintAsString($counter)));
