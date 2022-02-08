@@ -9,7 +9,7 @@
  * set/read the object variables of the subclass according to the mappings
  */
 
-class Streamer implements Serializable, JsonSerializable {
+class Streamer implements JsonSerializable {
     const STREAMER_VAR = 1;
     const STREAMER_ARRAY = 2;
     const STREAMER_TYPE = 3;
@@ -370,37 +370,6 @@ class Streamer implements Serializable, JsonSerializable {
         if ($flags === 0) {
             unset($this->mapping);
         }
-
-        return true;
-    }
-
-    /**
-     * Method to serialize a Streamer and respective SyncObject
-     *
-     * @access public
-     * @return array
-     */
-    public function serialize() {
-        $values = array();
-        foreach ($this->mapping as $k=>$v) {
-            if (isset($this->{$v[self::STREAMER_VAR]}))
-                $values[$v[self::STREAMER_VAR]] = serialize($this->{$v[self::STREAMER_VAR]});
-        }
-
-        return serialize($values);
-    }
-
-    /**
-     * Method to unserialize a Streamer and respective SyncObject
-     *
-     * @access public
-     * @return array
-     */
-    public function unserialize($data) {
-        $this->__construct();
-        $values = unserialize($data);
-        foreach ($values as $k=>$v)
-            $this->$k = unserialize($v);
 
         return true;
     }

@@ -421,21 +421,6 @@ class SyncParameters extends StateObject {
      */
 
     /**
-     * Called before the StateObject is serialized
-     *
-     * @access protected
-     * @return boolean
-     */
-    protected function preSerialize() {
-        parent::preSerialize();
-
-        if ($this->changed === true && ($this->synckeyChanged || $this->lastsynctime === false))
-            $this->lastsynctime = time();
-
-        return true;
-    }
-
-    /**
      * Called after the StateObject was unserialized
      *
      * @access protected
