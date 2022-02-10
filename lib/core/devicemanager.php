@@ -938,7 +938,6 @@ class DeviceManager extends InterProcessData {
                     }
                 }
                 if (method_exists($device, 'LoadedDevice')) {
-                    ZLog::Write(LOGLEVEL_WARN, sprintf("devicehash %s", $deviceHash));
                     $this->device = $device;
                     $this->device->LoadedDevice();
                     $this->deviceHash = $deviceHash;
