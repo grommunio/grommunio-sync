@@ -654,16 +654,6 @@ class SyncCollections implements Iterator {
             return false;
         }
 
-        // Prevent ZP-623 by checking if the states have been used before, if so force a sync on this folder.
-        // ZCP/KC 7.2.3 and newer support SYNC_STATE_READONLY so this behaviour is not required (see ZP-968).
-        if (!Utils::CheckMapiExtVersion('7.2.3')) {
-            if (ZPush::GetDeviceManager()->CheckHearbeatStateIntegrity($spa->GetFolderId(), $spa->GetUuid(), $spa->GetUuidCounter())) {
-                ZLog::Write(LOGLEVEL_DEBUG, "SyncCollections->CountChange(): Cannot verify changes for state as it was already used. Forcing sync of folder.");
-                $this->changes[$folderid] = 1;
-                return true;
-            }
-        }
-
         $backendFolderId = ZPush::GetDeviceManager()->GetBackendIdForFolderId($folderid);
         // switch user store if this is a additional folder (additional true -> do not debug)
         ZPush::GetBackend()->Setup(ZPush::GetAdditionalSyncFolderStore($backendFolderId, true));
@@ -673,8 +663,6 @@ class SyncCollections implements Iterator {
             $exporter = ZPush::GetBackend()->GetExporter($backendFolderId);
             if ($exporter !== false && isset($this->addparms[$folderid]["state"])) {
                 $importer = false;
-
-                $exporter->SetMoveStates($spa->GetMoveState());
                 $exporter->Config($this->addparms[$folderid]["state"], BACKEND_DISCARD_DATA);
                 $exporter->ConfigContentParameters($spa->GetCPO());
                 $ret = $exporter->InitializeExporter($importer);

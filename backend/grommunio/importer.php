@@ -34,8 +34,7 @@ class ImportChangesICS implements IImportChanges {
     private $cutoffdate;
     private $contentClass;
     private $prefix;
-    private $moveSrcState;
-    private $moveDstState;
+
 
     /**
      * Constructor
@@ -195,32 +194,6 @@ class ImportChangesICS implements IImportChanges {
         }
 
         return $state;
-    }
-
-    /**
-     * Sets the states from move operations.
-     * When src and dst state are set, a MOVE operation is being executed.
-     *
-     * @param mixed         $srcState
-     * @param mixed         (opt) $dstState, default: null
-     *
-     * @access public
-     * @return boolean
-     */
-    public function SetMoveStates($srcState, $dstState = null) {
-        $this->moveSrcState = $srcState;
-        $this->moveDstState = $dstState;
-        return true;
-    }
-
-    /**
-     * Gets the states of special move operations.
-     *
-     * @access public
-     * @return array(0 => $srcState, 1 => $dstState)
-     */
-    public function GetMoveStates() {
-        return array($this->moveSrcState, $this->moveDstState);
     }
 
     /**

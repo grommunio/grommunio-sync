@@ -33,7 +33,6 @@ class DeviceManager extends InterProcessData {
     const FLD_FLAGS_SENDASOWNER = 1;
     const FLD_FLAGS_TRACKSHARENAME = 2;
     const FLD_FLAGS_CALENDARREMINDERS = 4;
-    const FLD_FLAGS_NOREADONLYNOTIFY = 8;
 
     private $device;
     private $deviceHash;

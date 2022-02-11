@@ -823,7 +823,6 @@ class Sync extends RequestProcessor {
                             $streamimporter = new ImportChangesStream(self::$encoder, ZPush::getSyncObjectFromFolderClass($spa->GetContentClass()));
 
                             if ($exporter !== false) {
-                                $exporter->SetMoveStates($spa->GetMoveState());
                                 $exporter->Config($sc->GetParameter($spa, "state"));
                                 $exporter->ConfigContentParameters($spa->GetCPO());
                                 $exporter->InitializeExporter($streamimporter);
@@ -1232,10 +1231,6 @@ class Sync extends RequestProcessor {
             try {
                 if (isset($exporter) && $exporter) {
                     $state = $exporter->GetState();
-
-                    // update the move state (it should be gone now)
-                    list($moveState,) = $exporter->GetMoveStates();
-                    $spa->SetMoveState($moveState);
                 }
 
                 // nothing exported, but possibly imported - get the importer state
@@ -1335,9 +1330,6 @@ class Sync extends RequestProcessor {
                 // if something goes wrong, ask the mobile to resync the hierarchy
                 if ($this->importer === false)
                     throw new StatusException(sprintf("Sync->getImporter(): no importer for folder id %s/%s", $spa->GetFolderId(), $spa->GetBackendFolderId()), SYNC_STATUS_FOLDERHIERARCHYCHANGED);
-
-                // set the move state so the importer is aware of previous made moves
-                $this->importer->SetMoveStates($spa->GetMoveState());
 
                 // if there is a valid state obtained after importing changes in a previous loop, we use that state
                 if (isset($actiondata["failstate"]) && isset($actiondata["failstate"]["failedsyncstate"])) {

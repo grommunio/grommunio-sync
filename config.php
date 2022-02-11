@@ -232,6 +232,12 @@
     // The backend data provider.
     define('BACKEND_PROVIDER', 'BackendGrommunio');
 
+    // Defines the server to which we want to connect.
+    define('MAPI_SERVER', 'default:');
+
+    // Hidden state folder in store
+    define('STORE_STATE_FOLDER', 'GS-SyncState');
+
 /**********************************************************************************
  *  Search provider settings
  *
@@ -274,15 +280,12 @@
  *                          No flags configured, default flag to be set
  *                      DeviceManager::FLD_FLAGS_SENDASOWNER
  *                          When replying in this folder, automatically do Send-As
- *                      DeviceManager::FLD_FLAGS_NOREADONLYNOTIFY
- *                          If set, grommunio-sync won't send notification emails for changes
- *                          if the folder is read-only
  *
  *  Additional notes:
  *  - on grommunio systems, use backend/grommunio/listfolders.php script to get a list
  *    of available folders
  *
- *  - all grommunio-sync users must have at least reading permissions so the configured
+ *  - all grommunio-sync users must have full permissions so the configured
  *    folders can be synchronized to the mobile. Else they are ignored.
  *
  *  - this feature is only partly suitable for multi-tenancy environments,

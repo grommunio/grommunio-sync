@@ -37,7 +37,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     private $store;
     private $storeName;
     private $storeCache;
-    private $importedFolders;
     private $notifications;
     private $changesSink;
     private $changesSinkFolders;
@@ -65,7 +64,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         $this->store = false;
         $this->storeName = false;
         $this->storeCache = array();
-        $this->importedFolders = array();
         $this->notifications = false;
         $this->changesSink = false;
         $this->changesSinkFolders = array();
@@ -78,7 +76,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         $this->stateFolder = null;
 
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio using PHP-MAPI version: %s - PHP version: %s", phpversion("mapi"), phpversion()));
-        GrommunioChangesWrapper::SetBackend($this);
 
         # Interprocessdata
         $this->allocate = 0;
@@ -231,12 +228,11 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @param string        $store              target store, could contain a "domain\user" value
      * @param boolean       $checkACLonly       if set to true, Setup() should just check ACLs
      * @param string        $folderid           if set, only ACLs on this folderid are relevant
-     * @param boolean       $readonly           if set, the folder needs at least read permissions
      *
      * @access public
      * @return boolean
      */
-    public function Setup($store, $checkACLonly = false, $folderid = false, $readonly = false) {
+    public function Setup($store, $checkACLonly = false, $folderid = false) {
         list($user, $domain) = Utils::SplitDomainUser($store);
 
         if (!isset($this->mainUser))
@@ -291,13 +287,8 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                 }
                 // check permissions on this folder
                 else {
-                    if (! $readonly) {
-                        $rights = $this->HasSecretaryACLs($userstore, $folderid);
-                    }
-                    else {
-                        $rights = $this->HasReadACLs($userstore, $folderid);
-                    }
-                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->Setup(): Checking for '%s' ACLs on '%s' of store '%s': '%s'", ($readonly?'read':'secretary'), $folderid, $user, Utils::PrintAsString($rights)));
+                    $rights = $this->HasSecretaryACLs($userstore, $folderid);
+                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->Setup(): Checking for secretary ACLs on '%s' of store '%s': '%s'", $folderid, $user, Utils::PrintAsString($rights)));
                     return $rights;
                 }
             }
@@ -398,10 +389,12 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     public function GetImporter($folderid = false) {
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->GetImporter() folderid: '%s'", Utils::PrintAsString($folderid)));
         if($folderid !== false) {
-            $this->importedFolders[$folderid] = $this->store;
-            $wrapper = GrommunioChangesWrapper::GetWrapper($this->storeName, $this->session, $this->store, $folderid, $this->storeName == $this->mainUser);
-            $wrapper->Prepare(GrommunioChangesWrapper::IMPORTER);
-            return $wrapper;
+            // check if the user of the current store has permissions to import to this folderid
+            if ($this->storeName != $this->mainUser && !$this->hasSecretaryACLs($this->store, $folderid)) {
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->GetImporter(): missing permissions on folderid: '%s'.", Utils::PrintAsString($folderid)));
+                return false;
+            }
+            return new ImportChangesICS($this->session, $this->store, hex2bin($folderid));
         }
         else
             return new ImportChangesICS($this->session, $this->store);
@@ -419,9 +412,12 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      */
     public function GetExporter($folderid = false) {
         if($folderid !== false) {
-            $wrapper = GrommunioChangesWrapper::GetWrapper($this->storeName, $this->session, $this->store, $folderid, $this->storeName == $this->mainUser);
-            $wrapper->Prepare(GrommunioChangesWrapper::EXPORTER);
-            return $wrapper;
+            // check if the user of the current store has permissions to export from this folderid
+            if ($this->storeName != $this->mainUser && !$this->hasSecretaryACLs($this->store, $folderid)) {
+                ZLog::Write(LOGLEVEL_DEBUG, sprintf("BackendGrommunio->GetExporter(): missing permissions on folderid: '%s'.", Utils::PrintAsString($folderid)));
+                return false;
+            }
+            return new ExportChangesICS($this->session, $this->store, hex2bin($folderid));
         }
         else
             return new ExportChangesICS($this->session, $this->store);
@@ -1478,12 +1474,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             }
         }
 
-        // if there is a ReplyBackImExporter, the exporter needs to run!
-        $wrapper = GrommunioChangesWrapper::GetWrapper($user, false, null, $folderid, null);
-        if ($wrapper && $wrapper->HasReplyBackExporter()) {
-            return "replyback-". time();
-        }
-
         if (!isset($this->folderStatCache[$user])) {
             $this->folderStatCache[$user] = array();
         }
@@ -2130,36 +2120,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
             return true;
         }
         return false;
-    }
-
-    /**
-     * Checks if the logged in user has read permissions on a folder.
-     *
-     * @param ressource $store
-     * @param string $folderid
-     *
-     * @access public
-     * @return boolean
-     */
-    public function HasReadACLs($store, $folderid) {
-        $entryid = mapi_msgstore_entryidfromsourcekey($store, hex2bin($folderid));
-        if (!$entryid) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("BackendGrommunio->HasReadACLs(): error, no entryid resolved for %s on store %s", $folderid, $store));
-            return false;
-        }
-
-        $folder = mapi_msgstore_openentry($store, $entryid);
-        if (!$folder) {
-            ZLog::Write(LOGLEVEL_WARN, sprintf("BackendGrommunio->HasReadACLs(): error, could not open folder with entryid %s on store %s", bin2hex($entryid), $store));
-            return false;
-        }
-
-        $props = mapi_getprops($folder, array(PR_RIGHTS));
-        if (isset($props[PR_RIGHTS]) &&
-                ($props[PR_RIGHTS] & ecRightsReadAny) ) {
-                    return true;
-                }
-                return false;
     }
 
     /**
