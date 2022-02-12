@@ -303,6 +303,14 @@ class ZPush {
             throw new FatalMisconfigurationException("The RETRY_AFTER_DELAY value must be 'false' or a number greater than 0.");
         }
 
+        // set Grommunio backend defaults if not set
+        if (!defined('MAPI_SERVER')) {
+            define('MAPI_SERVER', 'default:');
+        }
+        if (!defined('STORE_STATE_FOLDER')) {
+            define('STORE_STATE_FOLDER', 'GS-SyncState');
+        }
+
         // the check on additional folders will not throw hard errors, as this is probably changed on live systems
         if (isset($additionalFolders) && !is_array($additionalFolders))
             ZLog::Write(LOGLEVEL_ERROR, "ZPush::CheckConfig() : The additional folders synchronization not available as array.");
