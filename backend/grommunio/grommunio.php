@@ -10,15 +10,6 @@
  * user's store and extends InterProcessData to access Redis.
  */
 
-// config file
-$config_path = stream_resolve_include_path(__DIR__."/config.php");
-if ($config_path !== false) {
-    require_once($config_path);
-}
-else {
-    ZLog::Write(LOGLEVEL_WARN, "BackendGrommunio->config file can not be found");
-}
-
 // include PHP-MAPI classes
 include_once('backend/grommunio/mapi/mapi.util.php');
 include_once('backend/grommunio/mapi/mapidefs.php');
