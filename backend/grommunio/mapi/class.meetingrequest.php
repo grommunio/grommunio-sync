@@ -730,7 +730,7 @@ If it is the first time this attendee has proposed a new date/time, increment th
             mapi_message_setreadflag($this->message, SUPPRESS_RECEIPT);
 
             // This meeting request item is recurring, so find all occurrences and saves them all as exceptions to this meeting request item.
-            if ($messageprops[$this->proptags['recurring']] == true) {
+            if (isset($messageprops[$this->proptags['recurring']]) && $messageprops[$this->proptags['recurring']] == true) {
                 $calendarItem = false;
 
                 // Find main recurring item based on GlobalID (0x3)
