@@ -761,7 +761,8 @@ class DeviceManager extends InterProcessData {
         // status available or just initialized
         if (isset($currentStatus->{ASDevice::FOLDERSYNCSTATUS}) || $statusflag == self::FLD_SYNC_INITIALIZED) {
             // only update if there is a change
-            if ((!$currentStatus || $statusflag !== $currentStatus->{ASDevice::FOLDERSYNCSTATUS}) && $statusflag != self::FLD_SYNC_COMPLETED) {
+            if ((!$currentStatus || (isset($currentStatus->{ASDevice::FOLDERSYNCSTATUS}) && $statusflag !== $currentStatus->{ASDevice::FOLDERSYNCSTATUS})) && 
+                    $statusflag != self::FLD_SYNC_COMPLETED) {
                 $this->device->SetFolderSyncStatus($folderid, $statusflag);
                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("SetFolderSyncStatus(): set %s for %s", $statusflag, $folderid));
             }
