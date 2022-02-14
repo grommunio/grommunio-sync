@@ -132,7 +132,7 @@ class Sync extends RequestProcessor {
                             $spa->SetMoveState(false);
                         }
                         else if ($synckey !== false) {
-                            if (($synckey !== $spa->GetSyncKey() && $synckey !== $spa->GetNewSyncKey()) || !!$spa->GetMoveState()) {
+                            if ($synckey !== $spa->GetSyncKey() && $synckey !== $spa->GetNewSyncKey()) {
                                 ZLog::Write(LOGLEVEL_DEBUG, "HandleSync(): Synckey does not match latest saved for this folder or there is a move state, removing folderstat to force Exporter setup");
                                 $spa->DelFolderStat();
                             }
@@ -1120,7 +1120,7 @@ class Sync extends RequestProcessor {
             }
             // send <MoreAvailable/> if there are more changes than fit in the folder windowsize
             // or there is a move state (another sync should be done afterwards)
-            if($changecount > $windowSize || $spa->GetMoveState() !== false) {
+            if($changecount > $windowSize) {
                 self::$encoder->startTag(SYNC_MOREAVAILABLE, false, true);
                 $moreAvailableSent = true;
                 $spa->DelFolderStat();
