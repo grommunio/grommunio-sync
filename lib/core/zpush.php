@@ -146,7 +146,6 @@ class ZPush {
 
 
     static private $stateMachine;
-    static private $searchProvider;
     static private $deviceManager;
     static private $provisioningManager;
     static private $topCollector;
@@ -461,40 +460,6 @@ class ZPush {
 
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("Including backend file: '%s'", $toLoad));
         return include_once($toLoad);
-    }
-
-    /**
-     * Returns the SearchProvider object
-     * which has to be an ISearchProvider implementation
-     *
-     * @access public
-     * @return object   implementation of ISearchProvider
-     * @throws FatalMisconfigurationException, FatalNotImplementedException
-     */
-    static public function GetSearchProvider() {
-        if (!isset(ZPush::$searchProvider)) {
-            // is a global searchprovider configured ? It will  outrank the backend
-            if (defined('SEARCH_PROVIDER') && @constant('SEARCH_PROVIDER') != "") {
-                $searchClass = @constant('SEARCH_PROVIDER');
-
-                if (! class_exists($searchClass))
-                    self::IncludeBackend($searchClass);
-
-                if (class_exists($searchClass))
-                    $aSearchProvider = new $searchClass();
-                else
-                    throw new FatalMisconfigurationException(sprintf("Search provider '%s' can not be loaded. Check configuration!", $searchClass));
-            }
-            // get the searchprovider from the backend
-            else
-                $aSearchProvider = self::GetBackend()->GetSearchProvider();
-
-            if (in_array('ISearchProvider', class_implements($aSearchProvider)))
-                ZPush::$searchProvider = $aSearchProvider;
-            else
-                throw new FatalNotImplementedException("Instantiated SearchProvider does not implement the ISearchProvider interface!");
-        }
-        return ZPush::$searchProvider;
     }
 
     /**

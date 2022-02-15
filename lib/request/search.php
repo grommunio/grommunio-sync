@@ -304,7 +304,7 @@ class Search extends RequestProcessor {
             return false;
 
         // get SearchProvider
-        $searchprovider = ZPush::GetSearchProvider();
+        $searchprovider = ZPush::GetBackend()->GetSearchProvider();
         $status = SYNC_SEARCHSTATUS_SUCCESS;
         $rows = array();
 
@@ -444,7 +444,8 @@ class Search extends RequestProcessor {
                     }
                     elseif ($searchname == ISearchProvider::SEARCH_MAILBOX) {
                         foreach ($rows as $u) {
-                            $folderid = self::$deviceManager->GetFolderIdForBackendId($u['folderid']);
+                            // TODO: unclear if any clients *require* the folder id where the message is located (it's not available anymore)
+                            //$folderid = self::$deviceManager->GetFolderIdForBackendId($u['folderid']);
 
                             self::$encoder->startTag(SYNC_SEARCH_RESULT);
                                 self::$encoder->startTag(SYNC_FOLDERTYPE);
@@ -453,13 +454,12 @@ class Search extends RequestProcessor {
                                 self::$encoder->startTag(SYNC_SEARCH_LONGID);
                                 self::$encoder->content($u['longid']);
                                 self::$encoder->endTag();
-                                self::$encoder->startTag(SYNC_FOLDERID);
-                                self::$encoder->content($folderid);
-                                self::$encoder->endTag();
+                                //self::$encoder->startTag(SYNC_FOLDERID);
+                                //self::$encoder->content($folderid);
+                                //self::$encoder->endTag();
 
                                 self::$encoder->startTag(SYNC_SEARCH_PROPERTIES);
-                                    $tmp = explode(":", $u['longid']);
-                                    $message = self::$backend->Fetch($u['folderid'], $tmp[1], $cpo);
+                                    $message = self::$backend->Fetch(false, $u['longid'], $cpo);
                                     $message->Encode(self::$encoder);
 
                                 self::$encoder->endTag();//result

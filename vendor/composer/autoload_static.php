@@ -77,7 +77,6 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'RequestProcessor' => __DIR__ . '/../..' . '/lib/request/requestprocessor.php',
         'ResolveRecipients' => __DIR__ . '/../..' . '/lib/request/resolverecipients.php',
         'Search' => __DIR__ . '/../..' . '/lib/request/search.php',
-        'SearchProvider' => __DIR__ . '/../..' . '/lib/default/searchprovider.php',
         'SendMail' => __DIR__ . '/../..' . '/lib/request/sendmail.php',
         'ServiceUnavailableException' => __DIR__ . '/../..' . '/lib/exceptions/serviceunavailableexception.php',
         'Settings' => __DIR__ . '/../..' . '/lib/request/settings.php',

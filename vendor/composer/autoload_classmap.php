@@ -70,7 +70,6 @@ return array(
     'RequestProcessor' => $baseDir . '/lib/request/requestprocessor.php',
     'ResolveRecipients' => $baseDir . '/lib/request/resolverecipients.php',
     'Search' => $baseDir . '/lib/request/search.php',
-    'SearchProvider' => $baseDir . '/lib/default/searchprovider.php',
     'SendMail' => $baseDir . '/lib/request/sendmail.php',
     'ServiceUnavailableException' => $baseDir . '/lib/exceptions/serviceunavailableexception.php',
     'Settings' => $baseDir . '/lib/request/settings.php',

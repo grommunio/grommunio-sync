@@ -624,10 +624,18 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
      * @throws StatusException
      */
     public function Fetch($folderid, $id, $contentparameters) {
-        // id might be in the new longid format, so we have to split it here
-        list($fsk, $sk) = Utils::SplitMessageId($id);
-        // get the entry id of the message
-        $entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid), hex2bin($sk));
+        // SEARCH fetches with folderid == false and PR_ENTRYID as ID
+        if (! $folderid) {
+            $entryid = hex2bin($id);
+            $sk = $id;
+        }
+        else {
+            // id might be in the new longid format, so we have to split it here
+            list($fsk, $sk) = Utils::SplitMessageId($id);
+            // get the entry id of the message
+            $entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid), hex2bin($sk));
+
+        }
         if(!$entryid)
             throw new StatusException(sprintf("BackendGrommunio->Fetch('%s','%s'): Error getting entryid: 0x%X", $folderid, $sk, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
 
@@ -1292,17 +1300,17 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
         }
 
         // if the search range is set limit the result to it, otherwise return all found messages
-        $rows = (is_array($searchRange) && isset($searchRange[0]) && isset($searchRange[1])) ?
-            mapi_table_queryrows($table, array(PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY), $searchRange[0], $searchRange[1] - $searchRange[0] + 1) :
-            mapi_table_queryrows($table, array(PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY), 0, SEARCH_MAXRESULTS);
+        $rows = (is_array($searchRange) && isset($searchRange[0], $searchRange[1])) ?
+            mapi_table_queryrows($table, array(PR_ENTRYID), $searchRange[0], $searchRange[1] - $searchRange[0] + 1) :
+            mapi_table_queryrows($table, array(PR_ENTRYID), 0, SEARCH_MAXRESULTS);
 
         $cnt = count($rows);
         $items['searchtotal'] = $cnt;
         $items["range"] = $cpo->GetSearchRange();
         for ($i = 0; $i < $cnt; $i++) {
             $items[$i]['class'] = 'Email';
-            $items[$i]['longid'] = ZPush::GetDeviceManager()->GetFolderIdForBackendId(bin2hex($rows[$i][PR_PARENT_SOURCE_KEY])) . ":" . bin2hex($rows[$i][PR_SOURCE_KEY]);
-            $items[$i]['folderid'] = bin2hex($rows[$i][PR_PARENT_SOURCE_KEY]);
+            $items[$i]['longid'] = bin2hex($rows[$i][PR_ENTRYID]);
+            //$items[$i]['folderid'] = bin2hex($rows[$i][PR_PARENT_SOURCE_KEY]);
         }
         return $items;
     }
