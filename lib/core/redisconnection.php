@@ -34,7 +34,7 @@ EOF;
      *
      * @access public
      */
-    public function __construct($host ='localhost', $port = 6379) {
+    public function __construct($host=REDIS_HOST, $port=REDIS_PORT) {
         $this->redisObj = new Redis();
         // Opening a redis connection
         $this->redisObj->connect($host, $port);

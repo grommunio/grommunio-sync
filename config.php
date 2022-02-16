@@ -238,6 +238,12 @@
     // Hidden state folder in store
     define('STORE_STATE_FOLDER', 'GS-SyncState');
 
+    // Redis host
+    define('REDIS_HOST', 'localhost');
+
+    // Redis port
+    define('REDIS_PORT', 6379);
+
 /**********************************************************************************
  *  Search provider settings
  *

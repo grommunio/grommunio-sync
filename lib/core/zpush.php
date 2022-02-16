@@ -252,7 +252,14 @@ class ZPush {
             ZLog::Write(LOGLEVEL_INFO, "The configuration parameter 'USE_X_FORWARDED_FOR_HEADER' was deprecated in favor of 'USE_CUSTOM_REMOTE_IP_HEADER'. Please update your configuration.");
         }
 
-        // TODO: check redis configuration
+        // check redis configuration - set defaults
+        if (!defined('REDIS_HOST')) {
+            define('REDIS_HOST', 'localhost');
+        }
+        if (!defined('REDIS_PORT')) {
+            define('REDIS_PORT', 6379);
+        }
+
         return true;
     }
 
