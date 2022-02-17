@@ -237,7 +237,7 @@ class ZPush {
                 throw new FatalMisconfigurationException(sprintf("The configured TIMEZONE '%s' is not valid. Please check supported timezones at http://www.php.net/manual/en/timezones.php", constant('TIMEZONE')));
         }
         else if(!ini_get('date.timezone')) {
-            date_default_timezone_set('Europe/Amsterdam');
+            date_default_timezone_set('Europe/Vienna');
         }
 
         if (defined('USE_X_FORWARDED_FOR_HEADER')) {
