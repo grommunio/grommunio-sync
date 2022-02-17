@@ -16,6 +16,7 @@ class MAPIStreamWrapper {
     private $streamlength;
     private $toTruncate;
     private $truncateHtmlSafe;
+    private $context;
 
     /**
      * Opens the stream

@@ -1213,7 +1213,7 @@ class MAPIProvider {
         else {
             $this->setPropsInMAPI($mapimessage, $message->flag, $flagmapping);
             $props[$flagprops["todoitemsflags"]] = 1;
-            if (isset($message->subject) && str_len($message->subject) > 0)
+            if (isset($message->subject) && strlen($message->subject) > 0)
                 $props[$flagprops["todotitle"]] = $message->subject;
             // ordinal date is utc current time
             if (!isset($message->flag->ordinaldate) || empty($message->flag->ordinaldate)) {
@@ -1536,6 +1536,7 @@ class MAPIProvider {
             mapi_message_modifyrecipients($mapimessage, 0, $recips);
         }
         mapi_setprops($mapimessage, $props);
+        return true;
     }
 
     /**
@@ -1670,6 +1671,7 @@ class MAPIProvider {
         else ZLog::Write(LOGLEVEL_DEBUG, "FILEAS_ORDER not defined");
 
         mapi_setprops($mapimessage, $props);
+        return true;
     }
 
     /**
@@ -1761,8 +1763,7 @@ class MAPIProvider {
             }
         }
         mapi_setprops($mapimessage, $props);
-
-
+        return true;
     }
 
     /**
@@ -1799,6 +1800,7 @@ class MAPIProvider {
 
         $props[$noteprops["internetcpid"]] = INTERNET_CPID_UTF8;
         mapi_setprops($mapimessage, $props);
+        return true;
     }
 
     /**----------------------------------------------------------------------------------------------------------
@@ -1911,7 +1913,7 @@ class MAPIProvider {
 
         mapi_setprops($mapimessage, $propsToSet);
         if (mapi_last_hresult()) {
-            Zlog::Write(LOGLEVEL_WARN, sprintf("Failed to set properties, trying to set them separately. Error code was:%x", mapi_last_hresult()));
+            ZLog::Write(LOGLEVEL_WARN, sprintf("Failed to set properties, trying to set them separately. Error code was:%x", mapi_last_hresult()));
             $this->setPropsIndividually($mapimessage, $propsToSet, $mapiprops);
         }
 
@@ -1935,7 +1937,7 @@ class MAPIProvider {
         foreach ($propsToSet as $prop => $value) {
             mapi_setprops($mapimessage, array($prop => $value));
             if (mapi_last_hresult()) {
-                Zlog::Write(LOGLEVEL_ERROR, sprintf("Failed setting property [%s] with value [%s], error code was:%x", array_search($prop, $mapiprops), $value, mapi_last_hresult()));
+                ZLog::Write(LOGLEVEL_ERROR, sprintf("Failed setting property [%s] with value [%s], error code was:%x", array_search($prop, $mapiprops), $value, mapi_last_hresult()));
             }
         }
 

@@ -64,6 +64,7 @@ class PHPWrapper {
      */
     public function ConfigContentParameters($contentparameters) {
         $this->contentparameters = $contentparameters;
+        return true;
     }
 
     /**

@@ -31,11 +31,14 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     private $notifications;
     private $changesSink;
     private $changesSinkFolders;
+    private $changesSinkHierarchyHash;
     private $changesSinkStores;
     private $wastebasket;
     private $addressbook;
     private $folderStatCache;
     private $impersonateUser;
+    private $stateFolder;
+    private $userDeviceData;
 
     // KC config parameter for PR_EC_ENABLED_FEATURES / PR_EC_DISABLED_FEATURES
     const MOBILE_ENABLED = 'mobile';
@@ -1737,18 +1740,6 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
     }
 
     /**
-     * Returns all available states for a device id
-     *
-     * @param string    $devid              the device id
-     *
-     * @access public
-     * @return array(mixed)
-     */
-    public function GetAllStatesForDevice($devid) {
-
-    }
-
-    /**
      * Returns MAPIFolder object which contains the state information.
      * Creates this folder if it is not available yet.
      *
@@ -2571,7 +2562,7 @@ class BackendGrommunio extends InterProcessData implements IBackend, ISearchProv
                         $distListContent = mapi_folder_getcontentstable($distList);
                         $distListMembers = mapi_table_queryallrows($distListContent, array(PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_TAGGED_X509_CERT));
                         for ($j = 0, $nrDistListMembers = mapi_table_getrowcount($distListContent); $j < $nrDistListMembers; $j++) {
-                            ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrommunio->resolveRecipientGAL(): distlist's '%s' member", $to, $distListMembers[$j][PR_DISPLAY_NAME]));
+                            ZLog::Write(LOGLEVEL_WBXML, sprintf("BackendGrommunio->resolveRecipientGAL(): distlist's '%s' member: '%s'", $to, $distListMembers[$j][PR_DISPLAY_NAME]));
                             $recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $to, $distListMembers[$j], $nrDistListMembers);
                         }
                     }

@@ -137,13 +137,4 @@ interface IStateMachine {
      */
     public function SetStateVersion($version);
 
-    /**
-     * Returns all available states for a device id
-     *
-     * @param string    $devid              the device id
-     *
-     * @access public
-     * @return array(mixed)
-     */
-    public function GetAllStatesForDevice($devid);
 }
