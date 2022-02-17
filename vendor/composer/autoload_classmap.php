@@ -49,7 +49,7 @@ return array(
     'MAPIProvider' => $baseDir . '/backend/grommunio/mapiprovider.php',
     'MAPIStreamWrapper' => $baseDir . '/backend/grommunio/mapistreamwrapper.php',
     'MAPIUtils' => $baseDir . '/backend/grommunio/mapiutils.php',
-    'Mail_RFC822' => $baseDir . '/include/z_RFC822.php',
+    'Mail_RFC822' => $baseDir . '/lib/utils/g_RFC822.php',
     'MeetingResponse' => $baseDir . '/lib/request/meetingresponse.php',
     'Meetingrequest' => $baseDir . '/backend/grommunio/mapi/class.meetingrequest.php',
     'MoveItems' => $baseDir . '/lib/request/moveitems.php',

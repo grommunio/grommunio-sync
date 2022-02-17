@@ -56,7 +56,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'MAPIProvider' => __DIR__ . '/../..' . '/backend/grommunio/mapiprovider.php',
         'MAPIStreamWrapper' => __DIR__ . '/../..' . '/backend/grommunio/mapistreamwrapper.php',
         'MAPIUtils' => __DIR__ . '/../..' . '/backend/grommunio/mapiutils.php',
-        'Mail_RFC822' => __DIR__ . '/../..' . '/include/z_RFC822.php',
+        'Mail_RFC822' => __DIR__ . '/../..' . '/lib/utils/g_RFC822.php',
         'MeetingResponse' => __DIR__ . '/../..' . '/lib/request/meetingresponse.php',
         'Meetingrequest' => __DIR__ . '/../..' . '/backend/grommunio/mapi/class.meetingrequest.php',
         'MoveItems' => __DIR__ . '/../..' . '/lib/request/moveitems.php',
