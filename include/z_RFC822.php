@@ -8,27 +8,29 @@
  *
  * LICENSE:
  *
- * Copyright (c) 2001-2010, Richard Heyes
+ * Copyright (c) 2001-2017, Chuck Hagenbuch & Richard Heyes
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
  *
- * o Redistributions of source code must retain the above copyright
- *   notice, this list of conditions and the following disclaimer.
- * o Redistributions in binary form must reproduce the above copyright
- *   notice, this list of conditions and the following disclaimer in the
- *   documentation and/or other materials provided with the distribution.
- * o The names of the authors may not be used to endorse or promote
- *   products derived from this software without specific prior written
- *   permission.
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
  * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
  * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
  * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
@@ -40,9 +42,9 @@
  * @package     Mail
  * @author      Richard Heyes <richard@phpguru.org>
  * @author      Chuck Hagenbuch <chuck@horde.org
- * @copyright   2001-2010 Richard Heyes
- * @license     http://opensource.org/licenses/bsd-license.php New BSD License
- * @version     CVS: $Id: RFC822.php 294749 2010-02-08 08:22:25Z clockwerx $
+ * @copyright   2001-2017 Richard Heyes
+ * @license     http://opensource.org/licenses/BSD-3-Clause New BSD License
+ * @version     CVS: $Id$
  * @link        http://pear.php.net/package/Mail/
  */
 
@@ -69,7 +71,6 @@
  * @license BSD
  * @package Mail
  */
-
 class Mail_RFC822 {
 
     /**
@@ -123,6 +124,7 @@ class Mail_RFC822 {
     /**
      * The number of groups that have been found in the address list.
      * @var integer $num_groups
+     * @access public
      */
     var $num_groups = 0;
 
@@ -822,7 +824,7 @@ class Mail_RFC822 {
      */
     protected function _validateDliteral($dliteral)
     {
-        return !preg_match('/(.)[][\x0D\\\\]/', $dliteral, $matches) && $matches[1] != '\\';
+        return !preg_match('/(.)[][\x0D\\\\]/', $dliteral, $matches) && ((! isset($matches[1])) || $matches[1] != '\\');
     }
 
     /**
@@ -905,7 +907,7 @@ class Mail_RFC822 {
      * @param  string $data Addresses to count
      * @return int          Approximate count
      */
-    function approximateCount($data)
+    public function approximateCount($data)
     {
         return count(preg_split('/(?<!\\\\),/', $data));
     }
@@ -923,7 +925,7 @@ class Mail_RFC822 {
      * @return mixed           False if it fails, an indexed array
      *                         username/domain if it matches
      */
-    function isValidInetAddress($data, $strict = false)
+    public function isValidInetAddress($data, $strict = false)
     {
         $regex = $strict ? '/^([.0-9a-z_+-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i' : '/^([*+!.&#$|\'\\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i';
         if (preg_match($regex, trim($data), $matches)) {
