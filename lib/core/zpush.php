@@ -259,7 +259,9 @@ class ZPush {
         if (!defined('REDIS_PORT')) {
             define('REDIS_PORT', 6379);
         }
-
+        if (!defined('REDIS_AUTH')) {
+            define('REDIS_AUTH', '');
+        }
         return true;
     }
 

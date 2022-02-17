@@ -34,10 +34,13 @@ EOF;
      *
      * @access public
      */
-    public function __construct($host=REDIS_HOST, $port=REDIS_PORT) {
+    public function __construct($host=REDIS_HOST, $port=REDIS_PORT, $auth=REDIS_AUTH) {
         $this->redisObj = new Redis();
         // Opening a redis connection
         $this->redisObj->connect($host, $port);
+        if ($auth) {
+            $this->redisObj->auth($auth);
+        }
     }
 
     function getKey($key) {
