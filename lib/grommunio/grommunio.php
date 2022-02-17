@@ -11,11 +11,11 @@
  */
 
 // include PHP-MAPI classes
-include_once('backend/grommunio/mapi/mapi.util.php');
-include_once('backend/grommunio/mapi/mapidefs.php');
-include_once('backend/grommunio/mapi/mapitags.php');
-include_once('backend/grommunio/mapi/mapicode.php');
-include_once('backend/grommunio/mapi/mapiguid.php');
+include_once('mapi/mapi.util.php');
+include_once('mapi/mapidefs.php');
+include_once('mapi/mapitags.php');
+include_once('mapi/mapicode.php');
+include_once('mapi/mapiguid.php');
 
 
 //setlocale to UTF-8 in order to support properties containing Unicode characters
