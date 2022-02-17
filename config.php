@@ -227,11 +227,8 @@
     define('RETRY_AFTER_DELAY', 300);
 
 /**********************************************************************************
- *  Backend settings
+ *  Grommunio settings
  */
-    // The backend data provider.
-    define('BACKEND_PROVIDER', 'BackendGrommunio');
-
     // Defines the server to which we want to connect.
     define('MAPI_SERVER', 'default:');
 
@@ -247,15 +244,6 @@
     // Redis authentication - leave empty to connect without authentication (default)
     define('REDIS_AUTH', '');
 
-/**********************************************************************************
- *  Search provider settings
- *
- *  Alternative backend to perform SEARCH requests (GAL search)
- *  By default the main Backend defines the preferred search functionality.
- *  If set, the Search Provider will always be preferred.
- *  Use 'BackendSearchLDAP' to search in a LDAP directory (see backend/searchldap/config.php)
- */
-    define('SEARCH_PROVIDER', '');
     // Time in seconds for the server search. Setting it too high might result in timeout.
     // Setting it too low might not return all results. Default is 10.
     define('SEARCH_WAIT', 10);
@@ -291,8 +279,7 @@
  *                          When replying in this folder, automatically do Send-As
  *
  *  Additional notes:
- *  - on grommunio systems, use backend/grommunio/listfolders.php script to get a list
- *    of available folders
+ *  - use lib/grommunio/listfolders.php script to get a list of available folders
  *
  *  - all grommunio-sync users must have full permissions so the configured
  *    folders can be synchronized to the mobile. Else they are ignored.

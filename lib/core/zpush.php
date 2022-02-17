@@ -63,14 +63,6 @@ class ZPush {
     // Latest supported State version
     const STATE_VERSION = IStateMachine::STATEVERSION_02;
 
-    static private $autoloadBackendPreference = array(
-                    "BackendGrommunio",
-                    "BackendCombined",
-                    "BackendIMAP",
-                    "BackendVCardDir",
-                    "BackendMaildir"
-                );
-
     // Versions 1.0, 2.0, 2.1 and 2.5 are deprecated (ZP-604)
     static private $supportedASVersions = array(
                     self::ASV_12,
@@ -482,13 +474,8 @@ class ZPush {
         // if the backend is not yet loaded, load backend drivers and instantiate it
         if (!isset(ZPush::$backend)) {
 
-            // Initialize our backend
-            $ourBackend = @constant('BACKEND_PROVIDER');
-
-            if (!class_exists($ourBackend)) {
-                throw new FatalMisconfigurationException(sprintf("Backend provider '%s' can not be loaded. Check configuration!", $ourBackend));
-            }
-            ZPush::$backend = new $ourBackend();
+            // Initialize Grommunio
+            ZPush::$backend = new Grommunio();
         }
         return ZPush::$backend;
     }
