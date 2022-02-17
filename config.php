@@ -244,7 +244,7 @@
     // Redis port
     define('REDIS_PORT', 6379);
 
-    // Redis authentication - leave empty to connect without authendication (default)
+    // Redis authentication - leave empty to connect without authentication (default)
     define('REDIS_AUTH', '');
 
 /**********************************************************************************
