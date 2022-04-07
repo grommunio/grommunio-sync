@@ -585,7 +585,7 @@ class MAPIUtils {
      * @return void
      */
     public static function ParseSmime($session, $store, $addressBook, &$mapimessage) {
-        $props = mapi_getprops($mapimessage, array(PR_MESSAGE_CLASS, PR_SUBJECT, PR_MESSAGE_DELIVERY_TIME, PR_SENT_REPRESENTING_SEARCH_KEY, PR_MESSAGE_FLAGS));
+        $props = mapi_getprops($mapimessage, array(PR_MESSAGE_CLASS, PR_SUBJECT, PR_MESSAGE_DELIVERY_TIME, PR_SENT_REPRESENTING_NAME, PR_SENT_REPRESENTING_ENTRYID, PR_SENT_REPRESENTING_SEARCH_KEY, PR_MESSAGE_FLAGS));
         $read = $props[PR_MESSAGE_FLAGS] & MSGFLAG_READ;
 
         if (isset($props[PR_MESSAGE_CLASS]) && stripos($props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
@@ -613,6 +613,8 @@ class MAPIUtils {
                 PR_MESSAGE_CLASS => 'IPM.Note.SMIME.MultipartSigned',
                 PR_SUBJECT => $props[PR_SUBJECT],
                 PR_MESSAGE_DELIVERY_TIME => $props[PR_MESSAGE_DELIVERY_TIME],
+                PR_SENT_REPRESENTING_NAME => $props[PR_SENT_REPRESENTING_NAME],
+                PR_SENT_REPRESENTING_ENTRYID => $props[PR_SENT_REPRESENTING_ENTRYID],
                 PR_SENT_REPRESENTING_SEARCH_KEY => $props[PR_SENT_REPRESENTING_SEARCH_KEY],
                 // mark the message as read if the main message has read flag
                 PR_MESSAGE_FLAGS => $read ? $mprops[PR_MESSAGE_FLAGS] | MSGFLAG_READ : $mprops[PR_MESSAGE_FLAGS],
