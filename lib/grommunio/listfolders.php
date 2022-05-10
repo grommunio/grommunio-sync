@@ -9,15 +9,7 @@
  * folder available for synchronization.
  */
 
-if (CheckMapiExtVersion('8.0.0')) {
-    define('MAPI_SERVER', 'default:');
-}
-elseif (CheckMapiExtVersion('7.2.0')) {
-    define('MAPI_SERVER', 'file:///var/run/zarafad/server.sock');
-}
-else {
-    define('MAPI_SERVER', 'file:///var/run/zarafa');
-}
+define('MAPI_SERVER', 'default:');
 define('SSLCERT_FILE', null);
 define('SSLCERT_PASS', null);
 
@@ -48,11 +40,11 @@ function listfolders_configure() {
         exit(1);
     }
 
-    require(__DIR__ . '/mapi/mapi.util.php');
-    require(__DIR__ . '/mapi/mapidefs.php');
-    require(__DIR__ . '/mapi/mapicode.php');
-    require(__DIR__ . '/mapi/mapitags.php');
-    require(__DIR__ . '/mapi/mapiguid.php');
+    require('mapi/mapi.util.php');
+    require('mapi/mapidefs.php');
+    require('mapi/mapicode.php');
+    require('mapi/mapitags.php');
+    require('mapi/mapiguid.php');
 }
 
 function listfolders_handle() {
@@ -89,17 +81,22 @@ function listfolders_handle() {
 }
 
 function listfolders_zarafa_admin_setup ($mapi, $user, $pass, $sslcert_file, $sslcert_pass) {
-    $session = @mapi_logon_zarafa($user, $pass, $mapi, $sslcert_file, $sslcert_pass);
+    $session = @mapi_logon_zarafa($user, $pass, $mapi, $sslcert_file, $sslcert_pass, 0, 'script', 'script');
 
     if (!$session) {
         echo "User '$user' could not login. The script will exit. Errorcode: 0x". sprintf("%x", mapi_last_hresult()) . "\n";
         exit(1);
     }
 
+    $adminStore = null;
     $stores = @mapi_getmsgstorestable($session);
-    $storeslist = @mapi_table_queryallrows($stores);
-    $adminStore = @mapi_openmsgstore($session, $storeslist[0][PR_ENTRYID]);
-
+    $storeslist = @mapi_table_queryallrows($stores, array(PR_ENTRYID, PR_DEFAULT_STORE, PR_MDB_PROVIDER));
+    foreach ($storeslist as $store) {
+        if (isset($store[PR_DEFAULT_STORE]) && $store[PR_DEFAULT_STORE] == true) {
+            $adminStore = @mapi_openmsgstore($session, $store[PR_ENTRYID]);
+                break;
+            }
+    }
     $zarafauserinfo['admin'] = 1;
     $admin = (isset($zarafauserinfo['admin']) && $zarafauserinfo['admin'])?true:false;
 
