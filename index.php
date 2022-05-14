@@ -174,7 +174,7 @@ include_once(ZPUSH_CONFIG);
                 ZPush::PrintGrommunioSyncLegal($exclass, sprintf('<pre>%s</pre>',$ex->getMessage()));
             }
 
-            // log the failed login attemt e.g. for fail2ban
+            // log the failed login attempt e.g. for fail2ban
             if (defined('LOGAUTHFAIL') && LOGAUTHFAIL != false)
                 ZLog::Write(LOGLEVEL_WARN, sprintf("IP: %s failed to authenticate user '%s'",  Request::GetRemoteAddr(), Request::GetAuthUser()? Request::GetAuthUser(): Request::GetGETUser() ));
         }

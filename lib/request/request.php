@@ -8,7 +8,7 @@
  */
 
 class Request {
-    const MAXMEMORYUSAGE = 0.9;     // use max. 90% of allowed memory when synching
+    const MAXMEMORYUSAGE = 0.9;     // use max. 90% of allowed memory when syncing
     const UNKNOWN = "unknown";
     const IMPERSONATE_DELIM = '#';
 
@@ -600,7 +600,7 @@ class Request {
     }
 
     /**
-     * Sometimes strange device ids are sumbitted
+     * Sometimes strange device ids are submitted
      * No device information should be saved when this happens
      *
      * @access public
@@ -751,7 +751,7 @@ class Request {
     static private function decodeBase64URI() {
         /*
          * The query string has a following structure. Number in () is position:
-         * 1 byte       - protocoll version (0)
+         * 1 byte       - protocol version (0)
          * 1 byte       - command code (1)
          * 2 bytes      - locale (2)
          * 1 byte       - device ID length (4)

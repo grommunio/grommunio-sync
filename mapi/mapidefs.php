@@ -292,7 +292,7 @@ define('IMPORTANCE_LOW'                          ,0);
 define('IMPORTANCE_NORMAL'                       ,1);
 define('IMPORTANCE_HIGH'                         ,2);
 
-/* Stream interace values */
+/* Stream interface values */
 define('STREAM_SEEK_SET'                         ,0);
 define('STREAM_SEEK_CUR'                         ,1);
 define('STREAM_SEEK_END'                         ,2);

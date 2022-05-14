@@ -22,7 +22,7 @@ class Utils {
 
     /**
      * Splits a "domain\user" string into two values
-     * If the string cotains only the user, domain is returned empty
+     * If the string contains only the user, domain is returned empty
      *
      * @param string    $domainuser
      *
@@ -105,7 +105,7 @@ class Utils {
             }
 
             // if fileas with a company is selected
-            // but company is emtpy then it will
+            // but company is empty then it will
             // fallback to firstlast or lastfirst
             // (depending on which is selected for company)
             switch (FILEAS_ORDER) {
@@ -359,7 +359,7 @@ class Utils {
     }
 
     /**
-     * Truncate an UTF-8 encoded sting correctly
+     * Truncate an UTF-8 encoded string correctly
      *
      * If it's not possible to truncate properly, an empty string is returned
      *
@@ -370,7 +370,7 @@ class Utils {
      * @return string truncated string
      */
     static public function Utf8_truncate($string, $length, $htmlsafe = false) {
-        // make sure length is always an interger
+        // make sure length is always an integer
         $length = (int)$length;
 
         // if the input string is shorter then the trunction, make sure it's valid UTF-8!
@@ -860,7 +860,7 @@ class Utils {
 
 // TODO Win1252/UTF8 functions are deprecated and will be removed sometime
 //if the ICS backend is loaded in CombinedBackend and Zarafa > 7
-//STORE_SUPPORTS_UNICODE is true and the convertion will not be done
+//STORE_SUPPORTS_UNICODE is true and the conversion will not be done
 //for other backends.
 function utf8_to_windows1252($string, $option = "", $force_convert = false) {
     //if the store supports unicode return the string without converting it

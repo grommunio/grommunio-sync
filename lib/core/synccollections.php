@@ -343,7 +343,7 @@ class SyncCollections implements Iterator {
      * Returns the latest known PolicyKey to be used as reference
      *
      * @access public
-     * @return int/boolen       returns false if nothing found in collections
+     * @return int/boolean       returns false if nothing found in collections
      */
     public function GetReferencePolicyKey() {
         return $this->refPolicyKey;

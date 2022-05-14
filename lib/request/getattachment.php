@@ -27,7 +27,7 @@ class GetAttachment extends RequestProcessor {
             $stream = $attachment->data;
             ZLog::Write(LOGLEVEL_DEBUG, sprintf("HandleGetAttachment(): attachment stream from backend: %s", $stream));
 
-            // need to check for a resource here, as eg. feof('Error') === false and causing infinit loop in while!
+            // need to check for a resource here, as eg. feof('Error') === false and causing infinite loop in while!
             if (!is_resource($stream))
                 throw new StatusException(sprintf("HandleGetAttachment(): No stream resource returned by backend for attachment: %s", $attname), SYNC_ITEMOPERATIONSSTATUS_INVALIDATT);
 

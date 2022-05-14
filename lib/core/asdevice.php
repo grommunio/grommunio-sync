@@ -140,7 +140,7 @@ class ASDevice extends StateObject {
 
     /**
      * Sets the useragent of the current request
-     * If this value is alreay available, no update is done
+     * If this value is already available, no update is done
      *
      * @param string    $useragent
      *
@@ -301,7 +301,7 @@ class ASDevice extends StateObject {
      * The hierarchydata, can be:
      *  - false     a new HierarchyCache is initialized
      *  - array()   new HierarchyCache is initialized and data from GetHierarchy is loaded
-     *  - string    previousely serialized data is loaded
+     *  - string    previously serialized data is loaded
      *
      * @param string    $hierarchydata      (opt)
      *
@@ -551,7 +551,7 @@ class ASDevice extends StateObject {
                 return $this->backend2folderidCache[$backendid];
             }
             // if we have a different origin, we need to actively search for all synchronized folders, as they might be synched with a different origin
-            // the short-id is only used if the folder is being synchronized (in contentdata) - else any chached (temporarily) ids are NOT used
+            // the short-id is only used if the folder is being synchronized (in contentdata) - else any cached (temporarily) ids are NOT used
             else {
                 foreach ($this->contentData as $folderid => $data) {
                     if (isset($data->{self::FOLDERBACKENDID}) && $data->{self::FOLDERBACKENDID} == $backendid) {
@@ -599,7 +599,7 @@ class ASDevice extends StateObject {
     }
 
     /**
-     * Gets the supported fields transmitted previousely by the device
+     * Gets the supported fields transmitted previously by the device
      * for a certain folder
      *
      * @param string    $folderid
@@ -803,7 +803,7 @@ class ASDevice extends StateObject {
         $this->additionalfolders = $af;
         $this->changed = true;
 
-        // generate an interger folderid for it
+        // generate an integer folderid for it
         $id = $this->GetFolderIdForBackendId($folderid, true, DeviceManager::FLD_ORIGIN_SHARED, $name);
 
         return true;

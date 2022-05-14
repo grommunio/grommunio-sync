@@ -238,7 +238,7 @@ interface IBackend {
     public function ChangesSink($timeout = 30);
 
     /**
-     * Applies settings to and gets informations from the device
+     * Applies settings to and gets information from the device
      *
      * @param SyncObject    $settings (SyncOOF, SyncUserInformation, SyncRightsManagementTemplates possible)
      *

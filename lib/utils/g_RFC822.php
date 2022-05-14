@@ -53,7 +53,7 @@
  *
  * What is it?
  *
- * This class will take an address string, and parse it into it's consituent
+ * This class will take an address string, and parse it into it's constituent
  * parts, be that either addresses, groups, or combinations. Nested groups
  * are not supported. The structure it returns is pretty straight forward,
  * and is similar to that provided by the imap_rfc822_parse_adrlist(). Use

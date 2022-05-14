@@ -491,7 +491,7 @@ class ZPushTop {
                     $this->filter = false;
                     $this->wide = false;
                     $this->helpexpire = 0;
-                    $this->status = "resetted";
+                    $this->status = "reset";
                     $this->statusexpire = $this->currenttime+2;
                 }
                 // enable/disable wide view

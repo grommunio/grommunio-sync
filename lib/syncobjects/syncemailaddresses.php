@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: Copyright 2017 Zarafa Deutschland GmbH
  * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
- * WBXML email adresses entities that can be parsed directly (as a stream)
+ * WBXML email addresses entities that can be parsed directly (as a stream)
  * from WBXML. It is automatically decoded according to $mapping and the
  * Sync WBXML mappings.
  */

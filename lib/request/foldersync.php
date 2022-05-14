@@ -180,7 +180,7 @@ class FolderSync extends RequestProcessor {
 
                     // update the foldersync complete flag
                     if (USE_PARTIAL_FOLDERSYNC && $partial == false && self::$deviceManager->GetFolderSyncComplete() === false) {
-                        // say that we are done with partial synching
+                        // say that we are done with partial syncing
                         self::$deviceManager->SetFolderSyncComplete(true);
                         // reset the loop data to prevent any loop detection to kick in now
                         self::$deviceManager->ClearLoopDetectionData(Request::GetAuthUserString(), Request::GetDeviceID());

@@ -332,7 +332,7 @@ class ZPush {
                     ZLog::Write(LOGLEVEL_ERROR, sprintf("ZPush::CheckConfig() : the type of the additional synchronization folder '%s is not permitted.", $af['name']));
                     continue;
                 }
-                // the data will be inizialized when used via self::getAddFolders()
+                // the data will be initialized when used via self::getAddFolders()
             }
         }
 
@@ -811,7 +811,7 @@ END;
     }
 
     /**
-     * Indicates if the comand to be executed operates on the hierarchy
+     * Indicates if the command to be executed operates on the hierarchy
      *
      * @param int $commandCode
 

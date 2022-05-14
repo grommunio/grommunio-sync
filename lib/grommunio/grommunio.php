@@ -886,7 +886,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
         // on recurring items, the MeetingRequest class responds with a wrong entryid
         if ($requestid == $calendarid) {
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): returned calender id is the same as the requestid - re-searching", $requestid, $folderid, $response));
+            ZLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): returned calendar id is the same as the requestid - re-searching", $requestid, $folderid, $response));
 
             if (empty($props)) {
                 $props = MAPIMapping::GetMeetingRequestProperties();
@@ -1040,7 +1040,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
     }
 
     /**
-     * Applies settings to and gets informations from the device.
+     * Applies settings to and gets information from the device.
      *
      * @param SyncObject    $settings (SyncOOF, SyncUserInformation, SyncRightsManagementTemplates possible)
      *
@@ -1086,7 +1086,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
                         $resolveRecipientsOptions->maxambiguousrecipients >= 0 &&
                         $resolveRecipientsOptions->maxambiguousrecipients <= self::MAXAMBIGUOUSRECIPIENTS) {
                     $maxAmbiguousRecipients = $resolveRecipientsOptions->maxambiguousrecipients;
-                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->ResolveRecipients(): The client requested %d max ambigous recipients to resolve.", $maxAmbiguousRecipients));
+                    ZLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->ResolveRecipients(): The client requested %d max ambiguous recipients to resolve.", $maxAmbiguousRecipients));
                 }
             }
 
@@ -1155,7 +1155,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
     /**
      * Searches the GAB of Grommunio
-     * Can be overwitten globally by configuring a SearchBackend
+     * Can be overwritten globally by configuring a SearchBackend
      *
      * @param string                        $searchquery        string to be searched for
      * @param string                        $searchrange        specified searchrange
@@ -1373,16 +1373,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
     }
 
     /**
-     * Returns the MAPI store ressource for a folderid
+     * Returns the MAPI store resource for a folderid
      * This is not part of IBackend but necessary for the ImportChangesICS->MoveMessage() operation if
      * the destination folder is not in the default store
      * Note: The current backend store might be changed as IBackend->Setup() is executed
      *
-     * @param string        $store              target store, could contain a "domain\user" value - if emtpy default store is returned
+     * @param string        $store              target store, could contain a "domain\user" value - if empty default store is returned
      * @param string        $folderid
      *
      * @access public
-     * @return Ressource/boolean
+     * @return Resource/boolean
      */
     public function GetMAPIStoreForFolderId($store, $folderid) {
         if ($store == false) {
@@ -1588,7 +1588,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
     /**
      * Gets a state for a specified key and counter.
-     * This method sould call IStateMachine->CleanStates()
+     * This method should call IStateMachine->CleanStates()
      * to remove older states (same key, previous counters)
      *
      * @param string    $devid              the device id
@@ -2077,7 +2077,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
     /**
      * Checks if the logged in user has secretary permissions on a folder.
      *
-     * @param ressource $store
+     * @param resource $store
      * @param string $folderid
      *
      * @access public

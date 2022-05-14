@@ -55,7 +55,7 @@ class SendMail extends RequestProcessor {
 
         // Check if it is a reply or forward. Two cases are possible:
         // 1. Either $smartreply or $smartforward are set after reading WBXML
-        // 2. Either $reply or $forward are set after geting the request parameters
+        // 2. Either $reply or $forward are set after getting the request parameters
         if ($reply || $smartreply || $forward || $smartforward) {
             // If the mobile sends an email in WBXML data the variables below
             // should be set. If it is a RFC822 message, get the reply/forward message id

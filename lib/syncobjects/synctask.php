@@ -115,7 +115,7 @@ class SyncTask extends SyncObject {
 
     /**
      * Method checks if the object has the minimum of required parameters
-     * and fullfills semantic dependencies
+     * and fulfills semantic dependencies
      *
      * This overloads the general check() with special checks to be executed
      *

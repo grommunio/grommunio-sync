@@ -78,7 +78,7 @@ class LoopDetection extends InterProcessData {
     }
 
     /**
-     * Returns a unique entry with informations about the current process
+     * Returns a unique entry with information about the current process
      *
      * @access public
      * @return array
@@ -476,7 +476,7 @@ class LoopDetection extends InterProcessData {
             }
             else {
                 foreach ($brokenmsgs as $id => $data) {
-                    // previously broken message was sucessfully synced!
+                    // previously broken message was successfully synced!
                     if ($data['uuid'] == $this->broken_message_uuid && $data['counter'] < $this->broken_message_counter) {
                         ZLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->GetSyncedButBeforeIgnoredMessages('%s'): message '%s' was successfully synchronized", $folderid, $id));
                         $okIds[] = $id;
@@ -625,7 +625,7 @@ class LoopDetection extends InterProcessData {
      *
      *    3. request counter is the same as the previous and last time objects were sent (loop!)
      *      3.0)   no loop was detected before, but with big window size -> lower window size first - NO LOOP mode yet
-     *      3.1)   no loop was detected before, entereing loop mode     -> save loop data, loopcount = 1
+     *      3.1)   no loop was detected before, entering loop mode      -> save loop data, loopcount = 1
      *      3.2)   loop was detected before, but are gone               -> loop resolved
      *      3.3)   loop was detected before, continuing in loop mode    -> this is probably the broken element,loopcount++,
      *      3.3.1) item identified, loopcount >= 3                      -> ignore item, set ignoredata flag
@@ -737,7 +737,7 @@ class LoopDetection extends InterProcessData {
                 else if ($current['count'] == $counter && $current['queued'] > 0) {
 
                     if (!isset($current['loopcount'])) {
-                        // ZP-1213 we are potentially synching a lot of data, e.g. OL with 512 WindowSize
+                        // ZP-1213 we are potentially syncing a lot of data, e.g. OL with 512 WindowSize
                         // In case there are more then 40 items in the last request, we limit to 25 items
                         // before entering 1-by-1 loop detection if counter is re-requested
                         if ($maxItems > 40 && !isset($current['windowLimit'])) {

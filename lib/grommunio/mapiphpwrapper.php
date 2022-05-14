@@ -29,8 +29,8 @@ class PHPWrapper {
     /**
      * Constructor of the PHPWrapper
      *
-     * @param ressource         $session
-     * @param ressource         $store
+     * @param resource         $session
+     * @param resource         $store
      * @param IImportChanges    $importer       incoming changes from ICS are forwarded here.
      * @param string            $folderid       the folder this wrapper was configured for.
      *
@@ -113,12 +113,12 @@ class PHPWrapper {
         catch (SyncObjectBrokenException $mbe) {
             $brokenSO = $mbe->GetSyncObject();
             if (!$brokenSO) {
-                ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Catched SyncObjectBrokenException but broken SyncObject available"));
+                ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Caught SyncObjectBrokenException but broken SyncObject available"));
             }
             else {
                 if (!isset($brokenSO->id)) {
                     $brokenSO->id = "Unknown ID";
-                    ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Catched SyncObjectBrokenException but no ID of object set"));
+                    ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Caught SyncObjectBrokenException but no ID of object set"));
                 }
                 ZPush::GetDeviceManager()->AnnounceIgnoredMessage(false, $brokenSO->id, $brokenSO);
             }
@@ -127,7 +127,7 @@ class PHPWrapper {
         }
 
 
-        // substitute the MAPI SYNC_NEW_MESSAGE flag by a grommunio-sync propietary flag
+        // substitute the MAPI SYNC_NEW_MESSAGE flag by a grommunio-sync proprietary flag
         if ($flags == SYNC_NEW_MESSAGE) $message->flags = SYNC_NEWMESSAGE;
         else $message->flags = $flags;
 

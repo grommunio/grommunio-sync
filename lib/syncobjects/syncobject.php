@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
  * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
  *
- * Defines general behavoir of sub-WBXML entities (Sync* objects) that can be
+ * Defines general behavior of sub-WBXML entities (Sync* objects) that can be
  * parsed directly (as a stream) from WBXML. They are automatically decoded
  * according to $mapping by the Streamer and the Sync WBXML mappings.
  */
@@ -211,7 +211,7 @@ abstract class SyncObject extends Streamer {
 
     /**
      * Method checks if the object has the minimum of required parameters
-     * and fullfills semantic dependencies
+     * and fulfills semantic dependencies
      *
      * General checks:
      *     STREAMER_CHECK_REQUIRED      may have as value false (do not fix, ignore object!) or set-to-values: STREAMER_CHECK_SETZERO/ONE/TWO, STREAMER_CHECK_SETEMPTY

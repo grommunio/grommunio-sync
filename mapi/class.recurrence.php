@@ -208,7 +208,7 @@
 
         /**
          * Modifies an existing exception, but only updates the given properties
-         * NOTE: You can't remove properites from an exception, only add new ones
+         * NOTE: You can't remove properties from an exception, only add new ones
          */
         function modifyException($exception_props, $base_date, $exception_recips = array(), $copy_attach_from = false)
         {
@@ -802,7 +802,7 @@
 
                     if(!isset($data[$this->proptags["basedate"]])) {
                         // if no basedate found then it could be embedded message so ignore it
-                        // we need proper restriction to exclude embedded messages aswell
+                        // we need proper restriction to exclude embedded messages as well
                         continue;
                     }
 

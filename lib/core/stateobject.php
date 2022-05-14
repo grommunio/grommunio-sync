@@ -56,7 +56,7 @@ class StateObject implements JsonSerializable {
 
     /**
      * PHP magic to get an instance variable
-     * if the variable was not set previousely, the value of the
+     * if the variable was not set previously, the value of the
      * Unsetdata array is returned
      *
      * @access public

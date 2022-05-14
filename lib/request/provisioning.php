@@ -209,7 +209,7 @@ class Provisioning extends RequestProcessor {
                         self::$topCollector->AnnounceInformation("Policytype not supported", true);
                         return false;
                     }
-                    self::$topCollector->AnnounceInformation("Updated provisiong", true);
+                    self::$topCollector->AnnounceInformation("Updated provisioning", true);
 
                     self::$encoder->endTag();//data
                 }

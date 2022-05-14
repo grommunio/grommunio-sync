@@ -88,7 +88,7 @@
             // Save recurrence because we need proper startrecurrdate and endrecurrdate
             $this->saveRecurrence();
 
-            // Update $this->recur with proper startrecurrdate and endrecurrdate updated after saveing recurrence
+            // Update $this->recur with proper startrecurrdate and endrecurrdate updated after saving recurrence
             $msgProps = mapi_getprops($this->message, array($this->proptags['recurring_data']));
             $recurring_data = $this->parseRecurrence($msgProps[$this->proptags['recurring_data']]);
             foreach($recurring_data as $key => $value) {
@@ -162,7 +162,7 @@
                     $this->action['startdate'] = $props[$this->proptags['startdate']] = $nextOccurrence[$this->proptags['startdate']];
                     $this->action['commonstart'] = $props[$this->proptags['commonstart']] = $nextOccurrence[$this->proptags['startdate']];
 
-                    // If current task as been mark as 'Complete' then next occurrence should be uncomplete.
+                    // If current task as been mark as 'Complete' then next occurrence should be incomplete.
                     if (isset($this->action['complete']) && $this->action['complete'] == 1) {
                         $this->action['status'] = $props[$this->proptags["status"]] = olTaskNotStarted;
                         $this->action['complete'] = $props[$this->proptags["complete"]] = false;

@@ -49,7 +49,7 @@ interface IStateMachine {
 
     /**
      * Gets a state for a specified key and counter.
-     * This method sould call IStateMachine->CleanStates()
+     * This method should call IStateMachine->CleanStates()
      * to remove older states (same key, previous counters)
      *
      * @param string    $devid              the device id

@@ -1028,7 +1028,7 @@
                         case 0x0B: //weekly
                             // Needed values
                             // $forwardcount - number of weeks we can skip forward
-                            // $restocc - number of remaning occurrences after the week skip
+                            // $restocc - number of remaining occurrences after the week skip
 
                             // Add the weeks till the last item
                             $occenddate+=($forwardcount*7*24*60*60);
@@ -1180,7 +1180,7 @@
 
             // FlagDueBy is datetime of the first reminder occurrence. Outlook gives on this time a reminder popup dialog
             // Any change of the recurrence (including changing and deleting exceptions) causes the flagdueby to be reset
-            // to the 'next' occurrence; this makes sure that deleting the next ocurrence will correctly set the reminder to
+            // to the 'next' occurrence; this makes sure that deleting the next occurrence will correctly set the reminder to
             // the occurrence after that. The 'next' occurrence is defined as being the first occurrence that starts at moment X (server time)
             // with the reminder flag set.
             $reminderprops = mapi_getprops($this->message, array($this->proptags["reminder_minutes"]) );
@@ -1872,7 +1872,7 @@
          *
          * Returns the number of days in the upcoming number of months. If you specify 1 month as
          * $months it will give you the number of days in the month of $date. If you specify more it
-         * will also count the days in the upcomming months and add that to the number of days. So
+         * will also count the days in the upcoming months and add that to the number of days. So
          * if you have a date in march and you specify $months as 2 it will return 61.
          * @param Integer $date Specified date as timestamp from which you want to know the number
          * of days in the month.

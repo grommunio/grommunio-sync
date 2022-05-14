@@ -114,7 +114,7 @@ class ExportChangesICS implements IExportChanges{
             // On subsequent syncs, we do want to receive delete events.
             if(strlen($state) == 0 || bin2hex(substr($state,4,4)) == "00000000") {
                 if (!($this->flags & BACKEND_DISCARD_DATA))
-                    ZLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): synching inital data");
+                    ZLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): syncing initial data");
                 $this->exporterflags |= SYNC_NO_SOFT_DELETIONS | SYNC_NO_DELETIONS;
             }
         }
