@@ -924,7 +924,7 @@ class DeviceManager extends InterProcessData {
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->loadDeviceData(): Device data was changed, reloading");
                 $device = $this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA);
                 // TODO: case should be removed when removing ASDevice backwards compatibility
-                // fallback for old Z-Push like devicedata
+                // fallback for old grosync like devicedata
                 if (($device instanceof StateObject) && isset($device->devices) && is_array($device->devices)) {
                     ZLog::Write(LOGLEVEL_INFO, "Found old style device, converting...");
                     list ($_deviceuser, $_domain) =  Utils::SplitDomainUser(Request::GetGETUser());

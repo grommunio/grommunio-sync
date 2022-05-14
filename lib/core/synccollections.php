@@ -149,8 +149,8 @@ class SyncCollections implements Iterator {
             // Get SyncParameters for the folder from the state
             $spa = $this->stateManager->GetSynchedFolderState($folderid, !$loadState);
 
-            // TODO remove resync of folders for < Z-Push 2.beta4 users
-            // this forces a resync of all states previous to Z-Push 2 beta4
+            // TODO remove resync of folders
+            // this forces a resync of all states
             if (! $spa instanceof SyncParameters) {
                 throw new StateInvalidException("Saved state are not of type SyncParameters");
             }

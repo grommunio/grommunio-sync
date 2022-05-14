@@ -22,8 +22,8 @@ interface IStateMachine {
     const HIERARCHY = "hc";
     const BACKENDSTORAGE = "bs";
 
-    const STATEVERSION_01 = "1";    // Z-Push 2.0.x - default value if unset
-    const STATEVERSION_02 = "2";    // Z-Push 2.1.0 Milestone 1
+    const STATEVERSION_01 = "1";
+    const STATEVERSION_02 = "2";
 
     /**
      * Constructor

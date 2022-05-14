@@ -706,7 +706,7 @@ class Utils {
 
             if ($perm_file['uid'] == 0 && $perm_dir['uid'] == 0 && $perm_dir['gid'] == 0) {
                 unlink($file);
-                throw new FatalException("FixFileOwner: $dir must be owned by the nginx/apache/php user instead of root for debian based systems and by root:z-push for RHEL-based systems");
+                throw new FatalException("FixFileOwner: $dir must be owned by the nginx/apache/php user instead of root for debian based systems and by root:grosync for RHEL-based systems");
             }
 
             if($perm_dir['uid'] !== $perm_file['uid'] || $perm_dir['gid'] !== $perm_file['gid']) {
