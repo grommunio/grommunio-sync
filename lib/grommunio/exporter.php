@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2015-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * This is a generic class that is used by both the proxy importer (for
  * outgoing messages) and our local importer (for incoming messages). Basically

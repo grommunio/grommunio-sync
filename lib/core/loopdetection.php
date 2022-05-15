@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Detects an outgoing loop by looking if subsequent requests do try to get
  * changes for the same sync key. If more than once a synckey is requested,

@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2015-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * This is a small command line tool to list folders of a user store or public
  * folder available for synchronization.
