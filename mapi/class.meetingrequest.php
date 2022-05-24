@@ -192,7 +192,7 @@ class Meetingrequest {
 
     /**
      * Sets the direct booking property. This is an alternative to the setting of the direct booking
-     * property through the constructor. However, setting it in the constructor is prefered.
+     * property through the constructor. However, setting it in the constructor is preferred.
      * @param Boolean $directBookingSetting
      *
      */

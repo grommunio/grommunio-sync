@@ -230,7 +230,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
 
             $retFolder = $this->destinationImporter->ImportFolderChange($folder);
 
-            // if the operation was successfull, update the HierarchyCache
+            // if the operation was successful, update the HierarchyCache
             if ($retFolder) {
                 // if we get a folder back, we need to update some data in the cache
                 if (isset($retFolder->serverid) && $retFolder->serverid) {

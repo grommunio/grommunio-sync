@@ -26,7 +26,7 @@ abstract class RequestProcessor {
      * As second step the GET-User verified by Backend->Setup() for permission check
      * Request::GetGETUser() is usually the same as the Request::GetAuthUser().
      * If the GETUser is different from the AuthUser, the AuthUser MUST HAVE admin
-     * permissions on GETUsers data store. Only then the Setup() will be sucessfull.
+     * permissions on GETUsers data store. Only then the Setup() will be successful.
      * This allows the user 'john' to do operations as user 'joe' if he has sufficient privileges.
      *
      * @access public

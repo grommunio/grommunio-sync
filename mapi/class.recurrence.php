@@ -818,7 +818,7 @@
         /**
          * processOccurrenceItem, adds an item to a list of occurrences, but only if the following criteria are met:
          * - The resulting occurrence (or exception) starts or ends in the interval <$start, $end>
-         * - The ocurrence isn't specified as a deleted occurrence
+         * - The occurrence isn't specified as a deleted occurrence
          * @param array $items reference to the array to be added to
          * @param date $start start of timeframe in GMT TIME
          * @param date $end end of timeframe in GMT TIME
