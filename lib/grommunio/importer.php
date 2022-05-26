@@ -161,6 +161,7 @@ class ImportChangesICS implements IImportChanges {
                 break;
         }
         $this->contentClass = $contentparameters->GetContentClass();
+        return true;
     }
 
     /**
@@ -282,7 +283,7 @@ class ImportChangesICS implements IImportChanges {
      * e.g. on ADD or MODIFY
      *
      * @access private
-     * @return
+     * @return boolean
      */
     private function lazyLoadConflicts() {
         if (!isset($this->session) || !isset($this->store) || !isset($this->folderid) ||
@@ -306,7 +307,7 @@ class ImportChangesICS implements IImportChanges {
             if ($potConflicts > 100) {
                 ZLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection abandoned as there are too many (%d) changes to be exported.", $potConflicts));
                 $this->conflictsLoaded = true;
-                return;
+                return false;
             }
             $started = time();
             $exported = 0;
@@ -319,7 +320,7 @@ class ImportChangesICS implements IImportChanges {
                     if ((time() - $started) > 15 && ($potConflicts - $exported) > 5 ) {
                         ZLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection cancelled as operation is too slow. In %d seconds only %d from %d changes were processed.",(time() - $started), $exported, $potConflicts));
                         $this->conflictsLoaded = true;
-                        return;
+                        return false;
                     }
                 }
             }
@@ -329,6 +330,7 @@ class ImportChangesICS implements IImportChanges {
             }
             $this->conflictsLoaded = true;
         }
+        return true;
     }
 
     /**
@@ -497,7 +499,7 @@ class ImportChangesICS implements IImportChanges {
      * @param string        $newfolder      destination folder
      *
      * @access public
-     * @return boolean
+     * @return boolean/string
      * @throws StatusException
      */
     public function ImportMessageMove($id, $newfolder) {
@@ -593,7 +595,7 @@ class ImportChangesICS implements IImportChanges {
      * @param object        $folder     SyncFolder
      *
      * @access public
-     * @return boolean|SyncFolder       false on error or a SyncFolder object with serverid and BackendId set (if available)
+     * @return boolean/SyncFolder       false on error or a SyncFolder object with serverid and BackendId set (if available)
      * @throws StatusException
      */
     public function ImportFolderChange($folder) {
