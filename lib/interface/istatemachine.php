@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Interface called from the Device and StateManager to save states for a
  * user/device/folder. Backends provide their own IStateMachine implementation of
@@ -22,8 +22,8 @@ interface IStateMachine {
     const HIERARCHY = "hc";
     const BACKENDSTORAGE = "bs";
 
-    const STATEVERSION_01 = "1";    // Z-Push 2.0.x - default value if unset
-    const STATEVERSION_02 = "2";    // Z-Push 2.1.0 Milestone 1
+    const STATEVERSION_01 = "1";
+    const STATEVERSION_02 = "2";
 
     /**
      * Constructor
@@ -49,7 +49,7 @@ interface IStateMachine {
 
     /**
      * Gets a state for a specified key and counter.
-     * This method sould call IStateMachine->CleanStates()
+     * This method should call IStateMachine->CleanStates()
      * to remove older states (same key, previous counters)
      *
      * @param string    $devid              the device id

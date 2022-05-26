@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * WBXML user information entities that can be parsed directly (as a stream)
  * from WBXML. It is automatically decoded according to $mapping and the Sync
@@ -18,8 +18,8 @@ class SyncUserInformation extends SyncObject {
         $mapping = array(SYNC_SETTINGS_PROP_STATUS      => array (  self::STREAMER_VAR      => "Status",
                                                                     self::STREAMER_TYPE     => self::STREAMER_TYPE_IGNORE));
 
-        // In AS protocoll versions 12.0, 12.1 and 14.0 EmailAddresses element is child of Get in UserSettings
-        // Since AS protocoll version 14.1 EmailAddresses element is child of Account element of Get in UserSettings
+        // In AS protocol versions 12.0, 12.1 and 14.0 EmailAddresses element is child of Get in UserSettings
+        // Since AS protocol version 14.1 EmailAddresses element is child of Account element of Get in UserSettings
         if (Request::GetProtocolVersion() >= 12.0) {
             $mapping[SYNC_SETTINGS_EMAILADDRESSES]      = array (   self::STREAMER_VAR      => "emailaddresses",
                                                                     self::STREAMER_ARRAY    => SYNC_SETTINGS_SMPTADDRESS);

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * The ICS importer is very MAPI specific and needs to be wrapped, because we
  * want all MAPI code to be separate from the rest of grommunio-sync. To do so all
@@ -29,8 +29,8 @@ class PHPWrapper {
     /**
      * Constructor of the PHPWrapper
      *
-     * @param ressource         $session
-     * @param ressource         $store
+     * @param resource         $session
+     * @param resource         $store
      * @param IImportChanges    $importer       incoming changes from ICS are forwarded here.
      * @param string            $folderid       the folder this wrapper was configured for.
      *
@@ -113,12 +113,12 @@ class PHPWrapper {
         catch (SyncObjectBrokenException $mbe) {
             $brokenSO = $mbe->GetSyncObject();
             if (!$brokenSO) {
-                ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Catched SyncObjectBrokenException but broken SyncObject available"));
+                ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Caught SyncObjectBrokenException but broken SyncObject available"));
             }
             else {
                 if (!isset($brokenSO->id)) {
                     $brokenSO->id = "Unknown ID";
-                    ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Catched SyncObjectBrokenException but no ID of object set"));
+                    ZLog::Write(LOGLEVEL_ERROR, sprintf("PHPWrapper->ImportMessageChange(): Caught SyncObjectBrokenException but no ID of object set"));
                 }
                 ZPush::GetDeviceManager()->AnnounceIgnoredMessage(false, $brokenSO->id, $brokenSO);
             }
@@ -127,7 +127,7 @@ class PHPWrapper {
         }
 
 
-        // substitute the MAPI SYNC_NEW_MESSAGE flag by a grommunio-sync propietary flag
+        // substitute the MAPI SYNC_NEW_MESSAGE flag by a grommunio-sync proprietary flag
         if ($flags == SYNC_NEW_MESSAGE) $message->flags = SYNC_NEWMESSAGE;
         else $message->flags = $flags;
 

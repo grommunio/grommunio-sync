@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * This is the entry point through which all requests are processed.
  */
@@ -174,7 +174,7 @@ include_once(ZPUSH_CONFIG);
                 ZPush::PrintGrommunioSyncLegal($exclass, sprintf('<pre>%s</pre>',$ex->getMessage()));
             }
 
-            // log the failed login attemt e.g. for fail2ban
+            // log the failed login attempt e.g. for fail2ban
             if (defined('LOGAUTHFAIL') && LOGAUTHFAIL != false)
                 ZLog::Write(LOGLEVEL_WARN, sprintf("IP: %s failed to authenticate user '%s'",  Request::GetRemoteAddr(), Request::GetAuthUser()? Request::GetAuthUser(): Request::GetGETUser() ));
         }

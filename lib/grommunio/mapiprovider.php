@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
 class MAPIProvider {
@@ -19,8 +19,8 @@ class MAPIProvider {
      * Constructor of the MAPI Provider
      * Almost all methods of this class require a MAPI session and/or store
      *
-     * @param ressource         $session
-     * @param ressource         $store
+     * @param resource         $session
+     * @param resource         $store
      *
      * @access public
      */
@@ -773,7 +773,7 @@ class MAPIProvider {
                     continue;
                 }
 
-                // the displayname is handled equaly for all AS versions
+                // the displayname is handled equally for all AS versions
                 $attach->displayname = w2u((isset($attachprops[PR_ATTACH_LONG_FILENAME])) ? $attachprops[PR_ATTACH_LONG_FILENAME] : ((isset($attachprops[PR_ATTACH_FILENAME])) ? $attachprops[PR_ATTACH_FILENAME] : ((isset($attachprops[PR_DISPLAY_NAME])) ? $attachprops[PR_DISPLAY_NAME] : "attachment.bin")));
                 // fix attachment name in case of inline images
                 if (($attach->displayname == "inline.txt" && (isset($attachprops[PR_ATTACH_MIME_TAG]) || $attachprops[PR_ATTACH_MIME_TAG_W])) ||
@@ -955,7 +955,7 @@ class MAPIProvider {
             $entryid = mapi_msgstore_entryidfromsourcekey($this->store, $folderprops[PR_SOURCE_KEY]);
             $mapifolder = mapi_msgstore_openentry($this->store, $entryid);
             $folderprops = mapi_getprops($mapifolder, array(PR_DISPLAY_NAME, PR_PARENT_ENTRYID, PR_ENTRYID, PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY, PR_CONTAINER_CLASS, PR_ATTR_HIDDEN, PR_EXTENDED_FOLDER_FLAGS));
-            ZLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->GetFolder(): received insuffient of data from ICS. Fetching required data.");
+            ZLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->GetFolder(): received insufficient of data from ICS. Fetching required data.");
         }
 
         if(!isset($folderprops[PR_DISPLAY_NAME]) ||
@@ -1502,7 +1502,7 @@ class MAPIProvider {
 
             array_push($recips, $org);
 
-            //open addresss book for user resolve
+            // Open address book for user resolve
             $addrbook = $this->getAddressbook();
             foreach($appointment->attendees as $attendee) {
                 $recip = array();
@@ -1721,7 +1721,7 @@ class MAPIProvider {
             // Set PR_ICON_INDEX to 1281 to show correct icon in category view
             $props[$taskprops["icon"]] = 1281;
             // dead occur - false if new occurrences should be generated from the task
-            // true - if it is the last ocurrence of the task
+            // true - if it is the last occurrence of the task
             $props[$taskprops["deadoccur"]] = $deadoccur;
             $props[$taskprops["isrecurringtag"]] = true;
 
@@ -1750,7 +1750,7 @@ class MAPIProvider {
 
         $props[$taskprops["private"]] = (isset($task->sensitivity) && $task->sensitivity >= SENSITIVITY_PRIVATE) ? true : false;
 
-        //open addresss book for user resolve to set the owner
+        // Open address book for user resolve to set the owner
         $addrbook = $this->getAddressbook();
 
         // check if there is already an owner for the task, set current user if not
@@ -2727,7 +2727,7 @@ class MAPIProvider {
     * @return void
     */
     private function setFlag($mapimessage, &$message){
-        // do nothing if protocoll version is lower than 12.0 as flags haven't been defined before
+        // do nothing if protocol version is lower than 12.0 as flags haven't been defined before
         if (Request::GetProtocolVersion() < 12.0 ) return;
 
         $message->flag = new SyncMailFlags();
@@ -2897,7 +2897,7 @@ class MAPIProvider {
                     $unpackedData = unpack("vdataSize/velementID/velDataSize", substr($persistData, 2, 6));
                     if (isset($unpackedData['dataSize']) && isset($unpackedData['elementID']) && $unpackedData['elementID'] == RSF_ELID_ENTRYID && isset($unpackedData['elDataSize'])) {
                         $this->specialFoldersData[] = substr($persistData, 8, $unpackedData['elDataSize']);
-                        // Add PersistId and DataElementsSize lenghts to the data size as they're not part of it
+                        // Add PersistId and DataElementsSize lengths to the data size as they're not part of it
                         $persistData = substr($persistData, $unpackedData['dataSize'] + 4);
                     }
                     else {

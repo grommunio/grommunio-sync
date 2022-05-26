@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * WBXML appointment entities that can be parsed directly (as a stream) from
  * WBXML. It is automatically decoded according to $mapping and the Sync
@@ -211,7 +211,7 @@ class SyncAppointment extends SyncObject {
 
     /**
      * Method checks if the object has the minimum of required parameters
-     * and fullfills semantic dependencies
+     * and fulfills semantic dependencies
      *
      * This overloads the general check() with special checks to be executed
      * Checks if SYNC_POOMCAL_ORGANIZERNAME and SYNC_POOMCAL_ORGANIZEREMAIL are correctly set

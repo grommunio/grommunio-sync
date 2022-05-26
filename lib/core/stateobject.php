@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Simple data object with some PHP magic
  */
@@ -56,7 +56,7 @@ class StateObject implements JsonSerializable {
 
     /**
      * PHP magic to get an instance variable
-     * if the variable was not set previousely, the value of the
+     * if the variable was not set previously, the value of the
      * Unsetdata array is returned
      *
      * @access public

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Provides the GETITEMESTIMATE command
  */
@@ -237,7 +237,7 @@ class GetItemEstimate extends RequestProcessor {
                             if ($changes[$folderid] > 0)
                                 self::$topCollector->AnnounceInformation(sprintf("%s %d changes", $spa->GetContentClass(), $changes[$folderid]), true);
 
-                            // update the device data to mark folders as complete when synching with WM
+                            // update the device data to mark folders as complete when syncing with WM
                             if ($changes[$folderid] == 0)
                                 self::$deviceManager->SetFolderSyncStatus($folderid, DeviceManager::FLD_SYNC_COMPLETED);
                         }

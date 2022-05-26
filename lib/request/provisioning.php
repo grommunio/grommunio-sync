@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Provides the PROVISIONING command
  */
@@ -209,7 +209,7 @@ class Provisioning extends RequestProcessor {
                         self::$topCollector->AnnounceInformation("Policytype not supported", true);
                         return false;
                     }
-                    self::$topCollector->AnnounceInformation("Updated provisiong", true);
+                    self::$topCollector->AnnounceInformation("Updated provisioning", true);
 
                     self::$encoder->endTag();//data
                 }

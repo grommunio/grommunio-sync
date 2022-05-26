@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
 if (!function_exists("mapi_prop_tag"))
@@ -796,7 +796,7 @@ define('PR_EC_RECIPIENT_HISTORY'                      ,mapi_prop_tag(PT_STRING8,
 define('PR_EC_WEBACCESS_SETTINGS_JSON'                ,mapi_prop_tag(PT_STRING8,     0x6772));
 define('PR_EC_RECIPIENT_HISTORY_JSON'                 ,mapi_prop_tag(PT_STRING8,     0x6773));
 
-/* The peristent settings are settings that will not be touched when the settings are reset */
+/* The persistent settings are settings that will not be touched when the settings are reset */
 define('PR_EC_WEBAPP_PERSISTENT_SETTINGS_JSON'        ,mapi_prop_tag(PT_STRING8,     0x6774));
 
 /* statistics properties */

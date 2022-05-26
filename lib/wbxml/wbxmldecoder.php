@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * WBXMLDecoder decodes from Wap Binary XML
  */
@@ -243,7 +243,7 @@ class WBXMLDecoder extends WBXMLDefs {
     }
 
     /**
-     * Reads the remaning data from the input stream
+     * Reads the remaining data from the input stream
      *
      * @access public
      * @return void
@@ -410,7 +410,7 @@ class WBXMLDecoder extends WBXMLDefs {
         // there is no unlimited "length" for stream_get_line,
         // so we use a huge value for "length" param (1Gb)
         // (0 == PHP_SOCK_CHUNK_SIZE (8192))
-        // internaly php read at most PHP_SOCK_CHUNK_SIZE at a time,
+        // internally php read at most PHP_SOCK_CHUNK_SIZE at a time,
         // so we can use a huge value for "length" without problem
         return stream_get_line($this->in, 1073741824, "\0");
     }

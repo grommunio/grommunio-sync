@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * This is basically a list of synched folders with its respective
  * SyncParameters, while some additional parameters which are not stored
@@ -149,8 +149,8 @@ class SyncCollections implements Iterator {
             // Get SyncParameters for the folder from the state
             $spa = $this->stateManager->GetSynchedFolderState($folderid, !$loadState);
 
-            // TODO remove resync of folders for < Z-Push 2.beta4 users
-            // this forces a resync of all states previous to Z-Push 2 beta4
+            // TODO remove resync of folders
+            // this forces a resync of all states
             if (! $spa instanceof SyncParameters) {
                 throw new StateInvalidException("Saved state are not of type SyncParameters");
             }
@@ -343,7 +343,7 @@ class SyncCollections implements Iterator {
      * Returns the latest known PolicyKey to be used as reference
      *
      * @access public
-     * @return int/boolen       returns false if nothing found in collections
+     * @return int/boolean       returns false if nothing found in collections
      */
     public function GetReferencePolicyKey() {
         return $this->refPolicyKey;

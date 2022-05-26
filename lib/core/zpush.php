@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Core functionalities
  */
@@ -237,7 +237,7 @@ class ZPush {
                 throw new FatalMisconfigurationException(sprintf("The configured TIMEZONE '%s' is not valid. Please check supported timezones at http://www.php.net/manual/en/timezones.php", constant('TIMEZONE')));
         }
         else if(!ini_get('date.timezone')) {
-            date_default_timezone_set('Europe/Amsterdam');
+            date_default_timezone_set('Europe/Vienna');
         }
 
         if (defined('USE_X_FORWARDED_FOR_HEADER')) {
@@ -332,7 +332,7 @@ class ZPush {
                     ZLog::Write(LOGLEVEL_ERROR, sprintf("ZPush::CheckConfig() : the type of the additional synchronization folder '%s is not permitted.", $af['name']));
                     continue;
                 }
-                // the data will be inizialized when used via self::getAddFolders()
+                // the data will be initialized when used via self::getAddFolders()
             }
         }
 
@@ -811,7 +811,7 @@ END;
     }
 
     /**
-     * Indicates if the comand to be executed operates on the hierarchy
+     * Indicates if the command to be executed operates on the hierarchy
      *
      * @param int $commandCode
 

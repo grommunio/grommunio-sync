@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
     /*
     * In general
@@ -111,7 +111,7 @@
          * actions in this class.
          *
          * @param $store store MAPI Store in which $message resides. This is also the store where the tasks folder is assumed to be in
-         * @param $message message MAPI Message to which the task request referes (can be an email or a task)
+         * @param $message message MAPI Message to which the task request refers to (can be an email or a task)
          * @param $session session MAPI Session which is used to open tasks folders for delegated task requests or responses
          */
         function __construct($store, $message, $session) {

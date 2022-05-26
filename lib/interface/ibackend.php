@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * All grommunio-sync backends must implement this interface.
  * It describes all generic methods expected to be
@@ -238,7 +238,7 @@ interface IBackend {
     public function ChangesSink($timeout = 30);
 
     /**
-     * Applies settings to and gets informations from the device
+     * Applies settings to and gets information from the device
      *
      * @param SyncObject    $settings (SyncOOF, SyncUserInformation, SyncRightsManagementTemplates possible)
      *

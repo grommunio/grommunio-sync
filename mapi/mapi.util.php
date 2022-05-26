@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
 /**
@@ -133,7 +133,7 @@ function getPropIdsFromStrings($store, $mapping)
 }
 
 /**
- * Check wether a call to mapi_getprops returned errors for some properties.
+ * Check whether a call to mapi_getprops returned errors for some properties.
  * mapi_getprops function tries to get values of properties requested but somehow if
  * if a property value can not be fetched then it changes type of property tag as PT_ERROR
  * and returns error for that particular property, probable errors

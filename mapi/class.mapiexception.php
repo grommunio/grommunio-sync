@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
     /**
@@ -15,7 +15,7 @@
     class MAPIException extends FatalException
     {
         /**
-         * Function will return display message of exception if its set by the calle.
+         * Function will return display message of exception if its set by the callee.
          * if it is not set then we are generating some default display messages based
          * on mapi error code.
          * @return string returns error-message that should be sent to client to display.

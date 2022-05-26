@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
 /* Resource types as defined in main.h of the mapi extension */
@@ -292,7 +292,7 @@ define('IMPORTANCE_LOW'                          ,0);
 define('IMPORTANCE_NORMAL'                       ,1);
 define('IMPORTANCE_HIGH'                         ,2);
 
-/* Stream interace values */
+/* Stream interface values */
 define('STREAM_SEEK_SET'                         ,0);
 define('STREAM_SEEK_CUR'                         ,1);
 define('STREAM_SEEK_END'                         ,2);

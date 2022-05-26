@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2015-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * This is a generic class that is used by both the proxy importer (for
  * outgoing messages) and our local importer (for incoming messages). Basically
@@ -114,7 +114,7 @@ class ExportChangesICS implements IExportChanges{
             // On subsequent syncs, we do want to receive delete events.
             if(strlen($state) == 0 || bin2hex(substr($state,4,4)) == "00000000") {
                 if (!($this->flags & BACKEND_DISCARD_DATA))
-                    ZLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): synching inital data");
+                    ZLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): syncing initial data");
                 $this->exporterflags |= SYNC_NO_SOFT_DELETIONS | SYNC_NO_DELETIONS;
             }
         }

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
 class FreeBusyPublish {
@@ -16,7 +16,7 @@ class FreeBusyPublish {
     var $proptags;
 
     /**
-     * Constuctor
+     * Constructor
      *
      * @param mapi_session $session MAPI Session
      * @param mapi_folder $calendar Calendar to publish
@@ -67,11 +67,11 @@ class FreeBusyPublish {
     }
 
     /**
-     * Function is used to get the calender data based on give date range.
+     * Function is used to get the calendar data based on give date range.
      *
-     * @param timestamp $starttime Time from which to get the calender data.
-     * @param timestamp $length Time up till now get the calender data.
-     * @return Array return the calender data array.
+     * @param timestamp $starttime Time from which to get the calendar data.
+     * @param timestamp $length Time up till now get the calendar data.
+     * @return Array return the calendar data array.
      */
     function getCalendarData($starttime, $length)
     {
@@ -229,7 +229,7 @@ class FreeBusyPublish {
     }
 
     /**
-     * Publishes Free/Busy infomation of user.
+     * Publishes Free/Busy information of user.
      * @param timestamp $starttime Time from which to publish data  (usually now)
      * @param timestamp $length Time of seconds from $starttime we should publish
      */

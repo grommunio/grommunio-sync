@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
 
     /**
@@ -208,7 +208,7 @@
 
         /**
          * Modifies an existing exception, but only updates the given properties
-         * NOTE: You can't remove properites from an exception, only add new ones
+         * NOTE: You can't remove properties from an exception, only add new ones
          */
         function modifyException($exception_props, $base_date, $exception_recips = array(), $copy_attach_from = false)
         {
@@ -802,7 +802,7 @@
 
                     if(!isset($data[$this->proptags["basedate"]])) {
                         // if no basedate found then it could be embedded message so ignore it
-                        // we need proper restriction to exclude embedded messages aswell
+                        // we need proper restriction to exclude embedded messages as well
                         continue;
                     }
 
@@ -818,7 +818,7 @@
         /**
          * processOccurrenceItem, adds an item to a list of occurrences, but only if the following criteria are met:
          * - The resulting occurrence (or exception) starts or ends in the interval <$start, $end>
-         * - The ocurrence isn't specified as a deleted occurrence
+         * - The occurrence isn't specified as a deleted occurrence
          * @param array $items reference to the array to be added to
          * @param date $start start of timeframe in GMT TIME
          * @param date $end end of timeframe in GMT TIME

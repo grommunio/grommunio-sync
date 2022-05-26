@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Class that collect changes in memory
  */
@@ -230,7 +230,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
 
             $retFolder = $this->destinationImporter->ImportFolderChange($folder);
 
-            // if the operation was sucessfull, update the HierarchyCache
+            // if the operation was successful, update the HierarchyCache
             if ($retFolder) {
                 // if we get a folder back, we need to update some data in the cache
                 if (isset($retFolder->serverid) && $retFolder->serverid) {
@@ -302,7 +302,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
         if (isset($this->destinationImporter)) {
             $ret = $this->destinationImporter->ImportFolderDeletion($folder);
 
-            // if the operation was sucessfull, update the HierarchyCache
+            // if the operation was successful, update the HierarchyCache
             if ($ret)
                 $this->DelFolder($id);
 

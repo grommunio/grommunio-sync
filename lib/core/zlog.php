@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Debug and logging
  */
@@ -187,7 +187,7 @@ function zpush_error_handler($errno, $errstr, $errfile, $errline) {
                 if (isset($bt[$i]['line'])) $line = $bt[$i]['line'];
                 ZLog::Write(LOGLEVEL_ERROR, "trace: $i:". $file . ":" . $line. " - " . ((isset($bt[$i]['class']))? $bt[$i]['class'] . $bt[$i]['type']:""). $bt[$i]['function']. "()");
             }
-            //throw new Exception("An error occured.");
+            //throw new Exception("An error occurred.");
             break;
     }
 }

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Provides the SYNC command
  */
@@ -59,7 +59,7 @@ class Sync extends RequestProcessor {
                     return false;
             }
 
-            // Synching specified folders
+            // Syncing specified folders
             // Android still sends heartbeat sync even if all syncfolders are disabled.
             // Check if Folders tag is empty (<Folders/>) and only sync if there are
             // some folders in the request. See ZP-172
@@ -120,8 +120,8 @@ class Sync extends RequestProcessor {
                     try {
                         $spa = self::$deviceManager->GetStateManager()->GetSynchedFolderState($folderid);
 
-                        // TODO remove resync of folders for < Z-Push 2.beta4 users
-                        // this forces a resync of all states previous to Z-Push 2.beta4
+                        // TODO remove resync of folders
+                        // this forces a resync of all states
                         if (! $spa instanceof SyncParameters)
                             throw new StateInvalidException("Saved state are not of type SyncParameters");
 
@@ -442,7 +442,7 @@ class Sync extends RequestProcessor {
                             if ($status == SYNC_STATUS_SUCCESS)
                                 $nchanges++;
 
-                            // Foldertype sent when synching SMS
+                            // Foldertype sent when syncing SMS
                             if(self::$decoder->getElementStartTag(SYNC_FOLDERTYPE)) {
                                 $foldertype = self::$decoder->getElementContent();
                                 ZLog::Write(LOGLEVEL_DEBUG, sprintf("HandleSync(): incoming data with foldertype '%s'", $foldertype));
@@ -609,12 +609,12 @@ class Sync extends RequestProcessor {
             catch (StateInvalidException $siex) {
                 $status = SYNC_STATUS_INVALIDSYNCKEY;
                 self::$topCollector->AnnounceInformation("StateNotFoundException", $this->singleFolder);
-                $this->saveMultiFolderInfo("exeption", "StateNotFoundException");
+                $this->saveMultiFolderInfo("exception", "StateNotFoundException");
             }
             catch (StatusException $stex) {
                $status = SYNC_STATUS_FOLDERHIERARCHYCHANGED;
                self::$topCollector->AnnounceInformation(sprintf("StatusException code: %d", $status), $this->singleFolder);
-               $this->saveMultiFolderInfo("exeption", "StatusException");
+               $this->saveMultiFolderInfo("exception", "StatusException");
             }
 
             // update a few values
@@ -639,7 +639,7 @@ class Sync extends RequestProcessor {
             if (!$sc->LoadCollection(false, true, false)) {
                 $status = SYNC_STATUS_FOLDERHIERARCHYCHANGED;
                 self::$topCollector->AnnounceInformation(sprintf("StatusException code: %d", $status), $this->singleFolder);
-                $this->saveMultiFolderInfo("exeption", "StatusException");
+                $this->saveMultiFolderInfo("exception", "StatusException");
             }
         }
 
@@ -682,7 +682,7 @@ class Sync extends RequestProcessor {
                     else {
                         $status = SYNC_STATUS_FOLDERHIERARCHYCHANGED;
                         self::$topCollector->AnnounceInformation(sprintf("StatusException code: %d", $status), $this->singleFolder);
-                        $this->saveMultiFolderInfo("exeption", "StatusException");
+                        $this->saveMultiFolderInfo("exception", "StatusException");
                     }
                 }
 
@@ -1148,12 +1148,12 @@ class Sync extends RequestProcessor {
                 catch (SyncObjectBrokenException $mbe) {
                     $brokenSO = $mbe->GetSyncObject();
                     if (!$brokenSO) {
-                        ZLog::Write(LOGLEVEL_ERROR, sprintf("HandleSync(): Catched SyncObjectBrokenException but broken SyncObject not available. This should be fixed in the backend."));
+                        ZLog::Write(LOGLEVEL_ERROR, sprintf("HandleSync(): Caught SyncObjectBrokenException but broken SyncObject not available. This should be fixed in the backend."));
                     }
                     else {
                         if (!isset($brokenSO->id)) {
                             $brokenSO->id = "Unknown ID";
-                            ZLog::Write(LOGLEVEL_ERROR, sprintf("HandleSync(): Catched SyncObjectBrokenException but no ID of object set. This should be fixed in the backend."));
+                            ZLog::Write(LOGLEVEL_ERROR, sprintf("HandleSync(): Caught SyncObjectBrokenException but no ID of object set. This should be fixed in the backend."));
                         }
                         self::$deviceManager->AnnounceIgnoredMessage($spa->GetFolderId(), $brokenSO->id, $brokenSO);
                     }
@@ -1393,7 +1393,7 @@ class Sync extends RequestProcessor {
                 ZLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Incoming new message '%s' was created on the server before. Replying with known new server id: %s", $clientid, $actiondata["clientids"][$clientid]));
             }
 
-            // message was REMOVED before, do NOT attemp to remove it again
+            // message was REMOVED before, do NOT attempt to remove it again
             if ($todo == SYNC_REMOVE && isset($actiondata["failstate"]["removeids"][$serverid])) {
                 $ignoreMessage = true;
 
@@ -1587,7 +1587,7 @@ class Sync extends RequestProcessor {
 
         $interval = Utils::GetFiltertypeInterval($spa->GetFilterType());
         $timeout = time() + (($interval && $interval < $maxTimeout) ? $interval : $maxTimeout);
-        // randomize timout in 12h
+        // randomize timeout in 12h
         $timeout -= rand(0, 43200);
         ZLog::Write(LOGLEVEL_DEBUG, sprintf("Sync()->setFolderStat() on %s: %s expiring %s", $spa->getFolderId(), $newFolderStat, date('Y-m-d H:i:s', $timeout)));
         $spa->SetFolderStatTimeout($timeout);

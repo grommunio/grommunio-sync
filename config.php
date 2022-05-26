@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Main configuration file
  */
@@ -109,7 +109,7 @@
     // true - allow older devices, but enforce policies on devices which support it
     define('LOOSE_PROVISIONING', false);
 
-    // Retrive polcies for a user from admin API using the following endpoint
+    // Retrieve polcies for a user from admin API using the following endpoint
     define('ADMIN_API_POLICY_ENDPOINT', 'http://[::1]:8080/api/v1/service/syncPolicy/');
 
     // Retrieve and update remote wipe status for a user and device from admin API using the following endpoint
@@ -193,7 +193,7 @@
 
     // The minimum accepted time in second that a ping command should last.
     // It is strongly advised to keep this config to false. Some device
-    // might not be able to send a higher value than the one specificied here and thus
+    // might not be able to send a higher value than the one specified here and thus
     // unable to start a push connection.
     // If set to false, there will be no lower bound to the ping lifetime.
     // The minimum accepted value is 1 second. The maximum accepted value is 3540 seconds (59 minutes).
@@ -207,7 +207,7 @@
     // Maximum response time
     // Mobiles implement different timeouts to their TCP/IP connections. Android devices for example
     // have a hard timeout of 30 seconds. If the server is not able to answer a request within this timeframe,
-    // the answer will not be recieved and the device will send a new one overloading the server.
+    // the answer will not be received and the device will send a new one overloading the server.
     // There are three categories
     //   - Short timeout  - server has up within 30 seconds - is automatically applied for not categorized types
     //   - Medium timeout - server has up to 90 seconds to respond
@@ -262,7 +262,7 @@
  *      https://grommunio.com/
  *
  *  To synchronize a folder, add a section setting all parameters as below:
- *      store:      the ressource where the folder is located.
+ *      store:      the resource where the folder is located.
  *                  grommunio users use 'SYSTEM' for the 'Public Folder'
  *      folderid:   folder id of the folder to be synchronized
  *      name:       name to be displayed on the mobile device

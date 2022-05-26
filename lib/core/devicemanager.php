@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  *
  * Manages device relevant data, loop detection and device states.
  * The DeviceManager uses a IStateMachine implementation with
@@ -199,8 +199,8 @@ class DeviceManager extends InterProcessData {
     }
 
     /**
-     * Newer mobiles send extensive device informations with the Settings command
-     * These informations are saved in the ASDevice
+     * Newer mobiles send extensive device information with the Settings command
+     * These information are saved in the ASDevice
      *
      * @param SyncDeviceInformation     $deviceinformation
      *
@@ -214,7 +214,7 @@ class DeviceManager extends InterProcessData {
         if (isset($deviceinformation->useragent))
             $this->device->SetUserAgent($deviceinformation->useragent);
 
-        // save other informations
+        // save other information
         foreach (array("model", "imei", "friendlyname", "os", "oslanguage", "phonenumber", "mobileoperator", "enableoutboundsms") as $info) {
             if (isset($deviceinformation->$info) && $deviceinformation->$info != "") {
                 $this->device->__set("device".$info, $deviceinformation->$info);
@@ -312,7 +312,7 @@ class DeviceManager extends InterProcessData {
      * @throws NoHierarchyCacheAvailableException, NotImplementedException
      */
     public function GetFolderClassFromCacheByID($folderid) {
-        //TODO check if the parent folder exists and is also beeing synchronized
+        //TODO check if the parent folder exists and is also being synchronized
         $typeFromCache = $this->device->GetFolderType($folderid);
         if ($typeFromCache === false)
             throw new NoHierarchyCacheAvailableException(sprintf("Folderid '%s' is not fully synchronized on the device", $folderid));
@@ -494,7 +494,7 @@ class DeviceManager extends InterProcessData {
     }
 
     /**
-     * Gets the supported fields transmitted previousely by the device
+     * Gets the supported fields transmitted previously by the device
      * for a certain folder
      *
      * @param string    $folderid
@@ -533,7 +533,7 @@ class DeviceManager extends InterProcessData {
             // the store is only available when this is a shared folder (but might also be statically configured)
             if ($store) {
                 $origin = Utils::GetFolderOriginFromId($folderid);
-                // do not limit when the owner or impersonated user is synching!
+                // do not limit when the owner or impersonated user is syncing!
                 if ($origin == DeviceManager::FLD_ORIGIN_USER || $origin == DeviceManager::FLD_ORIGIN_IMPERSONATED) {
                     ZLog::Write(LOGLEVEL_DEBUG, "Not checking for specific sync limit as this is the owner/impersonated user.");
                 }
@@ -924,7 +924,7 @@ class DeviceManager extends InterProcessData {
                     ZLog::Write(LOGLEVEL_DEBUG, "DeviceManager->loadDeviceData(): Device data was changed, reloading");
                 $device = $this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA);
                 // TODO: case should be removed when removing ASDevice backwards compatibility
-                // fallback for old Z-Push like devicedata
+                // fallback for old grosync like devicedata
                 if (($device instanceof StateObject) && isset($device->devices) && is_array($device->devices)) {
                     ZLog::Write(LOGLEVEL_INFO, "Found old style device, converting...");
                     list ($_deviceuser, $_domain) =  Utils::SplitDomainUser(Request::GetGETUser());
@@ -943,7 +943,7 @@ class DeviceManager extends InterProcessData {
                     $this->deviceHash = $deviceHash;
                 }
                 else {
-                    ZLog::Write(LOGLEVEL_WARN, "Loaded device is not a device object. Dropping new laoded state and keeping initialized object!");
+                    ZLog::Write(LOGLEVEL_WARN, "Loaded device is not a device object. Dropping new loaded state and keeping initialized object!");
                 }
                 $this->stateManager->SetDevice($this->device);
             }
@@ -1017,7 +1017,7 @@ class DeviceManager extends InterProcessData {
      */
     private function announceAcceptedMessage($folderid, $id) {
         if ($this->device->RemoveIgnoredMessage($folderid, $id)) {
-            ZLog::Write(LOGLEVEL_INFO, sprintf("DeviceManager->announceAcceptedMessage('%s', '%s'): cleared previously ignored message as message is sucessfully streamed",$folderid, $id));
+            ZLog::Write(LOGLEVEL_INFO, sprintf("DeviceManager->announceAcceptedMessage('%s', '%s'): cleared previously ignored message as message is successfully streamed",$folderid, $id));
             return true;
         }
         return false;
@@ -1025,7 +1025,7 @@ class DeviceManager extends InterProcessData {
 
     /**
      * Checks if there were broken messages streamed to the mobile.
-     * If the sync completes/continues without further erros they are marked as accepted
+     * If the sync completes/continues without further errors they are marked as accepted
      *
      * @param string    $folderid       folderid which is to be checked
      *
