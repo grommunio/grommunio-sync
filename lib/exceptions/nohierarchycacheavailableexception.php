@@ -6,4 +6,5 @@
  *
  * Indicates that the HierarchyException is not available.
  */
-class NoHierarchyCacheAvailableException extends StateNotFoundException {}
+class NoHierarchyCacheAvailableException extends StateNotFoundException {
+}

@@ -10,16 +10,18 @@
  */
 
 class SyncEmailAddresses extends SyncObject {
-    public $smtpaddress;
-    public $primarysmtpaddress;
+	public $smtpaddress;
+	public $primarysmtpaddress;
 
-    public function __construct() {
-        $mapping = array (
-             SYNC_SETTINGS_SMPTADDRESS              => array (  self::STREAMER_VAR      => "smtpaddress",
-                                                                self::STREAMER_PROP     => self::STREAMER_TYPE_NO_CONTAINER,
-                                                                self::STREAMER_ARRAY     => SYNC_SETTINGS_SMPTADDRESS),
-             SYNC_SETTINGS_PRIMARYSMTPADDRESS       => array (  self::STREAMER_VAR      => "primarysmtpaddress"));
+	public function __construct() {
+		$mapping = [
+			SYNC_SETTINGS_SMPTADDRESS => [
+				self::STREAMER_VAR => "smtpaddress",
+				self::STREAMER_PROP => self::STREAMER_TYPE_NO_CONTAINER,
+				self::STREAMER_ARRAY => SYNC_SETTINGS_SMPTADDRESS, ],
+			SYNC_SETTINGS_PRIMARYSMTPADDRESS => [self::STREAMER_VAR => "primarysmtpaddress"],
+		];
 
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }

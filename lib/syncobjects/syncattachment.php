@@ -10,32 +10,41 @@
  */
 
 class SyncAttachment extends SyncObject {
-    public $attmethod;
-    public $attsize;
-    public $displayname;
-    public $attname;
-    public $attoid;
-    public $attremoved;
+	public $attmethod;
+	public $attsize;
+	public $displayname;
+	public $attname;
+	public $attoid;
+	public $attremoved;
 
-    function __construct() {
-        $mapping = array(
-                    SYNC_POOMMAIL_ATTMETHOD                             => array (  self::STREAMER_VAR      => "attmethod",
-                                                                                    self::STREAMER_RONOTIFY => true),
-                    SYNC_POOMMAIL_ATTSIZE                               => array (  self::STREAMER_VAR      => "attsize",
-                                                                                    self::STREAMER_CHECKS   => array(   self::STREAMER_CHECK_REQUIRED   => self::STREAMER_CHECK_SETZERO,
-                                                                                                                        self::STREAMER_CHECK_CMPHIGHER  => -1 )),
+	public function __construct() {
+		$mapping = [
+			SYNC_POOMMAIL_ATTMETHOD => [
+				self::STREAMER_VAR => "attmethod",
+				self::STREAMER_RONOTIFY => true,
+			],
+			SYNC_POOMMAIL_ATTSIZE => [
+				self::STREAMER_VAR => "attsize",
+				self::STREAMER_CHECKS => [
+					self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETZERO,
+					self::STREAMER_CHECK_CMPHIGHER => -1,
+				],
+			],
+			SYNC_POOMMAIL_DISPLAYNAME => [
+				self::STREAMER_VAR => "displayname",
+				self::STREAMER_CHECKS => [self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETEMPTY],
+			],
+			SYNC_POOMMAIL_ATTNAME => [
+				self::STREAMER_VAR => "attname",
+				self::STREAMER_CHECKS => [self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETEMPTY],
+			],
+			SYNC_POOMMAIL_ATTOID => [self::STREAMER_VAR => "attoid"],
+			SYNC_POOMMAIL_ATTREMOVED => [
+				self::STREAMER_VAR => "attremoved",
+				self::STREAMER_RONOTIFY => true,
+			],
+		];
 
-                    SYNC_POOMMAIL_DISPLAYNAME                           => array (  self::STREAMER_VAR      => "displayname",
-                                                                                    self::STREAMER_CHECKS   => array(   self::STREAMER_CHECK_REQUIRED   => self::STREAMER_CHECK_SETEMPTY)),
-
-                    SYNC_POOMMAIL_ATTNAME                               => array (  self::STREAMER_VAR      => "attname",
-                                                                                    self::STREAMER_CHECKS   => array(   self::STREAMER_CHECK_REQUIRED   => self::STREAMER_CHECK_SETEMPTY)),
-
-                    SYNC_POOMMAIL_ATTOID                                => array (  self::STREAMER_VAR      => "attoid"),
-                    SYNC_POOMMAIL_ATTREMOVED                            => array (  self::STREAMER_VAR      => "attremoved",
-                                                                                    self::STREAMER_RONOTIFY => true),
-                );
-
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }

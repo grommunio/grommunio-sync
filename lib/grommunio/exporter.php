@@ -14,278 +14,291 @@
  * This is our ICS exporter which requests the actual exporter from ICS and makes sure
  * that the ImportProxies are used.
  */
+class ExportChangesICS implements IExportChanges {
+	private $folderid;
+	private $store;
+	private $session;
+	private $restriction;
+	private $contentparameters;
+	private $flags;
+	private $exporterflags;
+	private $exporter;
+	private $moveSrcState;
+	private $moveDstState;
 
-class ExportChangesICS implements IExportChanges{
-    private $folderid;
-    private $store;
-    private $session;
-    private $restriction;
-    private $contentparameters;
-    private $flags;
-    private $exporterflags;
-    private $exporter;
-    private $moveSrcState;
-    private $moveDstState;
+	/**
+	 * Constructor.
+	 *
+	 * @param mapisession $session
+	 * @param mapistore   $store
+	 * @param mixed       $folderid
+	 *
+	 * @throws StatusException
+	 */
+	public function __construct($session, $store, $folderid = false) {
+		// Open a hierarchy or a contents exporter depending on whether a folderid was specified
+		$this->session = $session;
+		$this->folderid = $folderid;
+		$this->store = $store;
+		$this->restriction = false;
 
-    /**
-     * Constructor
-     *
-     * @param mapisession       $session
-     * @param mapistore         $store
-     * @param string             (opt)
-     *
-     * @access public
-     * @throws StatusException
-     */
-    public function __construct($session, $store, $folderid = false) {
-        // Open a hierarchy or a contents exporter depending on whether a folderid was specified
-        $this->session = $session;
-        $this->folderid = $folderid;
-        $this->store = $store;
-        $this->restriction = false;
+		try {
+			if ($folderid) {
+				$entryid = mapi_msgstore_entryidfromsourcekey($store, $folderid);
+			}
+			else {
+				$storeprops = mapi_getprops($this->store, [PR_IPM_SUBTREE_ENTRYID, PR_IPM_PUBLIC_FOLDERS_ENTRYID]);
+				if (GSync::GetBackend()->GetImpersonatedUser() == 'system') {
+					$entryid = $storeprops[PR_IPM_PUBLIC_FOLDERS_ENTRYID];
+				}
+				else {
+					$entryid = $storeprops[PR_IPM_SUBTREE_ENTRYID];
+				}
+			}
 
-        try {
-            if($folderid) {
-                $entryid = mapi_msgstore_entryidfromsourcekey($store, $folderid);
-            }
-            else {
-                $storeprops = mapi_getprops($this->store, array(PR_IPM_SUBTREE_ENTRYID, PR_IPM_PUBLIC_FOLDERS_ENTRYID));
-                if (ZPush::GetBackend()->GetImpersonatedUser() == 'system') {
-                    $entryid = $storeprops[PR_IPM_PUBLIC_FOLDERS_ENTRYID];
-                }
-                else {
-                    $entryid = $storeprops[PR_IPM_SUBTREE_ENTRYID];
-                }
-            }
+			$folder = false;
+			if ($entryid) {
+				$folder = mapi_msgstore_openentry($this->store, $entryid);
+				if (!$folder) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("ExportChangesICS(): Error, mapi_msgstore_openentry() failed: 0x%08X", mapi_last_hresult()));
+				}
+			}
 
-            $folder = false;
-            if ($entryid) {
-                $folder = mapi_msgstore_openentry($this->store, $entryid);
-                if (!$folder) {
-                    ZLog::Write(LOGLEVEL_WARN, sprintf("ExportChangesICS(): Error, mapi_msgstore_openentry() failed: 0x%08X", mapi_last_hresult()));
-                }
-            }
+			// Get the actual ICS exporter
+			if ($folder) {
+				if ($folderid) {
+					$this->exporter = mapi_openproperty($folder, PR_CONTENTS_SYNCHRONIZER, IID_IExchangeExportChanges, 0, 0);
+				}
+				else {
+					$this->exporter = mapi_openproperty($folder, PR_HIERARCHY_SYNCHRONIZER, IID_IExchangeExportChanges, 0, 0);
+				}
+			}
+			else {
+				$this->exporter = false;
+			}
+		}
+		catch (MAPIException $me) {
+			$this->exporter = false;
+			// We return the general error SYNC_FSSTATUS_CODEUNKNOWN (12) which is also SYNC_STATUS_FOLDERHIERARCHYCHANGED (12)
+			// if this happened while doing content sync, the mobile will try to resync the folderhierarchy
+			throw new StatusException(sprintf("ExportChangesICS('%s','%s','%s'): Error, unable to open folder: 0x%X", $session, $store, Utils::PrintAsString($folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
+		}
+	}
 
-            // Get the actual ICS exporter
-            if ($folder) {
-                if ($folderid) {
-                    $this->exporter = mapi_openproperty($folder, PR_CONTENTS_SYNCHRONIZER, IID_IExchangeExportChanges, 0 , 0);
-                }
-                else {
-                    $this->exporter = mapi_openproperty($folder, PR_HIERARCHY_SYNCHRONIZER, IID_IExchangeExportChanges, 0 , 0);
-                }
-            }
-            else {
-                $this->exporter = false;
-            }
-        }
-        catch (MAPIException $me) {
-            $this->exporter = false;
-            // We return the general error SYNC_FSSTATUS_CODEUNKNOWN (12) which is also SYNC_STATUS_FOLDERHIERARCHYCHANGED (12)
-            // if this happened while doing content sync, the mobile will try to resync the folderhierarchy
-            throw new StatusException(sprintf("ExportChangesICS('%s','%s','%s'): Error, unable to open folder: 0x%X", $session, $store, Utils::PrintAsString($folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
-        }
-    }
+	/**
+	 * Configures the exporter.
+	 *
+	 * @param string $state
+	 * @param int    $flags
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool
+	 */
+	public function Config($state, $flags = 0) {
+		$this->exporterflags = 0;
+		$this->flags = $flags;
 
-    /**
-     * Configures the exporter
-     *
-     * @param string        $state
-     * @param int           $flags
-     *
-     * @access public
-     * @return boolean
-     * @throws StatusException
-     */
-    public function Config($state, $flags = 0) {
-        $this->exporterflags = 0;
-        $this->flags = $flags;
+		// this should never happen
+		if ($this->exporter === false || is_array($state)) {
+			throw new StatusException("ExportChangesICS->Config(): Error, exporter not available", SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_ERROR);
+		}
 
-        // this should never happen
-        if ($this->exporter === false || is_array($state))
-            throw new StatusException("ExportChangesICS->Config(): Error, exporter not available", SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_ERROR);
+		// change exporterflags if we are doing a ContentExport
+		if ($this->folderid) {
+			$this->exporterflags |= SYNC_NORMAL | SYNC_READ_STATE;
 
-        // change exporterflags if we are doing a ContentExport
-        if($this->folderid) {
-            $this->exporterflags |= SYNC_NORMAL | SYNC_READ_STATE;
+			// Initial sync, we don't want deleted items. If the initial sync is chunked
+			// we check the change ID of the syncstate (0 at initial sync)
+			// On subsequent syncs, we do want to receive delete events.
+			if (strlen($state) == 0 || bin2hex(substr($state, 4, 4)) == "00000000") {
+				if (!($this->flags & BACKEND_DISCARD_DATA)) {
+					SLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): syncing initial data");
+				}
+				$this->exporterflags |= SYNC_NO_SOFT_DELETIONS | SYNC_NO_DELETIONS;
+			}
+		}
 
-            // Initial sync, we don't want deleted items. If the initial sync is chunked
-            // we check the change ID of the syncstate (0 at initial sync)
-            // On subsequent syncs, we do want to receive delete events.
-            if(strlen($state) == 0 || bin2hex(substr($state,4,4)) == "00000000") {
-                if (!($this->flags & BACKEND_DISCARD_DATA))
-                    ZLog::Write(LOGLEVEL_DEBUG, "ExportChangesICS->Config(): syncing initial data");
-                $this->exporterflags |= SYNC_NO_SOFT_DELETIONS | SYNC_NO_DELETIONS;
-            }
-        }
+		if ($this->flags & BACKEND_DISCARD_DATA) {
+			$this->exporterflags |= SYNC_CATCHUP;
+			$this->exporterflags |= SYNC_STATE_READONLY;
+		}
 
-        if($this->flags & BACKEND_DISCARD_DATA) {
-            $this->exporterflags |= SYNC_CATCHUP;
-            $this->exporterflags |= SYNC_STATE_READONLY;
-        }
+		// Put the state information in a stream that can be used by ICS
+		$stream = mapi_stream_create();
+		if (strlen($state) == 0) {
+			$state = hex2bin("0000000000000000");
+		}
 
-        // Put the state information in a stream that can be used by ICS
-        $stream = mapi_stream_create();
-        if(strlen($state) == 0)
-            $state = hex2bin("0000000000000000");
+		if (!($this->flags & BACKEND_DISCARD_DATA)) {
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->Config() initialized with state: 0x%s", bin2hex($state)));
+		}
 
-        if (!($this->flags & BACKEND_DISCARD_DATA))
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->Config() initialized with state: 0x%s", bin2hex($state)));
+		mapi_stream_write($stream, $state);
+		$this->statestream = $stream;
+	}
 
-        mapi_stream_write($stream, $state);
-        $this->statestream = $stream;
-    }
+	/**
+	 * Configures additional parameters used for content synchronization.
+	 *
+	 * @param ContentParameters $contentparameters
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool
+	 */
+	public function ConfigContentParameters($contentparameters) {
+		$filtertype = $contentparameters->GetFilterType();
 
-    /**
-     * Configures additional parameters used for content synchronization
-     *
-     * @param ContentParameters         $contentparameters
-     *
-     * @access public
-     * @return boolean
-     * @throws StatusException
-     */
-    public function ConfigContentParameters($contentparameters){
-        $filtertype = $contentparameters->GetFilterType();
-        switch($contentparameters->GetContentClass()) {
-            case "Email":
-                $this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetEmailRestriction(Utils::GetCutOffDate($filtertype)) : false;
-                break;
-            case "Calendar":
-                $this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetCalendarRestriction($this->store, Utils::GetCutOffDate($filtertype)) : false;
-                break;
-            default:
-            case "Contacts":
-            case "Tasks":
-                $this->restriction = false;
-                break;
-        }
+		switch ($contentparameters->GetContentClass()) {
+			case "Email":
+				$this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetEmailRestriction(Utils::GetCutOffDate($filtertype)) : false;
+				break;
 
-        $this->contentParameters = $contentparameters;
-    }
+			case "Calendar":
+				$this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetCalendarRestriction($this->store, Utils::GetCutOffDate($filtertype)) : false;
+				break;
 
+			default:
+			case "Contacts":
+			case "Tasks":
+				$this->restriction = false;
+				break;
+		}
 
-    /**
-     * Sets the importer the exporter will sent it's changes to
-     * and initializes the Exporter
-     *
-     * @param object        &$importer  Implementation of IImportChanges
-     *
-     * @access public
-     * @return boolean
-     * @throws StatusException
-     */
-    public function InitializeExporter(&$importer) {
-        // Because we're using ICS, we need to wrap the given importer to make it suitable to pass
-        // to ICS. We do this in two steps: first, wrap the importer with our own PHP importer class
-        // which removes all MAPI dependency, and then wrap that class with a C++ wrapper so we can
-        // pass it to ICS
+		$this->contentParameters = $contentparameters;
+	}
 
-        // this should never happen!
-        if($this->exporter === false || !isset($this->statestream) || !isset($this->flags) || !isset($this->exporterflags) ||
-            ($this->folderid && !isset($this->contentParameters)) )
-            throw new StatusException("ExportChangesICS->InitializeExporter(): Error, exporter or essential data not available", SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_ERROR);
+	/**
+	 * Sets the importer the exporter will sent it's changes to
+	 * and initializes the Exporter.
+	 *
+	 * @param object &$importer Implementation of IImportChanges
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool
+	 */
+	public function InitializeExporter(&$importer) {
+		// Because we're using ICS, we need to wrap the given importer to make it suitable to pass
+		// to ICS. We do this in two steps: first, wrap the importer with our own PHP importer class
+		// which removes all MAPI dependency, and then wrap that class with a C++ wrapper so we can
+		// pass it to ICS
 
-        // PHP wrapper
-        $phpwrapper = new PHPWrapper($this->session, $this->store, $importer, $this->folderid);
+		// this should never happen!
+		if ($this->exporter === false || !isset($this->statestream) || !isset($this->flags) || !isset($this->exporterflags) ||
+			($this->folderid && !isset($this->contentParameters))) {
+			throw new StatusException("ExportChangesICS->InitializeExporter(): Error, exporter or essential data not available", SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_ERROR);
+		}
 
-        // with a folderid we are going to get content
-        if($this->folderid) {
-            $phpwrapper->ConfigContentParameters($this->contentParameters);
+		// PHP wrapper
+		$phpwrapper = new PHPWrapper($this->session, $this->store, $importer, $this->folderid);
 
-            // ICS c++ wrapper
-            $mapiimporter = mapi_wrap_importcontentschanges($phpwrapper);
-            $includeprops = false;
-        }
-        else {
-            $mapiimporter = mapi_wrap_importhierarchychanges($phpwrapper);
-            $includeprops = array(PR_SOURCE_KEY, PR_DISPLAY_NAME);
-        }
+		// with a folderid we are going to get content
+		if ($this->folderid) {
+			$phpwrapper->ConfigContentParameters($this->contentParameters);
 
-        if (!$mapiimporter)
-            throw new StatusException(sprintf("ExportChangesICS->InitializeExporter(): Error, mapi_wrap_import_*_changes() failed: 0x%X", mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
+			// ICS c++ wrapper
+			$mapiimporter = mapi_wrap_importcontentschanges($phpwrapper);
+			$includeprops = false;
+		}
+		else {
+			$mapiimporter = mapi_wrap_importhierarchychanges($phpwrapper);
+			$includeprops = [PR_SOURCE_KEY, PR_DISPLAY_NAME];
+		}
 
-        $ret = mapi_exportchanges_config($this->exporter, $this->statestream, $this->exporterflags, $mapiimporter, $this->restriction, $includeprops, false, 1);
-        if(!$ret)
-            throw new StatusException(sprintf("ExportChangesICS->InitializeExporter(): Error, mapi_exportchanges_config() failed: 0x%X", mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
+		if (!$mapiimporter) {
+			throw new StatusException(sprintf("ExportChangesICS->InitializeExporter(): Error, mapi_wrap_import_*_changes() failed: 0x%X", mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
+		}
 
-        $changes = mapi_exportchanges_getchangecount($this->exporter);
-        if($changes || !($this->flags & BACKEND_DISCARD_DATA))
-            ZLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->InitializeExporter() successfully. %d changes ready to sync for '%s'.", $changes, ($this->folderid)?bin2hex($this->folderid) : 'hierarchy'));
+		$ret = mapi_exportchanges_config($this->exporter, $this->statestream, $this->exporterflags, $mapiimporter, $this->restriction, $includeprops, false, 1);
+		if (!$ret) {
+			throw new StatusException(sprintf("ExportChangesICS->InitializeExporter(): Error, mapi_exportchanges_config() failed: 0x%X", mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
+		}
 
-        return $ret;
-    }
+		$changes = mapi_exportchanges_getchangecount($this->exporter);
+		if ($changes || !($this->flags & BACKEND_DISCARD_DATA)) {
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->InitializeExporter() successfully. %d changes ready to sync for '%s'.", $changes, ($this->folderid) ? bin2hex($this->folderid) : 'hierarchy'));
+		}
 
-    /**
-     * Indicates if the exporter was configured with the BACKEND_DISCARD_DATA flag.
-     *
-     * @access public
-     * @return boolean
-     */
-    public function HasDiscardDataFlag() {
-        if (isset($this->flags) && $this->flags & BACKEND_DISCARD_DATA) {
-            return true;
-        }
-        return false;
-    }
+		return $ret;
+	}
 
-    /**
-     * Reads the current state from the Exporter
-     *
-     * @access public
-     * @return string
-     * @throws StatusException
-     */
-    public function GetState() {
-        $error = false;
-        if(!isset($this->statestream) || $this->exporter === false)
-            $error = true;
+	/**
+	 * Indicates if the exporter was configured with the BACKEND_DISCARD_DATA flag.
+	 *
+	 * @return bool
+	 */
+	public function HasDiscardDataFlag() {
+		if (isset($this->flags) && $this->flags & BACKEND_DISCARD_DATA) {
+			return true;
+		}
 
-        if($error === true || mapi_exportchanges_updatestate($this->exporter, $this->statestream) != true )
-            throw new StatusException(sprintf("ExportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid)?SYNC_STATUS_FOLDERHIERARCHYCHANGED:SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
+		return false;
+	}
 
-        mapi_stream_seek($this->statestream, 0, STREAM_SEEK_SET);
+	/**
+	 * Reads the current state from the Exporter.
+	 *
+	 * @throws StatusException
+	 *
+	 * @return string
+	 */
+	public function GetState() {
+		$error = false;
+		if (!isset($this->statestream) || $this->exporter === false) {
+			$error = true;
+		}
 
-        $state = "";
-        while(true) {
-            $data = mapi_stream_read($this->statestream, 4096);
-            if(strlen($data))
-                $state .= $data;
-            else
-                break;
-        }
+		if ($error === true || mapi_exportchanges_updatestate($this->exporter, $this->statestream) != true) {
+			throw new StatusException(sprintf("ExportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
+		}
 
-        return $state;
-    }
+		mapi_stream_seek($this->statestream, 0, STREAM_SEEK_SET);
 
-    /**
-     * Returns the amount of changes to be exported
-     *
-     * @access public
-     * @return int
-     */
-     public function GetChangeCount() {
-        if ($this->exporter)
-            return mapi_exportchanges_getchangecount($this->exporter);
-        else
-            return 0;
-    }
+		$state = "";
+		while (true) {
+			$data = mapi_stream_read($this->statestream, 4096);
+			if (strlen($data)) {
+				$state .= $data;
+			}
+			else {
+				break;
+			}
+		}
 
-    /**
-     * Synchronizes a change
-     *
-     * @access public
-     * @return array
-     */
-    public function Synchronize() {
-        if ($this->flags & BACKEND_DISCARD_DATA) {
-            ZLog::Write(LOGLEVEL_WARN, 'ExportChangesICS->Synchronize(): not supported in combination with the BACKEND_DISCARD_DATA flag.');
-            return false;
-        }
+		return $state;
+	}
 
-        if ($this->exporter) {
-            return mapi_exportchanges_synchronize($this->exporter);
-        }
-            return false;
-    }
+	/**
+	 * Returns the amount of changes to be exported.
+	 *
+	 * @return int
+	 */
+	public function GetChangeCount() {
+		if ($this->exporter) {
+			return mapi_exportchanges_getchangecount($this->exporter);
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Synchronizes a change.
+	 *
+	 * @return array
+	 */
+	public function Synchronize() {
+		if ($this->flags & BACKEND_DISCARD_DATA) {
+			SLog::Write(LOGLEVEL_WARN, 'ExportChangesICS->Synchronize(): not supported in combination with the BACKEND_DISCARD_DATA flag.');
+
+			return false;
+		}
+
+		if ($this->exporter) {
+			return mapi_exportchanges_synchronize($this->exporter);
+		}
+
+		return false;
+	}
 }

@@ -8,41 +8,43 @@
  */
 
 class Notify extends RequestProcessor {
+	/**
+	 * Handles the Notify command.
+	 *
+	 * @param int $commandCode
+	 *
+	 * @return bool
+	 */
+	public function Handle($commandCode) {
+		if (!self::$decoder->getElementStartTag(SYNC_AIRNOTIFY_NOTIFY)) {
+			return false;
+		}
 
-    /**
-     * Handles the Notify command
-     *
-     * @param int       $commandCode
-     *
-     * @access public
-     * @return boolean
-     */
-    public function Handle($commandCode) {
-        if(!self::$decoder->getElementStartTag(SYNC_AIRNOTIFY_NOTIFY))
-            return false;
+		if (!self::$decoder->getElementStartTag(SYNC_AIRNOTIFY_DEVICEINFO)) {
+			return false;
+		}
 
-        if(!self::$decoder->getElementStartTag(SYNC_AIRNOTIFY_DEVICEINFO))
-            return false;
+		if (!self::$decoder->getElementEndTag()) {
+			return false;
+		}
 
-        if(!self::$decoder->getElementEndTag())
-            return false;
+		if (!self::$decoder->getElementEndTag()) {
+			return false;
+		}
 
-        if(!self::$decoder->getElementEndTag())
-            return false;
+		self::$encoder->StartWBXML();
 
-        self::$encoder->StartWBXML();
+		self::$encoder->startTag(SYNC_AIRNOTIFY_NOTIFY);
 
-        self::$encoder->startTag(SYNC_AIRNOTIFY_NOTIFY);
-        {
-            self::$encoder->startTag(SYNC_AIRNOTIFY_STATUS);
-            self::$encoder->content(1);
-            self::$encoder->endTag();
+		self::$encoder->startTag(SYNC_AIRNOTIFY_STATUS);
+		self::$encoder->content(1);
+		self::$encoder->endTag();
 
-            self::$encoder->startTag(SYNC_AIRNOTIFY_VALIDCARRIERPROFILES);
-            self::$encoder->endTag();
-        }
-        self::$encoder->endTag();
+		self::$encoder->startTag(SYNC_AIRNOTIFY_VALIDCARRIERPROFILES);
+		self::$encoder->endTag();
 
-        return true;
-    }
+		self::$encoder->endTag();
+
+		return true;
+	}
 }

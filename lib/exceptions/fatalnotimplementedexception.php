@@ -6,4 +6,5 @@
  *
  * Fatal exception related to functionality which is not available
  */
-class FatalNotImplementedException extends FatalException {}
+class FatalNotImplementedException extends FatalException {
+}

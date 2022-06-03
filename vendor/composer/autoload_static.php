@@ -8,7 +8,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
 {
     public static $files = array (
         '158e247719544c05f5e89c414f630c24' => __DIR__ . '/../..' . '/version.php',
-        '7e65a9fc8bb44d8c2fe16fa283aeaaee' => __DIR__ . '/../..' . '/lib/core/zpushdefs.php',
+        'f2969980cdf0dddd210ef5448430b9c0' => __DIR__ . '/../..' . '/lib/core/gsyncdefs.php',
         'd2a63a53b4a43a2bd71de0cec5c1abfb' => __DIR__ . '/../..' . '/lib/utils/compat.php',
     );
 
@@ -31,6 +31,8 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'FolderChange' => __DIR__ . '/../..' . '/lib/request/folderchange.php',
         'FolderSync' => __DIR__ . '/../..' . '/lib/request/foldersync.php',
         'FreeBusyPublish' => __DIR__ . '/../..' . '/mapi/class.freebusypublish.php',
+        'GSync' => __DIR__ . '/../..' . '/lib/core/gsync.php',
+        'GSyncException' => __DIR__ . '/../..' . '/lib/exceptions/gsyncexception.php',
         'GetAttachment' => __DIR__ . '/../..' . '/lib/request/getattachment.php',
         'GetHierarchy' => __DIR__ . '/../..' . '/lib/request/gethierarchy.php',
         'GetItemEstimate' => __DIR__ . '/../..' . '/lib/request/getitemestimate.php',
@@ -75,6 +77,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'Request' => __DIR__ . '/../..' . '/lib/request/request.php',
         'RequestProcessor' => __DIR__ . '/../..' . '/lib/request/requestprocessor.php',
         'ResolveRecipients' => __DIR__ . '/../..' . '/lib/request/resolverecipients.php',
+        'SLog' => __DIR__ . '/../..' . '/lib/core/slog.php',
         'Search' => __DIR__ . '/../..' . '/lib/request/search.php',
         'SendMail' => __DIR__ . '/../..' . '/lib/request/sendmail.php',
         'ServiceUnavailableException' => __DIR__ . '/../..' . '/lib/exceptions/serviceunavailableexception.php',
@@ -144,9 +147,6 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'WBXMLDefs' => __DIR__ . '/../..' . '/lib/wbxml/wbxmldefs.php',
         'WBXMLEncoder' => __DIR__ . '/../..' . '/lib/wbxml/wbxmlencoder.php',
         'WBXMLException' => __DIR__ . '/../..' . '/lib/exceptions/wbxmlexception.php',
-        'ZLog' => __DIR__ . '/../..' . '/lib/core/zlog.php',
-        'ZPush' => __DIR__ . '/../..' . '/lib/core/zpush.php',
-        'ZPushException' => __DIR__ . '/../..' . '/lib/exceptions/zpushexception.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

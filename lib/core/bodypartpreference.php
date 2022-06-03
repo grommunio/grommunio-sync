@@ -8,26 +8,26 @@
  */
 
 class BodyPartPreference extends StateObject {
-    protected $unsetdata = array(   'truncationsize' => false,
-                                    'allornone' => false,
-                                    'preview' => false,
-                                );
+	protected $unsetdata = [
+		'truncationsize' => false,
+		'allornone' => false,
+		'preview' => false,
+	];
 
-    /**
-     * Expected magic getters and setters.
-     *
-     * GetTruncationSize() + SetTruncationSize()
-     * GetAllOrNone() + SetAllOrNone()
-     * GetPreview() + SetPreview()
-     */
+	/**
+	 * Expected magic getters and setters.
+	 *
+	 * GetTruncationSize() + SetTruncationSize()
+	 * GetAllOrNone() + SetAllOrNone()
+	 * GetPreview() + SetPreview()
+	 */
 
-    /**
-     * Indicates if this object has values.
-     *
-     * @access public
-     * @return boolean
-     */
-    public function HasValues() {
-        return (count($this->data) > 0);
-    }
+	/**
+	 * Indicates if this object has values.
+	 *
+	 * @return bool
+	 */
+	public function HasValues() {
+		return count($this->data) > 0;
+	}
 }

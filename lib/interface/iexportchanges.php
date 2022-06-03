@@ -10,31 +10,29 @@
  */
 
 interface IExportChanges extends IChanges {
-    /**
-     * Sets the importer where the exporter will sent its changes to
-     * This exporter should also be ready to accept calls after this
-     *
-     * @param object        &$importer      Implementation of IImportChanges
-     *
-     * @access public
-     * @return boolean
-     * @throws StatusException
-     */
-    public function InitializeExporter(&$importer);
+	/**
+	 * Sets the importer where the exporter will sent its changes to
+	 * This exporter should also be ready to accept calls after this.
+	 *
+	 * @param object &$importer Implementation of IImportChanges
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool
+	 */
+	public function InitializeExporter(&$importer);
 
-    /**
-     * Returns the amount of changes to be exported
-     *
-     * @access public
-     * @return int
-     */
-    public function GetChangeCount();
+	/**
+	 * Returns the amount of changes to be exported.
+	 *
+	 * @return int
+	 */
+	public function GetChangeCount();
 
-    /**
-     * Synchronizes a change to the configured importer
-     *
-     * @access public
-     * @return array        with status information
-     */
-    public function Synchronize();
+	/**
+	 * Synchronizes a change to the configured importer.
+	 *
+	 * @return array with status information
+	 */
+	public function Synchronize();
 }

@@ -11,10 +11,10 @@ class ServiceUnavailableException extends HTTPReturnCodeException {
 	protected $defaultLogLevel = LOGLEVEL_INFO;
 	protected $httpReturnCode = HTTP_CODE_503;
 	protected $httpReturnMessage = "Service Unavailable";
-	protected $httpHeaders = array();
+	protected $httpHeaders = [];
 	protected $showLegal = false;
 
-	public function __construct($message = "", $code = 0, $previous = NULL, $logLevel = false) {
+	public function __construct($message = "", $code = 0, $previous = null, $logLevel = false) {
 		parent::__construct($message, $code, $previous, $logLevel);
 		if (RETRY_AFTER_DELAY !== false) {
 			$this->httpHeaders[] = 'Retry-After: ' . RETRY_AFTER_DELAY;

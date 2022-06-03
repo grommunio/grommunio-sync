@@ -10,17 +10,18 @@
  */
 
 class SyncDevicePassword extends SyncObject {
-    public $password;
-    public $Status;
+	public $password;
+	public $Status;
 
-    public function __construct() {
-        $mapping = array (
-            SYNC_SETTINGS_PW                        => array (  self::STREAMER_VAR      => "password"),
+	public function __construct() {
+		$mapping = [
+			SYNC_SETTINGS_PW => [self::STREAMER_VAR => "password"],
+			SYNC_SETTINGS_PROP_STATUS => [
+				self::STREAMER_VAR => "Status",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			],
+		];
 
-            SYNC_SETTINGS_PROP_STATUS               => array (  self::STREAMER_VAR      => "Status",
-                                                                self::STREAMER_TYPE     => self::STREAMER_TYPE_IGNORE)
-        );
-
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }

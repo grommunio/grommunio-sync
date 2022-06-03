@@ -7,4 +7,5 @@
  * Indicates that a synchronization state could not be retrieved
  * from an IStateMachine.
  */
-class StateNotFoundException extends StatusException {}
+class StateNotFoundException extends StatusException {
+}

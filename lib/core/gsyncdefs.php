@@ -8,392 +8,392 @@
  */
 
 // Code Page 0: AirSync, all AS versions
-define("SYNC_SYNCHRONIZE","Synchronize");
-define("SYNC_REPLIES","Replies");
-define("SYNC_ADD","Add");
-define("SYNC_MODIFY","Modify");
-define("SYNC_REMOVE","Remove");
-define("SYNC_FETCH","Fetch");
-define("SYNC_SYNCKEY","SyncKey");
-define("SYNC_CLIENTENTRYID","ClientEntryId");
-define("SYNC_SERVERENTRYID","ServerEntryId");
-define("SYNC_STATUS","Status");
-define("SYNC_FOLDER","Folder");
-define("SYNC_FOLDERTYPE","FolderType");
-define("SYNC_VERSION","Version"); // deprecated
-define("SYNC_FOLDERID","FolderId");
-define("SYNC_GETCHANGES","GetChanges");
-define("SYNC_MOREAVAILABLE","MoreAvailable");
-define("SYNC_WINDOWSIZE","WindowSize"); //MaxItems before version 2
-define("SYNC_PERFORM","Perform");
-define("SYNC_OPTIONS","Options");
-define("SYNC_FILTERTYPE","FilterType");
-define("SYNC_TRUNCATION","Truncation"); // 2.5
-define("SYNC_RTFTRUNCATION","RtfTruncation"); // 2.5
-define("SYNC_CONFLICT","Conflict");
-define("SYNC_FOLDERS","Folders");
-define("SYNC_DATA","Data");
-define("SYNC_DELETESASMOVES","DeletesAsMoves");
-define("SYNC_NOTIFYGUID","NotifyGUID");
-define("SYNC_SUPPORTED","Supported");
-define("SYNC_SOFTDELETE","SoftDelete");
-define("SYNC_MIMESUPPORT","MIMESupport");
-define("SYNC_MIMETRUNCATION","MIMETruncation");
-define("SYNC_NEWMESSAGE","NewMessage");
-define("SYNC_WAIT","Wait"); // Since 12.1
-define("SYNC_LIMIT","Limit"); // Since 12.1
-define("SYNC_PARTIAL","Partial"); // Since 12.1
-define("SYNC_CONVERSATIONMODE","ConversationMode"); // Since 14.0
-define("SYNC_MAXITEMS","MaxItems"); // Since 14.0
-define("SYNC_HEARTBEATINTERVAL","HeartbeatInterval"); // Since 14.0
+define("SYNC_SYNCHRONIZE", "Synchronize");
+define("SYNC_REPLIES", "Replies");
+define("SYNC_ADD", "Add");
+define("SYNC_MODIFY", "Modify");
+define("SYNC_REMOVE", "Remove");
+define("SYNC_FETCH", "Fetch");
+define("SYNC_SYNCKEY", "SyncKey");
+define("SYNC_CLIENTENTRYID", "ClientEntryId");
+define("SYNC_SERVERENTRYID", "ServerEntryId");
+define("SYNC_STATUS", "Status");
+define("SYNC_FOLDER", "Folder");
+define("SYNC_FOLDERTYPE", "FolderType");
+define("SYNC_VERSION", "Version"); // deprecated
+define("SYNC_FOLDERID", "FolderId");
+define("SYNC_GETCHANGES", "GetChanges");
+define("SYNC_MOREAVAILABLE", "MoreAvailable");
+define("SYNC_WINDOWSIZE", "WindowSize"); // MaxItems before version 2
+define("SYNC_PERFORM", "Perform");
+define("SYNC_OPTIONS", "Options");
+define("SYNC_FILTERTYPE", "FilterType");
+define("SYNC_TRUNCATION", "Truncation"); // 2.5
+define("SYNC_RTFTRUNCATION", "RtfTruncation"); // 2.5
+define("SYNC_CONFLICT", "Conflict");
+define("SYNC_FOLDERS", "Folders");
+define("SYNC_DATA", "Data");
+define("SYNC_DELETESASMOVES", "DeletesAsMoves");
+define("SYNC_NOTIFYGUID", "NotifyGUID");
+define("SYNC_SUPPORTED", "Supported");
+define("SYNC_SOFTDELETE", "SoftDelete");
+define("SYNC_MIMESUPPORT", "MIMESupport");
+define("SYNC_MIMETRUNCATION", "MIMETruncation");
+define("SYNC_NEWMESSAGE", "NewMessage");
+define("SYNC_WAIT", "Wait"); // Since 12.1
+define("SYNC_LIMIT", "Limit"); // Since 12.1
+define("SYNC_PARTIAL", "Partial"); // Since 12.1
+define("SYNC_CONVERSATIONMODE", "ConversationMode"); // Since 14.0
+define("SYNC_MAXITEMS", "MaxItems"); // Since 14.0
+define("SYNC_HEARTBEATINTERVAL", "HeartbeatInterval"); // Since 14.0
 
 // Code Page 1: Contacts - POOMCONTACTS, all AS versions
-define("SYNC_POOMCONTACTS_ANNIVERSARY","POOMCONTACTS:Anniversary");
-define("SYNC_POOMCONTACTS_ASSISTANTNAME","POOMCONTACTS:AssistantName");
-define("SYNC_POOMCONTACTS_ASSISTNAMEPHONENUMBER","POOMCONTACTS:AssistnamePhoneNumber");
-define("SYNC_POOMCONTACTS_BIRTHDAY","POOMCONTACTS:Birthday");
-define("SYNC_POOMCONTACTS_BODY","POOMCONTACTS:Body"); // 2.5, AirSyncBase Body is used since 12.0
-define("SYNC_POOMCONTACTS_BODYSIZE","POOMCONTACTS:BodySize"); // 2.5, AirSyncBase is used since version 12.0
-define("SYNC_POOMCONTACTS_BODYTRUNCATED","POOMCONTACTS:BodyTruncated"); // 2.5, AirSyncBase is used since version 12.0
-define("SYNC_POOMCONTACTS_BUSINESS2PHONENUMBER","POOMCONTACTS:Business2PhoneNumber");
-define("SYNC_POOMCONTACTS_BUSINESSCITY","POOMCONTACTS:BusinessCity");
-define("SYNC_POOMCONTACTS_BUSINESSCOUNTRY","POOMCONTACTS:BusinessCountry");
-define("SYNC_POOMCONTACTS_BUSINESSPOSTALCODE","POOMCONTACTS:BusinessPostalCode");
-define("SYNC_POOMCONTACTS_BUSINESSSTATE","POOMCONTACTS:BusinessState");
-define("SYNC_POOMCONTACTS_BUSINESSSTREET","POOMCONTACTS:BusinessStreet");
-define("SYNC_POOMCONTACTS_BUSINESSFAXNUMBER","POOMCONTACTS:BusinessFaxNumber");
-define("SYNC_POOMCONTACTS_BUSINESSPHONENUMBER","POOMCONTACTS:BusinessPhoneNumber");
-define("SYNC_POOMCONTACTS_CARPHONENUMBER","POOMCONTACTS:CarPhoneNumber");
-define("SYNC_POOMCONTACTS_CATEGORIES","POOMCONTACTS:Categories");
-define("SYNC_POOMCONTACTS_CATEGORY","POOMCONTACTS:Category");
-define("SYNC_POOMCONTACTS_CHILDREN","POOMCONTACTS:Children");
-define("SYNC_POOMCONTACTS_CHILD","POOMCONTACTS:Child");
-define("SYNC_POOMCONTACTS_COMPANYNAME","POOMCONTACTS:CompanyName");
-define("SYNC_POOMCONTACTS_DEPARTMENT","POOMCONTACTS:Department");
-define("SYNC_POOMCONTACTS_EMAIL1ADDRESS","POOMCONTACTS:Email1Address");
-define("SYNC_POOMCONTACTS_EMAIL2ADDRESS","POOMCONTACTS:Email2Address");
-define("SYNC_POOMCONTACTS_EMAIL3ADDRESS","POOMCONTACTS:Email3Address");
-define("SYNC_POOMCONTACTS_FILEAS","POOMCONTACTS:FileAs");
-define("SYNC_POOMCONTACTS_FIRSTNAME","POOMCONTACTS:FirstName");
-define("SYNC_POOMCONTACTS_HOME2PHONENUMBER","POOMCONTACTS:Home2PhoneNumber");
-define("SYNC_POOMCONTACTS_HOMECITY","POOMCONTACTS:HomeCity");
-define("SYNC_POOMCONTACTS_HOMECOUNTRY","POOMCONTACTS:HomeCountry");
-define("SYNC_POOMCONTACTS_HOMEPOSTALCODE","POOMCONTACTS:HomePostalCode");
-define("SYNC_POOMCONTACTS_HOMESTATE","POOMCONTACTS:HomeState");
-define("SYNC_POOMCONTACTS_HOMESTREET","POOMCONTACTS:HomeStreet");
-define("SYNC_POOMCONTACTS_HOMEFAXNUMBER","POOMCONTACTS:HomeFaxNumber");
-define("SYNC_POOMCONTACTS_HOMEPHONENUMBER","POOMCONTACTS:HomePhoneNumber");
-define("SYNC_POOMCONTACTS_JOBTITLE","POOMCONTACTS:JobTitle");
-define("SYNC_POOMCONTACTS_LASTNAME","POOMCONTACTS:LastName");
-define("SYNC_POOMCONTACTS_MIDDLENAME","POOMCONTACTS:MiddleName");
-define("SYNC_POOMCONTACTS_MOBILEPHONENUMBER","POOMCONTACTS:MobilePhoneNumber");
-define("SYNC_POOMCONTACTS_OFFICELOCATION","POOMCONTACTS:OfficeLocation");
-define("SYNC_POOMCONTACTS_OTHERCITY","POOMCONTACTS:OtherCity");
-define("SYNC_POOMCONTACTS_OTHERCOUNTRY","POOMCONTACTS:OtherCountry");
-define("SYNC_POOMCONTACTS_OTHERPOSTALCODE","POOMCONTACTS:OtherPostalCode");
-define("SYNC_POOMCONTACTS_OTHERSTATE","POOMCONTACTS:OtherState");
-define("SYNC_POOMCONTACTS_OTHERSTREET","POOMCONTACTS:OtherStreet");
-define("SYNC_POOMCONTACTS_PAGERNUMBER","POOMCONTACTS:PagerNumber");
-define("SYNC_POOMCONTACTS_RADIOPHONENUMBER","POOMCONTACTS:RadioPhoneNumber");
-define("SYNC_POOMCONTACTS_SPOUSE","POOMCONTACTS:Spouse");
-define("SYNC_POOMCONTACTS_SUFFIX","POOMCONTACTS:Suffix");
-define("SYNC_POOMCONTACTS_TITLE","POOMCONTACTS:Title");
-define("SYNC_POOMCONTACTS_WEBPAGE","POOMCONTACTS:WebPage");
-define("SYNC_POOMCONTACTS_YOMICOMPANYNAME","POOMCONTACTS:YomiCompanyName");
-define("SYNC_POOMCONTACTS_YOMIFIRSTNAME","POOMCONTACTS:YomiFirstName");
-define("SYNC_POOMCONTACTS_YOMILASTNAME","POOMCONTACTS:YomiLastName");
-define("SYNC_POOMCONTACTS_RTF","POOMCONTACTS:Rtf"); // deprecated
-define("SYNC_POOMCONTACTS_PICTURE","POOMCONTACTS:Picture");
-define("SYNC_POOMCONTACTS_ALIAS","POOMCONTACTS:Alias"); // Since 14.0
-define("SYNC_POOMCONTACTS_WEIGHEDRANK","POOMCONTACTS:WeightedRank"); // Since 14.0
+define("SYNC_POOMCONTACTS_ANNIVERSARY", "POOMCONTACTS:Anniversary");
+define("SYNC_POOMCONTACTS_ASSISTANTNAME", "POOMCONTACTS:AssistantName");
+define("SYNC_POOMCONTACTS_ASSISTNAMEPHONENUMBER", "POOMCONTACTS:AssistnamePhoneNumber");
+define("SYNC_POOMCONTACTS_BIRTHDAY", "POOMCONTACTS:Birthday");
+define("SYNC_POOMCONTACTS_BODY", "POOMCONTACTS:Body"); // 2.5, AirSyncBase Body is used since 12.0
+define("SYNC_POOMCONTACTS_BODYSIZE", "POOMCONTACTS:BodySize"); // 2.5, AirSyncBase is used since version 12.0
+define("SYNC_POOMCONTACTS_BODYTRUNCATED", "POOMCONTACTS:BodyTruncated"); // 2.5, AirSyncBase is used since version 12.0
+define("SYNC_POOMCONTACTS_BUSINESS2PHONENUMBER", "POOMCONTACTS:Business2PhoneNumber");
+define("SYNC_POOMCONTACTS_BUSINESSCITY", "POOMCONTACTS:BusinessCity");
+define("SYNC_POOMCONTACTS_BUSINESSCOUNTRY", "POOMCONTACTS:BusinessCountry");
+define("SYNC_POOMCONTACTS_BUSINESSPOSTALCODE", "POOMCONTACTS:BusinessPostalCode");
+define("SYNC_POOMCONTACTS_BUSINESSSTATE", "POOMCONTACTS:BusinessState");
+define("SYNC_POOMCONTACTS_BUSINESSSTREET", "POOMCONTACTS:BusinessStreet");
+define("SYNC_POOMCONTACTS_BUSINESSFAXNUMBER", "POOMCONTACTS:BusinessFaxNumber");
+define("SYNC_POOMCONTACTS_BUSINESSPHONENUMBER", "POOMCONTACTS:BusinessPhoneNumber");
+define("SYNC_POOMCONTACTS_CARPHONENUMBER", "POOMCONTACTS:CarPhoneNumber");
+define("SYNC_POOMCONTACTS_CATEGORIES", "POOMCONTACTS:Categories");
+define("SYNC_POOMCONTACTS_CATEGORY", "POOMCONTACTS:Category");
+define("SYNC_POOMCONTACTS_CHILDREN", "POOMCONTACTS:Children");
+define("SYNC_POOMCONTACTS_CHILD", "POOMCONTACTS:Child");
+define("SYNC_POOMCONTACTS_COMPANYNAME", "POOMCONTACTS:CompanyName");
+define("SYNC_POOMCONTACTS_DEPARTMENT", "POOMCONTACTS:Department");
+define("SYNC_POOMCONTACTS_EMAIL1ADDRESS", "POOMCONTACTS:Email1Address");
+define("SYNC_POOMCONTACTS_EMAIL2ADDRESS", "POOMCONTACTS:Email2Address");
+define("SYNC_POOMCONTACTS_EMAIL3ADDRESS", "POOMCONTACTS:Email3Address");
+define("SYNC_POOMCONTACTS_FILEAS", "POOMCONTACTS:FileAs");
+define("SYNC_POOMCONTACTS_FIRSTNAME", "POOMCONTACTS:FirstName");
+define("SYNC_POOMCONTACTS_HOME2PHONENUMBER", "POOMCONTACTS:Home2PhoneNumber");
+define("SYNC_POOMCONTACTS_HOMECITY", "POOMCONTACTS:HomeCity");
+define("SYNC_POOMCONTACTS_HOMECOUNTRY", "POOMCONTACTS:HomeCountry");
+define("SYNC_POOMCONTACTS_HOMEPOSTALCODE", "POOMCONTACTS:HomePostalCode");
+define("SYNC_POOMCONTACTS_HOMESTATE", "POOMCONTACTS:HomeState");
+define("SYNC_POOMCONTACTS_HOMESTREET", "POOMCONTACTS:HomeStreet");
+define("SYNC_POOMCONTACTS_HOMEFAXNUMBER", "POOMCONTACTS:HomeFaxNumber");
+define("SYNC_POOMCONTACTS_HOMEPHONENUMBER", "POOMCONTACTS:HomePhoneNumber");
+define("SYNC_POOMCONTACTS_JOBTITLE", "POOMCONTACTS:JobTitle");
+define("SYNC_POOMCONTACTS_LASTNAME", "POOMCONTACTS:LastName");
+define("SYNC_POOMCONTACTS_MIDDLENAME", "POOMCONTACTS:MiddleName");
+define("SYNC_POOMCONTACTS_MOBILEPHONENUMBER", "POOMCONTACTS:MobilePhoneNumber");
+define("SYNC_POOMCONTACTS_OFFICELOCATION", "POOMCONTACTS:OfficeLocation");
+define("SYNC_POOMCONTACTS_OTHERCITY", "POOMCONTACTS:OtherCity");
+define("SYNC_POOMCONTACTS_OTHERCOUNTRY", "POOMCONTACTS:OtherCountry");
+define("SYNC_POOMCONTACTS_OTHERPOSTALCODE", "POOMCONTACTS:OtherPostalCode");
+define("SYNC_POOMCONTACTS_OTHERSTATE", "POOMCONTACTS:OtherState");
+define("SYNC_POOMCONTACTS_OTHERSTREET", "POOMCONTACTS:OtherStreet");
+define("SYNC_POOMCONTACTS_PAGERNUMBER", "POOMCONTACTS:PagerNumber");
+define("SYNC_POOMCONTACTS_RADIOPHONENUMBER", "POOMCONTACTS:RadioPhoneNumber");
+define("SYNC_POOMCONTACTS_SPOUSE", "POOMCONTACTS:Spouse");
+define("SYNC_POOMCONTACTS_SUFFIX", "POOMCONTACTS:Suffix");
+define("SYNC_POOMCONTACTS_TITLE", "POOMCONTACTS:Title");
+define("SYNC_POOMCONTACTS_WEBPAGE", "POOMCONTACTS:WebPage");
+define("SYNC_POOMCONTACTS_YOMICOMPANYNAME", "POOMCONTACTS:YomiCompanyName");
+define("SYNC_POOMCONTACTS_YOMIFIRSTNAME", "POOMCONTACTS:YomiFirstName");
+define("SYNC_POOMCONTACTS_YOMILASTNAME", "POOMCONTACTS:YomiLastName");
+define("SYNC_POOMCONTACTS_RTF", "POOMCONTACTS:Rtf"); // deprecated
+define("SYNC_POOMCONTACTS_PICTURE", "POOMCONTACTS:Picture");
+define("SYNC_POOMCONTACTS_ALIAS", "POOMCONTACTS:Alias"); // Since 14.0
+define("SYNC_POOMCONTACTS_WEIGHEDRANK", "POOMCONTACTS:WeightedRank"); // Since 14.0
 
 // Code Page 2: Email - POOMMAIL, all AS versions
-define("SYNC_POOMMAIL_ATTACHMENT","POOMMAIL:Attachment"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTACHMENTS","POOMMAIL:Attachments"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTNAME","POOMMAIL:AttName"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTSIZE","POOMMAIL:AttSize"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTOID","POOMMAIL:AttOid"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTMETHOD","POOMMAIL:AttMethod"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_ATTREMOVED","POOMMAIL:AttRemoved"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_BODY","POOMMAIL:Body"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMMAIL_BODYSIZE","POOMMAIL:BodySize"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMMAIL_BODYTRUNCATED","POOMMAIL:BodyTruncated"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMMAIL_DATERECEIVED","POOMMAIL:DateReceived");
-define("SYNC_POOMMAIL_DISPLAYNAME","POOMMAIL:DisplayName"); // AirSyncBase Attachments is used since 12.0
-define("SYNC_POOMMAIL_DISPLAYTO","POOMMAIL:DisplayTo");
-define("SYNC_POOMMAIL_IMPORTANCE","POOMMAIL:Importance");
-define("SYNC_POOMMAIL_MESSAGECLASS","POOMMAIL:MessageClass");
-define("SYNC_POOMMAIL_SUBJECT","POOMMAIL:Subject");
-define("SYNC_POOMMAIL_READ","POOMMAIL:Read");
-define("SYNC_POOMMAIL_TO","POOMMAIL:To");
-define("SYNC_POOMMAIL_CC","POOMMAIL:Cc");
-define("SYNC_POOMMAIL_FROM","POOMMAIL:From");
-define("SYNC_POOMMAIL_REPLY_TO","POOMMAIL:Reply-To");
-define("SYNC_POOMMAIL_ALLDAYEVENT","POOMMAIL:AllDayEvent");
-define("SYNC_POOMMAIL_CATEGORIES","POOMMAIL:Categories"); // Since 14.0
-define("SYNC_POOMMAIL_CATEGORY","POOMMAIL:Category"); // Since 14.0
-define("SYNC_POOMMAIL_DTSTAMP","POOMMAIL:DtStamp");
-define("SYNC_POOMMAIL_ENDTIME","POOMMAIL:EndTime");
-define("SYNC_POOMMAIL_INSTANCETYPE","POOMMAIL:InstanceType");
-define("SYNC_POOMMAIL_BUSYSTATUS","POOMMAIL:BusyStatus");
-define("SYNC_POOMMAIL_LOCATION","POOMMAIL:Location"); // 2.5, 12.0, 12.1, 14.0 and 14.1. Since 16.0 AirSyncBase Location is used.
-define("SYNC_POOMMAIL_MEETINGREQUEST","POOMMAIL:MeetingRequest");
-define("SYNC_POOMMAIL_ORGANIZER","POOMMAIL:Organizer");
-define("SYNC_POOMMAIL_RECURRENCEID","POOMMAIL:RecurrenceId");
-define("SYNC_POOMMAIL_REMINDER","POOMMAIL:Reminder");
-define("SYNC_POOMMAIL_RESPONSEREQUESTED","POOMMAIL:ResponseRequested");
-define("SYNC_POOMMAIL_RECURRENCES","POOMMAIL:Recurrences");
-define("SYNC_POOMMAIL_RECURRENCE","POOMMAIL:Recurrence");
-define("SYNC_POOMMAIL_TYPE","POOMMAIL:Type");
-define("SYNC_POOMMAIL_UNTIL","POOMMAIL:Until");
-define("SYNC_POOMMAIL_OCCURRENCES","POOMMAIL:Occurrences");
-define("SYNC_POOMMAIL_INTERVAL","POOMMAIL:Interval");
-define("SYNC_POOMMAIL_DAYOFWEEK","POOMMAIL:DayOfWeek");
-define("SYNC_POOMMAIL_DAYOFMONTH","POOMMAIL:DayOfMonth");
-define("SYNC_POOMMAIL_WEEKOFMONTH","POOMMAIL:WeekOfMonth");
-define("SYNC_POOMMAIL_MONTHOFYEAR","POOMMAIL:MonthOfYear");
-define("SYNC_POOMMAIL_STARTTIME","POOMMAIL:StartTime");
-define("SYNC_POOMMAIL_SENSITIVITY","POOMMAIL:Sensitivity");
-define("SYNC_POOMMAIL_TIMEZONE","POOMMAIL:TimeZone");
-define("SYNC_POOMMAIL_GLOBALOBJID","POOMMAIL:GlobalObjId"); // 2.5, 12.0, 12.1, 14.0 and 14.1. UID of Calendar (Code page 4) is used since 16.0
-define("SYNC_POOMMAIL_THREADTOPIC","POOMMAIL:ThreadTopic");
-define("SYNC_POOMMAIL_MIMEDATA","POOMMAIL:MIMEData"); // 2.5
-define("SYNC_POOMMAIL_MIMETRUNCATED","POOMMAIL:MIMETruncated"); // 2.5
-define("SYNC_POOMMAIL_MIMESIZE","POOMMAIL:MIMESize");
-define("SYNC_POOMMAIL_INTERNETCPID","POOMMAIL:InternetCPID");
+define("SYNC_POOMMAIL_ATTACHMENT", "POOMMAIL:Attachment"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTACHMENTS", "POOMMAIL:Attachments"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTNAME", "POOMMAIL:AttName"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTSIZE", "POOMMAIL:AttSize"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTOID", "POOMMAIL:AttOid"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTMETHOD", "POOMMAIL:AttMethod"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_ATTREMOVED", "POOMMAIL:AttRemoved"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_BODY", "POOMMAIL:Body"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMMAIL_BODYSIZE", "POOMMAIL:BodySize"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMMAIL_BODYTRUNCATED", "POOMMAIL:BodyTruncated"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMMAIL_DATERECEIVED", "POOMMAIL:DateReceived");
+define("SYNC_POOMMAIL_DISPLAYNAME", "POOMMAIL:DisplayName"); // AirSyncBase Attachments is used since 12.0
+define("SYNC_POOMMAIL_DISPLAYTO", "POOMMAIL:DisplayTo");
+define("SYNC_POOMMAIL_IMPORTANCE", "POOMMAIL:Importance");
+define("SYNC_POOMMAIL_MESSAGECLASS", "POOMMAIL:MessageClass");
+define("SYNC_POOMMAIL_SUBJECT", "POOMMAIL:Subject");
+define("SYNC_POOMMAIL_READ", "POOMMAIL:Read");
+define("SYNC_POOMMAIL_TO", "POOMMAIL:To");
+define("SYNC_POOMMAIL_CC", "POOMMAIL:Cc");
+define("SYNC_POOMMAIL_FROM", "POOMMAIL:From");
+define("SYNC_POOMMAIL_REPLY_TO", "POOMMAIL:Reply-To");
+define("SYNC_POOMMAIL_ALLDAYEVENT", "POOMMAIL:AllDayEvent");
+define("SYNC_POOMMAIL_CATEGORIES", "POOMMAIL:Categories"); // Since 14.0
+define("SYNC_POOMMAIL_CATEGORY", "POOMMAIL:Category"); // Since 14.0
+define("SYNC_POOMMAIL_DTSTAMP", "POOMMAIL:DtStamp");
+define("SYNC_POOMMAIL_ENDTIME", "POOMMAIL:EndTime");
+define("SYNC_POOMMAIL_INSTANCETYPE", "POOMMAIL:InstanceType");
+define("SYNC_POOMMAIL_BUSYSTATUS", "POOMMAIL:BusyStatus");
+define("SYNC_POOMMAIL_LOCATION", "POOMMAIL:Location"); // 2.5, 12.0, 12.1, 14.0 and 14.1. Since 16.0 AirSyncBase Location is used.
+define("SYNC_POOMMAIL_MEETINGREQUEST", "POOMMAIL:MeetingRequest");
+define("SYNC_POOMMAIL_ORGANIZER", "POOMMAIL:Organizer");
+define("SYNC_POOMMAIL_RECURRENCEID", "POOMMAIL:RecurrenceId");
+define("SYNC_POOMMAIL_REMINDER", "POOMMAIL:Reminder");
+define("SYNC_POOMMAIL_RESPONSEREQUESTED", "POOMMAIL:ResponseRequested");
+define("SYNC_POOMMAIL_RECURRENCES", "POOMMAIL:Recurrences");
+define("SYNC_POOMMAIL_RECURRENCE", "POOMMAIL:Recurrence");
+define("SYNC_POOMMAIL_TYPE", "POOMMAIL:Type");
+define("SYNC_POOMMAIL_UNTIL", "POOMMAIL:Until");
+define("SYNC_POOMMAIL_OCCURRENCES", "POOMMAIL:Occurrences");
+define("SYNC_POOMMAIL_INTERVAL", "POOMMAIL:Interval");
+define("SYNC_POOMMAIL_DAYOFWEEK", "POOMMAIL:DayOfWeek");
+define("SYNC_POOMMAIL_DAYOFMONTH", "POOMMAIL:DayOfMonth");
+define("SYNC_POOMMAIL_WEEKOFMONTH", "POOMMAIL:WeekOfMonth");
+define("SYNC_POOMMAIL_MONTHOFYEAR", "POOMMAIL:MonthOfYear");
+define("SYNC_POOMMAIL_STARTTIME", "POOMMAIL:StartTime");
+define("SYNC_POOMMAIL_SENSITIVITY", "POOMMAIL:Sensitivity");
+define("SYNC_POOMMAIL_TIMEZONE", "POOMMAIL:TimeZone");
+define("SYNC_POOMMAIL_GLOBALOBJID", "POOMMAIL:GlobalObjId"); // 2.5, 12.0, 12.1, 14.0 and 14.1. UID of Calendar (Code page 4) is used since 16.0
+define("SYNC_POOMMAIL_THREADTOPIC", "POOMMAIL:ThreadTopic");
+define("SYNC_POOMMAIL_MIMEDATA", "POOMMAIL:MIMEData"); // 2.5
+define("SYNC_POOMMAIL_MIMETRUNCATED", "POOMMAIL:MIMETruncated"); // 2.5
+define("SYNC_POOMMAIL_MIMESIZE", "POOMMAIL:MIMESize");
+define("SYNC_POOMMAIL_INTERNETCPID", "POOMMAIL:InternetCPID");
 define("SYNC_POOMMAIL_FLAG", "POOMMAIL:Flag"); // Since 12.0
 define("SYNC_POOMMAIL_FLAGSTATUS", "POOMMAIL:FlagStatus"); // Since 12.0
 define("SYNC_POOMMAIL_CONTENTCLASS", "POOMMAIL:ContentClass"); // Since 12.0
 define("SYNC_POOMMAIL_FLAGTYPE", "POOMMAIL:FlagType"); // Since 12.0
-define("SYNC_POOMMAIL_COMPLETETIME", "POOMMAIL:CompleteTime"); //Since 12.0
+define("SYNC_POOMMAIL_COMPLETETIME", "POOMMAIL:CompleteTime"); // Since 12.0
 define("SYNC_POOMMAIL_DISALLOWNEWTIMEPROPOSAL", "POOMMAIL:DisallowNewTimeProposal"); // Since 14.0
 
 // Code Page 3: AirNotify - AIRNOTIFY, no longer in use
-define("SYNC_AIRNOTIFY_NOTIFY","AirNotify:Notify");
-define("SYNC_AIRNOTIFY_NOTIFICATION","AirNotify:Notification");
-define("SYNC_AIRNOTIFY_VERSION","AirNotify:Version");
-define("SYNC_AIRNOTIFY_LIFETIME","AirNotify:Lifetime");
-define("SYNC_AIRNOTIFY_DEVICEINFO","AirNotify:DeviceInfo");
-define("SYNC_AIRNOTIFY_ENABLE","AirNotify:Enable");
-define("SYNC_AIRNOTIFY_FOLDER","AirNotify:Folder");
-define("SYNC_AIRNOTIFY_SERVERENTRYID","AirNotify:ServerEntryId");
-define("SYNC_AIRNOTIFY_DEVICEADDRESS","AirNotify:DeviceAddress");
-define("SYNC_AIRNOTIFY_VALIDCARRIERPROFILES","AirNotify:ValidCarrierProfiles");
-define("SYNC_AIRNOTIFY_CARRIERPROFILE","AirNotify:CarrierProfile");
-define("SYNC_AIRNOTIFY_STATUS","AirNotify:Status");
-define("SYNC_AIRNOTIFY_REPLIES","AirNotify:Replies");
-define("SYNC_AIRNOTIFY_VERSION='1.1'","AirNotify:Version='1.1'");
-define("SYNC_AIRNOTIFY_DEVICES","AirNotify:Devices");
-define("SYNC_AIRNOTIFY_DEVICE","AirNotify:Device");
-define("SYNC_AIRNOTIFY_ID","AirNotify:Id");
-define("SYNC_AIRNOTIFY_EXPIRY","AirNotify:Expiry");
-define("SYNC_AIRNOTIFY_NOTIFYGUID","AirNotify:NotifyGUID");
+define("SYNC_AIRNOTIFY_NOTIFY", "AirNotify:Notify");
+define("SYNC_AIRNOTIFY_NOTIFICATION", "AirNotify:Notification");
+define("SYNC_AIRNOTIFY_VERSION", "AirNotify:Version");
+define("SYNC_AIRNOTIFY_LIFETIME", "AirNotify:Lifetime");
+define("SYNC_AIRNOTIFY_DEVICEINFO", "AirNotify:DeviceInfo");
+define("SYNC_AIRNOTIFY_ENABLE", "AirNotify:Enable");
+define("SYNC_AIRNOTIFY_FOLDER", "AirNotify:Folder");
+define("SYNC_AIRNOTIFY_SERVERENTRYID", "AirNotify:ServerEntryId");
+define("SYNC_AIRNOTIFY_DEVICEADDRESS", "AirNotify:DeviceAddress");
+define("SYNC_AIRNOTIFY_VALIDCARRIERPROFILES", "AirNotify:ValidCarrierProfiles");
+define("SYNC_AIRNOTIFY_CARRIERPROFILE", "AirNotify:CarrierProfile");
+define("SYNC_AIRNOTIFY_STATUS", "AirNotify:Status");
+define("SYNC_AIRNOTIFY_REPLIES", "AirNotify:Replies");
+define("SYNC_AIRNOTIFY_VERSION='1.1'", "AirNotify:Version='1.1'");
+define("SYNC_AIRNOTIFY_DEVICES", "AirNotify:Devices");
+define("SYNC_AIRNOTIFY_DEVICE", "AirNotify:Device");
+define("SYNC_AIRNOTIFY_ID", "AirNotify:Id");
+define("SYNC_AIRNOTIFY_EXPIRY", "AirNotify:Expiry");
+define("SYNC_AIRNOTIFY_NOTIFYGUID", "AirNotify:NotifyGUID");
 
 // Code Page 4: Calendar - POOMCAL, all AS versions
-define("SYNC_POOMCAL_TIMEZONE","POOMCAL:Timezone");
-define("SYNC_POOMCAL_ALLDAYEVENT","POOMCAL:AllDayEvent");
-define("SYNC_POOMCAL_ATTENDEES","POOMCAL:Attendees");
-define("SYNC_POOMCAL_ATTENDEE","POOMCAL:Attendee");
-define("SYNC_POOMCAL_EMAIL","POOMCAL:Email");
-define("SYNC_POOMCAL_NAME","POOMCAL:Name");
-define("SYNC_POOMCAL_BODY","POOMCAL:Body"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMCAL_BODYTRUNCATED","POOMCAL:BodyTruncated"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMCAL_BUSYSTATUS","POOMCAL:BusyStatus");
-define("SYNC_POOMCAL_CATEGORIES","POOMCAL:Categories");
-define("SYNC_POOMCAL_CATEGORY","POOMCAL:Category");
-define("SYNC_POOMCAL_RTF","POOMCAL:Rtf"); // deprecated
-define("SYNC_POOMCAL_DTSTAMP","POOMCAL:DtStamp");
-define("SYNC_POOMCAL_ENDTIME","POOMCAL:EndTime");
-define("SYNC_POOMCAL_EXCEPTION","POOMCAL:Exception");
-define("SYNC_POOMCAL_EXCEPTIONS","POOMCAL:Exceptions");
-define("SYNC_POOMCAL_DELETED","POOMCAL:Deleted");
-define("SYNC_POOMCAL_EXCEPTIONSTARTTIME","POOMCAL:ExceptionStartTime"); // 2.5, 12.0, 12.1, 14.0 and 14.1.
-define("SYNC_POOMCAL_LOCATION","POOMCAL:Location"); // 2.5, 12.0, 12.1, 14.0 and 14.1. Since 16.0 AirSyncBase Location is used.
-define("SYNC_POOMCAL_MEETINGSTATUS","POOMCAL:MeetingStatus");
-define("SYNC_POOMCAL_ORGANIZEREMAIL","POOMCAL:OrganizerEmail");
-define("SYNC_POOMCAL_ORGANIZERNAME","POOMCAL:OrganizerName");
-define("SYNC_POOMCAL_RECURRENCE","POOMCAL:Recurrence");
-define("SYNC_POOMCAL_TYPE","POOMCAL:Type");
-define("SYNC_POOMCAL_UNTIL","POOMCAL:Until");
-define("SYNC_POOMCAL_OCCURRENCES","POOMCAL:Occurrences");
-define("SYNC_POOMCAL_INTERVAL","POOMCAL:Interval");
-define("SYNC_POOMCAL_DAYOFWEEK","POOMCAL:DayOfWeek");
-define("SYNC_POOMCAL_DAYOFMONTH","POOMCAL:DayOfMonth");
-define("SYNC_POOMCAL_WEEKOFMONTH","POOMCAL:WeekOfMonth");
-define("SYNC_POOMCAL_MONTHOFYEAR","POOMCAL:MonthOfYear");
-define("SYNC_POOMCAL_REMINDER","POOMCAL:Reminder");
-define("SYNC_POOMCAL_SENSITIVITY","POOMCAL:Sensitivity");
-define("SYNC_POOMCAL_SUBJECT","POOMCAL:Subject");
-define("SYNC_POOMCAL_STARTTIME","POOMCAL:StartTime");
-define("SYNC_POOMCAL_UID","POOMCAL:UID");
-define("SYNC_POOMCAL_ATTENDEESTATUS","POOMCAL:Attendee_Status"); // Since 12.0
-define("SYNC_POOMCAL_ATTENDEETYPE","POOMCAL:Attendee_Type"); // Since 12.0
-define("SYNC_POOMCAL_ATTACHMENT","POOMCAL:Attachment"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTACHMENTS","POOMCAL:Attachments"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTNAME","POOMCAL:AttName"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTSIZE","POOMCAL:AttSize"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTOID","POOMCAL:AttOid"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTMETHOD","POOMCAL:AttMethod"); // Not defined / deprecated
-define("SYNC_POOMCAL_ATTREMOVED","POOMCAL:AttRemoved"); // Not defined / deprecated
-define("SYNC_POOMCAL_DISPLAYNAME","POOMCAL:DisplayName"); // Not defined / deprecated
-define("SYNC_POOMCAL_DISALLOWNEWTIMEPROPOSAL","POOMCAL:DisallowNewTimeProposal"); // Since 14.0
-define("SYNC_POOMCAL_RESPONSEREQUESTED","POOMCAL:ResponseRequested"); // Since 14.0
-define("SYNC_POOMCAL_APPOINTMENTREPLYTIME","POOMCAL:AppointmentReplyTime"); // Since 14.0
-define("SYNC_POOMCAL_RESPONSETYPE","POOMCAL:ResponseType"); // Since 14.0
-define("SYNC_POOMCAL_CALENDARTYPE","POOMCAL:CalendarType"); // Since 14.0
-define("SYNC_POOMCAL_ISLEAPMONTH","POOMCAL:IsLeapMonth"); // Since 14.0
-define("SYNC_POOMCAL_FIRSTDAYOFWEEK","POOMCAL:FirstDayOfWeek"); // Since 14.1
-define("SYNC_POOMCAL_ONLINEMEETINGCONFLINK","POOMCAL:OnlineMeetingConfLink"); // Since 14.1
-define("SYNC_POOMCAL_ONLINEMEETINGEXTERNALLINK","POOMCAL:OnlineMeetingExternalLink"); // Since 14.0
+define("SYNC_POOMCAL_TIMEZONE", "POOMCAL:Timezone");
+define("SYNC_POOMCAL_ALLDAYEVENT", "POOMCAL:AllDayEvent");
+define("SYNC_POOMCAL_ATTENDEES", "POOMCAL:Attendees");
+define("SYNC_POOMCAL_ATTENDEE", "POOMCAL:Attendee");
+define("SYNC_POOMCAL_EMAIL", "POOMCAL:Email");
+define("SYNC_POOMCAL_NAME", "POOMCAL:Name");
+define("SYNC_POOMCAL_BODY", "POOMCAL:Body"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMCAL_BODYTRUNCATED", "POOMCAL:BodyTruncated"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMCAL_BUSYSTATUS", "POOMCAL:BusyStatus");
+define("SYNC_POOMCAL_CATEGORIES", "POOMCAL:Categories");
+define("SYNC_POOMCAL_CATEGORY", "POOMCAL:Category");
+define("SYNC_POOMCAL_RTF", "POOMCAL:Rtf"); // deprecated
+define("SYNC_POOMCAL_DTSTAMP", "POOMCAL:DtStamp");
+define("SYNC_POOMCAL_ENDTIME", "POOMCAL:EndTime");
+define("SYNC_POOMCAL_EXCEPTION", "POOMCAL:Exception");
+define("SYNC_POOMCAL_EXCEPTIONS", "POOMCAL:Exceptions");
+define("SYNC_POOMCAL_DELETED", "POOMCAL:Deleted");
+define("SYNC_POOMCAL_EXCEPTIONSTARTTIME", "POOMCAL:ExceptionStartTime"); // 2.5, 12.0, 12.1, 14.0 and 14.1.
+define("SYNC_POOMCAL_LOCATION", "POOMCAL:Location"); // 2.5, 12.0, 12.1, 14.0 and 14.1. Since 16.0 AirSyncBase Location is used.
+define("SYNC_POOMCAL_MEETINGSTATUS", "POOMCAL:MeetingStatus");
+define("SYNC_POOMCAL_ORGANIZEREMAIL", "POOMCAL:OrganizerEmail");
+define("SYNC_POOMCAL_ORGANIZERNAME", "POOMCAL:OrganizerName");
+define("SYNC_POOMCAL_RECURRENCE", "POOMCAL:Recurrence");
+define("SYNC_POOMCAL_TYPE", "POOMCAL:Type");
+define("SYNC_POOMCAL_UNTIL", "POOMCAL:Until");
+define("SYNC_POOMCAL_OCCURRENCES", "POOMCAL:Occurrences");
+define("SYNC_POOMCAL_INTERVAL", "POOMCAL:Interval");
+define("SYNC_POOMCAL_DAYOFWEEK", "POOMCAL:DayOfWeek");
+define("SYNC_POOMCAL_DAYOFMONTH", "POOMCAL:DayOfMonth");
+define("SYNC_POOMCAL_WEEKOFMONTH", "POOMCAL:WeekOfMonth");
+define("SYNC_POOMCAL_MONTHOFYEAR", "POOMCAL:MonthOfYear");
+define("SYNC_POOMCAL_REMINDER", "POOMCAL:Reminder");
+define("SYNC_POOMCAL_SENSITIVITY", "POOMCAL:Sensitivity");
+define("SYNC_POOMCAL_SUBJECT", "POOMCAL:Subject");
+define("SYNC_POOMCAL_STARTTIME", "POOMCAL:StartTime");
+define("SYNC_POOMCAL_UID", "POOMCAL:UID");
+define("SYNC_POOMCAL_ATTENDEESTATUS", "POOMCAL:Attendee_Status"); // Since 12.0
+define("SYNC_POOMCAL_ATTENDEETYPE", "POOMCAL:Attendee_Type"); // Since 12.0
+define("SYNC_POOMCAL_ATTACHMENT", "POOMCAL:Attachment"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTACHMENTS", "POOMCAL:Attachments"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTNAME", "POOMCAL:AttName"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTSIZE", "POOMCAL:AttSize"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTOID", "POOMCAL:AttOid"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTMETHOD", "POOMCAL:AttMethod"); // Not defined / deprecated
+define("SYNC_POOMCAL_ATTREMOVED", "POOMCAL:AttRemoved"); // Not defined / deprecated
+define("SYNC_POOMCAL_DISPLAYNAME", "POOMCAL:DisplayName"); // Not defined / deprecated
+define("SYNC_POOMCAL_DISALLOWNEWTIMEPROPOSAL", "POOMCAL:DisallowNewTimeProposal"); // Since 14.0
+define("SYNC_POOMCAL_RESPONSEREQUESTED", "POOMCAL:ResponseRequested"); // Since 14.0
+define("SYNC_POOMCAL_APPOINTMENTREPLYTIME", "POOMCAL:AppointmentReplyTime"); // Since 14.0
+define("SYNC_POOMCAL_RESPONSETYPE", "POOMCAL:ResponseType"); // Since 14.0
+define("SYNC_POOMCAL_CALENDARTYPE", "POOMCAL:CalendarType"); // Since 14.0
+define("SYNC_POOMCAL_ISLEAPMONTH", "POOMCAL:IsLeapMonth"); // Since 14.0
+define("SYNC_POOMCAL_FIRSTDAYOFWEEK", "POOMCAL:FirstDayOfWeek"); // Since 14.1
+define("SYNC_POOMCAL_ONLINEMEETINGCONFLINK", "POOMCAL:OnlineMeetingConfLink"); // Since 14.1
+define("SYNC_POOMCAL_ONLINEMEETINGEXTERNALLINK", "POOMCAL:OnlineMeetingExternalLink"); // Since 14.0
 
 // Code Page 5: Move, all AS versions
-define("SYNC_MOVE_MOVES","Move:Moves");
-define("SYNC_MOVE_MOVE","Move:Move");
-define("SYNC_MOVE_SRCMSGID","Move:SrcMsgId");
-define("SYNC_MOVE_SRCFLDID","Move:SrcFldId");
-define("SYNC_MOVE_DSTFLDID","Move:DstFldId");
-define("SYNC_MOVE_RESPONSE","Move:Response");
-define("SYNC_MOVE_STATUS","Move:Status");
-define("SYNC_MOVE_DSTMSGID","Move:DstMsgId");
+define("SYNC_MOVE_MOVES", "Move:Moves");
+define("SYNC_MOVE_MOVE", "Move:Move");
+define("SYNC_MOVE_SRCMSGID", "Move:SrcMsgId");
+define("SYNC_MOVE_SRCFLDID", "Move:SrcFldId");
+define("SYNC_MOVE_DSTFLDID", "Move:DstFldId");
+define("SYNC_MOVE_RESPONSE", "Move:Response");
+define("SYNC_MOVE_STATUS", "Move:Status");
+define("SYNC_MOVE_DSTMSGID", "Move:DstMsgId");
 
 // Code Page 6: GetItemEstimate, all AS versions
-define("SYNC_GETITEMESTIMATE_GETITEMESTIMATE","GetItemEstimate:GetItemEstimate");
-define("SYNC_GETITEMESTIMATE_VERSION","GetItemEstimate:Version"); // deprecated
-define("SYNC_GETITEMESTIMATE_FOLDERS","GetItemEstimate:Folders");
-define("SYNC_GETITEMESTIMATE_FOLDER","GetItemEstimate:Folder");
-define("SYNC_GETITEMESTIMATE_FOLDERTYPE","GetItemEstimate:FolderType"); // AirSync Class(SYNC_FOLDERTYPE) is used since AS 14.0
-define("SYNC_GETITEMESTIMATE_FOLDERID","GetItemEstimate:FolderId");
-define("SYNC_GETITEMESTIMATE_DATETIME","GetItemEstimate:DateTime"); // deprecated
-define("SYNC_GETITEMESTIMATE_ESTIMATE","GetItemEstimate:Estimate");
-define("SYNC_GETITEMESTIMATE_RESPONSE","GetItemEstimate:Response");
-define("SYNC_GETITEMESTIMATE_STATUS","GetItemEstimate:Status");
+define("SYNC_GETITEMESTIMATE_GETITEMESTIMATE", "GetItemEstimate:GetItemEstimate");
+define("SYNC_GETITEMESTIMATE_VERSION", "GetItemEstimate:Version"); // deprecated
+define("SYNC_GETITEMESTIMATE_FOLDERS", "GetItemEstimate:Folders");
+define("SYNC_GETITEMESTIMATE_FOLDER", "GetItemEstimate:Folder");
+define("SYNC_GETITEMESTIMATE_FOLDERTYPE", "GetItemEstimate:FolderType"); // AirSync Class(SYNC_FOLDERTYPE) is used since AS 14.0
+define("SYNC_GETITEMESTIMATE_FOLDERID", "GetItemEstimate:FolderId");
+define("SYNC_GETITEMESTIMATE_DATETIME", "GetItemEstimate:DateTime"); // deprecated
+define("SYNC_GETITEMESTIMATE_ESTIMATE", "GetItemEstimate:Estimate");
+define("SYNC_GETITEMESTIMATE_RESPONSE", "GetItemEstimate:Response");
+define("SYNC_GETITEMESTIMATE_STATUS", "GetItemEstimate:Status");
 
 // Code Page 7: FolderHierarchy, all AS versions
-define("SYNC_FOLDERHIERARCHY_FOLDERS","FolderHierarchy:Folders"); // 2.5, 12.0 and 12.1
-define("SYNC_FOLDERHIERARCHY_FOLDER","FolderHierarchy:Folder"); // 2.5, 12.0 and 12.1
-define("SYNC_FOLDERHIERARCHY_DISPLAYNAME","FolderHierarchy:DisplayName");
-define("SYNC_FOLDERHIERARCHY_SERVERENTRYID","FolderHierarchy:ServerEntryId");
-define("SYNC_FOLDERHIERARCHY_PARENTID","FolderHierarchy:ParentId");
-define("SYNC_FOLDERHIERARCHY_TYPE","FolderHierarchy:Type");
-define("SYNC_FOLDERHIERARCHY_RESPONSE","FolderHierarchy:Response"); // deprecated
-define("SYNC_FOLDERHIERARCHY_STATUS","FolderHierarchy:Status");
-define("SYNC_FOLDERHIERARCHY_CONTENTCLASS","FolderHierarchy:ContentClass"); // deprecated
-define("SYNC_FOLDERHIERARCHY_CHANGES","FolderHierarchy:Changes");
-define("SYNC_FOLDERHIERARCHY_ADD","FolderHierarchy:Add");
-define("SYNC_FOLDERHIERARCHY_REMOVE","FolderHierarchy:Remove");
-define("SYNC_FOLDERHIERARCHY_UPDATE","FolderHierarchy:Update");
-define("SYNC_FOLDERHIERARCHY_SYNCKEY","FolderHierarchy:SyncKey");
-define("SYNC_FOLDERHIERARCHY_FOLDERCREATE","FolderHierarchy:FolderCreate");
-define("SYNC_FOLDERHIERARCHY_FOLDERDELETE","FolderHierarchy:FolderDelete");
-define("SYNC_FOLDERHIERARCHY_FOLDERUPDATE","FolderHierarchy:FolderUpdate");
-define("SYNC_FOLDERHIERARCHY_FOLDERSYNC","FolderHierarchy:FolderSync");
-define("SYNC_FOLDERHIERARCHY_COUNT","FolderHierarchy:Count");
-define("SYNC_FOLDERHIERARCHY_VERSION","FolderHierarchy:Version"); // Not defined / deprecated
+define("SYNC_FOLDERHIERARCHY_FOLDERS", "FolderHierarchy:Folders"); // 2.5, 12.0 and 12.1
+define("SYNC_FOLDERHIERARCHY_FOLDER", "FolderHierarchy:Folder"); // 2.5, 12.0 and 12.1
+define("SYNC_FOLDERHIERARCHY_DISPLAYNAME", "FolderHierarchy:DisplayName");
+define("SYNC_FOLDERHIERARCHY_SERVERENTRYID", "FolderHierarchy:ServerEntryId");
+define("SYNC_FOLDERHIERARCHY_PARENTID", "FolderHierarchy:ParentId");
+define("SYNC_FOLDERHIERARCHY_TYPE", "FolderHierarchy:Type");
+define("SYNC_FOLDERHIERARCHY_RESPONSE", "FolderHierarchy:Response"); // deprecated
+define("SYNC_FOLDERHIERARCHY_STATUS", "FolderHierarchy:Status");
+define("SYNC_FOLDERHIERARCHY_CONTENTCLASS", "FolderHierarchy:ContentClass"); // deprecated
+define("SYNC_FOLDERHIERARCHY_CHANGES", "FolderHierarchy:Changes");
+define("SYNC_FOLDERHIERARCHY_ADD", "FolderHierarchy:Add");
+define("SYNC_FOLDERHIERARCHY_REMOVE", "FolderHierarchy:Remove");
+define("SYNC_FOLDERHIERARCHY_UPDATE", "FolderHierarchy:Update");
+define("SYNC_FOLDERHIERARCHY_SYNCKEY", "FolderHierarchy:SyncKey");
+define("SYNC_FOLDERHIERARCHY_FOLDERCREATE", "FolderHierarchy:FolderCreate");
+define("SYNC_FOLDERHIERARCHY_FOLDERDELETE", "FolderHierarchy:FolderDelete");
+define("SYNC_FOLDERHIERARCHY_FOLDERUPDATE", "FolderHierarchy:FolderUpdate");
+define("SYNC_FOLDERHIERARCHY_FOLDERSYNC", "FolderHierarchy:FolderSync");
+define("SYNC_FOLDERHIERARCHY_COUNT", "FolderHierarchy:Count");
+define("SYNC_FOLDERHIERARCHY_VERSION", "FolderHierarchy:Version"); // Not defined / deprecated
 // only for internal use - never to be streamed to the mobile
-define("SYNC_FOLDERHIERARCHY_IGNORE_STORE","FolderHierarchy:IgnoreStore");
-define("SYNC_FOLDERHIERARCHY_IGNORE_NOBCKENDFLD","FolderHierarchy:IgnoreNoBackendFolder");
-define("SYNC_FOLDERHIERARCHY_IGNORE_BACKENDID","FolderHierarchy:IgnoreBackendId");
-define("SYNC_FOLDERHIERARCHY_IGNORE_FLAGS","FolderHierarchy:IgnoreFlags");
-define("SYNC_FOLDERHIERARCHY_IGNORE_TYPEREAL","FolderHierarchy:TypeReal");
+define("SYNC_FOLDERHIERARCHY_IGNORE_STORE", "FolderHierarchy:IgnoreStore");
+define("SYNC_FOLDERHIERARCHY_IGNORE_NOBCKENDFLD", "FolderHierarchy:IgnoreNoBackendFolder");
+define("SYNC_FOLDERHIERARCHY_IGNORE_BACKENDID", "FolderHierarchy:IgnoreBackendId");
+define("SYNC_FOLDERHIERARCHY_IGNORE_FLAGS", "FolderHierarchy:IgnoreFlags");
+define("SYNC_FOLDERHIERARCHY_IGNORE_TYPEREAL", "FolderHierarchy:TypeReal");
 
 // Code Page 8: MeetingResponse, all AS versions
-define("SYNC_MEETINGRESPONSE_CALENDARID","MeetingResponse:CalendarId");
-define("SYNC_MEETINGRESPONSE_FOLDERID","MeetingResponse:FolderId");
-define("SYNC_MEETINGRESPONSE_MEETINGRESPONSE","MeetingResponse:MeetingResponse");
-define("SYNC_MEETINGRESPONSE_REQUESTID","MeetingResponse:RequestId");
-define("SYNC_MEETINGRESPONSE_REQUEST","MeetingResponse:Request");
-define("SYNC_MEETINGRESPONSE_RESULT","MeetingResponse:Result");
-define("SYNC_MEETINGRESPONSE_STATUS","MeetingResponse:Status");
-define("SYNC_MEETINGRESPONSE_USERRESPONSE","MeetingResponse:UserResponse");
-define("SYNC_MEETINGRESPONSE_VERSION","MeetingResponse:Version"); // Not defined / deprecated
-define("SYNC_MEETINGRESPONSE_INSTANCEID","MeetingResponse:InstanceId"); // Since AS 14.1
+define("SYNC_MEETINGRESPONSE_CALENDARID", "MeetingResponse:CalendarId");
+define("SYNC_MEETINGRESPONSE_FOLDERID", "MeetingResponse:FolderId");
+define("SYNC_MEETINGRESPONSE_MEETINGRESPONSE", "MeetingResponse:MeetingResponse");
+define("SYNC_MEETINGRESPONSE_REQUESTID", "MeetingResponse:RequestId");
+define("SYNC_MEETINGRESPONSE_REQUEST", "MeetingResponse:Request");
+define("SYNC_MEETINGRESPONSE_RESULT", "MeetingResponse:Result");
+define("SYNC_MEETINGRESPONSE_STATUS", "MeetingResponse:Status");
+define("SYNC_MEETINGRESPONSE_USERRESPONSE", "MeetingResponse:UserResponse");
+define("SYNC_MEETINGRESPONSE_VERSION", "MeetingResponse:Version"); // Not defined / deprecated
+define("SYNC_MEETINGRESPONSE_INSTANCEID", "MeetingResponse:InstanceId"); // Since AS 14.1
 
 // Code Page 9: Tasks - POOMTASKS, all AS versions
-define("SYNC_POOMTASKS_BODY","POOMTASKS:Body"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMTASKS_BODYSIZE","POOMTASKS:BodySize"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMTASKS_BODYTRUNCATED","POOMTASKS:BodyTruncated"); // AirSyncBase Body is used since 12.0
-define("SYNC_POOMTASKS_CATEGORIES","POOMTASKS:Categories");
-define("SYNC_POOMTASKS_CATEGORY","POOMTASKS:Category");
-define("SYNC_POOMTASKS_COMPLETE","POOMTASKS:Complete");
-define("SYNC_POOMTASKS_DATECOMPLETED","POOMTASKS:DateCompleted");
-define("SYNC_POOMTASKS_DUEDATE","POOMTASKS:DueDate");
-define("SYNC_POOMTASKS_UTCDUEDATE","POOMTASKS:UtcDueDate");
-define("SYNC_POOMTASKS_IMPORTANCE","POOMTASKS:Importance");
-define("SYNC_POOMTASKS_RECURRENCE","POOMTASKS:Recurrence");
-define("SYNC_POOMTASKS_TYPE","POOMTASKS:Type");
-define("SYNC_POOMTASKS_START","POOMTASKS:Start");
-define("SYNC_POOMTASKS_UNTIL","POOMTASKS:Until");
-define("SYNC_POOMTASKS_OCCURRENCES","POOMTASKS:Occurrences");
-define("SYNC_POOMTASKS_INTERVAL","POOMTASKS:Interval");
-define("SYNC_POOMTASKS_DAYOFWEEK","POOMTASKS:DayOfWeek");
-define("SYNC_POOMTASKS_DAYOFMONTH","POOMTASKS:DayOfMonth");
-define("SYNC_POOMTASKS_WEEKOFMONTH","POOMTASKS:WeekOfMonth");
-define("SYNC_POOMTASKS_MONTHOFYEAR","POOMTASKS:MonthOfYear");
-define("SYNC_POOMTASKS_REGENERATE","POOMTASKS:Regenerate");
-define("SYNC_POOMTASKS_DEADOCCUR","POOMTASKS:DeadOccur");
-define("SYNC_POOMTASKS_REMINDERSET","POOMTASKS:ReminderSet");
-define("SYNC_POOMTASKS_REMINDERTIME","POOMTASKS:ReminderTime");
-define("SYNC_POOMTASKS_SENSITIVITY","POOMTASKS:Sensitivity");
-define("SYNC_POOMTASKS_STARTDATE","POOMTASKS:StartDate");
-define("SYNC_POOMTASKS_UTCSTARTDATE","POOMTASKS:UtcStartDate");
-define("SYNC_POOMTASKS_SUBJECT","POOMTASKS:Subject");
-define("SYNC_POOMTASKS_RTF","POOMTASKS:Rtf");
-define("SYNC_POOMTASKS_ORDINALDATE","POOMTASKS:OrdinalDate"); // Since 12.0
-define("SYNC_POOMTASKS_SUBORDINALDATE","POOMTASKS:SubOrdinalDate"); // Since 12.0
-define("SYNC_POOMTASKS_CALENDARTYPE","POOMTASKS:CalendarType"); // Since 14.0
-define("SYNC_POOMTASKS_ISLEAPMONTH","POOMTASKS:IsLeapMonth"); // Since 14.0
-define("SYNC_POOMTASKS_FIRSTDAYOFWEEK","POOMTASKS:FirstDayOfWeek"); // Since 14.0
+define("SYNC_POOMTASKS_BODY", "POOMTASKS:Body"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMTASKS_BODYSIZE", "POOMTASKS:BodySize"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMTASKS_BODYTRUNCATED", "POOMTASKS:BodyTruncated"); // AirSyncBase Body is used since 12.0
+define("SYNC_POOMTASKS_CATEGORIES", "POOMTASKS:Categories");
+define("SYNC_POOMTASKS_CATEGORY", "POOMTASKS:Category");
+define("SYNC_POOMTASKS_COMPLETE", "POOMTASKS:Complete");
+define("SYNC_POOMTASKS_DATECOMPLETED", "POOMTASKS:DateCompleted");
+define("SYNC_POOMTASKS_DUEDATE", "POOMTASKS:DueDate");
+define("SYNC_POOMTASKS_UTCDUEDATE", "POOMTASKS:UtcDueDate");
+define("SYNC_POOMTASKS_IMPORTANCE", "POOMTASKS:Importance");
+define("SYNC_POOMTASKS_RECURRENCE", "POOMTASKS:Recurrence");
+define("SYNC_POOMTASKS_TYPE", "POOMTASKS:Type");
+define("SYNC_POOMTASKS_START", "POOMTASKS:Start");
+define("SYNC_POOMTASKS_UNTIL", "POOMTASKS:Until");
+define("SYNC_POOMTASKS_OCCURRENCES", "POOMTASKS:Occurrences");
+define("SYNC_POOMTASKS_INTERVAL", "POOMTASKS:Interval");
+define("SYNC_POOMTASKS_DAYOFWEEK", "POOMTASKS:DayOfWeek");
+define("SYNC_POOMTASKS_DAYOFMONTH", "POOMTASKS:DayOfMonth");
+define("SYNC_POOMTASKS_WEEKOFMONTH", "POOMTASKS:WeekOfMonth");
+define("SYNC_POOMTASKS_MONTHOFYEAR", "POOMTASKS:MonthOfYear");
+define("SYNC_POOMTASKS_REGENERATE", "POOMTASKS:Regenerate");
+define("SYNC_POOMTASKS_DEADOCCUR", "POOMTASKS:DeadOccur");
+define("SYNC_POOMTASKS_REMINDERSET", "POOMTASKS:ReminderSet");
+define("SYNC_POOMTASKS_REMINDERTIME", "POOMTASKS:ReminderTime");
+define("SYNC_POOMTASKS_SENSITIVITY", "POOMTASKS:Sensitivity");
+define("SYNC_POOMTASKS_STARTDATE", "POOMTASKS:StartDate");
+define("SYNC_POOMTASKS_UTCSTARTDATE", "POOMTASKS:UtcStartDate");
+define("SYNC_POOMTASKS_SUBJECT", "POOMTASKS:Subject");
+define("SYNC_POOMTASKS_RTF", "POOMTASKS:Rtf");
+define("SYNC_POOMTASKS_ORDINALDATE", "POOMTASKS:OrdinalDate"); // Since 12.0
+define("SYNC_POOMTASKS_SUBORDINALDATE", "POOMTASKS:SubOrdinalDate"); // Since 12.0
+define("SYNC_POOMTASKS_CALENDARTYPE", "POOMTASKS:CalendarType"); // Since 14.0
+define("SYNC_POOMTASKS_ISLEAPMONTH", "POOMTASKS:IsLeapMonth"); // Since 14.0
+define("SYNC_POOMTASKS_FIRSTDAYOFWEEK", "POOMTASKS:FirstDayOfWeek"); // Since 14.0
 
 // Code Page 10: ResolveRecipients, all AS versions
-define("SYNC_RESOLVERECIPIENTS_RESOLVERECIPIENTS","ResolveRecipients:ResolveRecipients");
-define("SYNC_RESOLVERECIPIENTS_RESPONSE","ResolveRecipients:Response");
-define("SYNC_RESOLVERECIPIENTS_STATUS","ResolveRecipients:Status");
-define("SYNC_RESOLVERECIPIENTS_TYPE","ResolveRecipients:Type");
-define("SYNC_RESOLVERECIPIENTS_RECIPIENT","ResolveRecipients:Recipient");
-define("SYNC_RESOLVERECIPIENTS_DISPLAYNAME","ResolveRecipients:DisplayName");
-define("SYNC_RESOLVERECIPIENTS_EMAILADDRESS","ResolveRecipients:EmailAddress");
-define("SYNC_RESOLVERECIPIENTS_CERTIFICATES","ResolveRecipients:Certificates");
-define("SYNC_RESOLVERECIPIENTS_CERTIFICATE","ResolveRecipients:Certificate");
-define("SYNC_RESOLVERECIPIENTS_MINICERTIFICATE","ResolveRecipients:MiniCertificate");
-define("SYNC_RESOLVERECIPIENTS_OPTIONS","ResolveRecipients:Options");
-define("SYNC_RESOLVERECIPIENTS_TO","ResolveRecipients:To");
-define("SYNC_RESOLVERECIPIENTS_CERTIFICATERETRIEVAL","ResolveRecipients:CertificateRetrieval");
-define("SYNC_RESOLVERECIPIENTS_RECIPIENTCOUNT","ResolveRecipients:RecipientCount");
-define("SYNC_RESOLVERECIPIENTS_MAXCERTIFICATES","ResolveRecipients:MaxCertificates");
-define("SYNC_RESOLVERECIPIENTS_MAXAMBIGUOUSRECIPIENTS","ResolveRecipients:MaxAmbiguousRecipients");
-define("SYNC_RESOLVERECIPIENTS_CERTIFICATECOUNT","ResolveRecipients:CertificateCount");
-define("SYNC_RESOLVERECIPIENTS_AVAILABILITY","ResolveRecipients:Availability"); // Since 14.0
-define("SYNC_RESOLVERECIPIENTS_STARTTIME","ResolveRecipients:StartTime"); // Since 14.0
-define("SYNC_RESOLVERECIPIENTS_ENDTIME","ResolveRecipients:EndTime"); // Since 14.0
-define("SYNC_RESOLVERECIPIENTS_MERGEDFREEBUSY","ResolveRecipients:MergedFreeBusy"); // Since 14.0
-define("SYNC_RESOLVERECIPIENTS_PICTURE","ResolveRecipients:Picture"); // Since 14.1
-define("SYNC_RESOLVERECIPIENTS_MAXSIZE","ResolveRecipients:MaxSize"); // Since 14.1
-define("SYNC_RESOLVERECIPIENTS_DATA","ResolveRecipients:Data"); // Since 14.1
-define("SYNC_RESOLVERECIPIENTS_MAXPICTURES","ResolveRecipients:MaxPictures"); // Since 14.1
+define("SYNC_RESOLVERECIPIENTS_RESOLVERECIPIENTS", "ResolveRecipients:ResolveRecipients");
+define("SYNC_RESOLVERECIPIENTS_RESPONSE", "ResolveRecipients:Response");
+define("SYNC_RESOLVERECIPIENTS_STATUS", "ResolveRecipients:Status");
+define("SYNC_RESOLVERECIPIENTS_TYPE", "ResolveRecipients:Type");
+define("SYNC_RESOLVERECIPIENTS_RECIPIENT", "ResolveRecipients:Recipient");
+define("SYNC_RESOLVERECIPIENTS_DISPLAYNAME", "ResolveRecipients:DisplayName");
+define("SYNC_RESOLVERECIPIENTS_EMAILADDRESS", "ResolveRecipients:EmailAddress");
+define("SYNC_RESOLVERECIPIENTS_CERTIFICATES", "ResolveRecipients:Certificates");
+define("SYNC_RESOLVERECIPIENTS_CERTIFICATE", "ResolveRecipients:Certificate");
+define("SYNC_RESOLVERECIPIENTS_MINICERTIFICATE", "ResolveRecipients:MiniCertificate");
+define("SYNC_RESOLVERECIPIENTS_OPTIONS", "ResolveRecipients:Options");
+define("SYNC_RESOLVERECIPIENTS_TO", "ResolveRecipients:To");
+define("SYNC_RESOLVERECIPIENTS_CERTIFICATERETRIEVAL", "ResolveRecipients:CertificateRetrieval");
+define("SYNC_RESOLVERECIPIENTS_RECIPIENTCOUNT", "ResolveRecipients:RecipientCount");
+define("SYNC_RESOLVERECIPIENTS_MAXCERTIFICATES", "ResolveRecipients:MaxCertificates");
+define("SYNC_RESOLVERECIPIENTS_MAXAMBIGUOUSRECIPIENTS", "ResolveRecipients:MaxAmbiguousRecipients");
+define("SYNC_RESOLVERECIPIENTS_CERTIFICATECOUNT", "ResolveRecipients:CertificateCount");
+define("SYNC_RESOLVERECIPIENTS_AVAILABILITY", "ResolveRecipients:Availability"); // Since 14.0
+define("SYNC_RESOLVERECIPIENTS_STARTTIME", "ResolveRecipients:StartTime"); // Since 14.0
+define("SYNC_RESOLVERECIPIENTS_ENDTIME", "ResolveRecipients:EndTime"); // Since 14.0
+define("SYNC_RESOLVERECIPIENTS_MERGEDFREEBUSY", "ResolveRecipients:MergedFreeBusy"); // Since 14.0
+define("SYNC_RESOLVERECIPIENTS_PICTURE", "ResolveRecipients:Picture"); // Since 14.1
+define("SYNC_RESOLVERECIPIENTS_MAXSIZE", "ResolveRecipients:MaxSize"); // Since 14.1
+define("SYNC_RESOLVERECIPIENTS_DATA", "ResolveRecipients:Data"); // Since 14.1
+define("SYNC_RESOLVERECIPIENTS_MAXPICTURES", "ResolveRecipients:MaxPictures"); // Since 14.1
 
 // Code Page 11: ValidateCert, all AS versions
-define("SYNC_VALIDATECERT_VALIDATECERT","ValidateCert:ValidateCert");
-define("SYNC_VALIDATECERT_CERTIFICATES","ValidateCert:Certificates");
-define("SYNC_VALIDATECERT_CERTIFICATE","ValidateCert:Certificate");
-define("SYNC_VALIDATECERT_CERTIFICATECHAIN","ValidateCert:CertificateChain");
-define("SYNC_VALIDATECERT_CHECKCRL","ValidateCert:CheckCRL");
-define("SYNC_VALIDATECERT_STATUS","ValidateCert:Status");
+define("SYNC_VALIDATECERT_VALIDATECERT", "ValidateCert:ValidateCert");
+define("SYNC_VALIDATECERT_CERTIFICATES", "ValidateCert:Certificates");
+define("SYNC_VALIDATECERT_CERTIFICATE", "ValidateCert:Certificate");
+define("SYNC_VALIDATECERT_CERTIFICATECHAIN", "ValidateCert:CertificateChain");
+define("SYNC_VALIDATECERT_CHECKCRL", "ValidateCert:CheckCRL");
+define("SYNC_VALIDATECERT_STATUS", "ValidateCert:Status");
 
 // Code Page 12: Contacts2 - POOMCONTACTS2, all AS versions
-define("SYNC_POOMCONTACTS2_CUSTOMERID","POOMCONTACTS2:CustomerId");
-define("SYNC_POOMCONTACTS2_GOVERNMENTID","POOMCONTACTS2:GovernmentId");
-define("SYNC_POOMCONTACTS2_IMADDRESS","POOMCONTACTS2:IMAddress");
-define("SYNC_POOMCONTACTS2_IMADDRESS2","POOMCONTACTS2:IMAddress2");
-define("SYNC_POOMCONTACTS2_IMADDRESS3","POOMCONTACTS2:IMAddress3");
-define("SYNC_POOMCONTACTS2_MANAGERNAME","POOMCONTACTS2:ManagerName");
-define("SYNC_POOMCONTACTS2_COMPANYMAINPHONE","POOMCONTACTS2:CompanyMainPhone");
-define("SYNC_POOMCONTACTS2_ACCOUNTNAME","POOMCONTACTS2:AccountName");
-define("SYNC_POOMCONTACTS2_NICKNAME","POOMCONTACTS2:NickName");
-define("SYNC_POOMCONTACTS2_MMS","POOMCONTACTS2:MMS");
+define("SYNC_POOMCONTACTS2_CUSTOMERID", "POOMCONTACTS2:CustomerId");
+define("SYNC_POOMCONTACTS2_GOVERNMENTID", "POOMCONTACTS2:GovernmentId");
+define("SYNC_POOMCONTACTS2_IMADDRESS", "POOMCONTACTS2:IMAddress");
+define("SYNC_POOMCONTACTS2_IMADDRESS2", "POOMCONTACTS2:IMAddress2");
+define("SYNC_POOMCONTACTS2_IMADDRESS3", "POOMCONTACTS2:IMAddress3");
+define("SYNC_POOMCONTACTS2_MANAGERNAME", "POOMCONTACTS2:ManagerName");
+define("SYNC_POOMCONTACTS2_COMPANYMAINPHONE", "POOMCONTACTS2:CompanyMainPhone");
+define("SYNC_POOMCONTACTS2_ACCOUNTNAME", "POOMCONTACTS2:AccountName");
+define("SYNC_POOMCONTACTS2_NICKNAME", "POOMCONTACTS2:NickName");
+define("SYNC_POOMCONTACTS2_MMS", "POOMCONTACTS2:MMS");
 
 // Code Page 13: Ping, all AS versions
-define("SYNC_PING_PING","Ping:Ping");
-define("SYNC_PING_STATUS","Ping:Status");
+define("SYNC_PING_PING", "Ping:Ping");
+define("SYNC_PING_STATUS", "Ping:Status");
 define("SYNC_PING_LIFETIME", "Ping:LifeTime");
 define("SYNC_PING_FOLDERS", "Ping:Folders");
 define("SYNC_PING_FOLDER", "Ping:Folder");
@@ -486,9 +486,9 @@ define("SYNC_SEARCH_SUPPORTED", "Search:Supported"); // Since AS 12.0
 define("SYNC_SEARCH_USERNAME", "Search:UserName"); // Since 12.1
 define("SYNC_SEARCH_PASSWORD", "Search:Password"); // Since 12.1
 define("SYNC_SEARCH_CONVERSATIONID", "Search:ConversationId"); // Since 14.0
-define("SYNC_SEARCH_PICTURE","Search:Picture"); // Since 14.1
-define("SYNC_SEARCH_MAXSIZE","Search:MaxSize"); // Since 14.1
-define("SYNC_SEARCH_MAXPICTURES","Search:MaxPictures"); // Since 14.1
+define("SYNC_SEARCH_PICTURE", "Search:Picture"); // Since 14.1
+define("SYNC_SEARCH_MAXSIZE", "Search:MaxSize"); // Since 14.1
+define("SYNC_SEARCH_MAXPICTURES", "Search:MaxPictures"); // Since 14.1
 
 // Code Page 16: GAL, all AS versions
 define("SYNC_GAL_DISPLAYNAME", "GAL:DisplayName");
@@ -502,9 +502,9 @@ define("SYNC_GAL_LASTNAME", "GAL:LastName");
 define("SYNC_GAL_HOMEPHONE", "GAL:HomePhone");
 define("SYNC_GAL_MOBILEPHONE", "GAL:MobilePhone");
 define("SYNC_GAL_EMAILADDRESS", "GAL:EmailAddress");
-define("SYNC_GAL_PICTURE","GAL:Picture"); // Since 14.1
-define("SYNC_GAL_STATUS","GAL:Status"); // Since 14.1
-define("SYNC_GAL_DATA","GAL:Data"); // Since 14.1
+define("SYNC_GAL_PICTURE", "GAL:Picture"); // Since 14.1
+define("SYNC_GAL_STATUS", "GAL:Status"); // Since 14.1
+define("SYNC_GAL_DATA", "GAL:Data"); // Since 14.1
 
 // Code Page 17: AirSyncBase, Since 12.0
 define("SYNC_AIRSYNCBASE_BODYPREFERENCE", "AirSyncBase:BodyPreference");
@@ -526,9 +526,9 @@ define("SYNC_AIRSYNCBASE_ISINLINE", "AirSyncBase:IsInline");
 define("SYNC_AIRSYNCBASE_NATIVEBODYTYPE", "AirSyncBase:NativeBodyType");
 define("SYNC_AIRSYNCBASE_CONTENTTYPE", "AirSyncBase:ContentType");
 define("SYNC_AIRSYNCBASE_PREVIEW", "AirSyncBase:Preview"); // Since 14.0
-define("SYNC_AIRSYNCBASE_BODYPARTPREFERENCE", "AirSyncBase:BodyPartPreference"); //Since 14.1
+define("SYNC_AIRSYNCBASE_BODYPARTPREFERENCE", "AirSyncBase:BodyPartPreference"); // Since 14.1
 define("SYNC_AIRSYNCBASE_BODYPART", "AirSyncBase:BodyPart"); // Since 14.1
-define("SYNC_AIRSYNCBASE_STATUS", "AirSyncBase:Status"); //Since 14.1
+define("SYNC_AIRSYNCBASE_STATUS", "AirSyncBase:Status"); // Since 14.1
 
 // Code Page 18: Settings, Since 12.0
 define("SYNC_SETTINGS_SETTINGS", "Settings:Settings");
@@ -572,7 +572,7 @@ define("SYNC_SETTINGS_RIGHTSMANAGEMENTINFORMATION", "Settings:RightsManagementIn
 // only for internal use - never to be streamed to the mobile
 define("SYNC_SETTINGS_PROP_STATUS", "Settings:PropertyStatus");
 
-//Code Page 19: DocumentLibrary, Since 12.0
+// Code Page 19: DocumentLibrary, Since 12.0
 define("SYNC_DOCUMENTLIBRARY_LINKID", "DocumentLibrary:LinkId");
 define("SYNC_DOCUMENTLIBRARY_DISPLAYNAME", "DocumentLibrary:DisplayName");
 define("SYNC_DOCUMENTLIBRARY_ISFOLDER", "DocumentLibrary:IsFolder");
@@ -582,7 +582,7 @@ define("SYNC_DOCUMENTLIBRARY_ISHIDDEN", "DocumentLibrary:IsHidden");
 define("SYNC_DOCUMENTLIBRARY_CONTENTLENGTH", "DocumentLibrary:ContentLength");
 define("SYNC_DOCUMENTLIBRARY_CONTENTTYPE", "DocumentLibrary:ContentType");
 
-//Code Page 20: ItemOperations, Since 12.0
+// Code Page 20: ItemOperations, Since 12.0
 define("SYNC_ITEMOPERATIONS_ITEMOPERATIONS", "ItemOperations:ItemOperations");
 define("SYNC_ITEMOPERATIONS_FETCH", "ItemOperations:Fetch");
 define("SYNC_ITEMOPERATIONS_STORE", "ItemOperations:Store");
@@ -622,8 +622,8 @@ define("SYNC_COMPOSEMAIL_CLIENTID", "ComposeMail:ClientId");
 define("SYNC_COMPOSEMAIL_STATUS", "ComposeMail:Status");
 define("SYNC_COMPOSEMAIL_ACCOUNTID", "ComposeMail:AccountId"); // Since 14.1
 // only for internal use - never to be streamed to the mobile
-define("SYNC_COMPOSEMAIL_REPLYFLAG","ComposeMail:ReplyFlag");
-define("SYNC_COMPOSEMAIL_FORWARDFLAG","ComposeMail:ForwardFlag");
+define("SYNC_COMPOSEMAIL_REPLYFLAG", "ComposeMail:ReplyFlag");
+define("SYNC_COMPOSEMAIL_FORWARDFLAG", "ComposeMail:ForwardFlag");
 
 // Code Page 22: Email2 - POOMMAIL2, Since 14.0
 define("SYNC_POOMMAIL2_UMCALLERID", "POOMMAIL2:UmCallerId");
@@ -649,7 +649,7 @@ define("SYNC_NOTES_LASTMODIFIEDDATE", "Notes:LastModifiedDate");
 define("SYNC_NOTES_CATEGORIES", "Notes:Categories");
 define("SYNC_NOTES_CATEGORY", "Notes:Category");
 // only for internal use - never to be streamed to the mobile
-define("SYNC_NOTES_IGNORE_COLOR","Notes:IgnoreColor");
+define("SYNC_NOTES_IGNORE_COLOR", "Notes:IgnoreColor");
 
 // Code Page 24: RightsManagement, Since 14.1
 define("SYNC_RIGHTSMANAGEMENT_SUPPORT", "RightsManagement:RightsManagementSupport");
@@ -973,7 +973,7 @@ define("HTTP_CODE_503", 503);
 
 define("WINDOW_SIZE_MAX", 512);
 
-//logging defs
+// logging defs
 define("LOGLEVEL_OFF", 0);
 define("LOGLEVEL_FATAL", 1);
 define("LOGLEVEL_ERROR", 2);
@@ -1023,8 +1023,8 @@ define("SYNC_FILEAS_COMPANYFIRST", 5);
 define("SYNC_FILEAS_LASTCOMPANY", 6);
 define("SYNC_FILEAS_FIRSTCOMPANY", 7);
 
-define ("SYNC_RESOLVERECIPIENTS_TYPE_GAL", 1);
-define ("SYNC_RESOLVERECIPIENTS_TYPE_CONTACT", 2);
+define("SYNC_RESOLVERECIPIENTS_TYPE_GAL", 1);
+define("SYNC_RESOLVERECIPIENTS_TYPE_CONTACT", 2);
 
 define("SYNC_RESOLVERECIPIENTS_CERTRETRIEVE_NO", 1);
 define("SYNC_RESOLVERECIPIENTS_CERTRETRIEVE_FULL", 2);

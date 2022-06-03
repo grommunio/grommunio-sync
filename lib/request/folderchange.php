@@ -8,232 +8,238 @@
  */
 
 class FolderChange extends RequestProcessor {
+	/**
+	 * Handles creates, updates or deletes of a folder
+	 * issued by the commands FolderCreate, FolderUpdate and FolderDelete.
+	 *
+	 * @param int $commandCode
+	 *
+	 * @return bool
+	 */
+	public function Handle($commandCode) {
+		$el = self::$decoder->getElement();
 
-    /**
-     * Handles creates, updates or deletes of a folder
-     * issued by the commands FolderCreate, FolderUpdate and FolderDelete
-     *
-     * @param int       $commandCode
-     *
-     * @access public
-     * @return boolean
-     */
-    public function Handle ($commandCode) {
-        $el = self::$decoder->getElement();
+		if ($el[EN_TYPE] != EN_TYPE_STARTTAG) {
+			return false;
+		}
 
-        if($el[EN_TYPE] != EN_TYPE_STARTTAG)
-            return false;
+		$create = $update = $delete = false;
+		if ($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERCREATE) {
+			$create = true;
+		}
+		elseif ($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERUPDATE) {
+			$update = true;
+		}
+		elseif ($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERDELETE) {
+			$delete = true;
+		}
 
-        $create = $update = $delete = false;
-        if($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERCREATE)
-            $create = true;
-        else if($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERUPDATE)
-            $update = true;
-        else if($el[EN_TAG] == SYNC_FOLDERHIERARCHY_FOLDERDELETE)
-            $delete = true;
+		if (!$create && !$update && !$delete) {
+			return false;
+		}
 
-        if(!$create && !$update && !$delete)
-            return false;
+		// SyncKey
+		if (!self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_SYNCKEY)) {
+			return false;
+		}
+		$synckey = self::$decoder->getElementContent();
+		if (!self::$decoder->getElementEndTag()) {
+			return false;
+		}
 
-        // SyncKey
-        if(!self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_SYNCKEY))
-            return false;
-        $synckey = self::$decoder->getElementContent();
-        if(!self::$decoder->getElementEndTag())
-            return false;
+		// ServerID
+		$serverid = false;
+		$backendid = false;
+		if (self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_SERVERENTRYID)) {
+			$serverid = self::$decoder->getElementContent();
+			$backendid = self::$deviceManager->GetBackendIdForFolderId($serverid);
+			if (!self::$decoder->getElementEndTag()) {
+				return false;
+			}
+		}
 
-        // ServerID
-        $serverid = false;
-        $backendid = false;
-        if(self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_SERVERENTRYID)) {
-            $serverid = self::$decoder->getElementContent();
-            $backendid = self::$deviceManager->GetBackendIdForFolderId($serverid);
-            if(!self::$decoder->getElementEndTag())
-                return false;
-        }
+		// Parent
+		$parentid = false;
+		$parentBackendId = false;
 
-        // Parent
-        $parentid = false;
-        $parentBackendId = false;
+		// when creating or updating more information is necessary
+		if (!$delete) {
+			if (self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_PARENTID)) {
+				$parentid = self::$decoder->getElementContent();
+				$parentBackendId = self::$deviceManager->GetBackendIdForFolderId($parentid);
+				if (!self::$decoder->getElementEndTag()) {
+					return false;
+				}
+			}
 
-        // when creating or updating more information is necessary
-        if (!$delete) {
-            if(self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_PARENTID)) {
-                $parentid = self::$decoder->getElementContent();
-                $parentBackendId = self::$deviceManager->GetBackendIdForFolderId($parentid);
-                if(!self::$decoder->getElementEndTag())
-                    return false;
-            }
+			// Displayname
+			if (!self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_DISPLAYNAME)) {
+				return false;
+			}
+			$displayname = self::$decoder->getElementContent();
+			if (!self::$decoder->getElementEndTag()) {
+				return false;
+			}
 
-            // Displayname
-            if(!self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_DISPLAYNAME))
-                return false;
-            $displayname = self::$decoder->getElementContent();
-            if(!self::$decoder->getElementEndTag())
-                return false;
+			// Type
+			$type = false;
+			if (self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_TYPE)) {
+				$type = self::$decoder->getElementContent();
+				if (!self::$decoder->getElementEndTag()) {
+					return false;
+				}
+			}
+		}
 
-            // Type
-            $type = false;
-            if(self::$decoder->getElementStartTag(SYNC_FOLDERHIERARCHY_TYPE)) {
-                $type = self::$decoder->getElementContent();
-                if(!self::$decoder->getElementEndTag())
-                    return false;
-            }
-        }
+		// endtag foldercreate, folderupdate, folderdelete
+		if (!self::$decoder->getElementEndTag()) {
+			return false;
+		}
 
-        // endtag foldercreate, folderupdate, folderdelete
-        if(!self::$decoder->getElementEndTag())
-            return false;
+		$status = SYNC_FSSTATUS_SUCCESS;
+		// Get state of hierarchy
+		try {
+			$syncstate = self::$deviceManager->GetStateManager()->GetSyncState($synckey);
+			$newsynckey = self::$deviceManager->GetStateManager()->GetNewSyncKey($synckey);
 
-        $status = SYNC_FSSTATUS_SUCCESS;
-        // Get state of hierarchy
-        try {
-            $syncstate = self::$deviceManager->GetStateManager()->GetSyncState($synckey);
-            $newsynckey = self::$deviceManager->GetStateManager()->GetNewSyncKey($synckey);
+			// there are no SyncParameters for the hierarchy, but we use it to save the latest synckeys
+			$spa = self::$deviceManager->GetStateManager()->GetSynchedFolderState(false);
 
-            // there are no SyncParameters for the hierarchy, but we use it to save the latest synckeys
-            $spa = self::$deviceManager->GetStateManager()->GetSynchedFolderState(false);
+			// Over the ChangesWrapper the HierarchyCache is notified about all changes
+			$changesMem = self::$deviceManager->GetHierarchyChangesWrapper();
 
-            // Over the ChangesWrapper the HierarchyCache is notified about all changes
-            $changesMem = self::$deviceManager->GetHierarchyChangesWrapper();
+			// the hierarchyCache should now fully be initialized - check for changes in the additional folders
+			$changesMem->Config(GSync::GetAdditionalSyncFolders(false));
 
-            // the hierarchyCache should now fully be initialized - check for changes in the additional folders
-            $changesMem->Config(ZPush::GetAdditionalSyncFolders(false));
+			// reset to default store in backend
+			self::$backend->Setup(false);
 
-            // reset to default store in backend
-            self::$backend->Setup(false);
+			// there are unprocessed changes in the hierarchy, trigger resync
+			if ($changesMem->GetChangeCount() > 0) {
+				throw new StatusException("HandleFolderChange() can not proceed as there are unprocessed hierarchy changes", SYNC_FSSTATUS_SERVERERROR);
+			}
 
-            // there are unprocessed changes in the hierarchy, trigger resync
-            if ($changesMem->GetChangeCount() > 0)
-                throw new StatusException("HandleFolderChange() can not proceed as there are unprocessed hierarchy changes", SYNC_FSSTATUS_SERVERERROR);
+			// any additional folders can not be modified - with exception if they are of type SYNC_FOLDER_TYPE_UNKNOWN (ZP-907)
+			if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && $serverid !== false && GSync::GetAdditionalSyncFolderStore($backendid)) {
+				throw new StatusException("HandleFolderChange() can not change additional folders which are configured", SYNC_FSSTATUS_SYSTEMFOLDER);
+			}
 
-            // any additional folders can not be modified - with exception if they are of type SYNC_FOLDER_TYPE_UNKNOWN (ZP-907)
-            if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && $serverid !== false && ZPush::GetAdditionalSyncFolderStore($backendid))
-                throw new StatusException("HandleFolderChange() can not change additional folders which are configured", SYNC_FSSTATUS_SYSTEMFOLDER);
+			// switch user store if this this happens inside an additional folder
+			// if this is an additional folder the backend has to be setup correctly
+			// backend should also not be switched when type is SYNC_FOLDER_TYPE_UNKNOWN (ZP-1220)
+			if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && !self::$backend->Setup(GSync::GetAdditionalSyncFolderStore((($parentBackendId != false) ? $parentBackendId : $backendid)))) {
+				throw new StatusException(sprintf("HandleFolderChange() could not Setup() the backend for folder id '%s'", (($parentBackendId != false) ? $parentBackendId : $backendid)), SYNC_FSSTATUS_SERVERERROR);
+			}
+		}
+		catch (StateNotFoundException $snfex) {
+			$status = SYNC_FSSTATUS_SYNCKEYERROR;
+		}
+		catch (StatusException $stex) {
+			$status = $stex->getCode();
+		}
 
-            // switch user store if this this happens inside an additional folder
-            // if this is an additional folder the backend has to be setup correctly
-            // backend should also not be switched when type is SYNC_FOLDER_TYPE_UNKNOWN (ZP-1220)
-            if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && !self::$backend->Setup(ZPush::GetAdditionalSyncFolderStore((($parentBackendId != false) ? $parentBackendId : $backendid))))
-                throw new StatusException(sprintf("HandleFolderChange() could not Setup() the backend for folder id '%s'", (($parentBackendId != false) ? $parentBackendId : $backendid)), SYNC_FSSTATUS_SERVERERROR);
-        }
-        catch (StateNotFoundException $snfex) {
-            $status = SYNC_FSSTATUS_SYNCKEYERROR;
-        }
-        catch (StatusException $stex) {
-           $status = $stex->getCode();
-        }
+		// set $newsynckey in case of an error
+		if (!isset($newsynckey)) {
+			$newsynckey = $synckey;
+		}
 
-        // set $newsynckey in case of an error
-        if (!isset($newsynckey))
-            $newsynckey = $synckey;
+		if ($status == SYNC_FSSTATUS_SUCCESS) {
+			try {
+				// Configure importer with last state
+				$importer = self::$backend->GetImporter();
+				$importer->Config($syncstate);
 
-        if ($status == SYNC_FSSTATUS_SUCCESS) {
-            try {
-                // Configure importer with last state
-                $importer = self::$backend->GetImporter();
-                $importer->Config($syncstate);
+				// the messages from the PIM will be forwarded to the real importer
+				$changesMem->SetDestinationImporter($importer);
 
-                // the messages from the PIM will be forwarded to the real importer
-                $changesMem->SetDestinationImporter($importer);
+				// Create SyncFolder object
+				$folder = new SyncFolder();
+				$folder->serverid = $serverid;
+				$folder->parentid = $parentBackendId;
+				if (isset($displayname)) {
+					$folder->displayname = $displayname;
+				}
+				if (isset($type)) {
+					$folder->type = $type;
+				}
+				// add the backendId to the SyncFolder object
+				$folder->BackendId = $backendid;
 
-                // Create SyncFolder object
-                $folder = new SyncFolder();
-                $folder->serverid = $serverid;
-                $folder->parentid = $parentBackendId;
-                if (isset($displayname)) {
-                    $folder->displayname = $displayname;
-                }
-                if (isset($type)) {
-                    $folder->type = $type;
-                }
-                // add the backendId to the SyncFolder object
-                $folder->BackendId = $backendid;
+				// process incoming change
+				if (!$delete) {
+					// when creating, $folder->serverid is false, and the returned id is already mapped by the backend
+					$folder = $changesMem->ImportFolderChange($folder);
+				}
+				else {
+					// delete folder
+					$changesMem->ImportFolderDeletion($folder);
+				}
+			}
+			catch (StatusException $stex) {
+				$status = $stex->getCode();
+			}
+		}
 
-                // process incoming change
-                if (!$delete) {
-                    // when creating, $folder->serverid is false, and the returned id is already mapped by the backend
-                    $folder = $changesMem->ImportFolderChange($folder);
-                }
-                else {
-                    // delete folder
-                    $changesMem->ImportFolderDeletion($folder);
-                }
-            }
-            catch (StatusException $stex) {
-                $status = $stex->getCode();
-            }
-        }
+		self::$encoder->startWBXML();
+		if ($create) {
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERCREATE);
 
-        self::$encoder->startWBXML();
-        if ($create) {
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
+			self::$encoder->content($status);
+			self::$encoder->endTag();
 
-            self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERCREATE);
-            {
-                {
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
-                    self::$encoder->content($status);
-                    self::$encoder->endTag();
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
+			self::$encoder->content($newsynckey);
+			self::$encoder->endTag();
 
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
-                    self::$encoder->content($newsynckey);
-                    self::$encoder->endTag();
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SERVERENTRYID);
+			self::$encoder->content($folder->serverid);
+			self::$encoder->endTag();
 
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SERVERENTRYID);
-                    self::$encoder->content($folder->serverid);
-                    self::$encoder->endTag();
-                }
-            }
-            self::$encoder->endTag();
-        }
+			self::$encoder->endTag();
+		}
+		elseif ($update) {
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERUPDATE);
 
-        elseif ($update) {
-            self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERUPDATE);
-            {
-                {
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
-                    self::$encoder->content($status);
-                    self::$encoder->endTag();
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
+			self::$encoder->content($status);
+			self::$encoder->endTag();
 
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
-                    self::$encoder->content($newsynckey);
-                    self::$encoder->endTag();
-                }
-            }
-            self::$encoder->endTag();
-        }
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
+			self::$encoder->content($newsynckey);
+			self::$encoder->endTag();
 
-        elseif ($delete) {
-            self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERDELETE);
-            {
-                {
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
-                    self::$encoder->content($status);
-                    self::$encoder->endTag();
+			self::$encoder->endTag();
+		}
+		elseif ($delete) {
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERDELETE);
 
-                    self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
-                    self::$encoder->content($newsynckey);
-                    self::$encoder->endTag();
-                }
-            }
-            self::$encoder->endTag();
-        }
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_STATUS);
+			self::$encoder->content($status);
+			self::$encoder->endTag();
 
-        self::$topCollector->AnnounceInformation(sprintf("Operation status %d", $status), true);
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_SYNCKEY);
+			self::$encoder->content($newsynckey);
+			self::$encoder->endTag();
 
-        // Save the sync state for the next time
-        if (isset($importer)) {
-            self::$deviceManager->GetStateManager()->SetSyncState($newsynckey, $importer->GetState());
+			self::$encoder->endTag();
+		}
 
-            // update SPA & save it
-            $spa->SetSyncKey($newsynckey);
-            $spa->SetFolderId(false);
-            self::$deviceManager->GetStateManager()->SetSynchedFolderState($spa);
+		self::$topCollector->AnnounceInformation(sprintf("Operation status %d", $status), true);
 
-            // invalidate all pingable flags
-            SyncCollections::InvalidatePingableFlags();
-        }
+		// Save the sync state for the next time
+		if (isset($importer)) {
+			self::$deviceManager->GetStateManager()->SetSyncState($newsynckey, $importer->GetState());
 
-        return true;
-    }
+			// update SPA & save it
+			$spa->SetSyncKey($newsynckey);
+			$spa->SetFolderId(false);
+			self::$deviceManager->GetStateManager()->SetSynchedFolderState($spa);
+
+			// invalidate all pingable flags
+			SyncCollections::InvalidatePingableFlags();
+		}
+
+		return true;
+	}
 }

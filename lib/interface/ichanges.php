@@ -11,40 +11,42 @@
  */
 
 interface IChanges {
-    /**
-     * Constructor
-     *
-     * @throws StatusException
-     */
+	/**
+	 * Constructor.
+	 *
+	 * @param mixed $state
+	 * @param mixed $flags
+	 *
+	 * @throws StatusException
+	 */
 
-    /**
-     * Initializes the state and flags
-     *
-     * @param string        $state
-     * @param int           $flags
-     *
-     * @access public
-     * @return boolean      status flag
-     * @throws StatusException
-     */
-    public function Config($state, $flags = 0);
+	/**
+	 * Initializes the state and flags.
+	 *
+	 * @param string $state
+	 * @param int    $flags
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool status flag
+	 */
+	public function Config($state, $flags = 0);
 
-    /**
-     * Configures additional parameters used for content synchronization
-     *
-     * @param ContentParameters         $contentparameters
-     *
-     * @access public
-     * @return boolean
-     * @throws StatusException
-     */
-    public function ConfigContentParameters($contentparameters);
+	/**
+	 * Configures additional parameters used for content synchronization.
+	 *
+	 * @param ContentParameters $contentparameters
+	 *
+	 * @throws StatusException
+	 *
+	 * @return bool
+	 */
+	public function ConfigContentParameters($contentparameters);
 
-    /**
-     * Reads and returns the current state
-     *
-     * @access public
-     * @return string
-     */
-    public function GetState();
+	/**
+	 * Reads and returns the current state.
+	 *
+	 * @return string
+	 */
+	public function GetState();
 }

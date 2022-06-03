@@ -10,17 +10,18 @@
  */
 
 class SyncItemOperationsAttachment extends SyncObject {
-    public $contenttype;
-    public $data;
+	public $contenttype;
+	public $data;
 
-    function __construct() {
-        $mapping = array(
-            SYNC_AIRSYNCBASE_CONTENTTYPE                        => array (  self::STREAMER_VAR      => "contenttype"),
-            SYNC_ITEMOPERATIONS_DATA                            => array (  self::STREAMER_VAR      => "data",
-                                                                            self::STREAMER_TYPE     => self::STREAMER_TYPE_STREAM_ASBASE64,
-                                                                            self::STREAMER_PROP     => self::STREAMER_TYPE_MULTIPART),
-        );
+	public function __construct() {
+		$mapping = [
+			SYNC_AIRSYNCBASE_CONTENTTYPE => [self::STREAMER_VAR => "contenttype"],
+			SYNC_ITEMOPERATIONS_DATA => [
+				self::STREAMER_VAR => "data",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_STREAM_ASBASE64,
+				self::STREAMER_PROP => self::STREAMER_TYPE_MULTIPART, ],
+		];
 
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }

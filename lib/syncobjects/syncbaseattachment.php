@@ -10,25 +10,25 @@
  */
 
 class SyncBaseAttachment extends SyncObject {
-    public $displayname;
-    public $filereference;
-    public $method;
-    public $estimatedDataSize;
-    public $contentid;
-    public $contentlocation;
-    public $isinline;
+	public $displayname;
+	public $filereference;
+	public $method;
+	public $estimatedDataSize;
+	public $contentid;
+	public $contentlocation;
+	public $isinline;
 
-    function __construct() {
-        $mapping = array(
-                    SYNC_AIRSYNCBASE_DISPLAYNAME                        => array (self::STREAMER_VAR        => "displayname"),
-                    SYNC_AIRSYNCBASE_FILEREFERENCE                      => array (self::STREAMER_VAR        => "filereference"),
-                    SYNC_AIRSYNCBASE_METHOD                             => array (self::STREAMER_VAR        => "method"),
-                    SYNC_AIRSYNCBASE_ESTIMATEDDATASIZE                  => array (self::STREAMER_VAR        => "estimatedDataSize"),
-                    SYNC_AIRSYNCBASE_CONTENTID                          => array (self::STREAMER_VAR        => "contentid"),
-                    SYNC_AIRSYNCBASE_CONTENTLOCATION                    => array (self::STREAMER_VAR        => "contentlocation"),
-                    SYNC_AIRSYNCBASE_ISINLINE                           => array (self::STREAMER_VAR        => "isinline"),
-        );
+	public function __construct() {
+		$mapping = [
+			SYNC_AIRSYNCBASE_DISPLAYNAME => [self::STREAMER_VAR => "displayname"],
+			SYNC_AIRSYNCBASE_FILEREFERENCE => [self::STREAMER_VAR => "filereference"],
+			SYNC_AIRSYNCBASE_METHOD => [self::STREAMER_VAR => "method"],
+			SYNC_AIRSYNCBASE_ESTIMATEDDATASIZE => [self::STREAMER_VAR => "estimatedDataSize"],
+			SYNC_AIRSYNCBASE_CONTENTID => [self::STREAMER_VAR => "contentid"],
+			SYNC_AIRSYNCBASE_CONTENTLOCATION => [self::STREAMER_VAR => "contentlocation"],
+			SYNC_AIRSYNCBASE_ISINLINE => [self::STREAMER_VAR => "isinline"],
+		];
 
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }

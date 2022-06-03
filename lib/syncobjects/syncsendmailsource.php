@@ -10,20 +10,19 @@
  */
 
 class SyncSendMailSource extends SyncObject {
-    public $folderid;
-    public $itemid;
-    public $longid;
-    public $instanceid;
+	public $folderid;
+	public $itemid;
+	public $longid;
+	public $instanceid;
 
-    function __construct() {
-        $mapping = array (
-                    SYNC_COMPOSEMAIL_FOLDERID                             => array (  self::STREAMER_VAR      => "folderid"),
-                    SYNC_COMPOSEMAIL_ITEMID                               => array (  self::STREAMER_VAR      => "itemid"),
-                    SYNC_COMPOSEMAIL_LONGID                               => array (  self::STREAMER_VAR      => "longid"),
-                    SYNC_COMPOSEMAIL_INSTANCEID                           => array (  self::STREAMER_VAR      => "instanceid"),
-        );
+	public function __construct() {
+		$mapping = [
+			SYNC_COMPOSEMAIL_FOLDERID => [self::STREAMER_VAR => "folderid"],
+			SYNC_COMPOSEMAIL_ITEMID => [self::STREAMER_VAR => "itemid"],
+			SYNC_COMPOSEMAIL_LONGID => [self::STREAMER_VAR => "longid"],
+			SYNC_COMPOSEMAIL_INSTANCEID => [self::STREAMER_VAR => "instanceid"],
+		];
 
-        parent::__construct($mapping);
-    }
-
+		parent::__construct($mapping);
+	}
 }
