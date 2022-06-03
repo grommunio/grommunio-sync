@@ -8,7 +8,7 @@
  * The code indicates if the request identified was a OPTIONS or GET request
  */
 class NoPostRequestException extends FatalException {
-    const OPTIONS_REQUEST = 1;
-    const GET_REQUEST = 2;
-    protected $defaultLogLevel = LOGLEVEL_DEBUG;
+	public const OPTIONS_REQUEST = 1;
+	public const GET_REQUEST = 2;
+	protected $defaultLogLevel = LOGLEVEL_DEBUG;
 }

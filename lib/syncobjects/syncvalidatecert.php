@@ -10,26 +10,28 @@
  */
 
 class SyncValidateCert extends SyncObject {
-    public $certificatechain;
-    public $certificates;
-    public $checkCRL;
-    public $Status;
+	public $certificatechain;
+	public $certificates;
+	public $checkCRL;
+	public $Status;
 
-    public function __construct() {
-        $mapping = array (
-            SYNC_VALIDATECERT_CERTIFICATECHAIN  => array (  self::STREAMER_VAR      => "certificatechain",
-                                                            self::STREAMER_ARRAY    => SYNC_VALIDATECERT_CERTIFICATE),
+	public function __construct() {
+		$mapping = [
+			SYNC_VALIDATECERT_CERTIFICATECHAIN => [
+				self::STREAMER_VAR => "certificatechain",
+				self::STREAMER_ARRAY => SYNC_VALIDATECERT_CERTIFICATE,
+			],
+			SYNC_VALIDATECERT_CERTIFICATES => [
+				self::STREAMER_VAR => "certificates",
+				self::STREAMER_ARRAY => SYNC_VALIDATECERT_CERTIFICATE,
+			],
+			SYNC_VALIDATECERT_CHECKCRL => [self::STREAMER_VAR => "checkCRL"],
+			SYNC_SETTINGS_PROP_STATUS => [
+				self::STREAMER_VAR => "Status",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			],
+		];
 
-            SYNC_VALIDATECERT_CERTIFICATES      => array (  self::STREAMER_VAR      => "certificates",
-                                                            self::STREAMER_ARRAY    => SYNC_VALIDATECERT_CERTIFICATE),
-
-            SYNC_VALIDATECERT_CHECKCRL          => array (  self::STREAMER_VAR      => "checkCRL"),
-
-            SYNC_SETTINGS_PROP_STATUS           => array (  self::STREAMER_VAR      => "Status",
-                                                            self::STREAMER_TYPE     => self::STREAMER_TYPE_IGNORE)
-        );
-
-        parent::__construct($mapping);
-    }
-
+		parent::__construct($mapping);
+	}
 }

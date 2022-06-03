@@ -8,884 +8,1002 @@
  */
 
 class Utils {
-    /**
-     * Prints a variable as string
-     * If a boolean is sent, 'true' or 'false' is displayed
-     *
-     * @param string $var
-     * @access public
-     * @return string
-     */
-    static public function PrintAsString($var) {
-       return ($var)?(($var===true)?'true':$var):(($var===false)?'false':(($var==='')?'empty':(($var === null) ? 'null':$var)));
-    }
+	/**
+	 * Prints a variable as string
+	 * If a boolean is sent, 'true' or 'false' is displayed.
+	 *
+	 * @param string $var
+	 *
+	 * @return string
+	 */
+	public static function PrintAsString($var) {
+		return ($var) ? (($var === true) ? 'true' : $var) : (($var === false) ? 'false' : (($var === '') ? 'empty' : (($var === null) ? 'null' : $var)));
+	}
 
-    /**
-     * Splits a "domain\user" string into two values
-     * If the string contains only the user, domain is returned empty
-     *
-     * @param string    $domainuser
-     *
-     * @access public
-     * @return array    index 0: user  1: domain
-     */
-    static public function SplitDomainUser($domainuser) {
-        $pos = strrpos($domainuser, '\\');
-        if($pos === false){
-            $user = $domainuser;
-            $domain = '';
-        }
-        else{
-            $domain = substr($domainuser,0,$pos);
-            $user = substr($domainuser,$pos+1);
-        }
-        return array($user, $domain);
-    }
+	/**
+	 * Splits a "domain\user" string into two values
+	 * If the string contains only the user, domain is returned empty.
+	 *
+	 * @param string $domainuser
+	 *
+	 * @return array index 0: user  1: domain
+	 */
+	public static function SplitDomainUser($domainuser) {
+		$pos = strrpos($domainuser, '\\');
+		if ($pos === false) {
+			$user = $domainuser;
+			$domain = '';
+		}
+		else {
+			$domain = substr($domainuser, 0, $pos);
+			$user = substr($domainuser, $pos + 1);
+		}
 
-    /**
-     * Build an address string from the components
-     *
-     * @param string    $street     the street
-     * @param string    $zip        the zip code
-     * @param string    $city       the city
-     * @param string    $state      the state
-     * @param string    $country    the country
-     *
-     * @access public
-     * @return string   the address string or null
-     */
-    static public function BuildAddressString($street, $zip, $city, $state, $country) {
-        $out = "";
+		return [$user, $domain];
+	}
 
-        if (isset($country) && $street != "") $out = $country;
+	/**
+	 * Build an address string from the components.
+	 *
+	 * @param string $street  the street
+	 * @param string $zip     the zip code
+	 * @param string $city    the city
+	 * @param string $state   the state
+	 * @param string $country the country
+	 *
+	 * @return string the address string or null
+	 */
+	public static function BuildAddressString($street, $zip, $city, $state, $country) {
+		$out = "";
 
-        $zcs = "";
-        if (isset($zip) && $zip != "") $zcs = $zip;
-        if (isset($city) && $city != "") $zcs .= (($zcs)?" ":"") . $city;
-        if (isset($state) && $state != "") $zcs .= (($zcs)?" ":"") . $state;
-        if ($zcs) $out = $zcs . "\r\n" . $out;
+		if (isset($country) && $street != "") {
+			$out = $country;
+		}
 
-        if (isset($street) && $street != "") $out = $street . (($out)?"\r\n\r\n". $out: "") ;
+		$zcs = "";
+		if (isset($zip) && $zip != "") {
+			$zcs = $zip;
+		}
+		if (isset($city) && $city != "") {
+			$zcs .= (($zcs) ? " " : "") . $city;
+		}
+		if (isset($state) && $state != "") {
+			$zcs .= (($zcs) ? " " : "") . $state;
+		}
+		if ($zcs) {
+			$out = $zcs . "\r\n" . $out;
+		}
 
-        return ($out)?$out:null;
-    }
+		if (isset($street) && $street != "") {
+			$out = $street . (($out) ? "\r\n\r\n" . $out : "");
+		}
 
-    /**
-     * Build the fileas string from the components according to the configuration.
-     *
-     * @param string $lastname
-     * @param string $firstname
-     * @param string $middlename
-     * @param string $company
-     *
-     * @access public
-     * @return string fileas
-     */
-    static public function BuildFileAs($lastname = "", $firstname = "", $middlename = "", $company = "") {
-        if (defined('FILEAS_ORDER')) {
-            $fileas = $lastfirst = $firstlast = "";
-            $names = trim ($firstname . " " . $middlename);
-            $lastname = trim($lastname);
-            $company = trim($company);
+		return ($out) ? $out : null;
+	}
 
-            // lastfirst is "lastname, firstname middlename"
-            // firstlast is "firstname middlename lastname"
-            if (strlen($lastname) > 0) {
-                $lastfirst = $lastname;
-                if (strlen($names) > 0){
-                    $lastfirst .= ", $names";
-                    $firstlast = "$names $lastname";
-                }
-                else {
-                    $firstlast = $lastname;
-                }
-            }
-            elseif (strlen($names) > 0) {
-                $lastfirst = $firstlast = $names;
-            }
+	/**
+	 * Build the fileas string from the components according to the configuration.
+	 *
+	 * @param string $lastname
+	 * @param string $firstname
+	 * @param string $middlename
+	 * @param string $company
+	 *
+	 * @return string fileas
+	 */
+	public static function BuildFileAs($lastname = "", $firstname = "", $middlename = "", $company = "") {
+		if (defined('FILEAS_ORDER')) {
+			$fileas = $lastfirst = $firstlast = "";
+			$names = trim($firstname . " " . $middlename);
+			$lastname = trim($lastname);
+			$company = trim($company);
 
-            // if fileas with a company is selected
-            // but company is empty then it will
-            // fallback to firstlast or lastfirst
-            // (depending on which is selected for company)
-            switch (FILEAS_ORDER) {
-                case SYNC_FILEAS_COMPANYONLY:
-                    if (strlen($company) > 0) {
-                        $fileas = $company;
-                    }
-                    elseif (strlen($firstlast) > 0)
-                        $fileas = $lastfirst;
-                    break;
-                case SYNC_FILEAS_COMPANYLAST:
-                    if (strlen($company) > 0) {
-                        $fileas = $company;
-                        if (strlen($lastfirst) > 0)
-                            $fileas .= "($lastfirst)";
-                    }
-                    elseif (strlen($lastfirst) > 0)
-                        $fileas = $lastfirst;
-                    break;
-                case SYNC_FILEAS_COMPANYFIRST:
-                    if (strlen($company) > 0) {
-                        $fileas = $company;
-                        if (strlen($firstlast) > 0) {
-                            $fileas .= " ($firstlast)";
-                        }
-                    }
-                    elseif (strlen($firstlast) > 0) {
-                        $fileas = $firstlast;
-                    }
-                    break;
-                case SYNC_FILEAS_FIRSTCOMPANY:
-                    if (strlen($firstlast) > 0) {
-                        $fileas = $firstlast;
-                        if (strlen($company) > 0) {
-                            $fileas .= " ($company)";
-                        }
-                    }
-                    elseif (strlen($company) > 0) {
-                        $fileas = $company;
-                    }
-                    break;
-                case SYNC_FILEAS_LASTCOMPANY:
-                    if (strlen($lastfirst) > 0) {
-                        $fileas = $lastfirst;
-                        if (strlen($company) > 0) {
-                            $fileas .= " ($company)";
-                        }
-                    }
-                    elseif (strlen($company) > 0) {
-                        $fileas = $company;
-                    }
-                    break;
-                case SYNC_FILEAS_LASTFIRST:
-                    if (strlen($lastfirst) > 0) {
-                        $fileas = $lastfirst;
-                    }
-                    break;
-                default:
-                    $fileas = $firstlast;
-                    break;
-            }
-            if (strlen($fileas) == 0)
-                ZLog::Write(LOGLEVEL_DEBUG, "Fileas is empty.");
-            return $fileas;
-        }
-        ZLog::Write(LOGLEVEL_DEBUG, "FILEAS_ORDER not defined. Add it to your config.php.");
-        return null;
-    }
+			// lastfirst is "lastname, firstname middlename"
+			// firstlast is "firstname middlename lastname"
+			if (strlen($lastname) > 0) {
+				$lastfirst = $lastname;
+				if (strlen($names) > 0) {
+					$lastfirst .= ", {$names}";
+					$firstlast = "{$names} {$lastname}";
+				}
+				else {
+					$firstlast = $lastname;
+				}
+			}
+			elseif (strlen($names) > 0) {
+				$lastfirst = $firstlast = $names;
+			}
 
-    /**
-     * Checks if the PHP-MAPI extension is available and in a requested version.
-     *
-     * @param string    $version    the version to be checked ("6.30.10-18495", parts or build number)
-     *
-     * @access public
-     * @return boolean installed version is superior to the checked string
-     */
-    static public function CheckMapiExtVersion($version = "") {
-        if (!extension_loaded("mapi")) {
-            return false;
-        }
-        // compare build number if requested
-        if (preg_match('/^\d+$/', $version) && strlen($version) > 3) {
-            $vs = preg_split('/-/', phpversion("mapi"));
-            return ($version <= $vs[1]);
-        }
-        if (version_compare(phpversion("mapi"), $version) == -1){
-            return false;
-        }
+			// if fileas with a company is selected
+			// but company is empty then it will
+			// fallback to firstlast or lastfirst
+			// (depending on which is selected for company)
+			switch (FILEAS_ORDER) {
+				case SYNC_FILEAS_COMPANYONLY:
+					if (strlen($company) > 0) {
+						$fileas = $company;
+					}
+					elseif (strlen($firstlast) > 0) {
+						$fileas = $lastfirst;
+					}
+					break;
 
-        return true;
-    }
+				case SYNC_FILEAS_COMPANYLAST:
+					if (strlen($company) > 0) {
+						$fileas = $company;
+						if (strlen($lastfirst) > 0) {
+							$fileas .= "({$lastfirst})";
+						}
+					}
+					elseif (strlen($lastfirst) > 0) {
+						$fileas = $lastfirst;
+					}
+					break;
 
-    /**
-     * Parses and returns an ecoded vCal-Uid from an OL compatible GlobalObjectID.
-     *
-     * @param string    $olUid      an OL compatible GlobalObjectID
-     *
-     * @access public
-     * @return string   the vCal-Uid if available in the olUid, else the original olUid as HEX
-     */
-    static public function GetICalUidFromOLUid($olUid){
-        //check if "vCal-Uid" is somewhere in outlookid case-insensitive
-        $icalUid = stristr($olUid, "vCal-Uid");
-        if ($icalUid !== false) {
-            //get the length of the ical id - go back 4 position from where "vCal-Uid" was found
-            $begin = unpack("V", substr($olUid, strlen($icalUid) * (-1) - 4, 4));
-            //remove "vCal-Uid" and packed "1" and use the ical id length
-            return substr($icalUid, 12, ($begin[1] - 13));
-        }
-        return strtoupper(bin2hex($olUid));
-    }
+				case SYNC_FILEAS_COMPANYFIRST:
+					if (strlen($company) > 0) {
+						$fileas = $company;
+						if (strlen($firstlast) > 0) {
+							$fileas .= " ({$firstlast})";
+						}
+					}
+					elseif (strlen($firstlast) > 0) {
+						$fileas = $firstlast;
+					}
+					break;
 
-    /**
-     * Checks the given UID if it is an OL compatible GlobalObjectID
-     * If not, the given UID is encoded inside the GlobalObjectID
-     *
-     * @param string    $icalUid    an appointment uid as HEX
-     *
-     * @access public
-     * @return string   an OL compatible GlobalObjectID
-     *
-     */
-    static public function GetOLUidFromICalUid($icalUid) {
-        if (strlen($icalUid) <= 64) {
-            $len = 13 + strlen($icalUid);
-            $OLUid = pack("V", $len);
-            $OLUid .= "vCal-Uid";
-            $OLUid .= pack("V", 1);
-            $OLUid .= $icalUid;
-            return hex2bin("040000008200E00074C5B7101A82E0080000000000000000000000000000000000000000". bin2hex($OLUid). "00");
-        }
-        else
-           return hex2bin($icalUid);
-    }
+				case SYNC_FILEAS_FIRSTCOMPANY:
+					if (strlen($firstlast) > 0) {
+						$fileas = $firstlast;
+						if (strlen($company) > 0) {
+							$fileas .= " ({$company})";
+						}
+					}
+					elseif (strlen($company) > 0) {
+						$fileas = $company;
+					}
+					break;
 
-    /**
-     * Extracts the basedate of the GlobalObjectID and the RecurStartTime
-     *
-     * @param string    $goid           OL compatible GlobalObjectID
-     * @param long      $recurStartTime
-     *
-     * @access public
-     * @return long     basedate
-     */
-    static public function ExtractBaseDate($goid, $recurStartTime) {
-        $hexbase = substr(bin2hex($goid), 32, 8);
-        $day = hexdec(substr($hexbase, 6, 2));
-        $month = hexdec(substr($hexbase, 4, 2));
-        $year = hexdec(substr($hexbase, 0, 4));
+				case SYNC_FILEAS_LASTCOMPANY:
+					if (strlen($lastfirst) > 0) {
+						$fileas = $lastfirst;
+						if (strlen($company) > 0) {
+							$fileas .= " ({$company})";
+						}
+					}
+					elseif (strlen($company) > 0) {
+						$fileas = $company;
+					}
+					break;
 
-        if ($day && $month && $year) {
-            $h = $recurStartTime >> 12;
-            $m = ($recurStartTime - $h * 4096) >> 6;
-            $s = $recurStartTime - $h * 4096 - $m * 64;
+				case SYNC_FILEAS_LASTFIRST:
+					if (strlen($lastfirst) > 0) {
+						$fileas = $lastfirst;
+					}
+					break;
 
-            return gmmktime($h, $m, $s, $month, $day, $year);
-        }
-        else
-            return false;
-    }
+				default:
+					$fileas = $firstlast;
+					break;
+			}
+			if (strlen($fileas) == 0) {
+				SLog::Write(LOGLEVEL_DEBUG, "Fileas is empty.");
+			}
 
-    /**
-     * Converts SYNC_FILTERTYPE into a timestamp
-     *
-     * @param int $filtertype      Filtertype
-     *
-     * @access public
-     * @return long
-     */
-    static public function GetCutOffDate($filtertype) {
-        $back = Utils::GetFiltertypeInterval($filtertype);
+			return $fileas;
+		}
+		SLog::Write(LOGLEVEL_DEBUG, "FILEAS_ORDER not defined. Add it to your config.php.");
 
-        if ($back === false) {
-            return 0; // unlimited
-        }
+		return null;
+	}
 
-        return time() - $back;
-    }
+	/**
+	 * Checks if the PHP-MAPI extension is available and in a requested version.
+	 *
+	 * @param string $version the version to be checked ("6.30.10-18495", parts or build number)
+	 *
+	 * @return bool installed version is superior to the checked string
+	 */
+	public static function CheckMapiExtVersion($version = "") {
+		if (!extension_loaded("mapi")) {
+			return false;
+		}
+		// compare build number if requested
+		if (preg_match('/^\d+$/', $version) && strlen($version) > 3) {
+			$vs = preg_split('/-/', phpversion("mapi"));
 
-    /**
-     * Returns the interval indicated by the filtertype.
-     *
-     * @param int $filtertype
-     *
-     * @access public
-     * @return long|boolean     returns false on invalid filtertype
-     */
-    static public function GetFiltertypeInterval($filtertype) {
-        $back = false;
-        switch($filtertype) {
-            case SYNC_FILTERTYPE_1DAY:
-                $back = 60 * 60 * 24;
-                break;
-            case SYNC_FILTERTYPE_3DAYS:
-                $back = 60 * 60 * 24 * 3;
-                break;
-            case SYNC_FILTERTYPE_1WEEK:
-                $back = 60 * 60 * 24 * 7;
-                break;
-            case SYNC_FILTERTYPE_2WEEKS:
-                $back = 60 * 60 * 24 * 14;
-                break;
-            case SYNC_FILTERTYPE_1MONTH:
-                $back = 60 * 60 * 24 * 31;
-                break;
-            case SYNC_FILTERTYPE_3MONTHS:
-                $back = 60 * 60 * 24 * 31 * 3;
-                break;
-            case SYNC_FILTERTYPE_6MONTHS:
-                $back = 60 * 60 * 24 * 31 * 6;
-                break;
-            default:
-                $back = false;
-        }
-        return $back;
-    }
+			return $version <= $vs[1];
+		}
+		if (version_compare(phpversion("mapi"), $version) == -1) {
+			return false;
+		}
 
-    /**
-     * Converts SYNC_TRUNCATION into bytes
-     *
-     * @param int       SYNC_TRUNCATION
-     *
-     * @return long
-     */
-    static public function GetTruncSize($truncation) {
-        switch($truncation) {
-            case SYNC_TRUNCATION_HEADERS:
-                return 0;
-            case SYNC_TRUNCATION_512B:
-                return 512;
-            case SYNC_TRUNCATION_1K:
-                return 1024;
-            case SYNC_TRUNCATION_2K:
-                return 2*1024;
-            case SYNC_TRUNCATION_5K:
-                return 5*1024;
-            case SYNC_TRUNCATION_10K:
-                return 10*1024;
-            case SYNC_TRUNCATION_20K:
-                return 20*1024;
-            case SYNC_TRUNCATION_50K:
-                return 50*1024;
-            case SYNC_TRUNCATION_100K:
-                return 100*1024;
-            case SYNC_TRUNCATION_ALL:
-                return 1024*1024; // We'll limit to 1MB anyway
-            default:
-                return 1024; // Default to 1Kb
-        }
-    }
+		return true;
+	}
 
-    /**
-     * Truncate an UTF-8 encoded string correctly
-     *
-     * If it's not possible to truncate properly, an empty string is returned
-     *
-     * @param string    $string     the string
-     * @param string    $length     position where string should be cut
-     * @param boolean   $htmlsafe   doesn't cut html tags in half, doesn't ensure correct html - default: false
-     *
-     * @return string truncated string
-     */
-    static public function Utf8_truncate($string, $length, $htmlsafe = false) {
-        // make sure length is always an integer
-        $length = (int)$length;
+	/**
+	 * Parses and returns an ecoded vCal-Uid from an OL compatible GlobalObjectID.
+	 *
+	 * @param string $olUid an OL compatible GlobalObjectID
+	 *
+	 * @return string the vCal-Uid if available in the olUid, else the original olUid as HEX
+	 */
+	public static function GetICalUidFromOLUid($olUid) {
+		// check if "vCal-Uid" is somewhere in outlookid case-insensitive
+		$icalUid = stristr($olUid, "vCal-Uid");
+		if ($icalUid !== false) {
+			// get the length of the ical id - go back 4 position from where "vCal-Uid" was found
+			$begin = unpack("V", substr($olUid, strlen($icalUid) * (-1) - 4, 4));
+			// remove "vCal-Uid" and packed "1" and use the ical id length
+			return substr($icalUid, 12, ($begin[1] - 13));
+		}
 
-        // if the input string is shorter then the trunction, make sure it's valid UTF-8!
-        if (strlen($string) <= $length) {
-            $length = strlen($string) - 1;
-        }
+		return strtoupper(bin2hex($olUid));
+	}
 
-        // The intent is not to cut HTML tags in half which causes displaying issues (see ZP-1240).
-        // The used method just tries to cut outside of tags, without checking tag validity and closing tags.
-        if ($htmlsafe) {
-            $offset = 0 - strlen($string) + $length;
-            $validPos = strrpos($string, "<", $offset);
-            if ($validPos > strrpos($string, ">", $offset)) {
-                $length = $validPos;
-            }
-        }
+	/**
+	 * Checks the given UID if it is an OL compatible GlobalObjectID
+	 * If not, the given UID is encoded inside the GlobalObjectID.
+	 *
+	 * @param string $icalUid an appointment uid as HEX
+	 *
+	 * @return string an OL compatible GlobalObjectID
+	 */
+	public static function GetOLUidFromICalUid($icalUid) {
+		if (strlen($icalUid) <= 64) {
+			$len = 13 + strlen($icalUid);
+			$OLUid = pack("V", $len);
+			$OLUid .= "vCal-Uid";
+			$OLUid .= pack("V", 1);
+			$OLUid .= $icalUid;
 
-        while($length >= 0) {
-            if ((ord($string[$length]) < 0x80) || (ord($string[$length]) >= 0xC0)) {
-                return substr($string, 0, $length);
-            }
-            $length--;
-        }
-        return "";
-    }
+			return hex2bin("040000008200E00074C5B7101A82E0080000000000000000000000000000000000000000" . bin2hex($OLUid) . "00");
+		}
 
-    /**
-     * Indicates if the specified folder type is a system folder
-     *
-     * @param int            $foldertype
-     *
-     * @access public
-     * @return boolean
-     */
-    static public function IsSystemFolder($foldertype) {
-        return ($foldertype == SYNC_FOLDER_TYPE_INBOX || $foldertype == SYNC_FOLDER_TYPE_DRAFTS || $foldertype == SYNC_FOLDER_TYPE_WASTEBASKET || $foldertype == SYNC_FOLDER_TYPE_SENTMAIL ||
-                $foldertype == SYNC_FOLDER_TYPE_OUTBOX || $foldertype == SYNC_FOLDER_TYPE_TASK || $foldertype == SYNC_FOLDER_TYPE_APPOINTMENT || $foldertype == SYNC_FOLDER_TYPE_CONTACT ||
-                $foldertype == SYNC_FOLDER_TYPE_NOTE || $foldertype == SYNC_FOLDER_TYPE_JOURNAL) ? true:false;
-    }
+		return hex2bin($icalUid);
+	}
 
-    /**
-     * Checks for valid email addresses
-     * The used regex actually only checks if a valid email address is part of the submitted string
-     * it also returns true for the mailbox format, but this is not checked explicitly
-     *
-     * @param string $email     address to be checked
-     *
-     * @access public
-     * @return boolean
-     */
-    static public function CheckEmail($email) {
-        return strpos($email, '@') !== false ? true : false;
-    }
+	/**
+	 * Extracts the basedate of the GlobalObjectID and the RecurStartTime.
+	 *
+	 * @param string $goid           OL compatible GlobalObjectID
+	 * @param long   $recurStartTime
+	 *
+	 * @return long basedate
+	 */
+	public static function ExtractBaseDate($goid, $recurStartTime) {
+		$hexbase = substr(bin2hex($goid), 32, 8);
+		$day = hexdec(substr($hexbase, 6, 2));
+		$month = hexdec(substr($hexbase, 4, 2));
+		$year = hexdec(substr($hexbase, 0, 4));
 
-    /**
-     * Checks if a string is base64 encoded
-     *
-     * @param string $string    the string to be checked
-     *
-     * @access public
-     * @return boolean
-     */
-    static public function IsBase64String($string) {
-        return (bool) preg_match("#^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+/]{4})?$#", $string);
-    }
+		if ($day && $month && $year) {
+			$h = $recurStartTime >> 12;
+			$m = ($recurStartTime - $h * 4096) >> 6;
+			$s = $recurStartTime - $h * 4096 - $m * 64;
 
-    /**
-     * Returns a command string for a given command code.
-     *
-     * @param int $code
-     *
-     * @access public
-     * @return string or false if code is unknown
-     */
-    public static function GetCommandFromCode($code) {
-        switch ($code) {
-            case ZPush::COMMAND_SYNC:                 return 'Sync';
-            case ZPush::COMMAND_SENDMAIL:             return 'SendMail';
-            case ZPush::COMMAND_SMARTFORWARD:         return 'SmartForward';
-            case ZPush::COMMAND_SMARTREPLY:           return 'SmartReply';
-            case ZPush::COMMAND_GETATTACHMENT:        return 'GetAttachment';
-            case ZPush::COMMAND_FOLDERSYNC:           return 'FolderSync';
-            case ZPush::COMMAND_FOLDERCREATE:         return 'FolderCreate';
-            case ZPush::COMMAND_FOLDERDELETE:         return 'FolderDelete';
-            case ZPush::COMMAND_FOLDERUPDATE:         return 'FolderUpdate';
-            case ZPush::COMMAND_MOVEITEMS:            return 'MoveItems';
-            case ZPush::COMMAND_GETITEMESTIMATE:      return 'GetItemEstimate';
-            case ZPush::COMMAND_MEETINGRESPONSE:      return 'MeetingResponse';
-            case ZPush::COMMAND_SEARCH:               return 'Search';
-            case ZPush::COMMAND_SETTINGS:             return 'Settings';
-            case ZPush::COMMAND_PING:                 return 'Ping';
-            case ZPush::COMMAND_ITEMOPERATIONS:       return 'ItemOperations';
-            case ZPush::COMMAND_PROVISION:            return 'Provision';
-            case ZPush::COMMAND_RESOLVERECIPIENTS:    return 'ResolveRecipients';
-            case ZPush::COMMAND_VALIDATECERT:         return 'ValidateCert';
+			return gmmktime($h, $m, $s, $month, $day, $year);
+		}
 
-            // Deprecated commands
-            case ZPush::COMMAND_GETHIERARCHY:         return 'GetHierarchy';
-            case ZPush::COMMAND_CREATECOLLECTION:     return 'CreateCollection';
-            case ZPush::COMMAND_DELETECOLLECTION:     return 'DeleteCollection';
-            case ZPush::COMMAND_MOVECOLLECTION:       return 'MoveCollection';
-            case ZPush::COMMAND_NOTIFY:               return 'Notify';
-        }
-        return false;
-    }
+		return false;
+	}
 
-    /**
-     * Returns a command code for a given command.
-     *
-     * @param string $command
-     *
-     * @access public
-     * @return int or false if command is unknown
-     */
-    public static function GetCodeFromCommand($command) {
-        switch ($command) {
-            case 'Sync':                 return ZPush::COMMAND_SYNC;
-            case 'SendMail':             return ZPush::COMMAND_SENDMAIL;
-            case 'SmartForward':         return ZPush::COMMAND_SMARTFORWARD;
-            case 'SmartReply':           return ZPush::COMMAND_SMARTREPLY;
-            case 'GetAttachment':        return ZPush::COMMAND_GETATTACHMENT;
-            case 'FolderSync':           return ZPush::COMMAND_FOLDERSYNC;
-            case 'FolderCreate':         return ZPush::COMMAND_FOLDERCREATE;
-            case 'FolderDelete':         return ZPush::COMMAND_FOLDERDELETE;
-            case 'FolderUpdate':         return ZPush::COMMAND_FOLDERUPDATE;
-            case 'MoveItems':            return ZPush::COMMAND_MOVEITEMS;
-            case 'GetItemEstimate':      return ZPush::COMMAND_GETITEMESTIMATE;
-            case 'MeetingResponse':      return ZPush::COMMAND_MEETINGRESPONSE;
-            case 'Search':               return ZPush::COMMAND_SEARCH;
-            case 'Settings':             return ZPush::COMMAND_SETTINGS;
-            case 'Ping':                 return ZPush::COMMAND_PING;
-            case 'ItemOperations':       return ZPush::COMMAND_ITEMOPERATIONS;
-            case 'Provision':            return ZPush::COMMAND_PROVISION;
-            case 'ResolveRecipients':    return ZPush::COMMAND_RESOLVERECIPIENTS;
-            case 'ValidateCert':         return ZPush::COMMAND_VALIDATECERT;
+	/**
+	 * Converts SYNC_FILTERTYPE into a timestamp.
+	 *
+	 * @param int $filtertype Filtertype
+	 *
+	 * @return long
+	 */
+	public static function GetCutOffDate($filtertype) {
+		$back = Utils::GetFiltertypeInterval($filtertype);
 
-            // Deprecated commands
-            case 'GetHierarchy':         return ZPush::COMMAND_GETHIERARCHY;
-            case 'CreateCollection':     return ZPush::COMMAND_CREATECOLLECTION;
-            case 'DeleteCollection':     return ZPush::COMMAND_DELETECOLLECTION;
-            case 'MoveCollection':       return ZPush::COMMAND_MOVECOLLECTION;
-            case 'Notify':               return ZPush::COMMAND_NOTIFY;
-        }
-        return false;
-    }
+		if ($back === false) {
+			return 0; // unlimited
+		}
 
-    /**
-     * Normalize the given timestamp to the start of the day
-     *
-     * @param long      $timestamp
-     *
-     * @access private
-     * @return long
-     */
-    public static function getDayStartOfTimestamp($timestamp) {
-        return $timestamp - ($timestamp % (60 * 60 * 24));
-    }
+		return time() - $back;
+	}
 
-    /**
-     * Returns a formatted string output from an optional timestamp.
-     * If no timestamp is sent, NOW is used.
-     *
-     * @param long  $timestamp
-     *
-     * @access public
-     * @return string
-     */
-    public static function GetFormattedTime($timestamp = false) {
-        if (!$timestamp)
-            return @strftime("%d/%m/%Y %H:%M:%S");
-        else
-            return @strftime("%d/%m/%Y %H:%M:%S", $timestamp);
-    }
+	/**
+	 * Returns the interval indicated by the filtertype.
+	 *
+	 * @param int $filtertype
+	 *
+	 * @return bool|long returns false on invalid filtertype
+	 */
+	public static function GetFiltertypeInterval($filtertype) {
+		$back = false;
 
+		switch ($filtertype) {
+			case SYNC_FILTERTYPE_1DAY:
+				$back = 60 * 60 * 24;
+				break;
 
-   /**
-    * Get charset name from a codepage
-    *
-    * @see http://msdn.microsoft.com/en-us/library/dd317756(VS.85).aspx
-    *
-    * Table taken from common/codepage.cpp
-    *
-    * @param integer codepage Codepage
-    *
-    * @access public
-    * @return string iconv-compatible charset name
-    */
-    public static function GetCodepageCharset($codepage) {
-        $codepages = array(
-            20106 => "DIN_66003",
-            20108 => "NS_4551-1",
-            20107 => "SEN_850200_B",
-            950 => "big5",
-            50221 => "csISO2022JP",
-            51932 => "euc-jp",
-            51936 => "euc-cn",
-            51949 => "euc-kr",
-            949 => "euc-kr",
-            936 => "gb18030",
-            52936 => "csgb2312",
-            852 => "ibm852",
-            866 => "ibm866",
-            50220 => "iso-2022-jp",
-            50222 => "iso-2022-jp",
-            50225 => "iso-2022-kr",
-            1252 => "windows-1252",
-            28591 => "iso-8859-1",
-            28592 => "iso-8859-2",
-            28593 => "iso-8859-3",
-            28594 => "iso-8859-4",
-            28595 => "iso-8859-5",
-            28596 => "iso-8859-6",
-            28597 => "iso-8859-7",
-            28598 => "iso-8859-8",
-            28599 => "iso-8859-9",
-            28603 => "iso-8859-13",
-            28605 => "iso-8859-15",
-            20866 => "koi8-r",
-            21866 => "koi8-u",
-            932 => "shift-jis",
-            1200 => "unicode",
-            1201 => "unicodebig",
-            65000 => "utf-7",
-            65001 => "utf-8",
-            1250 => "windows-1250",
-            1251 => "windows-1251",
-            1253 => "windows-1253",
-            1254 => "windows-1254",
-            1255 => "windows-1255",
-            1256 => "windows-1256",
-            1257 => "windows-1257",
-            1258 => "windows-1258",
-            874 => "windows-874",
-            20127 => "us-ascii"
-        );
+			case SYNC_FILTERTYPE_3DAYS:
+				$back = 60 * 60 * 24 * 3;
+				break;
 
-        if(isset($codepages[$codepage])) {
-            return $codepages[$codepage];
-        } else {
-            // Defaulting to iso-8859-15 since it is more likely for someone to make a mistake in the codepage
-            // when using west-european charsets then when using other charsets since utf-8 is binary compatible
-            // with the bottom 7 bits of west-european
-            return "iso-8859-15";
-        }
-    }
+			case SYNC_FILTERTYPE_1WEEK:
+				$back = 60 * 60 * 24 * 7;
+				break;
 
-    /**
-     * Converts a string encoded with codepage into an UTF-8 string
-     *
-     * @param int $codepage
-     * @param string $string
-     *
-     * @access public
-     * @return string
-     */
-    public static function ConvertCodepageStringToUtf8($codepage, $string) {
-        if (function_exists("iconv")) {
-            $charset = self::GetCodepageCharset($codepage);
-            return iconv($charset, "utf-8", $string);
-        }
-        else
-            ZLog::Write(LOGLEVEL_WARN, "Utils::ConvertCodepageStringToUtf8() 'iconv' is not available. Charset conversion skipped.");
+			case SYNC_FILTERTYPE_2WEEKS:
+				$back = 60 * 60 * 24 * 14;
+				break;
 
-        return $string;
-    }
+			case SYNC_FILTERTYPE_1MONTH:
+				$back = 60 * 60 * 24 * 31;
+				break;
 
-    /**
-     * Converts a string to another charset.
-     *
-     * @param int $in
-     * @param int $out
-     * @param string $string
-     *
-     * @access public
-     * @return string
-     */
-    public static function ConvertCodepage($in, $out, $string) {
-        // do nothing if both charsets are the same
-        if ($in == $out)
-            return $string;
+			case SYNC_FILTERTYPE_3MONTHS:
+				$back = 60 * 60 * 24 * 31 * 3;
+				break;
 
-        if (function_exists("iconv")) {
-            $inCharset = self::GetCodepageCharset($in);
-            $outCharset = self::GetCodepageCharset($out);
-            return iconv($inCharset, $outCharset, $string);
-        }
-        else
-            ZLog::Write(LOGLEVEL_WARN, "Utils::ConvertCodepage() 'iconv' is not available. Charset conversion skipped.");
+			case SYNC_FILTERTYPE_6MONTHS:
+				$back = 60 * 60 * 24 * 31 * 6;
+				break;
 
-        return $string;
-    }
+			default:
+				$back = false;
+		}
 
-    /**
-     * Returns the best match of preferred body preference types.
-     *
-     * @param array             $bpTypes
-     *
-     * @access public
-     * @return int
-     */
-    public static function GetBodyPreferenceBestMatch($bpTypes) {
-        if ($bpTypes === false) {
-            return SYNC_BODYPREFERENCE_PLAIN;
-        }
-        // The best choice is RTF, then HTML and then MIME in order to save bandwidth
-        // because MIME is a complete message including the headers and attachments
-        if (in_array(SYNC_BODYPREFERENCE_RTF, $bpTypes))  return SYNC_BODYPREFERENCE_RTF;
-        if (in_array(SYNC_BODYPREFERENCE_HTML, $bpTypes)) return SYNC_BODYPREFERENCE_HTML;
-        if (in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) return SYNC_BODYPREFERENCE_MIME;
-        return SYNC_BODYPREFERENCE_PLAIN;
-    }
+		return $back;
+	}
 
-    /**
-     * Checks if a file has the same owner and group as the parent directory.
-     * If not, owner and group are fixed (being updated to the owner/group of the directory).
-     * If the given file is a special file (i.g., /dev/null, fifo), nothing is changed.
-     * Function code contributed by Robert Scheck aka rsc.
-     *
-     * @param string $file
-     *
-     * @access public
-     * @return boolean
-     */
-    public static function FixFileOwner($file) {
-        if (!function_exists('posix_getuid')) {
-           ZLog::Write(LOGLEVEL_DEBUG, "Utils::FixeFileOwner(): Posix subsystem not available, skipping.");
-           return false;
-        }
-        if (posix_getuid() == 0 && is_file($file)) {
-            $dir = dirname($file);
-            $perm_dir = stat($dir);
-            $perm_file = stat($file);
+	/**
+	 * Converts SYNC_TRUNCATION into bytes.
+	 *
+	 * @param int       SYNC_TRUNCATION
+	 * @param mixed $truncation
+	 *
+	 * @return long
+	 */
+	public static function GetTruncSize($truncation) {
+		switch ($truncation) {
+			case SYNC_TRUNCATION_HEADERS:
+				return 0;
 
-            if ($perm_file['uid'] == 0 && $perm_dir['uid'] == 0 && $perm_dir['gid'] == 0) {
-                unlink($file);
-                throw new FatalException("FixFileOwner: $dir must be owned by the nginx/apache/php user instead of root for debian based systems and by root:grosync for RHEL-based systems");
-            }
+			case SYNC_TRUNCATION_512B:
+				return 512;
 
-            if($perm_dir['uid'] !== $perm_file['uid'] || $perm_dir['gid'] !== $perm_file['gid']) {
-                chown($file, $perm_dir['uid']);
-                chgrp($file, $perm_dir['gid']);
-                chmod($file, 0664);
-            }
-        }
-        return true;
-    }
+			case SYNC_TRUNCATION_1K:
+				return 1024;
 
-    /**
-     * Returns AS-style LastVerbExecuted value from the server value.
-     *
-     * @param int $verb
-     *
-     * @access public
-     * @return int
-     */
-    public static function GetLastVerbExecuted($verb) {
-        switch ($verb) {
-            case NOTEIVERB_REPLYTOSENDER:   return AS_REPLYTOSENDER;
-            case NOTEIVERB_REPLYTOALL:      return AS_REPLYTOALL;
-            case NOTEIVERB_FORWARD:         return AS_FORWARD;
-        }
+			case SYNC_TRUNCATION_2K:
+				return 2 * 1024;
 
-        return 0;
-    }
+			case SYNC_TRUNCATION_5K:
+				return 5 * 1024;
 
-    /**
-     * Returns the local part from email address.
-     *
-     * @param string $email
-     *
-     * @access public
-     * @return string
-     */
-    public static function GetLocalPartFromEmail($email) {
-        $pos = strpos($email, '@');
-        if ($pos === false) {
-            return $email;
-        }
-        return substr($email, 0, $pos);
-    }
+			case SYNC_TRUNCATION_10K:
+				return 10 * 1024;
 
-    /**
-     * Format bytes to a more human readable value.
-     * @param int $bytes
-     * @param int $precision
-     *
-     * @access public
-     * @return void|string
-     */
-    public static function FormatBytes($bytes, $precision = 2) {
-        if ($bytes <= 0) return '0 B';
+			case SYNC_TRUNCATION_20K:
+				return 20 * 1024;
 
-        $units = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB');
-        $base = log ($bytes, 1024);
-        $fBase = floor($base);
-        $pow = pow(1024, $base - $fBase);
-        return sprintf ("%.{$precision}f %s", $pow, $units[$fBase]);
-    }
+			case SYNC_TRUNCATION_50K:
+				return 50 * 1024;
 
-    /**
-     * Returns folder origin identifier from its id.
-     *
-     * @param string $folderid
-     *
-     * @access public
-     * @return string|boolean  matches values of DeviceManager::FLD_ORIGIN_*
-     */
-    public static function GetFolderOriginFromId($folderid) {
-        $origin = substr($folderid, 0, 1);
-        switch ($origin) {
-            case DeviceManager::FLD_ORIGIN_CONFIG:
-            case DeviceManager::FLD_ORIGIN_GAB:
-            case DeviceManager::FLD_ORIGIN_SHARED:
-            case DeviceManager::FLD_ORIGIN_USER:
-            case DeviceManager::FLD_ORIGIN_IMPERSONATED:
-                return $origin;
-        }
-        ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFolderOriginFromId(): Unknown folder origin for folder with id '%s'", $folderid));
-        return false;
-    }
+			case SYNC_TRUNCATION_100K:
+				return 100 * 1024;
 
-    /**
-     * Returns folder origin as string from its id.
-     *
-     * @param string $folderid
-     *
-     * @access public
-     * @return string
-     */
-    public static function GetFolderOriginStringFromId($folderid) {
-        $origin = substr($folderid, 0, 1);
-        switch ($origin) {
-            case DeviceManager::FLD_ORIGIN_CONFIG:
-                return 'configured';
-            case DeviceManager::FLD_ORIGIN_GAB:
-                return 'GAB';
-            case DeviceManager::FLD_ORIGIN_SHARED:
-                return 'shared';
-            case DeviceManager::FLD_ORIGIN_USER:
-                return 'user';
-            case DeviceManager::FLD_ORIGIN_IMPERSONATED:
-                return 'impersonated';
-        }
-        ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFolderOriginStringFromId(): Unknown folder origin for folder with id '%s'", $folderid));
-        return 'unknown';
-    }
+			case SYNC_TRUNCATION_ALL:
+				return 1024 * 1024; // We'll limit to 1MB anyway
 
-    /**
-     * Splits the id into folder id and message id parts. A colon in the $id indicates
-     * that the id has folderid:messageid format.
-     *
-     * @param string            $id
-     *
-     * @access public
-     * @return array
-     */
-    public static function SplitMessageId($id) {
-        if (strpos($id, ':') !== false) {
-            return explode(':', $id);
-        }
-        return array(null, $id);
-    }
+			default:
+				return 1024; // Default to 1Kb
+		}
+	}
 
-    /**
-     * Converts a string freebusy type into a numeric status.
-     *
-     * @param string $fbType
-     *
-     * @access public
-     * @return int
-     */
-    public static function GetFbStatusFromType($fbType) {
-        switch ($fbType) {
-            case 'Free':
-                return fbFree;
-            case 'Tentative':
-                return fbTentative;
-            case 'Busy':
-                return fbBusy;
-            case 'OOF':
-                return fbOutOfOffice;
-        }
-        ZLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFbStatusFromType(): Unknown free busy type '%s'", $fbType));
-        return fbNoData;
-    }
+	/**
+	 * Truncate an UTF-8 encoded string correctly.
+	 *
+	 * If it's not possible to truncate properly, an empty string is returned
+	 *
+	 * @param string $string   the string
+	 * @param string $length   position where string should be cut
+	 * @param bool   $htmlsafe doesn't cut html tags in half, doesn't ensure correct html - default: false
+	 *
+	 * @return string truncated string
+	 */
+	public static function Utf8_truncate($string, $length, $htmlsafe = false) {
+		// make sure length is always an integer
+		$length = (int) $length;
+
+		// if the input string is shorter then the trunction, make sure it's valid UTF-8!
+		if (strlen($string) <= $length) {
+			$length = strlen($string) - 1;
+		}
+
+		// The intent is not to cut HTML tags in half which causes displaying issues (see ZP-1240).
+		// The used method just tries to cut outside of tags, without checking tag validity and closing tags.
+		if ($htmlsafe) {
+			$offset = 0 - strlen($string) + $length;
+			$validPos = strrpos($string, "<", $offset);
+			if ($validPos > strrpos($string, ">", $offset)) {
+				$length = $validPos;
+			}
+		}
+
+		while ($length >= 0) {
+			if ((ord($string[$length]) < 0x80) || (ord($string[$length]) >= 0xC0)) {
+				return substr($string, 0, $length);
+			}
+			--$length;
+		}
+
+		return "";
+	}
+
+	/**
+	 * Indicates if the specified folder type is a system folder.
+	 *
+	 * @param int $foldertype
+	 *
+	 * @return bool
+	 */
+	public static function IsSystemFolder($foldertype) {
+		return (
+			$foldertype == SYNC_FOLDER_TYPE_INBOX ||
+			$foldertype == SYNC_FOLDER_TYPE_DRAFTS ||
+			$foldertype == SYNC_FOLDER_TYPE_WASTEBASKET ||
+			$foldertype == SYNC_FOLDER_TYPE_SENTMAIL ||
+			$foldertype == SYNC_FOLDER_TYPE_OUTBOX ||
+			$foldertype == SYNC_FOLDER_TYPE_TASK ||
+			$foldertype == SYNC_FOLDER_TYPE_APPOINTMENT ||
+			$foldertype == SYNC_FOLDER_TYPE_CONTACT ||
+			$foldertype == SYNC_FOLDER_TYPE_NOTE ||
+			$foldertype == SYNC_FOLDER_TYPE_JOURNAL
+			) ? true : false;
+	}
+
+	/**
+	 * Checks for valid email addresses
+	 * The used regex actually only checks if a valid email address is part of the submitted string
+	 * it also returns true for the mailbox format, but this is not checked explicitly.
+	 *
+	 * @param string $email address to be checked
+	 *
+	 * @return bool
+	 */
+	public static function CheckEmail($email) {
+		return strpos($email, '@') !== false ? true : false;
+	}
+
+	/**
+	 * Checks if a string is base64 encoded.
+	 *
+	 * @param string $string the string to be checked
+	 *
+	 * @return bool
+	 */
+	public static function IsBase64String($string) {
+		return (bool) preg_match("#^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{2}==|[A-Za-z0-9+\\/]{3}=|[A-Za-z0-9+/]{4})?$#", $string);
+	}
+
+	/**
+	 * Returns a command string for a given command code.
+	 *
+	 * @param int $code
+	 *
+	 * @return string or false if code is unknown
+	 */
+	public static function GetCommandFromCode($code) {
+		switch ($code) {
+			case GSync::COMMAND_SYNC:                 return 'Sync';
+
+			case GSync::COMMAND_SENDMAIL:             return 'SendMail';
+
+			case GSync::COMMAND_SMARTFORWARD:         return 'SmartForward';
+
+			case GSync::COMMAND_SMARTREPLY:           return 'SmartReply';
+
+			case GSync::COMMAND_GETATTACHMENT:        return 'GetAttachment';
+
+			case GSync::COMMAND_FOLDERSYNC:           return 'FolderSync';
+
+			case GSync::COMMAND_FOLDERCREATE:         return 'FolderCreate';
+
+			case GSync::COMMAND_FOLDERDELETE:         return 'FolderDelete';
+
+			case GSync::COMMAND_FOLDERUPDATE:         return 'FolderUpdate';
+
+			case GSync::COMMAND_MOVEITEMS:            return 'MoveItems';
+
+			case GSync::COMMAND_GETITEMESTIMATE:      return 'GetItemEstimate';
+
+			case GSync::COMMAND_MEETINGRESPONSE:      return 'MeetingResponse';
+
+			case GSync::COMMAND_SEARCH:               return 'Search';
+
+			case GSync::COMMAND_SETTINGS:             return 'Settings';
+
+			case GSync::COMMAND_PING:                 return 'Ping';
+
+			case GSync::COMMAND_ITEMOPERATIONS:       return 'ItemOperations';
+
+			case GSync::COMMAND_PROVISION:            return 'Provision';
+
+			case GSync::COMMAND_RESOLVERECIPIENTS:    return 'ResolveRecipients';
+
+			case GSync::COMMAND_VALIDATECERT:         return 'ValidateCert';
+			// Deprecated commands
+			case GSync::COMMAND_GETHIERARCHY:         return 'GetHierarchy';
+
+			case GSync::COMMAND_CREATECOLLECTION:     return 'CreateCollection';
+
+			case GSync::COMMAND_DELETECOLLECTION:     return 'DeleteCollection';
+
+			case GSync::COMMAND_MOVECOLLECTION:       return 'MoveCollection';
+
+			case GSync::COMMAND_NOTIFY:               return 'Notify';
+		}
+
+		return false;
+	}
+
+	/**
+	 * Returns a command code for a given command.
+	 *
+	 * @param string $command
+	 *
+	 * @return int or false if command is unknown
+	 */
+	public static function GetCodeFromCommand($command) {
+		switch ($command) {
+			case 'Sync':                 return GSync::COMMAND_SYNC;
+
+			case 'SendMail':             return GSync::COMMAND_SENDMAIL;
+
+			case 'SmartForward':         return GSync::COMMAND_SMARTFORWARD;
+
+			case 'SmartReply':           return GSync::COMMAND_SMARTREPLY;
+
+			case 'GetAttachment':        return GSync::COMMAND_GETATTACHMENT;
+
+			case 'FolderSync':           return GSync::COMMAND_FOLDERSYNC;
+
+			case 'FolderCreate':         return GSync::COMMAND_FOLDERCREATE;
+
+			case 'FolderDelete':         return GSync::COMMAND_FOLDERDELETE;
+
+			case 'FolderUpdate':         return GSync::COMMAND_FOLDERUPDATE;
+
+			case 'MoveItems':            return GSync::COMMAND_MOVEITEMS;
+
+			case 'GetItemEstimate':      return GSync::COMMAND_GETITEMESTIMATE;
+
+			case 'MeetingResponse':      return GSync::COMMAND_MEETINGRESPONSE;
+
+			case 'Search':               return GSync::COMMAND_SEARCH;
+
+			case 'Settings':             return GSync::COMMAND_SETTINGS;
+
+			case 'Ping':                 return GSync::COMMAND_PING;
+
+			case 'ItemOperations':       return GSync::COMMAND_ITEMOPERATIONS;
+
+			case 'Provision':            return GSync::COMMAND_PROVISION;
+
+			case 'ResolveRecipients':    return GSync::COMMAND_RESOLVERECIPIENTS;
+
+			case 'ValidateCert':         return GSync::COMMAND_VALIDATECERT;
+			// Deprecated commands
+			case 'GetHierarchy':         return GSync::COMMAND_GETHIERARCHY;
+
+			case 'CreateCollection':     return GSync::COMMAND_CREATECOLLECTION;
+
+			case 'DeleteCollection':     return GSync::COMMAND_DELETECOLLECTION;
+
+			case 'MoveCollection':       return GSync::COMMAND_MOVECOLLECTION;
+
+			case 'Notify':               return GSync::COMMAND_NOTIFY;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Normalize the given timestamp to the start of the day.
+	 *
+	 * @param long $timestamp
+	 *
+	 * @return long
+	 */
+	public static function getDayStartOfTimestamp($timestamp) {
+		return $timestamp - ($timestamp % (60 * 60 * 24));
+	}
+
+	/**
+	 * Returns a formatted string output from an optional timestamp.
+	 * If no timestamp is sent, NOW is used.
+	 *
+	 * @param long $timestamp
+	 *
+	 * @return string
+	 */
+	public static function GetFormattedTime($timestamp = false) {
+		if (!$timestamp) {
+			return @strftime("%d/%m/%Y %H:%M:%S");
+		}
+
+		return @strftime("%d/%m/%Y %H:%M:%S", $timestamp);
+	}
+
+	/**
+	 * Get charset name from a codepage.
+	 *
+	 * @see http://msdn.microsoft.com/en-us/library/dd317756(VS.85).aspx
+	 *
+	 * Table taken from common/codepage.cpp
+	 *
+	 * @param int codepage Codepage
+	 * @param mixed $codepage
+	 *
+	 * @return string iconv-compatible charset name
+	 */
+	public static function GetCodepageCharset($codepage) {
+		$codepages = [
+			20106 => "DIN_66003",
+			20108 => "NS_4551-1",
+			20107 => "SEN_850200_B",
+			950 => "big5",
+			50221 => "csISO2022JP",
+			51932 => "euc-jp",
+			51936 => "euc-cn",
+			51949 => "euc-kr",
+			949 => "euc-kr",
+			936 => "gb18030",
+			52936 => "csgb2312",
+			852 => "ibm852",
+			866 => "ibm866",
+			50220 => "iso-2022-jp",
+			50222 => "iso-2022-jp",
+			50225 => "iso-2022-kr",
+			1252 => "windows-1252",
+			28591 => "iso-8859-1",
+			28592 => "iso-8859-2",
+			28593 => "iso-8859-3",
+			28594 => "iso-8859-4",
+			28595 => "iso-8859-5",
+			28596 => "iso-8859-6",
+			28597 => "iso-8859-7",
+			28598 => "iso-8859-8",
+			28599 => "iso-8859-9",
+			28603 => "iso-8859-13",
+			28605 => "iso-8859-15",
+			20866 => "koi8-r",
+			21866 => "koi8-u",
+			932 => "shift-jis",
+			1200 => "unicode",
+			1201 => "unicodebig",
+			65000 => "utf-7",
+			65001 => "utf-8",
+			1250 => "windows-1250",
+			1251 => "windows-1251",
+			1253 => "windows-1253",
+			1254 => "windows-1254",
+			1255 => "windows-1255",
+			1256 => "windows-1256",
+			1257 => "windows-1257",
+			1258 => "windows-1258",
+			874 => "windows-874",
+			20127 => "us-ascii",
+		];
+
+		if (isset($codepages[$codepage])) {
+			return $codepages[$codepage];
+		}
+		// Defaulting to iso-8859-15 since it is more likely for someone to make a mistake in the codepage
+		// when using west-european charsets then when using other charsets since utf-8 is binary compatible
+		// with the bottom 7 bits of west-european
+		return "iso-8859-15";
+	}
+
+	/**
+	 * Converts a string encoded with codepage into an UTF-8 string.
+	 *
+	 * @param int    $codepage
+	 * @param string $string
+	 *
+	 * @return string
+	 */
+	public static function ConvertCodepageStringToUtf8($codepage, $string) {
+		if (function_exists("iconv")) {
+			$charset = self::GetCodepageCharset($codepage);
+
+			return iconv($charset, "utf-8", $string);
+		}
+
+		SLog::Write(LOGLEVEL_WARN, "Utils::ConvertCodepageStringToUtf8() 'iconv' is not available. Charset conversion skipped.");
+
+		return $string;
+	}
+
+	/**
+	 * Converts a string to another charset.
+	 *
+	 * @param int    $in
+	 * @param int    $out
+	 * @param string $string
+	 *
+	 * @return string
+	 */
+	public static function ConvertCodepage($in, $out, $string) {
+		// do nothing if both charsets are the same
+		if ($in == $out) {
+			return $string;
+		}
+
+		if (function_exists("iconv")) {
+			$inCharset = self::GetCodepageCharset($in);
+			$outCharset = self::GetCodepageCharset($out);
+
+			return iconv($inCharset, $outCharset, $string);
+		}
+
+		SLog::Write(LOGLEVEL_WARN, "Utils::ConvertCodepage() 'iconv' is not available. Charset conversion skipped.");
+
+		return $string;
+	}
+
+	/**
+	 * Returns the best match of preferred body preference types.
+	 *
+	 * @param array $bpTypes
+	 *
+	 * @return int
+	 */
+	public static function GetBodyPreferenceBestMatch($bpTypes) {
+		if ($bpTypes === false) {
+			return SYNC_BODYPREFERENCE_PLAIN;
+		}
+		// The best choice is RTF, then HTML and then MIME in order to save bandwidth
+		// because MIME is a complete message including the headers and attachments
+		if (in_array(SYNC_BODYPREFERENCE_RTF, $bpTypes)) {
+			return SYNC_BODYPREFERENCE_RTF;
+		}
+		if (in_array(SYNC_BODYPREFERENCE_HTML, $bpTypes)) {
+			return SYNC_BODYPREFERENCE_HTML;
+		}
+		if (in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
+			return SYNC_BODYPREFERENCE_MIME;
+		}
+
+		return SYNC_BODYPREFERENCE_PLAIN;
+	}
+
+	/**
+	 * Checks if a file has the same owner and group as the parent directory.
+	 * If not, owner and group are fixed (being updated to the owner/group of the directory).
+	 * If the given file is a special file (i.g., /dev/null, fifo), nothing is changed.
+	 * Function code contributed by Robert Scheck aka rsc.
+	 *
+	 * @param string $file
+	 *
+	 * @return bool
+	 */
+	public static function FixFileOwner($file) {
+		if (!function_exists('posix_getuid')) {
+			SLog::Write(LOGLEVEL_DEBUG, "Utils::FixeFileOwner(): Posix subsystem not available, skipping.");
+
+			return false;
+		}
+		if (posix_getuid() == 0 && is_file($file)) {
+			$dir = dirname($file);
+			$perm_dir = stat($dir);
+			$perm_file = stat($file);
+
+			if ($perm_file['uid'] == 0 && $perm_dir['uid'] == 0 && $perm_dir['gid'] == 0) {
+				unlink($file);
+
+				throw new FatalException("FixFileOwner: {$dir} must be owned by the nginx/apache/php user instead of root for debian based systems and by root:grosync for RHEL-based systems");
+			}
+
+			if ($perm_dir['uid'] !== $perm_file['uid'] || $perm_dir['gid'] !== $perm_file['gid']) {
+				chown($file, $perm_dir['uid']);
+				chgrp($file, $perm_dir['gid']);
+				chmod($file, 0664);
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns AS-style LastVerbExecuted value from the server value.
+	 *
+	 * @param int $verb
+	 *
+	 * @return int
+	 */
+	public static function GetLastVerbExecuted($verb) {
+		switch ($verb) {
+			case NOTEIVERB_REPLYTOSENDER:   return AS_REPLYTOSENDER;
+
+			case NOTEIVERB_REPLYTOALL:      return AS_REPLYTOALL;
+
+			case NOTEIVERB_FORWARD:         return AS_FORWARD;
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Returns the local part from email address.
+	 *
+	 * @param string $email
+	 *
+	 * @return string
+	 */
+	public static function GetLocalPartFromEmail($email) {
+		$pos = strpos($email, '@');
+		if ($pos === false) {
+			return $email;
+		}
+
+		return substr($email, 0, $pos);
+	}
+
+	/**
+	 * Format bytes to a more human readable value.
+	 *
+	 * @param int $bytes
+	 * @param int $precision
+	 *
+	 * @return string|void
+	 */
+	public static function FormatBytes($bytes, $precision = 2) {
+		if ($bytes <= 0) {
+			return '0 B';
+		}
+
+		$units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB'];
+		$base = log($bytes, 1024);
+		$fBase = floor($base);
+		$pow = pow(1024, $base - $fBase);
+
+		return sprintf("%.{$precision}f %s", $pow, $units[$fBase]);
+	}
+
+	/**
+	 * Returns folder origin identifier from its id.
+	 *
+	 * @param string $folderid
+	 *
+	 * @return bool|string matches values of DeviceManager::FLD_ORIGIN_*
+	 */
+	public static function GetFolderOriginFromId($folderid) {
+		$origin = substr($folderid, 0, 1);
+
+		switch ($origin) {
+			case DeviceManager::FLD_ORIGIN_CONFIG:
+			case DeviceManager::FLD_ORIGIN_GAB:
+			case DeviceManager::FLD_ORIGIN_SHARED:
+			case DeviceManager::FLD_ORIGIN_USER:
+			case DeviceManager::FLD_ORIGIN_IMPERSONATED:
+				return $origin;
+		}
+		SLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFolderOriginFromId(): Unknown folder origin for folder with id '%s'", $folderid));
+
+		return false;
+	}
+
+	/**
+	 * Returns folder origin as string from its id.
+	 *
+	 * @param string $folderid
+	 *
+	 * @return string
+	 */
+	public static function GetFolderOriginStringFromId($folderid) {
+		$origin = substr($folderid, 0, 1);
+
+		switch ($origin) {
+			case DeviceManager::FLD_ORIGIN_CONFIG:
+				return 'configured';
+
+			case DeviceManager::FLD_ORIGIN_GAB:
+				return 'GAB';
+
+			case DeviceManager::FLD_ORIGIN_SHARED:
+				return 'shared';
+
+			case DeviceManager::FLD_ORIGIN_USER:
+				return 'user';
+
+			case DeviceManager::FLD_ORIGIN_IMPERSONATED:
+				return 'impersonated';
+		}
+		SLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFolderOriginStringFromId(): Unknown folder origin for folder with id '%s'", $folderid));
+
+		return 'unknown';
+	}
+
+	/**
+	 * Splits the id into folder id and message id parts. A colon in the $id indicates
+	 * that the id has folderid:messageid format.
+	 *
+	 * @param string $id
+	 *
+	 * @return array
+	 */
+	public static function SplitMessageId($id) {
+		if (strpos($id, ':') !== false) {
+			return explode(':', $id);
+		}
+
+		return [null, $id];
+	}
+
+	/**
+	 * Converts a string freebusy type into a numeric status.
+	 *
+	 * @param string $fbType
+	 *
+	 * @return int
+	 */
+	public static function GetFbStatusFromType($fbType) {
+		switch ($fbType) {
+			case 'Free':
+				return fbFree;
+
+			case 'Tentative':
+				return fbTentative;
+
+			case 'Busy':
+				return fbBusy;
+
+			case 'OOF':
+				return fbOutOfOffice;
+		}
+		SLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFbStatusFromType(): Unknown free busy type '%s'", $fbType));
+
+		return fbNoData;
+	}
 }
 
 // TODO Win1252/UTF8 functions are deprecated and will be removed sometime
-//if the ICS backend is loaded in CombinedBackend and Zarafa > 7
-//STORE_SUPPORTS_UNICODE is true and the conversion will not be done
-//for other backends.
+// if the ICS backend is loaded in CombinedBackend and Zarafa > 7
+// STORE_SUPPORTS_UNICODE is true and the conversion will not be done
+// for other backends.
 function utf8_to_windows1252($string, $option = "", $force_convert = false) {
-    //if the store supports unicode return the string without converting it
-    if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) return $string;
+	// if the store supports unicode return the string without converting it
+	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) {
+		return $string;
+	}
 
-    if (function_exists("iconv")){
-        return @iconv("UTF-8", "Windows-1252" . $option, $string);
-    }else{
-        return utf8_decode($string); // no euro support here
-    }
+	if (function_exists("iconv")) {
+		return @iconv("UTF-8", "Windows-1252" . $option, $string);
+	}
+
+	return utf8_decode($string); // no euro support here
 }
 
 function windows1252_to_utf8($string, $option = "", $force_convert = false) {
-    //if the store supports unicode return the string without converting it
-    if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) return $string;
+	// if the store supports unicode return the string without converting it
+	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) {
+		return $string;
+	}
 
-    if (function_exists("iconv")){
-        return @iconv("Windows-1252", "UTF-8" . $option, $string);
-    }else{
-        return utf8_encode($string); // no euro support here
-    }
+	if (function_exists("iconv")) {
+		return @iconv("Windows-1252", "UTF-8" . $option, $string);
+	}
+
+	return utf8_encode($string); // no euro support here
 }
 
-function w2u($string) { return windows1252_to_utf8($string); }
-function u2w($string) { return utf8_to_windows1252($string); }
+function w2u($string) {
+	return windows1252_to_utf8($string);
+}
+function u2w($string) {
+	return utf8_to_windows1252($string);
+}
 
-function w2ui($string) { return windows1252_to_utf8($string, "//TRANSLIT"); }
-function u2wi($string) { return utf8_to_windows1252($string, "//TRANSLIT"); }
+function w2ui($string) {
+	return windows1252_to_utf8($string, "//TRANSLIT");
+}
+function u2wi($string) {
+	return utf8_to_windows1252($string, "//TRANSLIT");
+}

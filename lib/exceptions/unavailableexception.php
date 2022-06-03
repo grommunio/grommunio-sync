@@ -7,4 +7,5 @@
  * This is a fatal exception when e.g. a subsystem is not
  * available. The mobile should retry later.
  */
-class UnavailableException extends FatalException {}
+class UnavailableException extends FatalException {
+}

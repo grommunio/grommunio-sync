@@ -6,4 +6,5 @@
  *
  * Exception related to WBXML
  */
-class WBXMLException extends FatalNotImplementedException {}
+class WBXMLException extends FatalNotImplementedException {
+}

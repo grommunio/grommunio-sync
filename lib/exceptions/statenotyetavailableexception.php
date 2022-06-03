@@ -6,4 +6,5 @@
  *
  * Indicates that a state was not yet loaded
  */
-class StateNotYetAvailableException extends StatusException {}
+class StateNotYetAvailableException extends StatusException {
+}

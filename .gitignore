@@ -1,3 +1,4 @@
 ignore/*
 tools/*
 .php-cs-fixer.cache
+composer.phar

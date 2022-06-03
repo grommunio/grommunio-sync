@@ -6,4 +6,5 @@
  *
  * Fatal exception related to configuration
  */
-class FatalMisconfigurationException extends FatalException {}
+class FatalMisconfigurationException extends FatalException {
+}

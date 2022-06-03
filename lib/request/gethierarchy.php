@@ -8,39 +8,37 @@
  */
 
 class GetHierarchy extends RequestProcessor {
+	/**
+	 * Handles the GetHierarchy command
+	 * simply returns current hierarchy of all folders.
+	 *
+	 * @param int $commandCode
+	 *
+	 * @return bool
+	 */
+	public function Handle($commandCode) {
+		try {
+			$folders = self::$backend->GetHierarchy();
+			if (!$folders || empty($folders)) {
+				throw new StatusException("GetHierarchy() did not return any data.");
+			}
 
-    /**
-     * Handles the GetHierarchy command
-     * simply returns current hierarchy of all folders
-     *
-     * @param int       $commandCode
-     *
-     * @access public
-     * @return boolean
-     */
-    public function Handle($commandCode) {
-        try {
-            $folders = self::$backend->GetHierarchy();
-            if (!$folders || empty($folders))
-                throw new StatusException("GetHierarchy() did not return any data.");
+			// TODO execute $data->Check() to see if SyncObject is valid
+		}
+		catch (StatusException $ex) {
+			return false;
+		}
 
-            // TODO execute $data->Check() to see if SyncObject is valid
+		self::$encoder->StartWBXML();
+		self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERS);
+		foreach ($folders as $folder) {
+			self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDER);
+			$folder->Encode(self::$encoder);
+			self::$encoder->endTag();
+		}
+		self::$encoder->endTag();
 
-        }
-        catch (StatusException $ex) {
-            return false;
-        }
-
-        self::$encoder->StartWBXML();
-        self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDERS);
-        foreach ($folders as $folder) {
-            self::$encoder->startTag(SYNC_FOLDERHIERARCHY_FOLDER);
-            $folder->Encode(self::$encoder);
-            self::$encoder->endTag();
-        }
-        self::$encoder->endTag();
-
-        // save hierarchy for upcoming syncing
-        return self::$deviceManager->InitializeFolderCache($folders);
-    }
+		// save hierarchy for upcoming syncing
+		return self::$deviceManager->InitializeFolderCache($folders);
+	}
 }

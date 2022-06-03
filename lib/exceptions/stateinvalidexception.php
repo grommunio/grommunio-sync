@@ -6,4 +6,5 @@
  *
  * Indicates that the state is not invalid.
  */
-class StateInvalidException extends StatusException {}
+class StateInvalidException extends StatusException {
+}

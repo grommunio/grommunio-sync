@@ -6,6 +6,6 @@
  *
  * Main exception related to errors regarding synchronization
  */
-class StatusException extends ZPushException {
-    protected $defaultLogLevel = LOGLEVEL_INFO;
+class StatusException extends GSyncException {
+	protected $defaultLogLevel = LOGLEVEL_INFO;
 }

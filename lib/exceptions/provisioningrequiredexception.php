@@ -7,7 +7,7 @@
  * Exception announcing to the mobile that a provisioning request is required
  */
 class ProvisioningRequiredException extends HTTPReturnCodeException {
-    protected $defaultLogLevel = LOGLEVEL_INFO;
-    protected $httpReturnCode = HTTP_CODE_449;
-    protected $httpReturnMessage = "Retry after sending a PROVISION command";
+	protected $defaultLogLevel = LOGLEVEL_INFO;
+	protected $httpReturnCode = HTTP_CODE_449;
+	protected $httpReturnMessage = "Retry after sending a PROVISION command";
 }

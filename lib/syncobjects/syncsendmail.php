@@ -10,39 +10,42 @@
  */
 
 class SyncSendMail extends SyncObject {
-    public $clientid;
-    public $saveinsent;
-    public $replacemime;
-    public $accountid;
-    public $source;
-    public $mime;
-    public $replyflag;
-    public $forwardflag;
+	public $clientid;
+	public $saveinsent;
+	public $replacemime;
+	public $accountid;
+	public $source;
+	public $mime;
+	public $replyflag;
+	public $forwardflag;
 
-    function __construct() {
-        $mapping = array (
-                    SYNC_COMPOSEMAIL_CLIENTID                             => array (  self::STREAMER_VAR      => "clientid"),
+	public function __construct() {
+		$mapping = [
+			SYNC_COMPOSEMAIL_CLIENTID => [self::STREAMER_VAR => "clientid"],
+			SYNC_COMPOSEMAIL_SAVEINSENTITEMS => [
+				self::STREAMER_VAR => "saveinsent",
+				self::STREAMER_PROP => self::STREAMER_TYPE_SEND_EMPTY,
+			],
+			SYNC_COMPOSEMAIL_REPLACEMIME => [
+				self::STREAMER_VAR => "replacemime",
+				self::STREAMER_PROP => self::STREAMER_TYPE_SEND_EMPTY,
+			],
+			SYNC_COMPOSEMAIL_ACCOUNTID => [self::STREAMER_VAR => "accountid"],
+			SYNC_COMPOSEMAIL_SOURCE => [
+				self::STREAMER_VAR => "source",
+				self::STREAMER_TYPE => "SyncSendMailSource",
+			],
+			SYNC_COMPOSEMAIL_MIME => [self::STREAMER_VAR => "mime"],
+			SYNC_COMPOSEMAIL_REPLYFLAG => [
+				self::STREAMER_VAR => "replyflag",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			],
+			SYNC_COMPOSEMAIL_FORWARDFLAG => [
+				self::STREAMER_VAR => "forwardflag",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			],
+		];
 
-                    SYNC_COMPOSEMAIL_SAVEINSENTITEMS                      => array (  self::STREAMER_VAR      => "saveinsent",
-                                                                                      self::STREAMER_PROP     => self::STREAMER_TYPE_SEND_EMPTY),
-
-                    SYNC_COMPOSEMAIL_REPLACEMIME                          => array (  self::STREAMER_VAR      => "replacemime",
-                                                                                      self::STREAMER_PROP     => self::STREAMER_TYPE_SEND_EMPTY),
-
-                    SYNC_COMPOSEMAIL_ACCOUNTID                            => array (  self::STREAMER_VAR      => "accountid"),
-
-                    SYNC_COMPOSEMAIL_SOURCE                               => array (  self::STREAMER_VAR      => "source",
-                                                                                      self::STREAMER_TYPE     => "SyncSendMailSource"),
-
-                    SYNC_COMPOSEMAIL_MIME                                 => array (  self::STREAMER_VAR      => "mime"),
-
-                    SYNC_COMPOSEMAIL_REPLYFLAG                            => array (  self::STREAMER_VAR      => "replyflag",
-                                                                                      self::STREAMER_TYPE     => self::STREAMER_TYPE_IGNORE),
-
-                    SYNC_COMPOSEMAIL_FORWARDFLAG                          => array (  self::STREAMER_VAR      => "forwardflag",
-                                                                                      self::STREAMER_TYPE     => self::STREAMER_TYPE_IGNORE),
-        );
-
-        parent::__construct($mapping);
-    }
+		parent::__construct($mapping);
+	}
 }
