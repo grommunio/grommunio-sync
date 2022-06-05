@@ -116,7 +116,7 @@ class StateManager {
 	/**
 	 * Saves a folder state - SyncParameters object.
 	 *
-	 * @param SyncParamerters $spa
+	 * @param SyncParameters $spa
 	 *
 	 * @return bool
 	 */
