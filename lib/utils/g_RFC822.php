@@ -368,8 +368,9 @@ class Mail_RFC822 {
 	 */
 	protected function _splitCheck($parts, $char) {
 		$string = $parts[0];
+		$partsCount = count($parts);
 
-		for ($i = 0; $i < count($parts); ++$i) {
+		for ($i = 0; $i < $partsCount; ++$i) {
 			if ($this->_hasUnclosedQuotes($string) ||
 				$this->_hasUnclosedBrackets($string, '<>') ||
 				$this->_hasUnclosedBrackets($string, '[]') ||
@@ -468,7 +469,9 @@ class Mail_RFC822 {
 	 */
 	protected function _hasUnclosedBracketsSub($string, &$num, $char) {
 		$parts = explode($char, $string);
-		for ($i = 0; $i < count($parts); ++$i) {
+		$partsCount = count($parts);
+
+		for ($i = 0; $i < partsCount; ++$i) {
 			if (substr($parts[$i], -1) == '\\' || $this->_hasUnclosedQuotes($parts[$i])) {
 				--$num;
 			}
@@ -536,7 +539,9 @@ class Mail_RFC822 {
 		//                         geezer@domain.com
 		//                         geezer
 		// ... or any other format valid by RFC 822.
-		for ($i = 0; $i < count($addresses); ++$i) {
+		$addressesCount = count($addresses);
+
+		for ($i = 0; $i < $addressesCount; ++$i) {
 			if (!$this->validateMailbox($addresses[$i])) {
 				if (empty($this->error)) {
 					$this->error = 'Validation failed for: ' . $addresses[$i];

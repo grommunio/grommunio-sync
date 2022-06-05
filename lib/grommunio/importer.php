@@ -190,7 +190,7 @@ class ImportChangesICS implements IImportChanges {
 			}
 		}
 
-		if ($error == true) {
+		if ($error === true) {
 			throw new StatusException(sprintf("ImportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
 		}
 
@@ -361,7 +361,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean/string - failure / id of message
+	 * @return boolean|string - failure / id of message
 	 */
 	public function ImportMessageChange($id, $message) {
 		$flags = 0;
@@ -530,7 +530,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean/string
+	 * @return boolean|string
 	 */
 	public function ImportMessageMove($id, $newfolder) {
 		list(, $sk) = Utils::SplitMessageId($id);
@@ -638,7 +638,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean/SyncFolder       false on error or a SyncFolder object with serverid and BackendId set (if available)
+	 * @return boolean|SyncFolder       false on error or a SyncFolder object with serverid and BackendId set (if available)
 	 */
 	public function ImportFolderChange($folder) {
 		$id = isset($folder->BackendId) ? $folder->BackendId : false;

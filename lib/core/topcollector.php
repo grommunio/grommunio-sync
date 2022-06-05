@@ -142,11 +142,11 @@ class TopCollector extends InterProcessData {
 	 */
 	public function ClearLatest($all = false) {
 		// it's ok when doing this every 10 sec
-		if ($all == false && time() % 10 != 0) {
+		if ($all === false && time() % 10 != 0) {
 			return true;
 		}
 
-		if ($all == true) {
+		if ($all === true) {
 			$this->getRedis()->delKey(self::TOPDATA);
 		}
 		else {

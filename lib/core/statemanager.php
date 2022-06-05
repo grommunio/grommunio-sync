@@ -116,7 +116,7 @@ class StateManager {
 	/**
 	 * Saves a folder state - SyncParameters object.
 	 *
-	 * @param SyncParamerters $spa
+	 * @param SyncParameters $spa
 	 *
 	 * @return bool
 	 */
@@ -222,7 +222,7 @@ class StateManager {
 	/**
 	 * Gets the failsave sync state for the current synckey.
 	 *
-	 * @return array/boolean    false if not available
+	 * @return array|boolean    false if not available
 	 */
 	public function GetSyncFailState() {
 		if (!$this->uuid) {

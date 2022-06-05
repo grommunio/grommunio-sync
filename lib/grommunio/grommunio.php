@@ -258,7 +258,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// only proceed if a store was found, else return false
 		if ($userstore) {
 			// only check permissions
-			if ($checkACLonly == true) {
+			if ($checkACLonly === true) {
 				// check for admin rights
 				if (!$folderid) {
 					if ($user != $this->mainUser) {
@@ -1455,7 +1455,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $store    target store, could contain a "domain\user" value - if empty default store is returned
 	 * @param string $folderid
 	 *
-	 * @return Resource/boolean
+	 * @return Resource|boolean
 	 */
 	public function GetMAPIStoreForFolderId($store, $folderid) {
 		if ($store == false) {

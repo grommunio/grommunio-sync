@@ -203,7 +203,8 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * @return
 	 */
 	private function _outputStack() {
-		for ($i = 0; $i < count($this->_stack); ++$i) {
+		$stackCount = count($this->_stack);
+		for ($i = 0; $i < $stackCount; ++$i) {
 			if (!$this->_stack[$i]['sent']) {
 				$this->_startTag($this->_stack[$i]['tag'], $this->_stack[$i]['nocontent']);
 				$this->_stack[$i]['sent'] = true;

@@ -78,16 +78,20 @@ class GSyncTop {
 
 	private $topCollector;
 	private $starttime;
+	private $currenttime;
 	private $action;
 	private $filter;
 	private $status;
 	private $statusexpire;
+	private $helpexpire;
+	private $doingTail;
 	private $wide;
 	private $wasEnabled;
 	private $terminate;
 	private $scrSize;
 	private $pingInterval;
 	private $showPush;
+	private $showOption;
 	private $showTermSec;
 
 	private $linesActive = [];
@@ -186,7 +190,7 @@ class GSyncTop {
 			// wait for user input
 			$this->readLineProcess();
 		}
-		while ($this->terminate != true);
+		while ($this->terminate !== true);
 	}
 
 	/**
@@ -712,7 +716,7 @@ class GSyncTop {
 		if (strlen($str) < $size) {
 			return str_pad($str, $size);
 		}
-		if ($cutmiddle == true) {
+		if ($cutmiddle === true) {
 			$cut = ($size - 2) / 2;
 
 			return $this->ptStr(substr($str, 0, $cut) . ".." . substr($str, (-1) * ($cut - 1)), $size);
