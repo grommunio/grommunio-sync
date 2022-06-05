@@ -796,7 +796,7 @@ class LoopDetection extends InterProcessData {
 		}
 		// end exclusive block
 
-		if ($loop === true && $this->ignore_messageid == false) {
+		if ($loop === true && $this->ignore_messageid === false) {
 			GSync::GetTopCollector()->AnnounceInformation("Loop detection", true);
 		}
 

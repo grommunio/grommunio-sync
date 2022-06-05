@@ -190,7 +190,7 @@ class ImportChangesICS implements IImportChanges {
 			}
 		}
 
-		if ($error == true) {
+		if ($error === true) {
 			throw new StatusException(sprintf("ImportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
 		}
 

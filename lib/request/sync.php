@@ -528,7 +528,7 @@ class Sync extends RequestProcessor {
 
 								default:
 									// get the importer
-									if ($this->importer == false) {
+									if ($this->importer === false) {
 										$status = $this->getImporter($sc, $spa, $actiondata);
 									}
 

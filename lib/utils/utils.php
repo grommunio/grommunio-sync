@@ -970,7 +970,7 @@ class Utils {
 // for other backends.
 function utf8_to_windows1252($string, $option = "", $force_convert = false) {
 	// if the store supports unicode return the string without converting it
-	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) {
+	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE === true) {
 		return $string;
 	}
 
@@ -983,7 +983,7 @@ function utf8_to_windows1252($string, $option = "", $force_convert = false) {
 
 function windows1252_to_utf8($string, $option = "", $force_convert = false) {
 	// if the store supports unicode return the string without converting it
-	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE == true) {
+	if (!$force_convert && defined('STORE_SUPPORTS_UNICODE') && STORE_SUPPORTS_UNICODE === true) {
 		return $string;
 	}
 

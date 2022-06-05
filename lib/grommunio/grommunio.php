@@ -258,7 +258,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// only proceed if a store was found, else return false
 		if ($userstore) {
 			// only check permissions
-			if ($checkACLonly == true) {
+			if ($checkACLonly === true) {
 				// check for admin rights
 				if (!$folderid) {
 					if ($user != $this->mainUser) {

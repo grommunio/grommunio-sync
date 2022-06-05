@@ -207,7 +207,7 @@ include_once GSYNC_CONFIG;
 			}
 
 			// log the failed login attempt e.g. for fail2ban
-			if (defined('LOGAUTHFAIL') && LOGAUTHFAIL != false) {
+			if (defined('LOGAUTHFAIL') && LOGAUTHFAIL !== false) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("IP: %s failed to authenticate user '%s'", Request::GetRemoteAddr(), Request::GetAuthUser() ? Request::GetAuthUser() : Request::GetGETUser()));
 			}
 		}
