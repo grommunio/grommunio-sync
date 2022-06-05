@@ -78,16 +78,20 @@ class GSyncTop {
 
 	private $topCollector;
 	private $starttime;
+	private $currenttime;
 	private $action;
 	private $filter;
 	private $status;
 	private $statusexpire;
+	private $helpexpire;
+	private $doingTail;
 	private $wide;
 	private $wasEnabled;
 	private $terminate;
 	private $scrSize;
 	private $pingInterval;
 	private $showPush;
+	private $showOption;
 	private $showTermSec;
 
 	private $linesActive = [];
