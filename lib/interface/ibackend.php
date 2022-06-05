@@ -17,7 +17,7 @@ interface IBackend {
 	/**
 	 * Returns a IStateMachine implementation used to save states.
 	 *
-	 * @return boolean/object       if false is returned, the default Statemachine is
+	 * @return boolean|object       if false is returned, the default Statemachine is
 	 *                              used else the implementation of IStateMachine
 	 */
 	public function GetStateMachine();

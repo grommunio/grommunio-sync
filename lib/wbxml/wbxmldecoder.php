@@ -98,7 +98,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Returns either start, content or end, and auto-concatenates successive content.
 	 *
-	 * @return element/value
+	 * @return element|value
 	 */
 	public function getElement() {
 		$element = $this->getToken();
@@ -150,7 +150,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	 *
 	 * @param $tag
 	 *
-	 * @return element/boolean      returns false if not available
+	 * @return element|boolean      returns false if not available
 	 */
 	public function getElementStartTag($tag) {
 		$element = $this->getToken();
@@ -172,7 +172,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Get the element of a EndTag.
 	 *
-	 * @return element/boolean      returns false if not available
+	 * @return element|boolean      returns false if not available
 	 */
 	public function getElementEndTag() {
 		$element = $this->getToken();
@@ -196,7 +196,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Get the content of an element.
 	 *
-	 * @return string/boolean       returns false if not available
+	 * @return string|boolean       returns false if not available
 	 */
 	public function getElementContent() {
 		$element = $this->getToken();
