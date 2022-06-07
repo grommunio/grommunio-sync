@@ -1038,6 +1038,13 @@ class Meetingrequest {
 							}
 						}
 
+						if (isset($props[$this->proptags['startdate']])) {
+							$props[$this->proptags['commonstart']] = $props[$this->proptags['startdate']];
+						}
+						if (isset($props[$this->proptags['duedate']])) {
+							$props[$this->proptags['commonend']] = $props[$this->proptags['duedate']];
+						}
+
 						mapi_setprops($new, $proposeNewTimeProps + $props);
 
 						// Copy attachments too
