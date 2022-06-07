@@ -892,7 +892,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$deviceType = strtolower(Request::GetDeviceType());
 		if ($deviceType == 'iphone' || $deviceType == 'ipad' || $deviceType == 'ipod') {
 			$matches = [];
-			if (preg_match("/^Apple-.*?\\/(\\d{4})\\./", Request::GetUserAgent(), $matches) && isset($matches[1]) && $matches[1] >= 1607) {
+			if (preg_match("/^Apple-.*?\\/(\\d{4})\\./", Request::GetUserAgent(), $matches) && isset($matches[1]) && $matches[1] >= 1607 && $matches[1] <= 1707) {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse: iOS device %s->%s", Request::GetDeviceType(), Request::GetUserAgent()));
 				$sendresponse = true;
 			}
