@@ -222,7 +222,7 @@ class StateManager {
 	/**
 	 * Gets the failsave sync state for the current synckey.
 	 *
-	 * @return array|boolean    false if not available
+	 * @return array|bool false if not available
 	 */
 	public function GetSyncFailState() {
 		if (!$this->uuid) {

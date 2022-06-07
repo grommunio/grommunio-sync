@@ -1455,7 +1455,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $store    target store, could contain a "domain\user" value - if empty default store is returned
 	 * @param string $folderid
 	 *
-	 * @return Resource|boolean
+	 * @return bool|resource
 	 */
 	public function GetMAPIStoreForFolderId($store, $folderid) {
 		if ($store == false) {

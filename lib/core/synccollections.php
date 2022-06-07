@@ -281,7 +281,7 @@ class SyncCollections implements Iterator {
 	 * @param SyncParameters $spa
 	 * @param mixed          $folderid
 	 *
-	 * @return SyncParameters|boolean      false if no SyncParameters object is found for folderid
+	 * @return bool|SyncParameters false if no SyncParameters object is found for folderid
 	 */
 	public function GetCollection($folderid) {
 		if (isset($this->collections[$folderid])) {
@@ -356,7 +356,7 @@ class SyncCollections implements Iterator {
 	/**
 	 * Returns the latest known PolicyKey to be used as reference.
 	 *
-	 * @return int|boolean       returns false if nothing found in collections
+	 * @return bool|int returns false if nothing found in collections
 	 */
 	public function GetReferencePolicyKey() {
 		return $this->refPolicyKey;
@@ -380,8 +380,8 @@ class SyncCollections implements Iterator {
 	 * Returns the global window size of items to be exported in total over all
 	 * requested collections.
 	 *
-	 * @return int|boolean          returns requested windows size, 512 (max) or the
-	 *                              value of config SYNC_MAX_ITEMS if it is lower
+	 * @return bool|int returns requested windows size, 512 (max) or the
+	 *                  value of config SYNC_MAX_ITEMS if it is lower
 	 */
 	public function GetGlobalWindowSize() {
 		// take the requested global windowsize or the max 512 if not defined

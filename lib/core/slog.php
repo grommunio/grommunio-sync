@@ -88,7 +88,7 @@ class SLog {
 	 *
 	 * @param int $loglevel one of the defined LOGLEVELS
 	 *
-	 * @return string|false     returns false if there was no message logged in that level
+	 * @return false|string returns false if there was no message logged in that level
 	 */
 	public static function GetLastMessage($loglevel) {
 		return (isset(self::$lastLogs[$loglevel])) ? self::$lastLogs[$loglevel] : false;

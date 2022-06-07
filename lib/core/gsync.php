@@ -647,7 +647,7 @@ class GSync {
 	 *
 	 * @param string $foldertype
 	 *
-	 * @return string|false     false if no class for this type is available
+	 * @return false|string false if no class for this type is available
 	 */
 	public static function GetFolderClassFromFolderType($foldertype) {
 		$class = false;

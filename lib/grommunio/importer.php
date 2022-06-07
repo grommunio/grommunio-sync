@@ -361,7 +361,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|string - failure / id of message
+	 * @return bool|string - failure / id of message
 	 */
 	public function ImportMessageChange($id, $message) {
 		$flags = 0;
@@ -530,7 +530,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|string
+	 * @return bool|string
 	 */
 	public function ImportMessageMove($id, $newfolder) {
 		list(, $sk) = Utils::SplitMessageId($id);
@@ -638,7 +638,7 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|SyncFolder       false on error or a SyncFolder object with serverid and BackendId set (if available)
+	 * @return bool|SyncFolder false on error or a SyncFolder object with serverid and BackendId set (if available)
 	 */
 	public function ImportFolderChange($folder) {
 		$id = isset($folder->BackendId) ? $folder->BackendId : false;

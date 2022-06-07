@@ -35,7 +35,7 @@ interface IImportChanges extends IChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|string               failure / id of message
+	 * @return bool|string failure / id of message
 	 */
 	public function ImportMessageChange($id, $message);
 
@@ -86,7 +86,7 @@ interface IImportChanges extends IChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|SyncObject           status/object with the ath least the serverid of the folder set
+	 * @return bool|SyncObject status/object with the ath least the serverid of the folder set
 	 */
 	public function ImportFolderChange($folder);
 
@@ -97,7 +97,7 @@ interface IImportChanges extends IChanges {
 	 *
 	 * @throws StatusException
 	 *
-	 * @return boolean|int  success/SYNC_FOLDERHIERARCHY_STATUS
+	 * @return bool|int success/SYNC_FOLDERHIERARCHY_STATUS
 	 */
 	public function ImportFolderDeletion($folder);
 }

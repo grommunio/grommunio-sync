@@ -52,7 +52,7 @@ class HierarchyCache extends StateObject {
 	 * @param bool   $oldstate (optional) by default false
 	 * @param mixed  $oldState
 	 *
-	 * @return SyncObject|boolean       false if not found
+	 * @return bool|SyncObject false if not found
 	 */
 	public function GetFolder($serverid, $oldState = false) {
 		if (!$oldState && array_key_exists($serverid, $this->data)) {

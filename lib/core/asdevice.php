@@ -445,7 +445,7 @@ class ASDevice extends StateObject {
 	 *
 	 * @param string $folderid
 	 *
-	 * @return int|boolean  returns false if the type is not set
+	 * @return bool|int returns false if the type is not set
 	 */
 	public function GetFolderType($folderid) {
 		if (isset($this->contentData[$folderid]->{self::FOLDERTYPE})) {
@@ -485,7 +485,7 @@ class ASDevice extends StateObject {
 	 *
 	 * @param int $folderid
 	 *
-	 * @return int|boolean  returns false if the type is not set
+	 * @return bool|int returns false if the type is not set
 	 */
 	public function GetFolderBackendId($folderid) {
 		if (isset($this->contentData[$folderid]->{self::FOLDERBACKENDID})) {
@@ -621,7 +621,7 @@ class ASDevice extends StateObject {
 	 *
 	 * @param string $folderid
 	 *
-	 * @return array|boolean        false means no supportedFields are available
+	 * @return array|bool false means no supportedFields are available
 	 */
 	public function GetSupportedFields($folderid) {
 		if (isset($this->contentData, $this->contentData[$folderid], $this->contentData[$folderid]->{self::FOLDERUUID}) &&
@@ -658,7 +658,7 @@ class ASDevice extends StateObject {
 	 *
 	 * @param string $folderid
 	 *
-	 * @return mixed|boolean        false means the status is not available
+	 * @return bool|mixed false means the status is not available
 	 */
 	public function GetFolderSyncStatus($folderid) {
 		if (isset($this->contentData[$folderid]->{self::FOLDERUUID}, $this->contentData[$folderid]->{self::FOLDERSYNCSTATUS}) &&

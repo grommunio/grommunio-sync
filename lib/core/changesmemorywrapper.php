@@ -222,7 +222,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
 	 *
 	 * @param SyncFolder $folder folder to be changed
 	 *
-	 * @return boolean|SyncObject           status/object with the ath least the serverid of the folder set
+	 * @return bool|SyncObject status/object with the ath least the serverid of the folder set
 	 */
 	public function ImportFolderChange($folder) {
 		// if the destinationImporter is set, then this folder should be processed by another importer

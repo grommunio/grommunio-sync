@@ -646,7 +646,7 @@ class LoopDetection extends InterProcessData {
 	 * @param string $maxItems       the current amount of items to be sent to the mobile
 	 * @param string $queuedMessages the amount of messages which were found by the exporter
 	 *
-	 * @return boolean|int      when returning true if a loop has been identified - returns new suggested window size if window might have been too big
+	 * @return bool|int when returning true if a loop has been identified - returns new suggested window size if window might have been too big
 	 */
 	public function Detect($folderid, $uuid, $counter, $maxItems, $queuedMessages) {
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): folderid:'%s' uuid:'%s' counter:'%s' max:'%s' queued:'%s'", $folderid, $uuid, $counter, $maxItems, $queuedMessages));
@@ -945,7 +945,7 @@ class LoopDetection extends InterProcessData {
 	 * @param string $user
 	 * @param string $devid
 	 *
-	 * @return array|boolean    returns false if data not available
+	 * @return array|bool returns false if data not available
 	 */
 	public function GetCachedData($user, $devid) {
 		// not implemented (also nowhere used apparently)

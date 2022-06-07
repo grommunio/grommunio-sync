@@ -283,7 +283,7 @@ class Request {
 	/**
 	 * Returns the input stream.
 	 *
-	 * @return handle|boolean      false if not available
+	 * @return bool|handle false if not available
 	 */
 	public static function GetInputStream() {
 		if (isset(self::$input)) {
@@ -296,7 +296,7 @@ class Request {
 	/**
 	 * Returns the output stream.
 	 *
-	 * @return handle|boolean      false if not available
+	 * @return bool|handle false if not available
 	 */
 	public static function GetOutputStream() {
 		if (isset(self::$output)) {
@@ -322,7 +322,7 @@ class Request {
 	/**
 	 * Returns the value of the user parameter of the querystring.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetGETUser() {
 		if (isset(self::$getUser)) {
@@ -335,7 +335,7 @@ class Request {
 	/**
 	 * Returns the value of the ItemId parameter of the querystring.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetGETItemId() {
 		if (isset(self::$itemId)) {
@@ -348,7 +348,7 @@ class Request {
 	/**
 	 * Returns the value of the CollectionId parameter of the querystring.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetGETCollectionId() {
 		if (isset(self::$collectionId)) {
@@ -387,7 +387,7 @@ class Request {
 	/**
 	 * Returns the value of the AttachmentName parameter of the querystring.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetGETAttachmentName() {
 		if (isset(self::$attachmentName)) {
@@ -402,7 +402,7 @@ class Request {
 	 * If impersonation is active it returns the impersonated user,
 	 * else the auth user.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetUser() {
 		if (self::GetImpersonatedUser()) {
@@ -415,7 +415,7 @@ class Request {
 	/**
 	 * Returns the AuthUser string send by the client.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetAuthUserString() {
 		if (isset(self::$authUserString)) {
@@ -428,7 +428,7 @@ class Request {
 	/**
 	 * Returns the impersonated user. If not available, returns false.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetImpersonatedUser() {
 		if (isset(self::$impersonatedUser)) {
@@ -441,7 +441,7 @@ class Request {
 	/**
 	 * Returns the authenticated user.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetAuthUser() {
 		if (isset(self::$authUser)) {
@@ -454,7 +454,7 @@ class Request {
 	/**
 	 * Returns the authenticated domain for the user.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetAuthDomain() {
 		if (isset(self::$authDomain)) {
@@ -467,7 +467,7 @@ class Request {
 	/**
 	 * Returns the transmitted password.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetAuthPassword() {
 		if (isset(self::$authPassword)) {
@@ -493,7 +493,7 @@ class Request {
 	/**
 	 * Returns the command to be executed.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetCommand() {
 		if (isset(self::$command)) {
@@ -506,7 +506,7 @@ class Request {
 	/**
 	 * Returns the command code which is being executed.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetCommandCode() {
 		if (isset(self::$command)) {
@@ -519,7 +519,7 @@ class Request {
 	/**
 	 * Returns the device id transmitted.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetDeviceID() {
 		if (isset(self::$devid)) {
@@ -532,7 +532,7 @@ class Request {
 	/**
 	 * Returns the device type if transmitted.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetDeviceType() {
 		if (isset(self::$devtype)) {
@@ -545,7 +545,7 @@ class Request {
 	/**
 	 * Returns the value of supported AS protocol from the headers.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetProtocolVersion() {
 		if (isset(self::$asProtocolVersion)) {
@@ -558,7 +558,7 @@ class Request {
 	/**
 	 * Returns the user agent sent in the headers.
 	 *
-	 * @return string|boolean       false if not available
+	 * @return bool|string false if not available
 	 */
 	public static function GetUserAgent() {
 		if (isset(self::$useragent)) {
@@ -571,7 +571,7 @@ class Request {
 	/**
 	 * Returns policy key sent by the device.
 	 *
-	 * @return int|boolean       false if not available
+	 * @return bool|int false if not available
 	 */
 	public static function GetPolicyKey() {
 		if (isset(self::$policykey)) {

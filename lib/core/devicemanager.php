@@ -257,7 +257,7 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @param string $folderid
 	 *
-	 * @return int|boolean        boolean if no type is found
+	 * @return bool|int boolean if no type is found
 	 */
 	public function GetFolderTypeFromCacheById($folderid) {
 		return $this->device->GetFolderType($folderid);
@@ -868,7 +868,7 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @param mixed $folderid
 	 *
-	 * @return int|boolean  returns false if the type is not set
+	 * @return bool|int returns false if the type is not set
 	 */
 	public function GetBackendIdForFolderId($folderid) {
 		$backendId = $this->device->GetFolderBackendId($folderid);
@@ -895,7 +895,7 @@ class DeviceManager extends InterProcessData {
 	 *                                   'I' (impersonated)
 	 * @param string $folderName         Folder name of the backend folder
 	 *
-	 * @return string|boolean  returns false if there is folderid known for this backendid and $generateNewIdIfNew is not set or false
+	 * @return bool|string returns false if there is folderid known for this backendid and $generateNewIdIfNew is not set or false
 	 */
 	public function GetFolderIdForBackendId($backendid, $generateNewIdIfNew = false, $folderOrigin = self::FLD_ORIGIN_USER, $folderName = null) {
 		if (!in_array($folderOrigin, [DeviceManager::FLD_ORIGIN_CONFIG, DeviceManager::FLD_ORIGIN_GAB, DeviceManager::FLD_ORIGIN_SHARED, DeviceManager::FLD_ORIGIN_USER, DeviceManager::FLD_ORIGIN_IMPERSONATED])) {

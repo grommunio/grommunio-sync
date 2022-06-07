@@ -62,7 +62,7 @@ class ContentParameters extends StateObject {
 	 *
 	 * @param int $type
 	 *
-	 * @return int|boolean          returns false if value is not defined
+	 * @return bool|int returns false if value is not defined
 	 */
 	public function BodyPreference($type) {
 		if (!isset($this->bodypref)) {
@@ -86,7 +86,7 @@ class ContentParameters extends StateObject {
 	 *
 	 * @param int $type
 	 *
-	 * @return int|boolean          returns false if value is not defined
+	 * @return bool|int returns false if value is not defined
 	 */
 	public function BodyPartPreference($type) {
 		if (!isset($this->bodypartpref)) {
@@ -108,7 +108,7 @@ class ContentParameters extends StateObject {
 	/**
 	 * Returns available body preference objects.
 	 *
-	 *  @return array|boolean       returns false if the client's body preference is not available
+	 *  @return array|bool       returns false if the client's body preference is not available
 	 */
 	public function GetBodyPreference() {
 		if (!isset($this->bodypref) || !(is_array($this->bodypref) || empty($this->bodypref))) {
@@ -123,7 +123,7 @@ class ContentParameters extends StateObject {
 	/**
 	 * Returns available body part preference objects.
 	 *
-	 *  @return array|boolean       returns false if the client's body preference is not available
+	 *  @return array|bool       returns false if the client's body preference is not available
 	 */
 	public function GetBodyPartPreference() {
 		if (!isset($this->bodypartpref) || !(is_array($this->bodypartpref) || empty($this->bodypartpref))) {
