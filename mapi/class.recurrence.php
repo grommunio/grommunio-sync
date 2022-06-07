@@ -445,15 +445,6 @@
 			return $this->toGMT($this->tz, $daystart + $this->recur["endocc"] * 60);
 		}
 
-		// Backwards compatible code
-		public function getOccurrenceStart($basedate) {
-			return $this->getOccurrenceStart($basedate);
-		}
-
-		public function getOccurrenceEnd($basedate) {
-			return $this->getOccurrenceEnd($basedate);
-		}
-
 		/**
 		 * This function returns the next remindertime starting from $timestamp
 		 * When no next reminder exists, false is returned.
