@@ -25,7 +25,8 @@ To set up a development environment, please follow these steps:
 4. After creation (or modification) of code, make sure your code follows the repositories coding style.
 
    ```sh
-   composer require --working-dir=tools/php-cs-fixer friendsofphp/php-cs-fixer
+   mkdir -p tools/php-cs-fixer
+   php composer.phar require --working-dir=tools/php-cs-fixer friendsofphp/php-cs-fixer
    tools/php-cs-fixer/vendor/friendsofphp/php-cs-fixer/php-cs-fixer --config=.phpcs fix ./
    ```
 
