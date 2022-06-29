@@ -825,7 +825,7 @@ class ASDevice extends StateObject {
 		$this->changed = true;
 
 		// generate an integer folderid for it
-		$id = $this->GetFolderIdForBackendId($folderid, true, DeviceManager::FLD_ORIGIN_SHARED, $name);
+		$this->GetFolderIdForBackendId($folderid, true, DeviceManager::FLD_ORIGIN_SHARED, $name);
 
 		return true;
 	}
