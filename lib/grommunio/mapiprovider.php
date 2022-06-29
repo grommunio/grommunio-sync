@@ -270,7 +270,7 @@ class MAPIProvider {
 						$attendee->email = w2u($this->getEmailAddressFromSearchKey($row[PR_SEARCH_KEY]));
 					}
 					else {
-						SLog::Write(LOGLEVEL_WARN, sprintf("MAPIProvider->getAppointment: The attendee '%s' of type ZARAFA can not be resolved. Code: 0x%X", $row[PR_EMAIL_ADDRESS], mapi_last_hresult()));
+						SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getAppointment: The attendee '%s' of type ZARAFA can not be resolved. Code: 0x%X", $row[PR_EMAIL_ADDRESS], mapi_last_hresult()));
 					}
 				}
 			}
