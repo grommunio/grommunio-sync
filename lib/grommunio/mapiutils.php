@@ -646,7 +646,15 @@ class MAPIUtils {
 	 * @param mixed          $mapimessage
 	 */
 	public static function ParseSmime($session, $store, $addressBook, &$mapimessage) {
-		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, PR_SUBJECT, PR_MESSAGE_DELIVERY_TIME, PR_SENT_REPRESENTING_NAME, PR_SENT_REPRESENTING_ENTRYID, PR_SENT_REPRESENTING_SEARCH_KEY, PR_MESSAGE_FLAGS]);
+		$props = mapi_getprops($mapimessage, [
+			PR_MESSAGE_CLASS,
+			PR_SUBJECT,
+			PR_MESSAGE_DELIVERY_TIME,
+			PR_SENT_REPRESENTING_NAME,
+			PR_SENT_REPRESENTING_ENTRYID,
+			PR_SENT_REPRESENTING_SEARCH_KEY,
+			PR_MESSAGE_FLAGS,
+		]);
 		$read = $props[PR_MESSAGE_FLAGS] & MSGFLAG_READ;
 
 		if (isset($props[PR_MESSAGE_CLASS]) && stripos($props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
@@ -665,7 +673,29 @@ class MAPIUtils {
 				$att = mapi_message_openattach($mapimessage, $attnum);
 				$data = mapi_openproperty($att, PR_ATTACH_DATA_BIN);
 				mapi_message_deleteattach($mapimessage, $attnum);
+				// also copy recipients because they are lost after mapi_inetmapi_imtomapi
+				$recipienttable = mapi_message_getrecipienttable($mapimessage);
+				$messageRecipients = mapi_table_queryallrows($recipienttable, [
+					PR_ENTRYID,
+					PR_SEARCH_KEY,
+					PR_ROWID,
+					PR_DISPLAY_NAME,
+					PR_DISPLAY_TYPE,
+					PR_DISPLAY_TYPE_EX,
+					PR_ADDRTYPE,
+					PR_EMAIL_ADDRESS,
+					PR_SMTP_ADDRESS,
+					PR_OBJECT_TYPE,
+					PR_RECIPIENT_FLAGS,
+					PR_RECIPIENT_TYPE,
+					PR_RECIPIENT_TRACKSTATUS,
+					PR_RECIPIENT_TRACKSTATUS_TIME,
+					PR_CREATION_TIME,
+				]);
 				mapi_inetmapi_imtomapi($session, $store, $addressBook, $mapimessage, $data, ["parse_smime_signed" => 1]);
+				if (!empty($messageRecipients)) {
+					mapi_message_modifyrecipients($mapimessage, MODRECIP_ADD, $messageRecipients);
+				}
 				SLog::Write(LOGLEVEL_DEBUG, "Convert a smime signed message to a normal message.");
 			}
 			$mprops = mapi_getprops($mapimessage, [PR_MESSAGE_FLAGS]);
