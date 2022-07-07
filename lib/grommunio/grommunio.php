@@ -1934,9 +1934,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 				return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
 			}
-			if ($rowCnt > 1) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->getStateMessage(): Found several (%d) states for '%s'", $rowCnt, $messageName));
-			}
 		}
 
 		throw new StateNotFoundException(sprintf(
