@@ -948,7 +948,6 @@ class DeviceManager extends InterProcessData {
 				else {
 					SLog::Write(LOGLEVEL_WARN, "Loaded device is not a device object. Dropping new loaded state and keeping initialized object!");
 				}
-				$this->stateManager->SetDevice($this->device);
 			}
 		}
 		catch (StateNotFoundException $snfex) {
@@ -961,6 +960,7 @@ class DeviceManager extends InterProcessData {
 				$this->hierarchySyncRequired = true;
 			}
 		}
+		$this->stateManager->SetDevice($this->device);
 
 		return true;
 	}
