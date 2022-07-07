@@ -1842,7 +1842,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// fallback code
-		if (!$this->stateFolder) {
+		if (!$this->stateFolder && $this->store) {
 			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getStateFolder(): state folder not set. Use fallback"));
 			$rootfolder = mapi_msgstore_openentry($this->store);
 			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
