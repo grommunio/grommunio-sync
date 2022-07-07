@@ -39,12 +39,6 @@ class ASDevice extends StateObject {
 		'syncfiltertype' => false,
 	];
 
-	protected $firstsynctime;
-	protected $deviceid;
-	protected $devicetype;
-	protected $deviceuser;
-	protected $domain;
-	protected $useragent;
 	protected $newdevice;
 	protected $hierarchyCache;
 	protected $ignoredMessageIds;
