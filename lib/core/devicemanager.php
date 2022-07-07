@@ -632,8 +632,15 @@ class DeviceManager extends InterProcessData {
 		}
 
 		// check if a hierarchy sync might be necessary
-		if ($this->device->GetFolderUUID(false) === false) {
+		$huuid = $this->device->GetFolderUUID(false);
+		if ($huuid === false) {
 			$this->hierarchySyncRequired = true;
+		}
+		// check if the hierarchy state is really available
+		else {
+			if ($this->statemachine->GetStateHash(self::$devid, IStateMachine::FOLDERDATA, $huuid) == "0") {
+				$this->hierarchySyncRequired = true;
+			}
 		}
 
 		return $this->hierarchySyncRequired;
