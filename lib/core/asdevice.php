@@ -108,6 +108,18 @@ class ASDevice extends StateObject {
 	public function LoadedDevice() {
 		$this->newdevice = false;
 
+		// Gsync Issue #52
+		// TODO: Remove fallback code for fix missing properties
+		if (!isset($this->data['deviceid']) || !$this->data['deviceid']) {
+			$this->deviceid = Request::GetDeviceID();
+			$this->devicetype = Request::GetDeviceType();
+			$this->deviceuser = Request::GetUser();
+			$this->domain = Request::GetAuthDomain();
+			$this->useragent = Request::GetUserAgent();
+			$this->firstsynctime = time();
+			SLog::Write(LOGLEVEL_INFO, "Successfulyy set missing properties (GSync #52). Requesting data to be saved.");
+		}
+
 		return true;
 	}
 
