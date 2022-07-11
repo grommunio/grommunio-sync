@@ -1056,17 +1056,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// it's possible to filter such notifications
 		$sinkresult = array_reverse($sinkresult, true);
 		foreach ($sinkresult as $sinknotif) {
-			// add a notification on a folder
-			if ($sinknotif['objtype'] == MAPI_FOLDER) {
-				$hierarchyNotifications[$sinknotif['entryid']] = IBackend::HIERARCHYNOTIFICATION;
-			}
-			// change on a message, remove hierarchy notification
-			if (isset($sinknotif['parentid']) && $sinknotif['objtype'] == MAPI_MESSAGE && isset($notifications[$sinknotif['parentid']])) {
-				unset($hierarchyNotifications[$sinknotif['parentid']]);
+			if (isset($sinknotif['objtype'])) {
+				// add a notification on a folder
+				if ($sinknotif['objtype'] == MAPI_FOLDER) {
+					$hierarchyNotifications[$sinknotif['entryid']] = IBackend::HIERARCHYNOTIFICATION;
+				}
+				// change on a message, remove hierarchy notification
+				if (isset($sinknotif['parentid']) && $sinknotif['objtype'] == MAPI_MESSAGE && isset($notifications[$sinknotif['parentid']])) {
+					unset($hierarchyNotifications[$sinknotif['parentid']]);
+				}
 			}
 
-			// TODO check if adding $sinknotif['objtype'] = MAPI_MESSAGE wouldn't break anything
 			// check if something in the monitored folders changed
+			// 'objtype' is not set when mail is received, so we don't check for it
 			if (isset($sinknotif['parentid']) && array_key_exists($sinknotif['parentid'], $this->changesSinkFolders)) {
 				$notifications[] = $this->changesSinkFolders[$sinknotif['parentid']];
 			}
@@ -2074,7 +2076,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private function adviseStoreToSink($store) {
 		// check if we already advised the store
 		if (!in_array($store, $this->changesSinkStores)) {
-			mapi_msgstore_advise($store, null, fnevObjectModified | fnevObjectCreated | fnevObjectMoved | fnevObjectDeleted, $this->changesSink);
+			mapi_msgstore_advise($store, null, fnevNewMail |fnevObjectModified | fnevObjectCreated | fnevObjectMoved | fnevObjectDeleted, $this->changesSink);
 
 			if (mapi_last_hresult()) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->adviseStoreToSink(): failed to advised store '%s' with code 0x%X. Polling will be performed.", $store, mapi_last_hresult()));
