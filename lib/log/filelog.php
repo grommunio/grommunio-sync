@@ -61,7 +61,7 @@ class FileLog extends Log {
 	 * @return string
 	 */
 	public function BuildLogString($loglevel, $message, $includeUserDevice = true) {
-		$log = Utils::GetFormattedTime() . ' [' . str_pad($this->GetPid(), 5, " ", STR_PAD_LEFT) . '] ' . $this->GetLogLevelString($loglevel, $loglevel >= LOGLEVEL_INFO);
+		$log = Utils::GetFormattedTime() . ' [' . str_pad($this->GetPid(), 5, " ", STR_PAD_LEFT) . '] ' . $this->GetLogLevelString($loglevel, LOGLEVEL >= LOGLEVEL_INFO);
 
 		if ($includeUserDevice) {
 			// when the users differ, we need to log both
