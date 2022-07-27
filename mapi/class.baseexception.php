@@ -4,6 +4,7 @@
  * SPDX-FileCopyrightText: Copyright 2005-2016 Zarafa Deutschland GmbH
  * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
  */
+
 /**
  * Defines a base exception class for all custom exceptions, so every exceptions that
  * is thrown/caught by this application should extend this base class and make use of it.
@@ -14,7 +15,7 @@
  * getFile() - source filename
  * getLine() - source line
  * getTrace() - n array of the backtrace()
- * getTraceAsString() - formated string of trace
+ * getTraceAsString() - formatted string of trace
  */
 class BaseException extends Exception {
 	/**
@@ -82,7 +83,7 @@ class BaseException extends Exception {
 	 * @param string $message display message
 	 */
 	public function setDisplayMessage($message) {
-		$this->displayMessage = $message;
+		$this->displayMessage = $message . " (" . mapi_strerror($this->getCode()) . ")";
 	}
 
 	/**

@@ -100,9 +100,9 @@ class Meetingrequest {
 	 */
 	public $errorSetResource;
 
-	private $proptags;
+	public $proptags;
 	private $store;
-	private $message;
+	public $message;
 	private $session;
 	private $meetingTimeInfo;
 	private $enableDirectBooking;
@@ -136,6 +136,7 @@ class Meetingrequest {
 		$this->meetingTimeInfo = false;
 		$this->enableDirectBooking = $enableDirectBooking;
 
+		$properties = [];
 		$properties['goid'] = 'PT_BINARY:PSETID_Meeting:0x3';
 		$properties['goid2'] = 'PT_BINARY:PSETID_Meeting:0x23';
 		$properties['type'] = 'PT_STRING8:PSETID_Meeting:0x24';
@@ -143,49 +144,51 @@ class Meetingrequest {
 		$properties['unknown2'] = 'PT_BOOLEAN:PSETID_Meeting:0xa';
 		$properties['attendee_critical_change'] = 'PT_SYSTIME:PSETID_Meeting:0x1';
 		$properties['owner_critical_change'] = 'PT_SYSTIME:PSETID_Meeting:0x1a';
-		$properties['meetingstatus'] = 'PT_LONG:PSETID_Appointment:0x8217';
+		$properties['meetingstatus'] = 'PT_LONG:PSETID_Appointment:' . PidLidAppointmentStateFlags;
 		$properties['responsestatus'] = 'PT_LONG:PSETID_Appointment:0x8218';
 		$properties['unknown6'] = 'PT_LONG:PSETID_Meeting:0x4';
 		$properties['replytime'] = 'PT_SYSTIME:PSETID_Appointment:0x8220';
 		$properties['usetnef'] = 'PT_BOOLEAN:PSETID_Common:0x8582';
-		$properties['recurrence_data'] = 'PT_BINARY:PSETID_Appointment:0x8216';
-		$properties['reminderminutes'] = 'PT_LONG:PSETID_Common:0x8501';
-		$properties['reminderset'] = 'PT_BOOLEAN:PSETID_Common:0x8503';
+		$properties['recurrence_data'] = 'PT_BINARY:PSETID_Appointment:' . PidLidAppointmentRecur;
+		$properties['reminderminutes'] = 'PT_LONG:PSETID_Common:' . PidLidReminderDelta;
+		$properties['reminderset'] = 'PT_BOOLEAN:PSETID_Common:' . PidLidReminderSet;
 		$properties['sendasical'] = 'PT_BOOLEAN:PSETID_Appointment:0x8200';
-		$properties['updatecounter'] = 'PT_LONG:PSETID_Appointment:0x8201';                    // AppointmentSequenceNumber
-		$properties['last_updatecounter'] = 'PT_LONG:PSETID_Appointment:0x8203';            // AppointmentLastSequence
+		$properties['updatecounter'] = 'PT_LONG:PSETID_Appointment:' . PidLidAppointmentSequence;					// AppointmentSequenceNumber
 		$properties['unknown7'] = 'PT_LONG:PSETID_Appointment:0x8202';
-		$properties['busystatus'] = 'PT_LONG:PSETID_Appointment:0x8205';
-		$properties['intendedbusystatus'] = 'PT_LONG:PSETID_Appointment:0x8224';
-		$properties['start'] = 'PT_SYSTIME:PSETID_Appointment:0x820d';
+		$properties['last_updatecounter'] = 'PT_LONG:PSETID_Appointment:0x8203';			// AppointmentLastSequence
+		$properties['busystatus'] = 'PT_LONG:PSETID_Appointment:' . PidLidBusyStatus;
+		$properties['intendedbusystatus'] = 'PT_LONG:PSETID_Appointment:' . PidLidIntendedBusyStatus;
+		$properties['start'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidAppointmentStartWhole;
 		$properties['responselocation'] = 'PT_STRING8:PSETID_Meeting:0x2';
-		$properties['location'] = 'PT_STRING8:PSETID_Appointment:0x8208';
-		$properties['requestsent'] = 'PT_BOOLEAN:PSETID_Appointment:0x8229';        // PidLidFInvited, MeetingRequestWasSent
-		$properties['startdate'] = 'PT_SYSTIME:PSETID_Appointment:0x820d';
-		$properties['duedate'] = 'PT_SYSTIME:PSETID_Appointment:0x820e';
-		$properties['flagdueby'] = 'PT_SYSTIME:PSETID_Common:0x8560';
+		$properties['location'] = 'PT_STRING8:PSETID_Appointment:' . PidLidLocation;
+		$properties['requestsent'] = 'PT_BOOLEAN:PSETID_Appointment:0x8229';		// PidLidFInvited, MeetingRequestWasSent
+		$properties['startdate'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidAppointmentStartWhole;
+		$properties['duedate'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidAppointmentEndWhole;
+		$properties['flagdueby'] = 'PT_SYSTIME:PSETID_Common:' . PidLidReminderSignalTime;
 		$properties['commonstart'] = 'PT_SYSTIME:PSETID_Common:0x8516';
 		$properties['commonend'] = 'PT_SYSTIME:PSETID_Common:0x8517';
-		$properties['recurring'] = 'PT_BOOLEAN:PSETID_Appointment:0x8223';
-		$properties['clipstart'] = 'PT_SYSTIME:PSETID_Appointment:0x8235';
-		$properties['clipend'] = 'PT_SYSTIME:PSETID_Appointment:0x8236';
-		$properties['start_recur_date'] = 'PT_LONG:PSETID_Meeting:0xD';                // StartRecurTime
-		$properties['start_recur_time'] = 'PT_LONG:PSETID_Meeting:0xE';                // StartRecurTime
-		$properties['end_recur_date'] = 'PT_LONG:PSETID_Meeting:0xF';                // EndRecurDate
-		$properties['end_recur_time'] = 'PT_LONG:PSETID_Meeting:0x10';                // EndRecurTime
-		$properties['is_exception'] = 'PT_BOOLEAN:PSETID_Meeting:0xA';                // LID_IS_EXCEPTION
+		$properties['recurring'] = 'PT_BOOLEAN:PSETID_Appointment:' . PidLidRecurring;
+		$properties['clipstart'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidClipStart;
+		$properties['clipend'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidClipEnd;
+		$properties['start_recur_date'] = 'PT_LONG:PSETID_Meeting:0xD';				// StartRecurTime
+		$properties['start_recur_time'] = 'PT_LONG:PSETID_Meeting:0xE';				// StartRecurTime
+		$properties['end_recur_date'] = 'PT_LONG:PSETID_Meeting:0xF';				// EndRecurDate
+		$properties['end_recur_time'] = 'PT_LONG:PSETID_Meeting:0x10';				// EndRecurTime
+		$properties['is_exception'] = 'PT_BOOLEAN:PSETID_Meeting:0xA';				// LID_IS_EXCEPTION
 		$properties['apptreplyname'] = 'PT_STRING8:PSETID_Appointment:0x8230';
 		// Propose new time properties
-		$properties['proposed_start_whole'] = 'PT_SYSTIME:PSETID_Appointment:0x8250';
-		$properties['proposed_end_whole'] = 'PT_SYSTIME:PSETID_Appointment:0x8251';
+		$properties['proposed_start_whole'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidAppointmentProposedStartWhole;
+		$properties['proposed_end_whole'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidAppointmentProposedEndWhole;
 		$properties['proposed_duration'] = 'PT_LONG:PSETID_Appointment:0x8256';
-		$properties['counter_proposal'] = 'PT_BOOLEAN:PSETID_Appointment:0x8257';
+		$properties['counter_proposal'] = 'PT_BOOLEAN:PSETID_Appointment:' . PidLidAppointmentCounterProposal;
 		$properties['recurring_pattern'] = 'PT_STRING8:PSETID_Appointment:0x8232';
-		$properties['basedate'] = 'PT_SYSTIME:PSETID_Appointment:0x8228';
+		$properties['basedate'] = 'PT_SYSTIME:PSETID_Appointment:' . PidLidExceptionReplaceTime;
 		$properties['meetingtype'] = 'PT_LONG:PSETID_Meeting:0x26';
-		$properties['timezone_data'] = 'PT_BINARY:PSETID_Appointment:0x8233';
-		$properties['timezone'] = 'PT_STRING8:PSETID_Appointment:0x8234';
-		$properties["categories"] = "PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords";
+		$properties['timezone_data'] = 'PT_BINARY:PSETID_Appointment:' . PidLidTimeZoneStruct;
+		$properties['timezone'] = 'PT_STRING8:PSETID_Appointment:' . PidLidTimeZoneDescription;
+		$properties['categories'] = 'PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords';
+		$properties['private'] = 'PT_BOOLEAN:PSETID_Common:' . PidLidPrivate;
+		$properties['alldayevent'] = 'PT_BOOLEAN:PSETID_Appointment:' . PidLidAppointmentSubType;
 		$properties['toattendeesstring'] = 'PT_STRING8:PSETID_Appointment:0x823B';
 		$properties['ccattendeesstring'] = 'PT_STRING8:PSETID_Appointment:0x823C';
 
@@ -266,7 +269,7 @@ class Meetingrequest {
 	/**
 	 * Function is used to get the last update counter of meeting request.
 	 *
-	 * @return bool|Number false when last_updatecounter not found else return last_updatecounter
+	 * @return int|bool false when last_updatecounter not found else return last_updatecounter
 	 */
 	public function getLastUpdateCounter() {
 		$calendarItemProps = mapi_getprops($this->message, [$this->proptags['last_updatecounter']]);
@@ -323,13 +326,10 @@ class Meetingrequest {
 		// check if delegate is processing the response
 		if (isset($messageprops[PR_RCVD_REPRESENTING_ENTRYID])) {
 			$delegatorStore = $this->getDelegatorStore($messageprops[PR_RCVD_REPRESENTING_ENTRYID], [PR_IPM_APPOINTMENT_ENTRYID]);
-
 			$userStore = $delegatorStore['store'];
-			$calFolder = $delegatorStore[PR_IPM_APPOINTMENT_ENTRYID];
 		}
 		else {
 			$userStore = $this->store;
-			$calFolder = $this->openDefaultCalendar();
 		}
 
 		// check for calendar access
@@ -352,10 +352,10 @@ class Meetingrequest {
 	 * Process every incoming MeetingRequest response.This updates the appointment
 	 * in your calendar to show whether the user has accepted or declined.
 	 *
-	 * @param resource    $store        contains the userStore in which the meeting is created
-	 * @param MAPIMessage $calendarItem resource of the calendar item for which this response has arrived
-	 * @param bool        $basedate     if present the create an exception
-	 * @param array       $messageprops contains message properties
+	 * @param resource $store        contains the userStore in which the meeting is created
+	 * @param resource $calendarItem resource of the calendar item for which this response has arrived
+	 * @param mixed    $basedate     if present the create an exception
+	 * @param array    $messageprops contains message properties
 	 */
 	public function processResponse($store, $calendarItem, $basedate, $messageprops) {
 		$senderentryid = $messageprops[PR_SENT_REPRESENTING_ENTRYID];
@@ -447,16 +447,20 @@ class Meetingrequest {
 
 				// The email address matches, update the row
 				$recipient[PR_RECIPIENT_TRACKSTATUS] = $this->getTrackStatus($messageclass);
-				$recipient[PR_RECIPIENT_TRACKSTATUS_TIME] = $messageprops[$this->proptags['attendee_critical_change']];
+				if (isset($messageprops[$this->proptags['attendee_critical_change']])) {
+					$recipient[PR_RECIPIENT_TRACKSTATUS_TIME] = $messageprops[$this->proptags['attendee_critical_change']];
+				}
 
 				// If this is a counter proposal, set the proposal properties in the recipient row
 				if (isset($messageprops[$this->proptags['counter_proposal']]) && $messageprops[$this->proptags['counter_proposal']]) {
-					$recipient[PR_PROPOSENEWTIME_START] = $messageprops[$this->proptags['proposed_start_whole']];
-					$recipient[PR_PROPOSENEWTIME_END] = $messageprops[$this->proptags['proposed_end_whole']];
-					$recipient[PR_PROPOSEDNEWTIME] = $messageprops[$this->proptags['counter_proposal']];
+					$recipient[PR_RECIPIENT_PROPOSEDSTARTTIME] = $messageprops[$this->proptags['proposed_start_whole']];
+					$recipient[PR_RECIPIENT_PROPOSEDENDTIME] = $messageprops[$this->proptags['proposed_end_whole']];
+					$recipient[PR_RECIPIENT_PROPOSED] = $messageprops[$this->proptags['counter_proposal']];
 				}
 
-				mapi_message_modifyrecipients($calendarItem, MODRECIP_MODIFY, [$recipient]);
+				// Update the recipient information
+				mapi_message_modifyrecipients($calendarItem, MODRECIP_REMOVE, [$recipient]);
+				mapi_message_modifyrecipients($calendarItem, MODRECIP_ADD, [$recipient]);
 			}
 			if (isset($recipient[PR_RECIPIENT_TRACKSTATUS]) && $recipient[PR_RECIPIENT_TRACKSTATUS] == olRecipientTrackStatusAccepted) {
 				++$acceptedrecips;
@@ -478,9 +482,9 @@ class Meetingrequest {
 
 			// If this is a counter proposal, set the proposal properties in the recipient row
 			if (isset($messageprops[$this->proptags['counter_proposal']])) {
-				$recipient[PR_PROPOSENEWTIME_START] = $messageprops[$this->proptags['proposed_start_whole']];
-				$recipient[PR_PROPOSENEWTIME_END] = $messageprops[$this->proptags['proposed_end_whole']];
-				$recipient[PR_PROPOSEDNEWTIME] = $messageprops[$this->proptags['counter_proposal']];
+				$recipient[PR_RECIPIENT_PROPOSEDSTARTTIME] = $messageprops[$this->proptags['proposed_start_whole']];
+				$recipient[PR_RECIPIENT_PROPOSEDENDTIME] = $messageprops[$this->proptags['proposed_end_whole']];
+				$recipient[PR_RECIPIENT_PROPOSED] = $messageprops[$this->proptags['counter_proposal']];
 			}
 
 			mapi_message_modifyrecipients($calendarItem, MODRECIP_ADD, [$recipient]);
@@ -545,7 +549,7 @@ class Meetingrequest {
 		$listProperties['rcvd_representing_search_key'] = PR_RCVD_REPRESENTING_SEARCH_KEY;
 		$messageProps = mapi_getprops($this->message, $listProperties);
 
-		$goid = $messageProps[$this->proptags['goid']];    // GlobalID (0x3)
+		$goid = $messageProps[$this->proptags['goid']];	// GlobalID (0x3)
 		if (!isset($goid)) {
 			return;
 		}
@@ -555,11 +559,9 @@ class Meetingrequest {
 			$delegatorStore = $this->getDelegatorStore($messageProps[PR_RCVD_REPRESENTING_ENTRYID], [PR_IPM_APPOINTMENT_ENTRYID]);
 
 			$store = $delegatorStore['store'];
-			$calFolder = $delegatorStore[PR_IPM_APPOINTMENT_ENTRYID];
 		}
 		else {
 			$store = $this->store;
-			$calFolder = $this->openDefaultCalendar();
 		}
 
 		// check for calendar access
@@ -618,18 +620,18 @@ class Meetingrequest {
 	 * inbox probably) to the calendar. If you don't, it is copied into
 	 * your calendar.
 	 *
-	 * @param bool   $tentative            true if user as tentative accepted the meeting
-	 * @param bool   $sendresponse         true if a response has to be send to organizer
-	 * @param bool   $move                 true if the meeting request should be moved to the deleted items after processing
-	 * @param string $newProposedStartTime contains starttime if user has proposed other time
-	 * @param string $newProposedEndTime   contains endtime if user has proposed other time
-	 * @param string $basedate             start of day of occurrence for which user has accepted the recurrent meeting
-	 * @param bool   $isImported           true to indicate that MR is imported from .ics or .vcs file else it false.
-	 * @param mixed  $body
-	 * @param mixed  $userAction
-	 * @param mixed  $store
+	 * @param bool  $tentative            true if user as tentative accepted the meeting
+	 * @param bool  $sendresponse         true if a response has to be sent to organizer
+	 * @param bool  $move                 true if the meeting request should be moved to the deleted items after processing
+	 * @param mixed $newProposedStartTime contains starttime if user has proposed other time
+	 * @param mixed $newProposedEndTime   contains endtime if user has proposed other time
+	 * @param mixed $body
+	 * @param mixed $userAction
+	 * @param mixed $store
+	 * @param mixed $basedate             start of day of occurrence for which user has accepted the recurrent meeting
+	 * @param bool  $isImported           true to indicate that MR is imported from .ics or .vcs file else it false.
 	 *
-	 * @return string $entryid entryid of item which created/updated in calendar
+	 * @return string|bool $entryid entryid of item which created/updated in calendar
 	 */
 	public function doAccept($tentative, $sendresponse, $move, $newProposedStartTime = false, $newProposedEndTime = false, $body = false, $userAction = false, $store = false, $basedate = false, $isImported = false) {
 		if ($this->isLocalOrganiser()) {
@@ -664,11 +666,11 @@ class Meetingrequest {
 		}
 
 		/*
-		 *    if this function is called automatically with meeting request object then there will be
-		 *    two possibilitites
-		 *    1) meeting request is opened first time, in this case make a tentative appointment in
-		 * recipient's calendar
-		 *    2) after this every subsequent request to open meeting request will not do any processing
+		 *	if this function is called automatically with meeting request object then there will be
+		 *	two possibilitites
+		 *	1) meeting request is opened first time, in this case make a tentative appointment in
+		 *		recipient's calendar
+		 *	2) after this every subsequent request to open meeting request will not do any processing
 		 */
 		if ($this->isMeetingRequest($messageprops[PR_MESSAGE_CLASS]) && $userAction == false) {
 			if (isset($messageprops[PR_PROCESSED]) && $messageprops[PR_PROCESSED] == true) {
@@ -678,13 +680,15 @@ class Meetingrequest {
 
 			// if correspondent calendar item is already processed then don't do anything
 			$calendarItem = $this->getCorrespondentCalendarItem();
-			$calendarItemProps = mapi_getprops($calendarItem, [PR_PROCESSED]);
-			if (isset($calendarItemProps[PR_PROCESSED]) && $calendarItemProps[PR_PROCESSED] == true) {
-				// mark meeting-request mail as processed as well
-				mapi_setprops($this->message, [PR_PROCESSED => true]);
-				mapi_savechanges($this->message);
+			if ($calendarItem) {
+				$calendarItemProps = mapi_getprops($calendarItem, [PR_PROCESSED]);
+				if (isset($calendarItemProps[PR_PROCESSED]) && $calendarItemProps[PR_PROCESSED] == true) {
+					// mark meeting-request mail as processed as well
+					mapi_setprops($this->message, [PR_PROCESSED => true]);
+					mapi_savechanges($this->message);
 
-				return false;
+					return false;
+				}
 			}
 		}
 
@@ -705,7 +709,7 @@ class Meetingrequest {
 		// While sender is receiver then we have to process the meeting request as per the intended busy status
 		// instead of tentative, and accept the same as per the intended busystatus.
 		$senderEntryId = isset($messageprops[PR_SENT_REPRESENTING_ENTRYID]) ? $messageprops[PR_SENT_REPRESENTING_ENTRYID] : $messageprops[PR_SENDER_ENTRYID];
-		if (isset($messageprops[PR_RECEIVED_BY_ENTRYID]) && MAPIUtils::CompareEntryIds($senderEntryId, $messageprops[PR_RECEIVED_BY_ENTRYID])) {
+		if (isset($messageprops[PR_RECEIVED_BY_ENTRYID]) && compareEntryIds($senderEntryId, $messageprops[PR_RECEIVED_BY_ENTRYID])) {
 			$entryid = $this->accept(false, $sendresponse, $move, $proposeNewTimeProps, $body, true, $store, $calFolder, $basedate);
 		}
 		else {
@@ -775,7 +779,8 @@ class Meetingrequest {
 				if (!$processed) {
 					// get all the properties and copy that to calendar item
 					$props = mapi_getprops($this->message);
-
+					// reset the PidLidMeetingType to Unspecified for outlook display the item
+					$props[$this->proptags['meetingtype']] = mtgEmpty;
 					/*
 					 * the client which has sent this meeting request can generate wrong flagdueby
 					 * time (mainly OL), so regenerate that property so we will always show reminder
@@ -922,6 +927,12 @@ class Meetingrequest {
 						$old_entryid = mapi_getprops($this->message, [PR_ENTRYID]);
 						$calmsg = mapi_folder_createmessage($calFolder);
 						mapi_copyto($this->message, [], [], $calmsg); /* includes attachments and recipients */
+						// reset the PidLidMeetingType to Unspecified for outlook display the item
+						$tmp_props = [];
+						$tmp_props[$this->proptags['meetingtype']] = mtgEmpty;
+						// OL needs this field always being set, or it will not display item
+						$tmp_props[$this->proptags['recurring']] = false;
+						mapi_setprops($calmsg, $tmp_props);
 
 						// After creating new MR, If local categories exist then apply it on new MR.
 						if (!empty($localCategories)) {
@@ -965,10 +976,27 @@ class Meetingrequest {
 							}
 						}
 
+						$calItemProps[$this->proptags['recurring_pattern']] = '';
+						$calItemProps[$this->proptags['alldayevent']] = $calItemProps[$this->proptags['alldayevent']] ?? false;
+						$calItemProps[$this->proptags['private']] = $calItemProps[$this->proptags['private']] ?? false;
+						$calItemProps[$this->proptags['meetingstatus']] = $calItemProps[$this->proptags['meetingstatus']] ?? olMeetingReceived;
+						if (isset($calItemProps[$this->proptags['startdate']])) {
+							$calItemProps[$this->proptags['commonstart']] = $calItemProps[$this->proptags['startdate']];
+						}
+						if (isset($calItemProps[$this->proptags['duedate']])) {
+							$calItemProps[$this->proptags['commonend']] = $calItemProps[$this->proptags['duedate']];
+						}
+
 						mapi_setprops($calmsg, $proposeNewTimeProps + $calItemProps);
 
 						// get properties which stores owner information in meeting request mails
-						$props = mapi_getprops($calmsg, [PR_SENT_REPRESENTING_ENTRYID, PR_SENT_REPRESENTING_NAME, PR_SENT_REPRESENTING_EMAIL_ADDRESS, PR_SENT_REPRESENTING_ADDRTYPE, PR_SENT_REPRESENTING_SEARCH_KEY]);
+						$props = mapi_getprops($calmsg, [
+							PR_SENT_REPRESENTING_ENTRYID,
+							PR_SENT_REPRESENTING_NAME,
+							PR_SENT_REPRESENTING_EMAIL_ADDRESS,
+							PR_SENT_REPRESENTING_ADDRTYPE,
+							PR_SENT_REPRESENTING_SEARCH_KEY,
+						]);
 
 						// add owner to recipient table
 						$recips = [];
@@ -988,7 +1016,22 @@ class Meetingrequest {
 						$new = mapi_folder_createmessage($calFolder);
 						$props = mapi_getprops($this->message);
 
+						$props[$this->proptags['recurring_pattern']] = '';
+						$props[$this->proptags['alldayevent']] = $props[$this->proptags['alldayevent']] ?? false;
+						$props[$this->proptags['private']] = $props[$this->proptags['private']] ?? false;
+						$props[$this->proptags['meetingstatus']] = $props[$this->proptags['meetingstatus']] ?? olMeetingReceived;
+						if (isset($props[$this->proptags['startdate']])) {
+							$props[$this->proptags['commonstart']] = $props[$this->proptags['startdate']];
+						}
+						if (isset($props[$this->proptags['duedate']])) {
+							$props[$this->proptags['commonend']] = $props[$this->proptags['duedate']];
+						}
+
 						$props[PR_MESSAGE_CLASS] = 'IPM.Appointment';
+						// reset the PidLidMeetingType to Unspecified for outlook display the item
+						$props[$this->proptags['meetingtype']] = mtgEmpty;
+						// OL needs this field always being set, or it will not display item
+						$props[$this->proptags['recurring']] = false;
 
 						// After creating new MR, If local categories exist then apply it on new MR.
 						if (!empty($localCategories)) {
@@ -1004,14 +1047,10 @@ class Meetingrequest {
 							$props[$this->proptags['flagdueby']] = $props[$this->proptags['startdate']] - ($props[$this->proptags['reminderminutes']] * 60);
 						}
 
-						// When meeting requests are generated by third-party solutions, we might be missing the properties.
+						// When meeting requests are generated by third-party solutions, we might be missing the updatecounter property.
 						if (!isset($props[$this->proptags['updatecounter']])) {
 							$props[$this->proptags['updatecounter']] = 0;
 						}
-						if (!isset($props[$this->proptags['recurring']])) {
-							$props[$this->proptags['recurring']] = false;
-						}
-
 						// when we are automatically processing the meeting request set responsestatus to olResponseNotResponded
 						$props[$this->proptags['responsestatus']] = $userAction ? ($tentative ? olResponseTentative : olResponseAccepted) : olResponseNotResponded;
 
@@ -1038,37 +1077,30 @@ class Meetingrequest {
 							}
 						}
 
-						if (isset($props[$this->proptags['startdate']])) {
-							$props[$this->proptags['commonstart']] = $props[$this->proptags['startdate']];
-						}
-						if (isset($props[$this->proptags['duedate']])) {
-							$props[$this->proptags['commonend']] = $props[$this->proptags['duedate']];
-						}
-
 						mapi_setprops($new, $proposeNewTimeProps + $props);
 
-						// Copy attachments too
-						$this->replaceAttachments($this->message, $new);
+						$reciptable = mapi_message_getrecipienttable($this->message);
 
-						// get recipient table of source message
-						$recipientTable = mapi_message_getrecipienttable($this->message);
-
+						$recips = [];
 						// If delegate, then do not add the delegate in recipients
 						if ($isDelegate) {
 							$delegate = mapi_getprops($this->message, [PR_RECEIVED_BY_EMAIL_ADDRESS]);
-							$res = [RES_PROPERTY, [
-								RELOP => RELOP_NE,
-								ULPROPTAG => PR_EMAIL_ADDRESS,
-								VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
-							],
+							$res = [
+								RES_PROPERTY,
+								[
+									RELOP => RELOP_NE,
+									ULPROPTAG => PR_EMAIL_ADDRESS,
+									VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
+								],
 							];
-							$recipients = mapi_table_queryallrows($recipientTable, $this->recipprops, $res);
+							$recips = mapi_table_queryallrows($reciptable, $this->recipprops, $res);
 						}
 						else {
-							$recipients = mapi_table_queryallrows($recipientTable, $this->recipprops);
+							$recips = mapi_table_queryallrows($reciptable, $this->recipprops);
 						}
-						$this->addOrganizer($props, $recipients);
-						mapi_message_modifyrecipients($new, MODRECIP_ADD, $recipients);
+
+						$this->addOrganizer($props, $recips);
+						mapi_message_modifyrecipients($new, MODRECIP_ADD, $recips);
 						mapi_savechanges($new);
 
 						$props = mapi_getprops($new, [PR_ENTRYID]);
@@ -1146,9 +1178,9 @@ class Meetingrequest {
 	 * When an occurrence is decline then false is returned because that
 	 * occurrence is deleted not the recurring item.
 	 *
-	 * @param bool   $sendresponse true if a response has to be sent to organizer
-	 * @param string $basedate     if specified contains starttime of day of an occurrence
-	 * @param mixed  $body
+	 * @param bool  $sendresponse true if a response has to be sent to organizer
+	 * @param mixed $basedate     if specified contains starttime of day of an occurrence
+	 * @param mixed $body
 	 *
 	 * @return bool true if item is deleted from Calendar else false
 	 */
@@ -1246,7 +1278,7 @@ class Meetingrequest {
 	 * Removes a meeting request from the calendar when the user presses the
 	 * 'remove from calendar' button in response to a meeting cancellation.
 	 *
-	 * @param string $basedate if specified contains starttime of day of an occurrence
+	 * @param mixed $basedate if specified contains starttime of day of an occurrence
 	 */
 	public function doRemoveFromCalendar($basedate) {
 		if ($this->isLocalOrganiser()) {
@@ -1330,7 +1362,7 @@ class Meetingrequest {
 	 * Function can be used to cancel any existing meeting and send cancellation mails to attendees.
 	 * Should only be called from meeting object from calendar.
 	 *
-	 * @param string $basedate (optional) basedate of occurrence which should be cancelled
+	 * @param mixed $basedate (optional) basedate of occurrence which should be cancelled
 	 * @FIXME cancellation mail is also sent to attendee which has declined the meeting
 	 * @FIXME don't send canellation mail when cancelling meeting from past
 	 */
@@ -1361,7 +1393,7 @@ class Meetingrequest {
 			$this->updateMeetingRequest();
 
 			// send cancellation mails
-			$this->sendMeetingRequest(true, _('Canceled: '), $basedate);
+			$this->sendMeetingRequest(true, dgettext('zarafa', 'Canceled') . ': ', $basedate);
 
 			// save changes in the message
 			mapi_savechanges($this->message);
@@ -1370,7 +1402,7 @@ class Meetingrequest {
 			// cancellation of normal meeting request
 			// Send the cancellation
 			$this->updateMeetingRequest();
-			$this->sendMeetingRequest(true, _('Canceled: '));
+			$this->sendMeetingRequest(true, dgettext('zarafa', 'Canceled') . ': ');
 
 			// save changes in the message
 			mapi_savechanges($this->message);
@@ -1396,9 +1428,8 @@ class Meetingrequest {
 	 * https://msdn.microsoft.com/en-us/library/office/cc765906.aspx.
 	 *
 	 * @param int the current epoch
-	 * @param mixed $epoch
 	 *
-	 * @return the MAPI FileTime equalevent to the given epoch time
+	 * @return int the MAPI FileTime equalevent to the given epoch time
 	 */
 	public function epochToMapiFileTime($epoch) {
 		$nanoseconds_between_epoch = 116444736000000000;
@@ -1420,13 +1451,20 @@ class Meetingrequest {
 		// Create a new global id for this item
 		// https://msdn.microsoft.com/en-us/library/ee160198(v=exchg.80).aspx
 		$goid = pack('H*', '040000008200E00074C5B7101A82E00800000000');
+		/*
+		$year = gmdate('Y');
+		$month = gmdate('n');
+		$day = gmdate('j');
+		$goid .= pack('n', $year);
+		$goid .= pack('C', $month);
+		$goid .= pack('C', $day);
+		*/
 		// Creation Time
 		$time = $this->epochToMapiFileTime(time());
-		$highdatetime = $time >> 32;
-		$lowdatetime = $time & 0xFFFFFFFF;
-		$goid .= pack('II', $lowdatetime, $highdatetime);
+		$goid .= pack('V', $time & 0xFFFFFFFF);
+		$goid .= pack('V', $time >> 32);
 		// 8 Zeros
-		$goid .= pack('P', 0);
+		$goid .= pack('H*', '0000000000000000');
 		// Length of the random data
 		$goid .= pack('V', 16);
 		// Random data.
@@ -1443,7 +1481,7 @@ class Meetingrequest {
 		$props[$this->proptags['goid2']] = $goid;
 
 		if (!isset($props[$this->proptags['updatecounter']])) {
-			$props[$this->proptags['updatecounter']] = 0;            // OL also starts sequence no with zero.
+			$props[$this->proptags['updatecounter']] = 0;			// OL also starts sequence no with zero.
 			$props[$this->proptags['last_updatecounter']] = 0;
 		}
 
@@ -1479,12 +1517,12 @@ class Meetingrequest {
 		// Set ResponseStatus to olResponseNotResponded
 
 		/*
-		 * While sending recurrence meeting exceptions are not send as attachments
-		 * because first all exceptions are send and then recurrence meeting is sent.
+		 * While sending recurrence meeting exceptions are not sent as attachments
+		 * because first all exceptions are sent and then recurrence meeting is sent.
 		 */
 		if (isset($messageprops[$this->proptags['recurring']]) && $messageprops[$this->proptags['recurring']] && !$basedate) {
 			// Book resource
-			$resourceRecipData = $this->bookResources($this->message, $cancel, $prefix);
+			$this->bookResources($this->message, $cancel, $prefix);
 
 			if (!$this->errorSetResource) {
 				$recurr = new Recurrence($this->openDefaultStore(), $this->message);
@@ -1508,7 +1546,7 @@ class Meetingrequest {
 			}
 		}
 		else {
-			// Basedate found, an exception is to be send
+			// Basedate found, an exception is to be sent
 			if ($basedate) {
 				$recurr = new Recurrence($this->openDefaultStore(), $this->message);
 
@@ -1554,49 +1592,6 @@ class Meetingrequest {
 		}
 
 		return true;
-	}
-
-	/**
-	 * This function will get freebusy data for user based on the timeframe passed in arguments.
-	 *
-	 * @param {HexString} $entryID Entryid of the user for which we need to get freebusy data
-	 * @param {Number} $start start offset for freebusy publish range
-	 * @param {Number} $end end offset for freebusy publish range
-	 *
-	 * @return {Array} freebusy blocks for passed publish range
-	 */
-	public function getFreeBusyInfo($entryID, $start, $end) {
-		$result = [];
-		$fbsupport = mapi_freebusysupport_open($this->session);
-
-		$fbDataArray = mapi_freebusysupport_loaddata($fbsupport, [$entryID]);
-
-		if ($fbDataArray[0] != null) {
-			foreach ($fbDataArray as $fbDataUser) {
-				$rangeuser1 = mapi_freebusydata_getpublishrange($fbDataUser);
-				if ($rangeuser1 == null) {
-					return $result;
-				}
-
-				$enumblock = mapi_freebusydata_enumblocks($fbDataUser, $start, $end);
-				mapi_freebusyenumblock_reset($enumblock);
-
-				while (true) {
-					$blocks = mapi_freebusyenumblock_next($enumblock, 100);
-					if (!$blocks) {
-						break;
-					}
-
-					foreach ($blocks as $blockItem) {
-						$result[] = $blockItem;
-					}
-				}
-			}
-		}
-
-		mapi_freebusysupport_close($fbsupport);
-
-		return $result;
 	}
 
 	/**
@@ -1670,17 +1665,14 @@ class Meetingrequest {
 		switch ($class) {
 			case 'IPM.Schedule.Meeting.Resp.Pos':
 				$status = olRecipientTrackStatusAccepted;
-
 				break;
 
 			case 'IPM.Schedule.Meeting.Resp.Tent':
 				$status = olRecipientTrackStatusTentative;
-
 				break;
 
 			case 'IPM.Schedule.Meeting.Resp.Neg':
 				$status = olRecipientTrackStatusDeclined;
-
 				break;
 		}
 
@@ -1700,9 +1692,9 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of the default calendar folder of store.
 	 *
-	 * @param MAPIStore $store {optional} user store whose default calendar should be opened
+	 * @param mixed $store {optional} user store whose default calendar should be opened
 	 *
-	 * @return MAPIFolder default calendar folder of store
+	 * @return resource default calendar folder of store
 	 */
 	public function openDefaultCalendar($store = false) {
 		return $this->openDefaultFolder(PR_IPM_APPOINTMENT_ENTRYID, $store);
@@ -1711,9 +1703,9 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of the default outbox folder of store.
 	 *
-	 * @param MAPIStore $store {optional} user store whose default outbox should be opened
+	 * @param mixed $store {optional} user store whose default outbox should be opened
 	 *
-	 * @return MAPIFolder default outbox folder of store
+	 * @return resource default outbox folder of store
 	 */
 	public function openDefaultOutbox($store = false) {
 		return $this->openBaseFolder(PR_IPM_OUTBOX_ENTRYID, $store);
@@ -1722,9 +1714,9 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of the default wastebasket folder of store.
 	 *
-	 * @param MAPIStore $store {optional} user store whose default wastebasket should be opened
+	 * @param mixed $store {optional} user store whose default wastebasket should be opened
 	 *
-	 * @return MAPIFolder default wastebasket folder of store
+	 * @return resource default wastebasket folder of store
 	 */
 	public function openDefaultWastebasket($store = false) {
 		return $this->openBaseFolder(PR_IPM_WASTEBASKET_ENTRYID, $store);
@@ -1733,9 +1725,9 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of the default calendar folder of store.
 	 *
-	 * @param MAPIStore $store {optional} user store whose default calendar should be opened
+	 * @param mixed $store {optional} user store whose default calendar should be opened
 	 *
-	 * @return MAPIFolder default calendar folder of store
+	 * @return resource default calendar folder of store
 	 */
 	public function getDefaultWastebasketEntryID($store = false) {
 		return $this->getBaseEntryID(PR_IPM_WASTEBASKET_ENTRYID, $store);
@@ -1744,9 +1736,9 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of the default sent mail folder of store.
 	 *
-	 * @param MAPIStore $store {optional} user store whose default sent mail should be opened
+	 * @param mixed $store {optional} user store whose default sent mail should be opened
 	 *
-	 * @return MAPIFolder default sent mail folder of store
+	 * @return resource default sent mail folder of store
 	 */
 	public function getDefaultSentmailEntryID($store = false) {
 		return $this->getBaseEntryID(PR_IPM_SENTMAIL_ENTRYID, $store);
@@ -1757,10 +1749,10 @@ class Meetingrequest {
 	 * to get entryid of folder which is stored as properties of inbox folder
 	 * (PR_IPM_APPOINTMENT_ENTRYID, PR_IPM_CONTACT_ENTRYID, PR_IPM_DRAFTS_ENTRYID, PR_IPM_JOURNAL_ENTRYID, PR_IPM_NOTE_ENTRYID, PR_IPM_TASK_ENTRYID).
 	 *
-	 * @param PropTag   $prop  proptag of the folder for which we want to get entryid
-	 * @param MAPIStore $store {optional} user store from which we need to get entryid of default folder
+	 * @param int   $prop  proptag of the folder for which we want to get entryid
+	 * @param mixed $store {optional} user store from which we need to get entryid of default folder
 	 *
-	 * @return BinString entryid of folder pointed by $prop
+	 * @return string|bool entryid of folder pointed by $prop
 	 */
 	public function getDefaultFolderEntryID($prop, $store = false) {
 		try {
@@ -1784,10 +1776,10 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of any default folder of store.
 	 *
-	 * @param PropTag   $prop  proptag of the folder that we want to open
-	 * @param MAPIStore $store {optional} user store from which we need to open default folder
+	 * @param int   $prop  proptag of the folder that we want to open
+	 * @param mixed $store {optional} user store from which we need to open default folder
 	 *
-	 * @return MAPIFolder default folder of store
+	 * @return resource default folder of store
 	 */
 	public function openDefaultFolder($prop, $store = false) {
 		$folder = false;
@@ -1805,10 +1797,10 @@ class Meetingrequest {
 	 * to get entryid of folder which is stored as store properties
 	 * (PR_IPM_FAVORITES_ENTRYID, PR_IPM_OUTBOX_ENTRYID, PR_IPM_SENTMAIL_ENTRYID, PR_IPM_WASTEBASKET_ENTRYID).
 	 *
-	 * @param PropTag   $prop  proptag of the folder whose entryid we want to get
-	 * @param MAPIStore $store {optional} user store from which we need to get entryid of default folder
+	 * @param int   $prop  proptag of the folder whose entryid we want to get
+	 * @param mixed $store {optional} user store from which we need to get entryid of default folder
 	 *
-	 * @return BinString entryid of default folder from store
+	 * @return string|bool entryid of default folder from store
 	 */
 	public function getBaseEntryID($prop, $store = false) {
 		$storeprops = mapi_getprops($store ? $store : $this->store, [$prop]);
@@ -1822,10 +1814,10 @@ class Meetingrequest {
 	/**
 	 * Function will return resource of any default folder of store.
 	 *
-	 * @param PropTag   $prop  proptag of the folder that we want to open
-	 * @param MAPIStore $store {optional} user store from which we need to open default folder
+	 * @param int   $prop  proptag of the folder that we want to open
+	 * @param mixed $store {optional} user store from which we need to open default folder
 	 *
-	 * @return MAPIFolder default folder of store
+	 * @return resource default folder of store
 	 */
 	public function openBaseFolder($prop, $store = false) {
 		$folder = false;
@@ -1841,8 +1833,8 @@ class Meetingrequest {
 	/**
 	 * Function checks whether user has access over the specified folder or not.
 	 *
-	 * @param Binary    $entryid entryid The entryid of the folder to check
-	 * @param MAPIStore $store   (optional) store from which folder should be opened
+	 * @param string $entryid entryid The entryid of the folder to check
+	 * @param mixed  $store   (optional) store from which folder should be opened
 	 *
 	 * @return bool true if user has an access over the folder, false if not
 	 */
@@ -1878,7 +1870,6 @@ class Meetingrequest {
 	/**
 	 * Function checks whether user has access over the specified folder or not.
 	 *
-	 * @param object MAPI Message Store Object
 	 * @param mixed $store
 	 *
 	 * @return bool true if user has an access over the folder, false if not
@@ -1922,7 +1913,7 @@ class Meetingrequest {
 	 *
 	 * @param string $ownerentryid the entryid of the user
 	 *
-	 * @return MAPIStore store of the user
+	 * @return resource store of the user
 	 */
 	public function openCustomUserStore($ownerentryid) {
 		$ab = mapi_openaddressbook($this->session);
@@ -1945,9 +1936,9 @@ class Meetingrequest {
 	 *
 	 * @param int   $status              response status of attendee
 	 * @param array $proposeNewTimeProps properties of attendee's proposal
-	 * @param int   $basedate            date of occurrence which attendee has responded
 	 * @param mixed $body
 	 * @param mixed $store
+	 * @param int   $basedate            date of occurrence which attendee has responded
 	 * @param mixed $calFolder
 	 */
 	public function createResponse($status, $proposeNewTimeProps = [], $body = false, $store, $basedate = false, $calFolder) {
@@ -1974,7 +1965,9 @@ class Meetingrequest {
 			$this->proptags['is_exception'],
 		]);
 
-		if ($basedate && !$this->isMeetingRequest($messageprops[PR_MESSAGE_CLASS])) {
+		$props = [];
+
+		if ($basedate !== false && !$this->isMeetingRequest($messageprops[PR_MESSAGE_CLASS])) {
 			// we are creating response from a recurring calendar item object
 			// We found basedate,so opened occurrence and get properties.
 			$recurr = new Recurrence($store, $this->message);
@@ -2056,29 +2049,27 @@ class Meetingrequest {
 		$recip[PR_RECIPIENT_TYPE] = MAPI_TO;
 		$recip[PR_SEARCH_KEY] = $messageprops[PR_SENT_REPRESENTING_SEARCH_KEY];
 
+		$subjectprefix = '';
 		switch ($status) {
 			case olResponseAccepted:
 				$classpostfix = 'Pos';
-				$subjectprefix = _('Accepted');
-
+				$subjectprefix = dgettext('zarafa', 'Accepted');
 				break;
 
 			case olResponseDeclined:
 				$classpostfix = 'Neg';
-				$subjectprefix = _('Declined');
-
+				$subjectprefix = dgettext('zarafa', 'Declined');
 				break;
 
 			case olResponseTentative:
 				$classpostfix = 'Tent';
-				$subjectprefix = _('Tentatively accepted');
-
+				$subjectprefix = dgettext('zarafa', 'Tentatively accepted');
 				break;
 		}
 
 		if (!empty($proposeNewTimeProps)) {
 			// if attendee has proposed new time then change subject prefix
-			$subjectprefix = _('New Time Proposed');
+			$subjectprefix = dgettext('zarafa', 'New Time Proposed');
 		}
 
 		$props[PR_SUBJECT] = $subjectprefix . ': ' . $messageprops[PR_SUBJECT];
@@ -2128,9 +2119,11 @@ class Meetingrequest {
 	/**
 	 * Function which finds items in calendar based on globalId and cleanGlobalId.
 	 *
-	 * @param binary     $goid             GlobalID(0x3) of item
-	 * @param MAPIFolder $calendar         MAPI_folder of user (optional)
-	 * @param bool       $useCleanGlobalId if true then search should be performed on cleanGlobalId(0x23) else globalId(0x3)
+	 * @param string $goid             GlobalID(0x3) of item
+	 * @param mixed  $calendar         MAPI_folder of user (optional)
+	 * @param bool   $useCleanGlobalId if true then search should be performed on cleanGlobalId(0x23) else globalId(0x3)
+	 *
+	 * @return array
 	 */
 	public function findCalendarItems($goid, $calendar = false, $useCleanGlobalId = false) {
 		if ($calendar === false) {
@@ -2140,17 +2133,13 @@ class Meetingrequest {
 
 		// Find the item by restricting all items to the correct ID
 		$restrict = [
-			RES_AND,
+			RES_PROPERTY,
 			[
-				[
-					RES_PROPERTY,
-					[
-						RELOP => RELOP_EQ,
-						ULPROPTAG => ($useCleanGlobalId === true ? $this->proptags['goid2'] : $this->proptags['goid']),
-						VALUE => $goid,
-					],
-				],
-			], ];
+				RELOP => RELOP_EQ,
+				ULPROPTAG => ($useCleanGlobalId === true ? $this->proptags['goid2'] : $this->proptags['goid']),
+				VALUE => $goid,
+			],
+		];
 
 		$calendarcontents = mapi_folder_getcontentstable($calendar);
 
@@ -2194,11 +2183,15 @@ class Meetingrequest {
 			return false;
 		}
 
-		$ab = mapi_openaddressbook($this->session);
+		try {
+			$ab = mapi_openaddressbook($this->session);
+			$abitem = mapi_ab_openentry($ab, $entryid);
 
-		$abitem = mapi_ab_openentry($ab, $entryid);
-
-		if (!$abitem) {
+			if (!$abitem) {
+				return '';
+			}
+		}
+		catch (MAPIException $e) {
 			return '';
 		}
 
@@ -2215,11 +2208,12 @@ class Meetingrequest {
 	 * Gets the properties associated with the owner of the passed store:
 	 * PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_ADDRTYPE, PR_ENTRYID, PR_SEARCH_KEY.
 	 *
-	 * @param $store message store
-	 * @param $fallbackToLoggedInUser if true then return properties of logged in user instead of mailbox owner
-	 * not used when passed store is public store. for public store we are always returning logged in user's info.
+	 * @param mixed $store message store
+	 * @param bool  $fallbackToLoggedInUser If true then return properties of logged in user instead of mailbox owner.
+	 *                                      Not used when passed store is public store.
+	 *                                      For public store we are always returning logged in user's info.
 	 *
-	 * @return properties of logged in user in an array in sequence of display_name, email address, address type,
+	 * @return array|bool properties of logged in user in an array in sequence of display_name, email address, address type,
 	 *                    entryid and search key
 	 */
 	public function getOwnerAddress($store, $fallbackToLoggedInUser = true) {
@@ -2268,7 +2262,6 @@ class Meetingrequest {
 		foreach ($rows as $row) {
 			if (isset($row[PR_DEFAULT_STORE]) && $row[PR_DEFAULT_STORE]) {
 				$entryid = $row[PR_ENTRYID];
-
 				break;
 			}
 		}
@@ -2323,7 +2316,7 @@ class Meetingrequest {
 	 * Function which removes an exception/occurrence from recurrencing meeting
 	 * when a meeting cancellation of an occurrence is processed.
 	 *
-	 * @param string   $basedate basedate of an occurrence
+	 * @param mixed    $basedate basedate of an occurrence
 	 * @param resource $message  recurring item from which occurrence has to be deleted
 	 * @param resource $store    MAPI_MSG_Store which contains the item
 	 */
@@ -2336,16 +2329,16 @@ class Meetingrequest {
 	/**
 	 * Function which returns basedate of an changed occurrence from globalID of meeting request.
 	 *
-	 *@param binary $goid globalID
+	 * @param string $goid globalID
 	 *
-	 *@return bool true if basedate is found else false it not found
+	 * @return int|bool true if basedate is found else false it not found
 	 */
 	public function getBasedateFromGlobalID($goid) {
 		$hexguid = bin2hex($goid);
 		$hexbase = substr($hexguid, 32, 8);
-		$day = hexdec(substr($hexbase, 6, 2));
-		$month = hexdec(substr($hexbase, 4, 2));
-		$year = hexdec(substr($hexbase, 0, 4));
+		$day = (int) hexdec(substr($hexbase, 6, 2));
+		$month = (int) hexdec(substr($hexbase, 4, 2));
+		$year = (int) hexdec(substr($hexbase, 0, 4));
 
 		if ($day && $month && $year) {
 			return gmmktime(0, 0, 0, $month, $day, $year);
@@ -2355,19 +2348,18 @@ class Meetingrequest {
 	}
 
 	/**
-	 * Function which sets basedate in globalID of changed occurrence which is to be send.
+	 * Function which sets basedate in globalID of changed occurrence which is to be sent.
 	 *
-	 *@param binary $goid globalID
-	 *@param string basedate of changed occurrence
-	 * @param mixed $basedate
+	 * @param string $goid globalID
+	 * @param mixed  $basedate of changed occurrence
 	 *
-	 *@return binary globalID with basedate in it
+	 * @return string|bool globalID with basedate in it
 	 */
 	public function setBasedateInGlobalID($goid, $basedate = false) {
 		$hexguid = bin2hex($goid);
-		$year = $basedate ? sprintf('%04s', dechex(gmdate('Y', $basedate))) : '0000';
-		$month = $basedate ? sprintf('%02s', dechex(gmdate('m', $basedate))) : '00';
-		$day = $basedate ? sprintf('%02s', dechex(gmdate('d', $basedate))) : '00';
+		$year = $basedate ? sprintf('%04s', dechex((int) gmdate('Y', $basedate))) : '0000';
+		$month = $basedate ? sprintf('%02s', dechex((int) gmdate('m', $basedate))) : '00';
+		$day = $basedate ? sprintf('%02s', dechex((int) gmdate('d', $basedate))) : '00';
 
 		return hex2bin(strtoupper(substr($hexguid, 0, 32) . $year . $month . $day . substr($hexguid, 40)));
 	}
@@ -2375,17 +2367,15 @@ class Meetingrequest {
 	/**
 	 * Function which replaces attachments with copy_from in copy_to.
 	 *
-	 * @param MAPIMessage $copy_from      MAPI_message from which attachments are to be copied
-	 * @param MAPIMessage $copy_to        MAPI_message to which attachment are to be copied
-	 * @param bool        $copyExceptions if true then all exceptions should also be sent as attachments
-	 * @param mixed       $copyFrom
-	 * @param mixed       $copyTo
+	 * @param mixed $copyFrom      MAPI_message from which attachments are to be copied
+	 * @param mixed $copyTo        MAPI_message to which attachment are to be copied
+	 * @param bool  $copyExceptions if true then all exceptions should also be sent as attachments
 	 */
 	public function replaceAttachments($copyFrom, $copyTo, $copyExceptions = true) {
 		/* remove all old attachments */
-		$attachmentTable = mapi_message_getattachmenttable($copyTo);
-		if ($attachmentTable) {
-			$attachments = mapi_table_queryallrows($attachmentTable, [PR_ATTACH_NUM, PR_ATTACH_METHOD, PR_EXCEPTION_STARTTIME]);
+		$attachmentTableTo = mapi_message_getattachmenttable($copyTo);
+		if ($attachmentTableTo) {
+			$attachments = mapi_table_queryallrows($attachmentTableTo, [PR_ATTACH_NUM, PR_ATTACH_METHOD, PR_EXCEPTION_STARTTIME]);
 
 			foreach ($attachments as $attachProps) {
 				/* remove exceptions too? */
@@ -2395,12 +2385,11 @@ class Meetingrequest {
 				mapi_message_deleteattach($copyTo, $attachProps[PR_ATTACH_NUM]);
 			}
 		}
-		$attachmentTable = false;
 
 		/* copy new attachments */
-		$attachmentTable = mapi_message_getattachmenttable($copyFrom);
-		if ($attachmentTable) {
-			$attachments = mapi_table_queryallrows($attachmentTable, [PR_ATTACH_NUM, PR_ATTACH_METHOD, PR_EXCEPTION_STARTTIME]);
+		$attachmentTableFrom = mapi_message_getattachmenttable($copyFrom);
+		if ($attachmentTableFrom) {
+			$attachments = mapi_table_queryallrows($attachmentTableFrom, [PR_ATTACH_NUM, PR_ATTACH_METHOD, PR_EXCEPTION_STARTTIME]);
 
 			foreach ($attachments as $attachProps) {
 				if (!$copyExceptions && $attachProps[PR_ATTACH_METHOD] == ATTACH_EMBEDDED_MSG && isset($attachProps[PR_EXCEPTION_STARTTIME])) {
@@ -2416,12 +2405,12 @@ class Meetingrequest {
 	}
 
 	/**
-	 * Function which replaces recipients in copy_to with recipients from copyFrom.
+	 * Function which replaces recipients in copyTo with recipients from copyFrom.
 	 *
-	 * @param MAPIMessage $copyFrom   MAPI_message from which recipients are to be copied
-	 * @param MAPIMessage $copyTo     MAPI_message to which recipients are to be copied
-	 * @param bool        $isDelegate indicates delegate is processing
-	 *                                so don't copy delegate information to recipient table
+	 * @param mixed $copyFrom   MAPI_message from which recipients are to be copied
+	 * @param mixed $copyTo     MAPI_message to which recipients are to be copied
+	 * @param bool  $isDelegate indicates wheter delegate is processing
+	 *                          so don't copy delegate information to recipient table
 	 */
 	public function replaceRecipients($copyFrom, $copyTo, $isDelegate = false) {
 		$recipientTable = mapi_message_getrecipienttable($copyFrom);
@@ -2429,11 +2418,13 @@ class Meetingrequest {
 		// If delegate, then do not add the delegate in recipients
 		if ($isDelegate) {
 			$delegate = mapi_getprops($copyFrom, [PR_RECEIVED_BY_EMAIL_ADDRESS]);
-			$res = [RES_PROPERTY, [
-				RELOP => RELOP_NE,
-				ULPROPTAG => PR_EMAIL_ADDRESS,
-				VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
-			],
+			$res = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_NE,
+					ULPROPTAG => PR_EMAIL_ADDRESS,
+					VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
+				],
 			];
 			$recipients = mapi_table_queryallrows($recipientTable, $this->recipprops, $res);
 		}
@@ -2453,7 +2444,7 @@ class Meetingrequest {
 	 *
 	 * @param resource $message  MAPI_message which is to create in resource's calendar
 	 * @param bool     $cancel   cancel meeting
-	 * @param string   $prefix   prefix for subject of meeting
+	 * @param mixed    $prefix   prefix for subject of meeting
 	 * @param mixed    $basedate
 	 */
 	public function bookResources($message, $cancel, $prefix, $basedate = false) {
@@ -2493,16 +2484,12 @@ class Meetingrequest {
 
 		// Get resource recipients
 		$getResourcesRestriction = [
-			RES_AND,
+			RES_PROPERTY,
 			[
-				[
-					RES_PROPERTY,
-					[
-						RELOP => RELOP_EQ,    // Equals recipient type 3: Resource
-						ULPROPTAG => PR_RECIPIENT_TYPE,
-						VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
-					],
-				], ],
+				RELOP => RELOP_EQ,	// Equals recipient type 3: Resource
+				ULPROPTAG => PR_RECIPIENT_TYPE,
+				VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
+			],
 		];
 		$recipienttable = mapi_message_getrecipienttable($message);
 		$resourceRecipients = mapi_table_queryallrows($recipienttable, $this->recipprops, $getResourcesRestriction);
@@ -2544,14 +2531,13 @@ class Meetingrequest {
 				 * Get the LocalFreebusy message that contains the properties that
 				 * are set to accept or decline resource meeting requests.
 				 */
-				// Use PR_FREEBUSY_ENTRYIDS[1] to open folder the LocalFreeBusy msg
-				$localFreebusyMsg = mapi_msgstore_openentry($userStore, $userRootProps[PR_FREEBUSY_ENTRYIDS][1]);
+				$localFreebusyMsg = FreeBusy::getLocalFreeBusyMessage($userStore);
 				if ($localFreebusyMsg) {
-					$props = mapi_getprops($localFreebusyMsg, [PR_PROCESS_MEETING_REQUESTS, PR_DECLINE_RECURRING_MEETING_REQUESTS, PR_DECLINE_CONFLICTING_MEETING_REQUESTS]);
+					$props = mapi_getprops($localFreebusyMsg, [PR_SCHDINFO_AUTO_ACCEPT_APPTS, PR_SCHDINFO_DISALLOW_RECURRING_APPTS, PR_SCHDINFO_DISALLOW_OVERLAPPING_APPTS]);
 
-					$acceptMeetingRequests = isset($props[PR_PROCESS_MEETING_REQUESTS]) ? $props[PR_PROCESS_MEETING_REQUESTS] : false;
-					$declineRecurringMeetingRequests = isset($props[PR_DECLINE_RECURRING_MEETING_REQUESTS]) ? $props[PR_DECLINE_RECURRING_MEETING_REQUESTS] : false;
-					$declineConflictingMeetingRequests = isset($props[PR_DECLINE_CONFLICTING_MEETING_REQUESTS]) ? $props[PR_DECLINE_CONFLICTING_MEETING_REQUESTS] : false;
+					$acceptMeetingRequests = isset($props[PR_SCHDINFO_AUTO_ACCEPT_APPTS]) ? $props[PR_SCHDINFO_AUTO_ACCEPT_APPTS] : false;
+					$declineRecurringMeetingRequests = isset($props[PR_SCHDINFO_DISALLOW_RECURRING_APPTS]) ? $props[PR_SCHDINFO_DISALLOW_RECURRING_APPTS] : false;
+					$declineConflictingMeetingRequests = isset($props[PR_SCHDINFO_DISALLOW_OVERLAPPING_APPTS]) ? $props[PR_SCHDINFO_DISALLOW_OVERLAPPING_APPTS] : false;
 
 					if (!$acceptMeetingRequests) {
 						/*
@@ -2613,7 +2599,6 @@ class Meetingrequest {
 
 							if (isset($ResourceMsgProps[$this->proptags['recurring']]) && $ResourceMsgProps[$this->proptags['recurring']]) {
 								$newResourceMsg = $ResourceMsg;
-
 								break;
 							}
 						}
@@ -2775,16 +2760,12 @@ class Meetingrequest {
 		 */
 		// Get resource recipients
 		$getResourcesRestriction = [
-			RES_AND,
+			RES_PROPERTY,
 			[
-				[
-					RES_PROPERTY,
-					[
-						RELOP => RELOP_EQ,    // Equals recipient type 3: Resource
-						ULPROPTAG => PR_RECIPIENT_TYPE,
-						VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
-					],
-				], ],
+				RELOP => RELOP_EQ,	// Equals recipient type 3: Resource
+				ULPROPTAG => PR_RECIPIENT_TYPE,
+				VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
+			],
 		];
 		$recipienttable = mapi_message_getrecipienttable($message);
 		$resourceRecipients = mapi_table_queryallrows($recipienttable, $this->recipprops, $getResourcesRestriction);
@@ -2795,21 +2776,6 @@ class Meetingrequest {
 				$resourceRecipients[$i][PR_RECIPIENT_TRACKSTATUS_TIME] = time();
 			}
 			mapi_message_modifyrecipients($message, MODRECIP_MODIFY, $resourceRecipients);
-		}
-
-		// Publish updated free/busy information
-		if (!$this->errorSetResource) {
-			for ($i = 0, $len = count($resourceRecipData); $i < $len; ++$i) {
-				$storeProps = mapi_getprops($resourceRecipData[$i]['store'], [PR_MAILBOX_OWNER_ENTRYID]);
-				if (isset($storeProps[PR_MAILBOX_OWNER_ENTRYID])) {
-					$start = time() - 7 * 24 * 60 * 60;
-					$range = strtotime("+6 month");
-					$range = $range - (7 * 24 * 60 * 60);
-
-					$pub = new FreeBusyPublish($this->session, $resourceRecipData[$i]['store'], $resourceRecipData[$i]['folder'], $storeProps[PR_MAILBOX_OWNER_ENTRYID]);
-					$pub->publishFB($start, $range); // publish from one week ago, 6 months ahead
-				}
-			}
 		}
 
 		return $resourceRecipData;
@@ -2838,11 +2804,13 @@ class Meetingrequest {
 		// If delegate, then do not add the delegate in recipients
 		if ($isDelegate) {
 			$delegate = mapi_getprops($this->message, [PR_RECEIVED_BY_EMAIL_ADDRESS]);
-			$res = [RES_PROPERTY, [
-				RELOP => RELOP_NE,
-				ULPROPTAG => PR_EMAIL_ADDRESS,
-				VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
-			],
+			$res = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_NE,
+					ULPROPTAG => PR_EMAIL_ADDRESS,
+					VALUE => [PR_EMAIL_ADDRESS => $delegate[PR_RECEIVED_BY_EMAIL_ADDRESS]],
+				],
 			];
 			$recips = mapi_table_queryallrows($reciptable, $this->recipprops, $res);
 		}
@@ -2909,7 +2877,7 @@ class Meetingrequest {
 	 *
 	 * @param resource $recurringItem  reference to MAPI_message of recurring item
 	 * @param resource $occurrenceItem reference to MAPI_message of occurrence
-	 * @param string   $basedate       basedate of occurrence
+	 * @param mixed    $basedate       basedate of occurrence
 	 * @param resource $store          user store
 	 */
 	public function mergeException(&$recurringItem, &$occurrenceItem, $basedate, $store) {
@@ -2940,12 +2908,12 @@ class Meetingrequest {
 	/**
 	 * Function which submits meeting request based on arguments passed to it.
 	 *
-	 * @param resource $message        MAPI_message whose meeting request is to be send
+	 * @param resource $message        MAPI_message whose meeting request is to be sent
 	 * @param bool     $cancel         if true send request, else send cancellation
-	 * @param string   $prefix         subject prefix
-	 * @param int      $basedate       basedate for an occurrence
-	 * @param object   $recurObject    recurrence object of mr
-	 * @param bool     $copyExceptions When sending update mail for recurring item then we dont send exceptions in attachments
+	 * @param mixed    $prefix         subject prefix
+	 * @param mixed    $basedate       basedate for an occurrence
+	 * @param mixed    $recurObject    recurrence object of mr
+	 * @param bool     $copyExceptions When sending update mail for recurring item then we don't send exceptions in attachments
 	 * @param mixed    $modifiedRecips
 	 * @param mixed    $deletedRecips
 	 */
@@ -3012,7 +2980,7 @@ class Meetingrequest {
 				$restriction[1][] = [
 					RES_PROPERTY,
 					[
-						RELOP => RELOP_NE,    // Does not equal recipient type: MAPI_BCC (Resource)
+						RELOP => RELOP_NE,	// Does not equal recipient type: MAPI_BCC (Resource)
 						ULPROPTAG => PR_RECIPIENT_TYPE,
 						VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
 					],
@@ -3045,6 +3013,13 @@ class Meetingrequest {
 		$meetingTimeInfo = $this->getMeetingTimeInfo();
 
 		if ($meetingTimeInfo) {
+			// Needs to unset PR_HTML and PR_RTF_COMPRESSED props
+			// because while canceling meeting requests with edit text
+			// will override the PR_BODY because body value is not consistent with
+			// PR_HTML and PR_RTF_COMPRESSED value so in this case PR_RTF_COMPRESSED will
+			// get priority which override the PR_BODY value.
+			unset($newmessageprops[PR_HTML], $newmessageprops[PR_RTF_COMPRESSED]);
+
 			$newmessageprops[PR_BODY] = $meetingTimeInfo;
 		}
 
@@ -3105,15 +3080,14 @@ class Meetingrequest {
 
 		// In direct-booking mode, resources do not receive a meeting request
 		if ($this->enableDirectBooking) {
-			$stripResourcesRestriction[1][] =
-									[
-										RES_PROPERTY,
-										[
-											RELOP => RELOP_NE,    // Does not equal recipient type: MAPI_BCC (Resource)
-											ULPROPTAG => PR_RECIPIENT_TYPE,
-											VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
-										],
-									];
+			$stripResourcesRestriction[1][] = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_NE,	// Does not equal recipient type: MAPI_BCC (Resource)
+					ULPROPTAG => PR_RECIPIENT_TYPE,
+					VALUE => [PR_RECIPIENT_TYPE => MAPI_BCC],
+				],
+			];
 		}
 
 		// If no recipients were explicitly provided, we will send the update to all
@@ -3178,7 +3152,7 @@ class Meetingrequest {
 		}
 
 		// Search through the deleted recipients, and see if any of them is also
-		// listed as a recipient to whom we have send an update. As we don't
+		// listed as a recipient to whom we have sent an update. As we don't
 		// want to send a cancellation message to recipients who will also receive
 		// an meeting update, we have to filter those recipients out.
 		if ($deletedRecips) {
@@ -3192,7 +3166,6 @@ class Meetingrequest {
 				foreach ($modifiedRecips as $recip) {
 					if ($this->compareABEntryIDs($recip[PR_ENTRYID], $delRecip[PR_ENTRYID])) {
 						$found = true;
-
 						break;
 					}
 				}
@@ -3216,9 +3189,9 @@ class Meetingrequest {
 			$newmessageprops[PR_MESSAGE_CLASS] = 'IPM.Schedule.Meeting.Canceled';
 			$newmessageprops[$this->proptags['meetingstatus']] = olMeetingCanceled; // It's a cancel request
 			$newmessageprops[$this->proptags['busystatus']] = fbFree; // set the busy status as free
-			$newmessageprops[PR_IMPORTANCE] = IMPORTANCE_HIGH;    // HIGH Importance
+			$newmessageprops[PR_IMPORTANCE] = IMPORTANCE_HIGH;	// HIGH Importance
 			if (isset($newmessageprops[PR_SUBJECT])) {
-				$newmessageprops[PR_SUBJECT] = _('Canceled: ') . $newmessageprops[PR_SUBJECT];
+				$newmessageprops[PR_SUBJECT] = dgettext('zarafa', 'Canceled') . ': ' . $newmessageprops[PR_SUBJECT];
 			}
 
 			mapi_setprops($new, $newmessageprops);
@@ -3263,8 +3236,8 @@ class Meetingrequest {
 	 * Ref: MS-OXCICAL 2.2.1.20.20 Property: RECURRENCE-ID.
 	 *
 	 * @param object $recurObject     instance of recurrence class for this message
-	 * @param array  $messageprops    properties of meeting object that is going to be send
-	 * @param array  $newmessageprops properties of meeting request/response that is going to be send
+	 * @param array  $messageprops    properties of meeting object that is going to be sent
+	 * @param array  $newmessageprops properties of meeting request/response that is going to be sent
 	 */
 	public function generateRecurDates($recurObject, $messageprops, &$newmessageprops) {
 		if ($messageprops[$this->proptags['startdate']] && $messageprops[$this->proptags['duedate']]) {
@@ -3288,10 +3261,10 @@ class Meetingrequest {
 	/**
 	 * Function will create a new outgoing message that will be used to send meeting mail.
 	 *
-	 * @param MAPIStore $store (optional) store that is used when creating response, if delegate is creating outgoing mail
+	 * @param mixed $store (optional) store that is used when creating response, if delegate is creating outgoing mail
 	 *                         then this would point to delegate store
 	 *
-	 * @return MAPIMessage outgoing mail that is created and can be used for sending it
+	 * @return resource outgoing mail that is created and can be used for sending it
 	 */
 	public function createOutgoingMessage($store = false) {
 		// get logged in user's store that will be used to send mail, for delegate this will be
@@ -3426,7 +3399,7 @@ class Meetingrequest {
 	/**
 	 * Function which checks that if we have received a meeting response for an updated meeting in organizer's calendar.
 	 *
-	 * @param Number $basedate basedate of the exception if we want to compare with exception
+	 * @param mixed $basedate basedate of the exception if we want to compare with exception
 	 *
 	 * @return bool true if meeting request is updated later
 	 */
@@ -3480,13 +3453,11 @@ class Meetingrequest {
 	 * 2) duedate has been changed OR
 	 * 3) recurrence pattern has been created, modified or removed.
 	 *
-	 * @param array oldProps old props before an update
-	 * @param Number basedate basedate
-	 * @param bool isRecurrenceChanged for change in recurrence pattern.
-	 * isRecurrenceChanged true means Recurrence pattern has been changed, so clear all attendees response
 	 * @param mixed $oldProps
 	 * @param mixed $basedate
-	 * @param mixed $isRecurrenceChanged
+	 * @param mixed $isRecurrenceChanged for change in recurrence pattern.
+	 *                                   true means Recurrence pattern has been changed,
+	 *                                   so clear all attendees response
 	 */
 	public function checkSignificantChanges($oldProps, $basedate, $isRecurrenceChanged = false) {
 		$message = null;
@@ -3521,21 +3492,21 @@ class Meetingrequest {
 		if (($newProps[$this->proptags['startdate']] != $oldProps[$this->proptags['startdate']]) ||
 			($newProps[$this->proptags['duedate']] != $oldProps[$this->proptags['duedate']]) ||
 			$isRecurrenceChanged) {
-			$this->clearRecipientResponse($message);
+				$this->clearRecipientResponse($message);
 
-			mapi_setprops($message, [$this->proptags['owner_critical_change'] => time()]);
+				mapi_setprops($message, [$this->proptags['owner_critical_change'] => time()]);
 
-			mapi_savechanges($message);
-			if ($attach) { // Also save attachment Object.
-				mapi_savechanges($attach);
-			}
+				mapi_savechanges($message);
+				if ($attach) { // Also save attachment Object.
+					mapi_savechanges($attach);
+				}
 		}
 	}
 
 	/**
 	 * Clear responses of all attendees who have replied in past.
 	 *
-	 * @param MAPI_MESSAGE $message on which responses should be cleared
+	 * @param resource $message on which responses should be cleared
 	 */
 	public function clearRecipientResponse($message) {
 		$recipTable = mapi_message_getrecipienttable($message);
@@ -3565,7 +3536,7 @@ class Meetingrequest {
 	 *
 	 * @param bool $open boolean to indicate the function should return entryid or MAPIMessage. Defaults to true.
 	 *
-	 * @return entryid or MAPIMessage resource of calendar item
+	 * @return resource|bool resource of calendar item
 	 */
 	public function getCorrespondentCalendarItem($open = true) {
 		$props = mapi_getprops($this->message, [PR_MESSAGE_CLASS, $this->proptags['goid'], $this->proptags['goid2'], PR_RCVD_REPRESENTING_ENTRYID]);
@@ -3626,9 +3597,9 @@ class Meetingrequest {
 	/**
 	 * Function returns exception item based on the basedate passed.
 	 *
-	 * @param MAPIMessage $recurringMessage Resource of Recurring meeting from calendar
-	 * @param Unixtime    $basedate         basedate of exception that needs to be returned
-	 * @param MAPIStore   $store            store that contains the recurring calendar item
+	 * @param mixed $recurringMessage Resource of Recurring meeting from calendar
+	 * @param mixed $basedate         basedate of exception that needs to be returned
+	 * @param mixed $store            store that contains the recurring calendar item
 	 *
 	 * @return entryid or MAPIMessage resource of exception item
 	 */
@@ -3638,7 +3609,7 @@ class Meetingrequest {
 		$props = mapi_getprops($this->message, [PR_RCVD_REPRESENTING_ENTRYID, $this->proptags['recurring']]);
 
 		// check if the passed item is recurring series
-		if ($props[$this->proptags['recurring']] !== false) {
+		if (isset($props[$this->proptags['recurring']]) && $props[$this->proptags['recurring']] !== false) {
 			return false;
 		}
 
@@ -3665,9 +3636,9 @@ class Meetingrequest {
 	/**
 	 * Function which checks whether received meeting request is either conflicting with other appointments or not.
 	 *
-	 * @param MAPIMessage $message   meeting request item that should be checked for conflicts in calendar
-	 * @param MAPIStore   $userStore store containing calendar folder that will be used for confilict checking
-	 * @param MAPIFolder  $calFolder calendar folder for conflict checking
+	 * @param mixed $message   meeting request item that should be checked for conflicts in calendar
+	 * @param mixed $userStore store containing calendar folder that will be used for confilict checking
+	 * @param mixed $calFolder calendar folder for conflict checking
 	 *
 	 * @return mixed(boolean/integer) true if normal meeting is conflicting or an integer which specifies no of instances
 	 * conflict of recurring meeting and false if meeting is not conflicting
@@ -3734,13 +3705,11 @@ class Meetingrequest {
 							if (isset($calendarItem[$this->proptags['goid']])) {
 								if ($calendarItem[$this->proptags['goid']] !== $messageProps[$this->proptags['goid']]) {
 									++$noOfInstances;
-
 									break;
 								}
 							}
 							else {
 								++$noOfInstances;
-
 								break;
 							}
 						}
@@ -3770,13 +3739,11 @@ class Meetingrequest {
 							if (($item[$this->proptags['goid']] !== $messageProps[$this->proptags['goid']]) &&
 								($item[$this->proptags['goid']] !== $messageProps[$this->proptags['goid2']])) {
 								$returnValue = true;
-
 								break;
 							}
 						}
 						else {
 							$returnValue = true;
-
 							break;
 						}
 					}
@@ -3793,7 +3760,6 @@ class Meetingrequest {
 	 *
 	 * @param array $messageProps message properties
 	 * @param array $recipients   recipients list of message
-	 * @param bool  $isException  true if we are processing recipient of exception
 	 */
 	public function addDelegator($messageProps, &$recipients) {
 		$hasDelegator = false;
@@ -3825,9 +3791,8 @@ class Meetingrequest {
 	/**
 	 * Function will return delegator's store and calendar folder for processing meetings.
 	 *
-	 * @param string $receivedRepresentingEnryid  entryid of the delegator user
+	 * @param string $receivedRepresentingEntryId entryid of the delegator user
 	 * @param array  $foldersToOpen               contains list of folder types that should be returned in result
-	 * @param mixed  $receivedRepresentingEntryId
 	 *
 	 * @return array contains store of the delegator and resource of folders if $foldersToOpen is not empty
 	 */
@@ -3865,7 +3830,7 @@ class Meetingrequest {
 	 * Function returns extra info about meeting timing along with message body
 	 * which will be included in body while sending meeting request/response.
 	 *
-	 * @return string $meetingTimeInfo info about meeting timing along with message body
+	 * @return string|bool $meetingTimeInfo info about meeting timing along with message body
 	 */
 	public function getMeetingTimeInfo() {
 		return $this->meetingTimeInfo;
@@ -3884,9 +3849,9 @@ class Meetingrequest {
 	/**
 	 * Helper function which is use to get local categories of all occurrence.
 	 *
-	 * @param MAPIMessage $calendarItem meeting request item
-	 * @param MAPIStore   $store        store containing calendar folder
-	 * @param MAPIFolder  $calFolder    calendar folder
+	 * @param mixed $calendarItem meeting request item
+	 * @param mixed $store        store containing calendar folder
+	 * @param mixed $calFolder    calendar folder
 	 *
 	 * @return array $localCategories which contain array of basedate along with categories
 	 */
@@ -3922,9 +3887,9 @@ class Meetingrequest {
 	/**
 	 * Helper function which is use to apply local categories on respective occurrences.
 	 *
-	 * @param MAPIMessage $calendarItem    meeting request item
-	 * @param MAPIStore   $store           store containing calendar folder
-	 * @param array       $localCategories array contains basedate and array of categories
+	 * @param mixed $calendarItem    meeting request item
+	 * @param mixed $store           store containing calendar folder
+	 * @param array $localCategories array contains basedate and array of categories
 	 */
 	public function applyLocalCategories($calendarItem, $store, $localCategories) {
 		$calendarItemProps = mapi_getprops($calendarItem, [PR_PARENT_ENTRYID, PR_ENTRYID]);

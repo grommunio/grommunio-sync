@@ -448,12 +448,12 @@ define('ULPROPTAG', 6);        // property
 define('ULPROPTAG1', 7);        // RES_COMPAREPROPS 1st property
 define('ULPROPTAG2', 8);        // RES_COMPAREPROPS 2nd property
 define('PROPS', 9);        // RES_COMMENT properties
-define('RESTRICTION', 10);       // RES_COMMENT and RES_SUBRESTRICTION restriction
+define('RESTRICTION', 10);        // RES_COMMENT and RES_SUBRESTRICTION restriction
 
 /* GUID's for PR_MDB_PROVIDER */
-define("ZARAFA_SERVICE_GUID", makeGuid("{3C253DCA-D227-443C-94FE-425FAB958C19}"));    // default store
+define("ZARAFA_SERVICE_GUID", makeGuid("{C0A19454-7F29-1B10-A587-08002B2A2517}"));    // default store
 define("ZARAFA_STORE_PUBLIC_GUID", makeGuid("{70FAB278-F7AF-CD11-9BC8-00AA002FC45A}"));    // public store
-define("ZARAFA_STORE_DELEGATE_GUID", makeGuid("{7C7C1085-BC6D-4E53-9DAB-8A53F8DEF808}"));    // other store
+define("ZARAFA_STORE_DELEGATE_GUID", makeGuid("{0077B49E-E474-CE11-8C5E-00AA004254E2}"));    // other store
 define('ZARAFA_STORE_ARCHIVER_GUID', makeGuid("{BC8953AD-2E3F-4172-9404-896FF459870F}"));    // archive store
 
 /* global profile section guid */
@@ -461,6 +461,11 @@ define('pbGlobalProfileSectionGuid', makeGuid("{C8B0DB13-05AA-1A10-9BB0-00AA002F
 
 /* Zarafa Contacts provider GUID */
 define('ZARAFA_CONTACTS_GUID', makeGuid("{30047F72-92E3-DA4F-B86A-E52A7FE46571}"));
+
+/* GUIDs fpr store UID's Providers */
+define('MUID_STORE_WRAP_GUID', makeGuid("{10BBA138-E505-1A10-A1BB-08002B2A56C2}"));
+define('MUID_STORE_PRIVATE_GUID', makeGuid("{20FA551B-66AA-CD11-9BC8-00AA002FC45A}"));
+define('MUID_STORE_PUBLIC_GUID', makeGuid("{1002831C-66AA-CD11-9BC8-00AA002FC45A}"));
 
 /* Permissions */
 
@@ -478,11 +483,19 @@ define('ecRightsEditAny', 0x00000020);
 define('ecRightsDeleteAny', 0x00000040);
 define('ecRightsCreateSubfolder', 0x00000080);
 define('ecRightsFolderAccess', 0x00000100);
-// define('ecrightsContact'                       ,0x00000200);
+define('ecRightsContact', 0x00000200);
 define('ecRightsFolderVisible', 0x00000400);
 
 define('ecRightsAll', ecRightsReadAny | ecRightsCreate | ecRightsEditOwned | ecRightsDeleteOwned | ecRightsEditAny | ecRightsDeleteAny | ecRightsCreateSubfolder | ecRightsFolderAccess | ecRightsFolderVisible);
+define('ecRightsSecretary', ecRightsReadAny | ecRightsCreate | ecRightsEditOwned | ecRightsDeleteOwned | ecRightsEditAny | ecRightsDeleteAny | ecRightsFolderVisible);
 define('ecRightsFullControl', ecRightsReadAny | ecRightsCreate | ecRightsEditOwned | ecRightsDeleteOwned | ecRightsEditAny | ecRightsDeleteAny | ecRightsCreateSubfolder | ecRightsFolderVisible);
+define('ecRightsContributor', ecRightsFolderVisible | ecRightsCreate);
+define('ecRightsReviewer', ecRightsReadAny | ecRightsFolderVisible);
+define('ecRightsNonEditingAuthor', ecRightsReadAny | ecRightsFolderVisible | ecRightsCreate | ecRightsDeleteOwned);
+define('ecRightsAuthor', ecRightsReadAny | ecRightsFolderVisible | ecRightsCreate | ecRightsDeleteOwned | ecRightsEditOwned);
+define('ecRightsPublishingAuthor', ecRightsReadAny | ecRightsFolderVisible | ecRightsCreate | ecRightsDeleteOwned | ecRightsEditOwned | ecRightsCreateSubfolder);
+define('ecRightsEditor', ecRightsReadAny | ecRightsFolderVisible | ecRightsCreate | ecRightsDeleteOwned | ecRightsEditOwned | ecRightsEditAny | ecRightsDeleteAny);
+define('ecRightsPublishingEditor', ecRightsReadAny | ecRightsFolderVisible | ecRightsCreate | ecRightsDeleteOwned | ecRightsEditOwned | ecRightsEditAny | ecRightsDeleteAny | ecRightsCreateSubfolder);
 define('ecRightsDefault', ecRightsNone | ecRightsFolderVisible);
 define('ecRightsDefaultPublic', ecRightsReadAny | ecRightsFolderVisible);
 define('ecRightsAdmin', 0x00001000);
@@ -617,7 +630,7 @@ define('fnevStatusObjectModified', 0x00000200);
 define('fnevReservedForMapi', 0x40000000);
 define('fnevExtended', 0x80000000);
 
-/* PersistBlockType values PR_IPM_OL2007_ENTRYIDS / PR_ADDITIONAL_REN_ENTRYIDS_EX PersistIDs */
+/* PersistBlockType values PR_ADDITIONAL_REN_ENTRYIDS_EX / PR_ADDITIONAL_REN_ENTRYIDS_EX PersistIDs */
 define('PERSIST_SENTINEL', 0x0000); // Indicates that the PersistData structure is the last one contained in the PidTagAdditionalRenEntryIdsEx property
 define('RSF_PID_RSS_SUBSCRIPTION', 0x8001); // Indicates that the structure contains data for the RSS Feeds folder
 define('RSF_PID_SEND_AND_TRACK', 0x8002); // Indicates that the structure contains data for the Tracked Mail Processing folder
@@ -629,7 +642,7 @@ define('RSF_PID_CONTACT_SEARCH', 0x8009); // Indicates that the structure contai
 define('RSF_PID_BUDDYLIST_PDLS', 0x800A); // Indicates that the structure contains data for the IM Contacts List folder.
 define('RSF_PID_BUDDYLIST_CONTACTS', 0x800B); // Indicates that the structure contains data for the Quick Contacts folder.
 
-/* PersistElementType Values ElementIDs for persist data of PR_IPM_OL2007_ENTRYIDS / PR_ADDITIONAL_REN_ENTRYIDS_EX */
+/* PersistElementType Values ElementIDs for persist data of PR_ADDITIONAL_REN_ENTRYIDS_EX / PR_ADDITIONAL_REN_ENTRYIDS_EX */
 define('ELEMENT_SENTINEL', 0x0000); // 0 bytes Indicates that the PersistElement structure is the last one contained in the DataElements field of the PersistData structure.
 define('RSF_ELID_ENTRYID', 0x0001); // variable Indicates that the ElementData field contains the entry ID of the special folder
 														   // that is of the type indicated by the value of the PersistID field of the PersistData structure.
@@ -653,3 +666,9 @@ define('STGM_CONVERT', 0x00020000);
 define('STGM_FAILIFTHERE', 0x00000000);
 define('STGM_NOSNAPSHOT', 0x00200000);
 define('STGM_DIRECT_SWMR', 0x00400000);
+
+/* PidTagWlinkType / PR_WLINK_TYPE values */
+define('wblNormalFolder', 0x00000000);
+define('wblSearchFolder', 0x00000001);
+define('wblSharedFolder', 0x00000002);
+define('wblHeader', 0x00000004);

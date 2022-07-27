@@ -27,26 +27,26 @@
 			$properties["importance"] = PR_IMPORTANCE;
 			$properties["sensitivity"] = PR_SENSITIVITY;
 			$properties["last_modification_time"] = PR_LAST_MODIFICATION_TIME;
-			$properties["status"] = "PT_LONG:PSETID_Task:0x8101";
-			$properties["percent_complete"] = "PT_DOUBLE:PSETID_Task:0x8102";
-			$properties["startdate"] = "PT_SYSTIME:PSETID_Task:0x8104";
-			$properties["duedate"] = "PT_SYSTIME:PSETID_Task:0x8105";
+			$properties["status"] = "PT_LONG:PSETID_Task:" . PidLidTaskStatus;
+			$properties["percent_complete"] = "PT_DOUBLE:PSETID_Task:" . PidLidPercentComplete;
+			$properties["startdate"] = "PT_SYSTIME:PSETID_Task:" . PidLidTaskStartDate;
+			$properties["duedate"] = "PT_SYSTIME:PSETID_Task:" . PidLidTaskDueDate;
 			$properties["reset_reminder"] = "PT_BOOLEAN:PSETID_Task:0x8107";
 			$properties["dead_occurrence"] = "PT_BOOLEAN:PSETID_Task:0x8109";
-			$properties["datecompleted"] = "PT_SYSTIME:PSETID_Task:0x810f";
+			$properties["datecompleted"] = "PT_SYSTIME:PSETID_Task:" . PidLidTaskDateCompleted;
 			$properties["recurring_data"] = "PT_BINARY:PSETID_Task:0x8116";
 			$properties["actualwork"] = "PT_LONG:PSETID_Task:0x8110";
 			$properties["totalwork"] = "PT_LONG:PSETID_Task:0x8111";
-			$properties["complete"] = "PT_BOOLEAN:PSETID_Task:0x811c";
+			$properties["complete"] = "PT_BOOLEAN:PSETID_Task:" . PidLidTaskComplete;
 			$properties["task_f_creator"] = "PT_BOOLEAN:PSETID_Task:0x811e";
 			$properties["owner"] = "PT_STRING8:PSETID_Task:0x811f";
 			$properties["recurring"] = "PT_BOOLEAN:PSETID_Task:0x8126";
 
-			$properties["reminder_minutes"] = "PT_LONG:PSETID_Common:0x8501";
-			$properties["reminder_time"] = "PT_SYSTIME:PSETID_Common:0x8502";
-			$properties["reminder"] = "PT_BOOLEAN:PSETID_Common:0x8503";
+			$properties["reminder_minutes"] = "PT_LONG:PSETID_Common:" . PidLidReminderDelta;
+			$properties["reminder_time"] = "PT_SYSTIME:PSETID_Common:" . PidLidReminderTime;
+			$properties["reminder"] = "PT_BOOLEAN:PSETID_Common:" . PidLidReminderSet;
 
-			$properties["private"] = "PT_BOOLEAN:PSETID_Common:0x8506";
+			$properties["private"] = "PT_BOOLEAN:PSETID_Common:" . PidLidPrivate;
 			$properties["contacts"] = "PT_MV_STRING8:PSETID_Common:0x853a";
 			$properties["contacts_string"] = "PT_STRING8:PSETID_Common:0x8586";
 			$properties["categories"] = "PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords";
@@ -54,22 +54,20 @@
 			$properties["commonstart"] = "PT_SYSTIME:PSETID_Common:0x8516";
 			$properties["commonend"] = "PT_SYSTIME:PSETID_Common:0x8517";
 			$properties["commonassign"] = "PT_LONG:PSETID_Common:0x8518";
-			$properties["flagdueby"] = "PT_SYSTIME:PSETID_Common:0x8560";
+			$properties["flagdueby"] = "PT_SYSTIME:PSETID_Common:" . PidLidReminderSignalTime;
 			$properties["side_effects"] = "PT_LONG:PSETID_Common:0x8510";
-			$properties["reminder"] = "PT_BOOLEAN:PSETID_Common:0x8503";
-			$properties["reminder_minutes"] = "PT_LONG:PSETID_Common:0x8501";
 
 			$this->proptags = getPropIdsFromStrings($store, $properties);
 
-			parent::__construct($store, $message, $properties);
+			parent::__construct($store, $message);
 		}
 
 		/**
 		 * Function which saves recurrence and also regenerates task if necessary.
 		 *
-		 *@param array $recur new recurrence properties
+		 * @param mixed $recur new recurrence properties
 		 *
-		 *@return array of properties of regenerated task else false
+		 * @return array|bool of properties of regenerated task else false
 		 */
 		public function setRecurrence(&$recur) {
 			$this->recur = $recur;
@@ -130,11 +128,8 @@
 		 * Function which creates new task as current occurrence and moves the
 		 * existing task to next occurrence.
 		 *
-		 *@param array $recur $action from client
-		 *
-		 *@return bool if moving to next occurrence succeed then it returns
-		 *        properties of either newly created task or existing task ELSE
-		 *        false because that was last occurrence
+		 * @return array|bool properties of newly created task if moving to next occurrence succeeds
+		 *                    false if that was last occurrence
 		 */
 		public function moveToNextOccurrence() {
 			$result = false;
@@ -148,7 +143,7 @@
 				$result = mapi_getprops($this->message, [PR_ENTRYID, PR_PARENT_ENTRYID, PR_STORE_ENTRYID]);
 
 				$props = [];
-				if ($nextOccurrence) {
+				if (!empty($nextOccurrence)) {
 					if (!isset($this->action['deleteOccurrence'])) {
 						// Create current occurrence as separate task
 						$result = $this->regenerateTask($this->action['complete']);
@@ -197,11 +192,10 @@
 		/**
 		 * Function which return properties of next occurrence.
 		 *
-		 *@return array startdate/enddate of next occurrence
+		 * @return array|bool startdate/enddate of next occurrence
 		 */
 		public function getNextOccurrence() {
 			if ($this->recur) {
-				$items = [];
 
 				// @TODO: fix start of range
 				$start = isset($this->messageprops[$this->proptags["duedate"]]) ? $this->messageprops[$this->proptags["duedate"]] : $this->action['start'];
@@ -222,7 +216,7 @@
 		 * Function which clones current occurrence and sets appropriate properties.
 		 * The original recurring item is moved to next occurrence.
 		 *
-		 *@param bool $markComplete true if existing occurrence has to be mark complete else false
+		 * @param bool $markComplete true if existing occurrence has to be marked complete
 		 */
 		public function regenerateTask($markComplete) {
 			// Get all properties
@@ -316,16 +310,20 @@
 		 * processOccurrenceItem, adds an item to a list of occurrences, but only if the
 		 * resulting occurrence starts or ends in the interval <$start, $end>.
 		 *
-		 * @param array $items    reference to the array to be added to
-		 * @param date  $start    start of timeframe in GMT TIME
-		 * @param date  $end      end of timeframe in GMT TIME
-		 * @param date  $basedate (hour/sec/min assumed to be 00:00:00) in LOCAL TIME OF THE OCCURRENCE
-		 * @param mixed $now
+		 * @param array $items reference to the array to be added to
+		 * @param int $start start of timeframe in GMT TIME
+		 * @param int $end end of timeframe in GMT TIME
+		 * @param int $basedate (hour/sec/min assumed to be 00:00:00) in LOCAL TIME OF THE OCCURRENCE
+		 * @param int $startocc start of occurrence since beginning of day in minutes
+		 * @param int $endocc end of occurrence since beginning of day in minutes
+		 * @param int $tz the timezone info for this occurrence ( applied to $basedate / $startocc / $endocc )
+		 * @param bool $reminderonly If TRUE, only add the item if the reminder is set
+		 *
 		 */
-		public function processOccurrenceItem(&$items, $start, $end, $now) {
-			if ($now > $start) {
+		public function processOccurrenceItem(&$items, $start, $end, $basedate, $startocc, $endocc, $tz, $reminderonly) {
+			if ($basedate > $start) {
 				$newItem = [];
-				$newItem[$this->proptags['startdate']] = $now;
+				$newItem[$this->proptags['startdate']] = $basedate;
 
 				// If startdate and enddate are set on task, then slide enddate according to duration
 				if (isset($this->messageprops[$this->proptags["startdate"]], $this->messageprops[$this->proptags["duedate"]])) {
@@ -342,9 +340,9 @@
 		/**
 		 * Function which marks existing occurrence to 'Complete'.
 		 *
-		 *@param array $recur array action from client
+		 * @param array $recur array action from client
 		 *
-		 *@return array of properties of regenerated task else false
+		 * @return array|bool of properties of regenerated task else false
 		 */
 		public function markOccurrenceComplete(&$recur) {
 			// Fix timezone object
@@ -362,11 +360,11 @@
 		/**
 		 * Function which sets reminder on recurring task after existing occurrence has been deleted or marked complete.
 		 *
-		 *@param array $nextOccurrence properties of next occurrence
+		 * @param mixed $nextOccurrence properties of next occurrence
 		 */
 		public function setReminder($nextOccurrence) {
 			$props = [];
-			if ($nextOccurrence) {
+			if (!empty($nextOccurrence)) {
 				// Check if reminder is reset. Default is 'false'
 				$reset_reminder = isset($this->messageprops[$this->proptags['reset_reminder']]) ? $this->messageprops[$this->proptags['reset_reminder']] : false;
 				$reminder = $this->messageprops[$this->proptags['reminder']];
@@ -402,6 +400,8 @@
 		 * It simply doesn't regenerate task.
 		 *
 		 * @param array $action
+		 *
+		 * @return array|bool
 		 */
 		public function deleteOccurrence($action) {
 			$this->tz = false;

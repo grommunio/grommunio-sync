@@ -49,7 +49,7 @@
 		 * @param array    $proptags an associative array of protags and their values
 		 */
 		public function __construct($store, $message, $proptags = []) {
-			if ($proptags) {
+			if (!empty($proptags)) {
 				$this->proptags = $proptags;
 			}
 			else {
@@ -62,36 +62,36 @@
 				$properties["display_to"] = PR_DISPLAY_TO;
 				$properties["importance"] = PR_IMPORTANCE;
 				$properties["sensitivity"] = PR_SENSITIVITY;
-				$properties["startdate"] = "PT_SYSTIME:PSETID_Appointment:0x820d";
-				$properties["duedate"] = "PT_SYSTIME:PSETID_Appointment:0x820e";
-				$properties["recurring"] = "PT_BOOLEAN:PSETID_Appointment:0x8223";
-				$properties["recurring_data"] = "PT_BINARY:PSETID_Appointment:0x8216";
-				$properties["busystatus"] = "PT_LONG:PSETID_Appointment:0x8205";
+				$properties["startdate"] = "PT_SYSTIME:PSETID_Appointment:" . PidLidAppointmentStartWhole;
+				$properties["duedate"] = "PT_SYSTIME:PSETID_Appointment:" . PidLidAppointmentEndWhole;
+				$properties["recurring"] = "PT_BOOLEAN:PSETID_Appointment:" . PidLidRecurring;
+				$properties["recurring_data"] = "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentRecur;
+				$properties["busystatus"] = "PT_LONG:PSETID_Appointment:" . PidLidBusyStatus;
 				$properties["label"] = "PT_LONG:PSETID_Appointment:0x8214";
-				$properties["alldayevent"] = "PT_BOOLEAN:PSETID_Appointment:0x8215";
-				$properties["private"] = "PT_BOOLEAN:PSETID_Common:0x8506";
-				$properties["meeting"] = "PT_LONG:PSETID_Appointment:0x8217";
-				$properties["startdate_recurring"] = "PT_SYSTIME:PSETID_Appointment:0x8235";
-				$properties["enddate_recurring"] = "PT_SYSTIME:PSETID_Appointment:0x8236";
+				$properties["alldayevent"] = "PT_BOOLEAN:PSETID_Appointment:" . PidLidAppointmentSubType;
+				$properties["private"] = "PT_BOOLEAN:PSETID_Common:" . PidLidPrivate;
+				$properties["meeting"] = "PT_LONG:PSETID_Appointment:" . PidLidAppointmentStateFlags;
+				$properties["startdate_recurring"] = "PT_SYSTIME:PSETID_Appointment:" . PidLidClipStart;
+				$properties["enddate_recurring"] = "PT_SYSTIME:PSETID_Appointment:" . PidLidClipEnd;
 				$properties["recurring_pattern"] = "PT_STRING8:PSETID_Appointment:0x8232";
-				$properties["location"] = "PT_STRING8:PSETID_Appointment:0x8208";
-				$properties["duration"] = "PT_LONG:PSETID_Appointment:0x8213";
+				$properties["location"] = "PT_STRING8:PSETID_Appointment:" . PidLidLocation;
+				$properties["duration"] = "PT_LONG:PSETID_Appointment:" . PidLidAppointmentDuration;
 				$properties["responsestatus"] = "PT_LONG:PSETID_Appointment:0x8218";
-				$properties["reminder"] = "PT_BOOLEAN:PSETID_Common:0x8503";
-				$properties["reminder_minutes"] = "PT_LONG:PSETID_Common:0x8501";
+				$properties["reminder"] = "PT_BOOLEAN:PSETID_Common:" . PidLidReminderSet;
+				$properties["reminder_minutes"] = "PT_LONG:PSETID_Common:" . PidLidReminderDelta;
 				$properties["recurrencetype"] = "PT_LONG:PSETID_Appointment:0x8231";
 				$properties["contacts"] = "PT_MV_STRING8:PSETID_Common:0x853a";
 				$properties["contacts_string"] = "PT_STRING8:PSETID_Common:0x8586";
 				$properties["categories"] = "PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords";
-				$properties["reminder_time"] = "PT_SYSTIME:PSETID_Common:0x8502";
+				$properties["reminder_time"] = "PT_SYSTIME:PSETID_Common:" . PidLidReminderTime;
 				$properties["commonstart"] = "PT_SYSTIME:PSETID_Common:0x8516";
 				$properties["commonend"] = "PT_SYSTIME:PSETID_Common:0x8517";
-				$properties["basedate"] = "PT_SYSTIME:PSETID_Appointment:0x8228";
-				$properties["timezone_data"] = "PT_BINARY:PSETID_Appointment:0x8233";
-				$properties["timezone"] = "PT_STRING8:PSETID_Appointment:0x8234";
-				$properties["flagdueby"] = "PT_SYSTIME:PSETID_Common:0x8560";
+				$properties["basedate"] = "PT_SYSTIME:PSETID_Appointment:" . PidLidExceptionReplaceTime;
+				$properties["timezone_data"] = "PT_BINARY:PSETID_Appointment:" . PidLidTimeZoneStruct;
+				$properties["timezone"] = "PT_STRING8:PSETID_Appointment:" . PidLidTimeZoneDescription;
+				$properties["flagdueby"] = "PT_SYSTIME:PSETID_Common:" . PidLidReminderSignalTime;
 				$properties["side_effects"] = "PT_LONG:PSETID_Common:0x8510";
-				$properties["hideattachments"] = "PT_BOOLEAN:PSETID_Common:0x8514";
+				$properties["hideattachments"] = "PT_BOOLEAN:PSETID_Common:" . PidLidSmartNoAttach;
 
 				$this->proptags = getPropIdsFromStrings($store, $properties);
 			}
@@ -102,11 +102,11 @@
 		/**
 		 * Create an exception.
 		 *
-		 * @param array        $exception_props  the exception properties (same properties as normal recurring items)
-		 * @param date         $base_date        the base date of the exception (LOCAL time of non-exception occurrence)
-		 * @param bool         $delete           true - delete occurrence, false - create new exception or modify existing
-		 * @param array        $exception_recips true - delete occurrence, false - create new exception or modify existing
-		 * @param mapi_message $copy_attach_from mapi message from which attachments should be copied
+		 * @param array $exception_props  the exception properties (same properties as normal recurring items)
+		 * @param mixed $base_date        the base date of the exception (LOCAL time of non-exception occurrence)
+		 * @param bool  $delete           true - delete occurrence, false - create new exception or modify existing
+		 * @param array $exception_recips list of recipients
+		 * @param mixed $copy_attach_from mapi message from which attachments should be copied
 		 */
 		public function createException($exception_props, $base_date, $delete = false, $exception_recips = [], $copy_attach_from = false) {
 			$baseday = $this->dayStartOf($base_date);
@@ -460,7 +460,7 @@
 			 * Get next item from now until forever, but max 1 item with reminder set
 			 * Note 0x7ff00000 instead of 0x7fffffff because of possible overflow failures when converting to GMT....
 			 * Here for getting next 10 occurrences assuming that next here we will be able to find
-			 * nextreminder occurrence in 10 occureneces.
+			 * nextreminder occurrence in 10 occurrences.
 			 */
 			$items = $this->getItems($timestamp, 0x7FF00000, 10, true);
 
@@ -479,7 +479,6 @@
 				// If tempnextreminder is greater than timestamp then save it in nextreminder and break from the loop.
 				if ($tempnextreminder > $timestamp) {
 					$nextreminder = $tempnextreminder;
-
 					break;
 				}
 			}
@@ -523,7 +522,7 @@
 			$start = $this->recur['start'];
 			$end = $this->recur['end'];
 			$term = $this->recur['term'];
-			$numocc = isset($this->recur['numoccur']) ? $this->recur['numoccur'] : false;
+			$numocc = isset($this->recur['numoccur']) ? $this->recur['numoccur'] : 0;
 			$startocc = $this->recur['startocc'];
 			$endocc = $this->recur['endocc'];
 			$pattern = '';
@@ -534,57 +533,53 @@
 				// Daily
 				case 0x0A:
 					if ($everyn == 1) {
-						$type = _('workday');
+						$type = dgettext('zarafa', 'workday');
 						$occSingleDayRank = true;
 					}
 					elseif ($everyn == (24 * 60)) {
-						$type = _('day');
+						$type = dgettext('zarafa', 'day');
 						$occSingleDayRank = true;
 					}
 					else {
 						$everyn /= (24 * 60);
-						$type = _('days');
+						$type = dgettext('zarafa', 'days');
 						$occSingleDayRank = false;
 					}
-
 					break;
 				// Weekly
 				case 0x0B:
 					if ($everyn == 1) {
-						$type = _('week');
+						$type = dgettext('zarafa', 'week');
 						$occSingleDayRank = true;
 					}
 					else {
-						$type = _('weeks');
+						$type = dgettext('zarafa', 'weeks');
 						$occSingleDayRank = false;
 					}
-
 					break;
 				// Monthly
 				case 0x0C:
 					if ($everyn == 1) {
-						$type = _('month');
+						$type = dgettext('zarafa', 'month');
 						$occSingleDayRank = true;
 					}
 					else {
-						$type = _('months');
+						$type = dgettext('zarafa', 'months');
 						$occSingleDayRank = false;
 					}
-
 					break;
 				// Yearly
 				case 0x0D:
 					if ($everyn <= 12) {
 						$everyn = 1;
-						$type = _('year');
+						$type = dgettext('zarafa', 'year');
 						$occSingleDayRank = true;
 					}
 					else {
 						$everyn = $everyn / 12;
-						$type = _('years');
+						$type = dgettext('zarafa', 'years');
 						$occSingleDayRank = false;
 					}
-
 					break;
 			}
 
@@ -592,10 +587,10 @@
 			$firstoccstartdate = isset($startocc) ? $start + (((int) $startocc) * 60) : $start;
 			$firstoccenddate = isset($endocc) ? $end + (((int) $endocc) * 60) : $end;
 
-			$start = gmdate(_('d-m-Y'), $firstoccstartdate);
-			$end = gmdate(_('d-m-Y'), $firstoccenddate);
-			$startocc = gmdate(_('G:i'), $firstoccstartdate);
-			$endocc = gmdate(_('G:i'), $firstoccenddate);
+			$start = gmdate(dgettext('zarafa', 'd-m-Y'), $firstoccstartdate);
+			$end = gmdate(dgettext('zarafa', 'd-m-Y'), $firstoccenddate);
+			$startocc = gmdate(dgettext('zarafa', 'G:i'), $firstoccstartdate);
+			$endocc = gmdate(dgettext('zarafa', 'G:i'), $firstoccenddate);
 
 			// Based on the properties, we need to generate the recurrence pattern string.
 			// This is obviously very easy since we can simply concatenate a bunch of strings,
@@ -608,18 +603,18 @@
 				// Never ends
 				if ($occTimeRange) {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(_('Occurs every %s effective %s from %s to %s.'), $type, $start, $startocc, $endocc);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s effective %s from %s to %s.'), $type, $start, $startocc, $endocc);
 					}
 					else {
-						$pattern = sprintf(_('Occurs every %s %s effective %s from %s to %s.'), $everyn, $type, $start, $startocc, $endocc);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s %s effective %s from %s to %s.'), $everyn, $type, $start, $startocc, $endocc);
 					}
 				}
 				else {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(_('Occurs every %s effective %s.'), $type, $start);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s effective %s.'), $type, $start);
 					}
 					else {
-						$pattern = sprintf(_('Occurs every %s %s effective %s.'), $everyn, $type, $start);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s %s effective %s.'), $everyn, $type, $start);
 					}
 				}
 			}
@@ -627,14 +622,16 @@
 				// After a number of times
 				if ($occTimeRange) {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(ngettext(
+						$pattern = sprintf(dngettext(
+							'zarafa',
 							'Occurs every %s effective %s for %s occurrence from %s to %s.',
 							'Occurs every %s effective %s for %s occurrences from %s to %s.',
 							$numocc
 						), $type, $start, $numocc, $startocc, $endocc);
 					}
 					else {
-						$pattern = sprintf(ngettext(
+						$pattern = sprintf(dngettext(
+							'zarafa',
 							'Occurs every %s %s effective %s for %s occurrence from %s to %s.',
 							'Occurs every %s %s effective %s for %s occurrences %s to %s.',
 							$numocc
@@ -643,14 +640,16 @@
 				}
 				else {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(ngettext(
+						$pattern = sprintf(dngettext(
+							'zarafa',
 							'Occurs every %s effective %s for %s occurrence.',
 							'Occurs every %s effective %s for %s occurrences.',
 							$numocc
 						), $type, $start, $numocc);
 					}
 					else {
-						$pattern = sprintf(ngettext(
+						$pattern = sprintf(dngettext(
+							'zarafa',
 							'Occurs every %s %s effective %s for %s occurrence.',
 							'Occurs every %s %s effective %s for %s occurrences.',
 							$numocc
@@ -662,18 +661,18 @@
 				// After the given enddate
 				if ($occTimeRange) {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(_('Occurs every %s effective %s until %s from %s to %s.'), $type, $start, $end, $startocc, $endocc);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s effective %s until %s from %s to %s.'), $type, $start, $end, $startocc, $endocc);
 					}
 					else {
-						$pattern = sprintf(_('Occurs every %s %s effective %s until %s from %s to %s.'), $everyn, $type, $start, $end, $startocc, $endocc);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s %s effective %s until %s from %s to %s.'), $everyn, $type, $start, $end, $startocc, $endocc);
 					}
 				}
 				else {
 					if ($occSingleDayRank) {
-						$pattern = sprintf(_('Occurs every %s effective %s until %s.'), $type, $start, $end);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s effective %s until %s.'), $type, $start, $end);
 					}
 					else {
-						$pattern = sprintf(_('Occurs every %s %s effective %s until %s.'), $everyn, $type, $start, $end);
+						$pattern = sprintf(dgettext('zarafa', 'Occurs every %s %s effective %s until %s.'), $everyn, $type, $start, $end);
 					}
 				}
 			}
@@ -719,6 +718,8 @@
 		 * @param array        $exception_props  the exception data (like any other MAPI appointment)
 		 * @param array        $exception_recips list of recipients
 		 * @param mapi_message $copy_attach_from mapi message from which attachments should be copied
+		 *
+		 * @return array properties of the exception
 		 */
 		public function createExceptionAttachment($exception_props, $exception_recips = [], $copy_attach_from = false) {
 			// Create new attachment.
@@ -728,7 +729,7 @@
 			$props[PR_ATTACHMENT_HIDDEN] = true;
 			$props[PR_ATTACHMENT_LINKID] = 0;
 			$props[PR_ATTACH_FLAGS] = 0;
-			$props[PR_ATTACH_METHOD] = 5;
+			$props[PR_ATTACH_METHOD] = ATTACH_EMBEDDED_MSG;
 			$props[PR_DISPLAY_NAME] = "Exception";
 			$props[PR_EXCEPTION_STARTTIME] = $this->fromGMT($this->tz, $exception_props[$this->proptags["startdate"]]);
 			$props[PR_EXCEPTION_ENDTIME] = $this->fromGMT($this->tz, $exception_props[$this->proptags["duedate"]]);
@@ -773,15 +774,24 @@
 		/**
 		 * Function which deletes the attachment of an exception.
 		 *
-		 * @param date $base_date base date of the attachment. Should be in GMT. The attachment
-		 *                        actually saves the real time of the original date, so we have
-		 *                        to check whether it's on the same day.
+		 * @param mixed $base_date base date of the attachment. Should be in GMT. The attachment
+		 *                         actually saves the real time of the original date, so we have
+		 *                         to check whether it's on the same day.
 		 */
 		public function deleteExceptionAttachment($base_date) {
 			$attachments = mapi_message_getattachmenttable($this->message);
-			$attachTable = mapi_table_queryallrows($attachments, [PR_ATTACH_NUM]);
+			// Retrieve only exceptions which are stored as embedded messages
+			$attach_res = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_EQ,
+					ULPROPTAG => PR_ATTACH_METHOD,
+					VALUE => [PR_ATTACH_METHOD => ATTACH_EMBEDDED_MSG],
+				],
+			];
+			$attachRows = mapi_table_queryallrows($attachments, [PR_ATTACH_NUM], $attach_res);
 
-			foreach ($attachTable as $attachRow) {
+			foreach ($attachRows as $attachRow) {
 				$tempattach = mapi_message_openattach($this->message, $attachRow[PR_ATTACH_NUM]);
 				$exception = mapi_attach_openobj($tempattach);
 
@@ -815,16 +825,11 @@
 		public function getExceptionAttachment($base_date) {
 			// Retrieve only exceptions which are stored as embedded messages
 			$attach_res = [
-				RES_AND,
+				RES_PROPERTY,
 				[
-					[
-						RES_PROPERTY,
-						[
-							RELOP => RELOP_EQ,
-							ULPROPTAG => PR_ATTACH_METHOD,
-							VALUE => [PR_ATTACH_METHOD => ATTACH_EMBEDDED_MSG],
-						],
-					],
+					RELOP => RELOP_EQ,
+					ULPROPTAG => PR_ATTACH_METHOD,
+					VALUE => [PR_ATTACH_METHOD => ATTACH_EMBEDDED_MSG],
 				],
 			];
 			$attachments = mapi_message_getattachmenttable($this->message);
@@ -858,12 +863,12 @@
 		 * - The occurrence isn't specified as a deleted occurrence.
 		 *
 		 * @param array $items        reference to the array to be added to
-		 * @param date  $start        start of timeframe in GMT TIME
-		 * @param date  $end          end of timeframe in GMT TIME
-		 * @param date  $basedate     (hour/sec/min assumed to be 00:00:00) in LOCAL TIME OF THE OCCURRENCE
+		 * @param int   $start        start of timeframe in GMT TIME
+		 * @param int   $end          end of timeframe in GMT TIME
+		 * @param int   $basedate     (hour/sec/min assumed to be 00:00:00) in LOCAL TIME OF THE OCCURRENCE
 		 * @param int   $startocc     start of occurrence since beginning of day in minutes
 		 * @param int   $endocc       end of occurrence since beginning of day in minutes
-		 * @param int   $tz           the timezone info for this occurrence ( applied to $basedate / $startocc / $endocc )
+		 * @param mixed $tz           the timezone info for this occurrence ( applied to $basedate / $startocc / $endocc )
 		 * @param bool  $reminderonly If TRUE, only add the item if the reminder is set
 		 */
 		public function processOccurrenceItem(&$items, $start, $end, $basedate, $startocc, $endocc, $tz, $reminderonly) {
@@ -879,10 +884,10 @@
 			$occend = $this->toGMT($tz, $occend);
 
 			/**
-			 * FIRST PART : Check range criterium. Exact matches (eg when $occstart == $end), do NOT match since you cannot
+			 * FIRST PART: Check range criterium. Exact matches (eg when $occstart == $end), do NOT match since you cannot
 			 * see any part of the appointment. Partial overlaps DO match.
 			 *
-			 * SECOND PART : check if occurrence is not a zero duration occurrence which
+			 * SECOND PART: check if occurrence is not a zero duration occurrence which
 			 * starts at 00:00 and ends on 00:00. if it is so, then process
 			 * the occurrence and send it in response.
 			 */
@@ -928,7 +933,7 @@
 				}
 
 				array_push($items, $this->getExceptionProperties($exception));
-				if ((count($items) == $limit)) {
+				if (count($items) == $limit) {
 					break;
 				}
 			}
@@ -937,10 +942,9 @@
 		/**
 		 * Function which verifies if on the given date an exception, delete or change, occurs.
 		 *
-		 * @param date  $date     the date
 		 * @param mixed $basedate
 		 *
-		 * @return array the exception, true - if an occurrence is deleted on the given date, false - no exception occurs on the given date
+		 * @return bool true - if an exception occurs on the given date, false - no exception occurs on the given date
 		 */
 		public function isException($basedate) {
 			if ($this->isDeleteException($basedate)) {
@@ -1001,59 +1005,6 @@
 			$time2 = $this->gmtime($date2);
 
 			return $time1["tm_mon"] == $time2["tm_mon"] && $time1["tm_year"] == $time2["tm_year"] && $time1["tm_mday"] == $time2["tm_mday"];
-		}
-
-		/**
-		 * Function to get all properties of a single changed exception.
-		 *
-		 * @param date  $date      base date of exception
-		 * @param mixed $exception
-		 *
-		 * @return array associative array of properties for the exception, compatible with
-		 */
-		public function getExceptionProperties($exception) {
-			// Exception has same properties as main object, with some properties overridden:
-			$item = $this->messageprops;
-
-			// Special properties
-			$item["exception"] = true;
-			$item["basedate"] = $exception["basedate"]; // note that the basedate is always in local time !
-
-			// MAPI-compatible properties (you can handle an exception as a normal calendar item like this)
-			$item[$this->proptags["startdate"]] = $this->toGMT($this->tz, $exception["start"]);
-			$item[$this->proptags["duedate"]] = $this->toGMT($this->tz, $exception["end"]);
-			$item[$this->proptags["commonstart"]] = $item[$this->proptags["startdate"]];
-			$item[$this->proptags["commonend"]] = $item[$this->proptags["duedate"]];
-
-			if (isset($exception["subject"])) {
-				$item[$this->proptags["subject"]] = $exception["subject"];
-			}
-
-			if (isset($exception["label"])) {
-				$item[$this->proptags["label"]] = $exception["label"];
-			}
-
-			if (isset($exception["alldayevent"])) {
-				$item[$this->proptags["alldayevent"]] = $exception["alldayevent"];
-			}
-
-			if (isset($exception["location"])) {
-				$item[$this->proptags["location"]] = $exception["location"];
-			}
-
-			if (isset($exception["remind_before"])) {
-				$item[$this->proptags["reminder_minutes"]] = $exception["remind_before"];
-			}
-
-			if (isset($exception["reminder_set"])) {
-				$item[$this->proptags["reminder"]] = $exception["reminder_set"];
-			}
-
-			if (isset($exception["busystatus"])) {
-				$item[$this->proptags["busystatus"]] = $exception["busystatus"];
-			}
-
-			return $item;
 		}
 
 		/**
@@ -1120,7 +1071,7 @@
 					else {
 						$recip[PR_RECIPIENT_FLAGS] = recipReserved | recipExceptionalDeleted | recipSendable;
 					}
-					$recip[PR_RECIPIENT_TRACKSTATUS] = olResponseNone;        // No Response required
+					$recip[PR_RECIPIENT_TRACKSTATUS] = olResponseNone;		// No Response required
 				}
 				unset($recip);
 				mapi_message_modifyrecipients($exception, MODRECIP_MODIFY, $exception_recips['remove']);
@@ -1182,7 +1133,6 @@
 							foreach ($deletedRecipients as $recip) {
 								if ($recip[PR_SEARCH_KEY] == $recipient[PR_SEARCH_KEY]) {
 									$foundInDeletedRecipients = true;
-
 									break;
 								}
 							}
@@ -1196,7 +1146,7 @@
 							else {
 								$recipient[PR_RECIPIENT_FLAGS] = recipReserved | recipExceptionalDeleted | recipSendable;
 							}
-							$recipient[PR_RECIPIENT_TRACKSTATUS] = olRecipientTrackStatusNone;    // No Response required
+							$recipient[PR_RECIPIENT_TRACKSTATUS] = olRecipientTrackStatusNone;	// No Response required
 							$deletedRecipients[] = $recipient;
 						}
 					}
@@ -1219,19 +1169,18 @@
 
 			if (!empty($exception_recips)) {
 				// Set the new list of recipients on the exception message, this also removes the existing recipients
-				mapi_message_modifyrecipients($message, 0, $exception_recips);
+				mapi_message_modifyrecipients($message, MODRECIP_MODIFY, $exception_recips);
 			}
 		}
 
 		/**
 		 * Function returns basedates of all changed occurrences.
 		 *
-		 *@return array array(
-		 * 0 => 123459321
-		 * )
+		 * @return array|bool array(
+		 *                        0 => 123459321
+		 *                    )
 		 */
 		public function getAllExceptions() {
-			$result = false;
 			if (!empty($this->recur["changed_occurrences"])) {
 				$result = [];
 				foreach ($this->recur["changed_occurrences"] as $exception) {
@@ -1241,7 +1190,7 @@
 				return $result;
 			}
 
-			return $result;
+			return false;
 		}
 
 		/**

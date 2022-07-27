@@ -14,7 +14,6 @@
 include_once 'mapi/mapi.util.php';
 include_once 'mapi/mapidefs.php';
 include_once 'mapi/mapitags.php';
-include_once 'mapi/mapicode.php';
 include_once 'mapi/mapiguid.php';
 
 // setlocale to UTF-8 in order to support properties containing Unicode characters
@@ -742,7 +741,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// get necessary attachment props
-		$attprops = mapi_getprops($attach, [PR_ATTACH_MIME_TAG, PR_ATTACH_MIME_TAG_W, PR_ATTACH_METHOD]);
+		$attprops = mapi_getprops($attach, [PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD]);
 		$attachment = new SyncItemOperationsAttachment();
 		// check if it's an embedded message and open it in such a case
 		if (isset($attprops[PR_ATTACH_METHOD]) && $attprops[PR_ATTACH_METHOD] == ATTACH_EMBEDDED_MSG) {
@@ -764,9 +763,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$attachment->data = MAPIStreamWrapper::Open($stream);
 		if (isset($attprops[PR_ATTACH_MIME_TAG])) {
 			$attachment->contenttype = $attprops[PR_ATTACH_MIME_TAG];
-		}
-		elseif (isset($attprops[PR_ATTACH_MIME_TAG_W])) {
-			$attachment->contenttype = $attprops[PR_ATTACH_MIME_TAG_W];
 		}
 		// TODO default contenttype
 		return $attachment;
@@ -875,7 +871,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		$meetingrequest = new Meetingrequest($this->store, $mapimessage, $this->session);
 
-		if (!$meetingrequest->isMeetingRequest()) {
+		if (!$meetingrequest->isMeetingRequest() && !$meetingrequest->isMeetingRequestResponse() && !$meetingrequest->isMeetingCancellation()) {
 			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, attempt to respond to non-meeting request", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 		}
 

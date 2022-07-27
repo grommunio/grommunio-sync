@@ -30,7 +30,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'FileLog' => __DIR__ . '/../..' . '/lib/log/filelog.php',
         'FolderChange' => __DIR__ . '/../..' . '/lib/request/folderchange.php',
         'FolderSync' => __DIR__ . '/../..' . '/lib/request/foldersync.php',
-        'FreeBusyPublish' => __DIR__ . '/../..' . '/mapi/class.freebusypublish.php',
+        'FreeBusy' => __DIR__ . '/../..' . '/mapi/class.freebusy.php',
         'GSync' => __DIR__ . '/../..' . '/lib/core/gsync.php',
         'GSyncException' => __DIR__ . '/../..' . '/lib/exceptions/gsyncexception.php',
         'GetAttachment' => __DIR__ . '/../..' . '/lib/request/getattachment.php',
