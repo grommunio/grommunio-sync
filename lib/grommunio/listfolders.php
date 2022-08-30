@@ -43,7 +43,6 @@ function listfolders_configure() {
 
 	require 'mapi/mapi.util.php';
 	require 'mapi/mapidefs.php';
-	require 'mapi/mapicode.php';
 	require 'mapi/mapitags.php';
 	require 'mapi/mapiguid.php';
 }
