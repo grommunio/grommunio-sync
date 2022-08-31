@@ -1968,7 +1968,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): mapi_folder_createmessage 0x%08X", mapi_last_hresult()));
 
 			$messageName = rtrim((($key !== false) ? $key . "-" : "") . (($type !== "") ? $type : ""), "-");
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): creating new state message '%s' (counter: %s)", $messageName, Utils::PrintAsString($counter));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): creating new state message '%s' (counter: %s)", $messageName, Utils::PrintAsString($counter)));
 			mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrommunioState']);
 		}
 		if (isset($stateMessage)) {
