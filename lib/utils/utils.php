@@ -242,28 +242,6 @@ class Utils {
 	}
 
 	/**
-	 * Checks the given UID if it is an OL compatible GlobalObjectID
-	 * If not, the given UID is encoded inside the GlobalObjectID.
-	 *
-	 * @param string $icalUid an appointment uid as HEX
-	 *
-	 * @return string an OL compatible GlobalObjectID
-	 */
-	public static function GetOLUidFromICalUid($icalUid) {
-		if (strlen($icalUid) <= 64) {
-			$len = 13 + strlen($icalUid);
-			$OLUid = pack("V", $len);
-			$OLUid .= "vCal-Uid";
-			$OLUid .= pack("V", 1);
-			$OLUid .= $icalUid;
-
-			return hex2bin("040000008200E00074C5B7101A82E0080000000000000000000000000000000000000000" . bin2hex($OLUid) . "00");
-		}
-
-		return hex2bin($icalUid);
-	}
-
-	/**
 	 * Extracts the basedate of the GlobalObjectID and the RecurStartTime.
 	 *
 	 * @param string $goid           OL compatible GlobalObjectID

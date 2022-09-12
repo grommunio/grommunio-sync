@@ -830,7 +830,7 @@ class MAPIProvider {
 
 				$mapiattach = mapi_message_openattach($mapimessage, $row[PR_ATTACH_NUM]);
 				$attachprops = mapi_getprops($mapiattach, [PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_A, PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_ATTACH_SIZE, PR_ATTACH_FLAGS]);
-				if ((isset($attachprops[PR_ATTACH_MIME_TAG]) && strpos(strtolower($attachprops[PR_ATTACH_MIME_TAG]), 'signed') !== false)) {
+				if (isset($attachprops[PR_ATTACH_MIME_TAG]) && strpos(strtolower($attachprops[PR_ATTACH_MIME_TAG]), 'signed') !== false) {
 					continue;
 				}
 
@@ -1039,12 +1039,13 @@ class MAPIProvider {
 		}
 
 		if (!isset(
-				$folderprops[PR_DISPLAY_NAME],
-				$folderprops[PR_PARENT_ENTRYID],
-				$folderprops[PR_SOURCE_KEY],
-				$folderprops[PR_ENTRYID],
-				$folderprops[PR_PARENT_SOURCE_KEY],
-				$storeprops[PR_IPM_SUBTREE_ENTRYID])) {
+			$folderprops[PR_DISPLAY_NAME],
+			$folderprops[PR_PARENT_ENTRYID],
+			$folderprops[PR_SOURCE_KEY],
+			$folderprops[PR_ENTRYID],
+			$folderprops[PR_PARENT_SOURCE_KEY],
+			$storeprops[PR_IPM_SUBTREE_ENTRYID]
+		)) {
 			SLog::Write(LOGLEVEL_ERROR, "MAPIProvider->GetFolder(): invalid folder. Missing properties");
 
 			return false;
@@ -1415,7 +1416,7 @@ class MAPIProvider {
 
 		// is the transmitted UID OL compatible?
 		// if not, encapsulate the transmitted uid
-		$appointment->uid = Utils::GetOLUidFromICalUid($appointment->uid);
+		$appointment->uid = getGoidFromUid($appointment->uid);
 
 		mapi_setprops($mapimessage, [PR_MESSAGE_CLASS => "IPM.Appointment"]);
 
@@ -2879,7 +2880,7 @@ class MAPIProvider {
 			if ($bpo->GetTruncationSize() != false &&
 					$bpReturnType != SYNC_BODYPREFERENCE_MIME &&
 					$message->asbody->estimatedDataSize > $bpo->GetTruncationSize()
-				) {
+			) {
 				// Truncated plaintext requests are used on iOS for the preview in the email list. All images and links should be removed - see https://jira.z-hub.io/browse/ZP-1025
 				if ($bpReturnType == SYNC_BODYPREFERENCE_PLAIN) {
 					SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setMessageBody(): truncated plain-text body requested, stripping all links and images");
@@ -2948,7 +2949,7 @@ class MAPIProvider {
 			switch ($asbody->type) {
 				case SYNC_BODYPREFERENCE_PLAIN:
 				default:
-				// set plain body if the type is not in valid range
+					// set plain body if the type is not in valid range
 					$props[$appointmentprops["body"]] = stream_get_contents($asbody->data);
 					break;
 
