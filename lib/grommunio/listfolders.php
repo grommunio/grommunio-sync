@@ -41,6 +41,8 @@ function listfolders_configure() {
 		exit(1);
 	}
 
+	set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__, 3) . '/');
+
 	require 'mapi/mapi.util.php';
 	require 'mapi/mapidefs.php';
 	require 'mapi/mapitags.php';
