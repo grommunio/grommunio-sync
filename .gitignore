@@ -2,3 +2,6 @@ ignore/*
 tools/*
 .php-cs-fixer.cache
 composer.phar
+settings.json
+vendor/phpstan*
+vendor/bin/phpstan*
