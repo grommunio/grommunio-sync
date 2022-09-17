@@ -1,6 +1,11 @@
 /var/log/grommunio-sync/*.log {
-	size 1k
-	su grosync grosync
 	compress
+	dateext
+	maxage 365
 	rotate 4
+	size=+4096k
+	missingok
+	notifempty
+	delaycompress
+	su grosync grosync
 }
