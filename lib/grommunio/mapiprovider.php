@@ -355,7 +355,14 @@ class MAPIProvider {
 			// The appointment is all-day but doesn't start at midnight.
 			// If it was created in another timezone and we have that information,
 			// set the startime to the midnight of the current timezone.
-			if ($appTz && ($localStartTime['tm_hour'] || $localStartTime['tm_min'])) {
+			// Only apply if the user is not organizer of a meeting.
+			if ($appTz && ($localStartTime['tm_hour'] || $localStartTime['tm_min']) && 
+				isset($message->meetingstatus) && (
+					$message->meetingstatus == 3 ||
+					$message->meetingstatus == 7 ||
+					$message->meetingstatus == 11 ||
+					$message->meetingstatus == 15)
+			) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight.");
 				$duration = $message->endtime - $message->starttime;
 				$serverTz = TimezoneUtil::GetFullTZ();
