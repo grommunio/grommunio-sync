@@ -9,12 +9,25 @@
  * in a top-style format.
  */
 
+// retrieve userinfo
+$USERINFO = posix_getpwnam("grosync");
+define('UID', $USERINFO['uid']);
+define('GID', $USERINFO['gid']);
+
 require_once 'vendor/autoload.php';
 if (!defined('GSYNC_CONFIG')) {
 	define('GSYNC_CONFIG', 'config.php');
 }
 
+chown(GSYNC_CONFIG, UID);
+
 include_once GSYNC_CONFIG;
+
+// apply ownwership
+chown(LOGFILE, UID);
+chgrp(LOGFILE, GID);
+chown(LOGERRORFILE, UID);
+chgrp(LOGERRORFILE, GID);
 
 /*
  * MAIN
@@ -27,9 +40,14 @@ include_once GSYNC_CONFIG;
 		define('GSYNC_CONFIG', BASE_PATH_CLI . 'config.php');
 	}
 
+
 	include_once GSYNC_CONFIG;
 
 	try {
+		// change user of running process
+		posix_seteuid(UID);
+		posix_setegid(GID);
+
 		GSync::CheckConfig();
 		if (!function_exists("pcntl_signal")) {
 			throw new FatalException("Function pcntl_signal() is not available. Please install package 'php5-pcntl' (or similar) on your system.");
