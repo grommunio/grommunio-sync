@@ -2121,6 +2121,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 			if ($result == NOERROR) {
 				$rows = mapi_table_queryallrows($storestables, [PR_ENTRYID, PR_DEFAULT_STORE, PR_MDB_PROVIDER]);
+				$result = mapi_last_hresult();
+				if ($result != NOERROR || !is_array($rows)) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->openMessageStore('%s'): Could not get storestables information 0x%08X", $user, $result));
+	
+					return false;
+				}
 
 				foreach ($rows as $row) {
 					if (!$return_public && isset($row[PR_DEFAULT_STORE]) && $row[PR_DEFAULT_STORE] == true) {
