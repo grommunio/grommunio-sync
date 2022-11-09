@@ -2643,7 +2643,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$rowsToQuery = $querycnt;
 			}
 			// get the certificate every time because caching the certificate is less expensive than opening addressbook entry again
-			$abentries = mapi_table_queryrows($table, [PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_TAGGED_X509_CERT, PR_OBJECT_TYPE, PR_SMTP_ADDRESS], 0, $rowsToQuery);
+			$abentries = mapi_table_queryrows($table, [PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_X509_CERT, PR_OBJECT_TYPE, PR_SMTP_ADDRESS], 0, $rowsToQuery);
 			for ($i = 0, $nrEntries = count($abentries); $i < $nrEntries; ++$i) {
 				if (strcasecmp($abentries[$i][PR_SMTP_ADDRESS], $to) !== 0 && $maxAmbiguousRecipients == 1) {
 					SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->resolveRecipientGAL(): maxAmbiguousRecipients is 1 and found non-matching user (to '%s' found: '%s')", $to, $abentries[$i][PR_SMTP_ADDRESS]));
@@ -2656,7 +2656,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientGAL(): '%s' is a dist list. Expand it to members.", $to));
 						$distList = mapi_ab_openentry($addrbook, $abentries[$i][PR_ENTRYID]);
 						$distListContent = mapi_folder_getcontentstable($distList);
-						$distListMembers = mapi_table_queryallrows($distListContent, [PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_TAGGED_X509_CERT]);
+						$distListMembers = mapi_table_queryallrows($distListContent, [PR_ENTRYID, PR_DISPLAY_NAME, PR_EMS_AB_X509_CERT]);
 						for ($j = 0, $nrDistListMembers = mapi_table_getrowcount($distListContent); $j < $nrDistListMembers; ++$j) {
 							SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientGAL(): distlist's '%s' member: '%s'", $to, $distListMembers[$j][PR_DISPLAY_NAME]));
 							$recipientGal[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_GAL, $to, $distListMembers[$j], $nrDistListMembers);
@@ -2813,7 +2813,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$recipient->emailaddress = $email;
 
 		if ($type == SYNC_RESOLVERECIPIENTS_TYPE_GAL) {
-			$certificateProp = PR_EMS_AB_TAGGED_X509_CERT;
+			$certificateProp = PR_EMS_AB_X509_CERT;
 		}
 		elseif ($type == SYNC_RESOLVERECIPIENTS_TYPE_CONTACT) {
 			$certificateProp = PR_USER_X509_CERTIFICATE;
