@@ -227,7 +227,7 @@ abstract class InterProcessData {
 					// TODO: make this configurable?
 					// retry in 0.1s
 					usleep(100000);
-					SLog::Write(LOG_DEBUG, "InterProcessData: setDeviceUserData CAS failed, retrying...");
+					SLog::Write(LOGLEVEL_DEBUG, "InterProcessData: setDeviceUserData CAS failed, retrying...");
 				}
 			}
 		}

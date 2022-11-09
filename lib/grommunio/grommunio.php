@@ -1694,7 +1694,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if ($state && $state[0] === '{') {
 			$jsonDec = json_decode($state);
 			if (isset($jsonDec->gsSyncStateClass)) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetState(): top class '%s'", $jsonDec->gsSyncStateClass));
 				$gsObj = new $jsonDec->gsSyncStateClass();
 				$gsObj->jsonDeserialize($jsonDec);
 				$gsObj->postUnserialize();

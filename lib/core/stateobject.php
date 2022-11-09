@@ -205,7 +205,6 @@ class StateObject implements JsonSerializable {
 	public function jsonDeserialize($stdObj) {
 		foreach ($stdObj->data as $prop => $val) {
 			if (is_object($val) && isset($val->gsSyncStateClass)) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): top class '%s'", $val->gsSyncStateClass));
 				$this->data[$prop] = new $val->gsSyncStateClass();
 				$this->data[$prop]->jsonDeserialize($val);
 				$this->data[$prop]->postUnserialize();
@@ -215,7 +214,6 @@ class StateObject implements JsonSerializable {
 				$this->data[$prop] = [];
 				foreach ($val as $k => $v) {
 					if (is_object($v) && isset($v->gsSyncStateClass)) {
-						SLog::Write(LOGLEVEL_DEBUG, sprintf("StateObject->jsonDeserialize(): sub class '%s'", $v->gsSyncStateClass));
 						// TODO: case should be removed when removing ASDevice backwards compatibility
 						if (strcasecmp($v->gsSyncStateClass, "ASDevice") == 0) {
 							$this->data[$prop][$k] = new ASDevice(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());

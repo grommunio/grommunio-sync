@@ -433,7 +433,6 @@ class Streamer implements JsonSerializable {
 	public function jsonDeserialize($stdObj) {
 		foreach ($stdObj->data as $k => $v) {
 			if (is_object($v) && isset($v->gsSyncStateClass)) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Streamer->jsonDeserialize(): top class '%s'", $v->gsSyncStateClass));
 				$this->{$k} = new $v->gsSyncStateClass();
 				$this->{$k}->jsonDeserialize($v);
 			}
