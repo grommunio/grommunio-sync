@@ -234,10 +234,6 @@ class GSync {
 			if ((!file_exists(LOGERRORFILE) && !touch(LOGERRORFILE)) || !is_writable(LOGERRORFILE)) {
 				throw new FatalMisconfigurationException("The configured LOGERRORFILE can not be modified.");
 			}
-
-			// check ownership on the (eventually) just created files
-			Utils::FixFileOwner(LOGFILE);
-			Utils::FixFileOwner(LOGERRORFILE);
 		}
 		else {
 			define('LOGBACKEND_CLASS', LOGBACKEND);

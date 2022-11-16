@@ -753,43 +753,6 @@ class Utils {
 	}
 
 	/**
-	 * Checks if a file has the same owner and group as the parent directory.
-	 * If not, owner and group are fixed (being updated to the owner/group of the directory).
-	 * If the given file is a special file (i.g., /dev/null, fifo), nothing is changed.
-	 * Function code contributed by Robert Scheck aka rsc.
-	 *
-	 * @param string $file
-	 *
-	 * @return bool
-	 */
-	public static function FixFileOwner($file) {
-		if (!function_exists('posix_getuid')) {
-			SLog::Write(LOGLEVEL_DEBUG, "Utils::FixeFileOwner(): Posix subsystem not available, skipping.");
-
-			return false;
-		}
-		if (posix_getuid() == 0 && is_file($file)) {
-			$dir = dirname($file);
-			$perm_dir = stat($dir);
-			$perm_file = stat($file);
-
-			if ($perm_file['uid'] == 0 && $perm_dir['uid'] == 0 && $perm_dir['gid'] == 0) {
-				unlink($file);
-
-				throw new FatalException("FixFileOwner: {$dir} must be owned by the nginx/apache/php user instead of root for debian based systems and by root:grosync for RHEL-based systems");
-			}
-
-			if ($perm_dir['uid'] !== $perm_file['uid'] || $perm_dir['gid'] !== $perm_file['gid']) {
-				chown($file, $perm_dir['uid']);
-				chgrp($file, $perm_dir['gid']);
-				chmod($file, 0664);
-			}
-		}
-
-		return true;
-	}
-
-	/**
 	 * Returns AS-style LastVerbExecuted value from the server value.
 	 *
 	 * @param int $verb
