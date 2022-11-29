@@ -39,7 +39,7 @@ _While Microsoft Outlook supports EAS, it is not recommended to use grommunio Sy
 - Provides **native** groupware (emails, contacts, calendar, tasks and notes) connectivity for mobile devices, such as phones and tablets
 - Delivers **Exchange ActiveSync (EAS)** 2.5, 12.0, 12.1, 14.0 and 14.1 protocol compatibility
 - **Multi-platform** support for most recent Android, Apple (iOS powered iPhones and iPads) and even outdated Windows Mobile, Nokia and Blackberry devices
-- Supports **device management policies** such as remote-wipe, password-strength, lockout after invalid authentication after defineable amount of times
+- Supports **device management policies** such as remote-wipe, password-strength, lockout after invalid authentication after definable amount of times
 - **Compatible**, works with various web servers such as nginx and apache and others; usage of nginx is recommended
 - **Highly efficient**, averaging at 2MB per sync thread per device of memory usage (using nginx with php-fpm)
 - **Distributable**, compatible with load balancers such as haproxy, apisix, KEMP and others
