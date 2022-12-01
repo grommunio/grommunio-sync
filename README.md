@@ -50,7 +50,7 @@ _While Microsoft Outlook supports EAS, it is not recommended to use grommunio Sy
 
 ### Built with
 
-- PHP **7.x** (PHP **8.0** and **8.1** in finalization)
+- PHP **7.x**, PHP **8.0** and **8.1**
 - PHP modules: soap, mbstring, posix, pcntl, pdo, xml, redis
 - PHP backend module: mapi
 
@@ -107,18 +107,14 @@ Together, we can make grommunio Sync **better**!
 
 First off, thanks for taking the time to contribute! Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make will benefit everybody else and are **greatly appreciated**.
 
-Please read [our contribution guidelines](docs/CONTRIBUTING.md), and **thank you** for being involved!
-
 ## Security
 
 grommunio Sync follows good practices of security. grommunio constantly monitors security-related issues.
 grommunio Sync is provided **"as is"** without any **warranty**. For professional support options through subscriptions, head over to [grommunio](https://grommunio.com).
 
-_For more information and to report security issues, please refer to our [security documentation](docs/SECURITY.md)._
-
 ## Coding style
 
-This repository follows a customized coding style. The coding style can be validated anytime by the repositories provided [configuration file](.phpcs). To understand how to run the coding style toolchain, follow the instructions in [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)
+This repository follows a customized coding style. The coding style can be validated anytime by the repositories provided [configuration file](.phpcs).
 
 ## License
 
