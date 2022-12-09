@@ -398,7 +398,10 @@ class GSyncTop {
 			}
 
 			$color = "0;31m";
-			if ($l['push'] == false && $time - $l["start"] > 30) {
+			if (!isset($l['start'])) {
+				$l['start'] = $time;
+			}
+			if ((!isset($l['push']) || $l['push'] == false) && $time - $l["start"] > 30) {
 				$color = "1;31m";
 			}
 			$this->scrPrintAt($lc, 0, "\033[0" . $color . $this->getLine($l) . "\033[0m");
