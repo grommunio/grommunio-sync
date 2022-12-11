@@ -529,7 +529,7 @@ class GSync {
 	}
 
 	/**
-	 * Returns additional folder objects which should be synchronized to the device.
+	 * Returns the store for an additional folder.
 	 *
 	 * @param string $backendid
 	 * @param bool   $noDebug   (opt) by default, debug message is shown
@@ -541,10 +541,7 @@ class GSync {
 			$val = self::getAddSyncFolders()[$backendid]->Store;
 		}
 		else {
-			$val = self::GetDeviceManager()->GetAdditionalUserSyncFolder($backendid);
-			if (isset($val['store'])) {
-				$val = $val['store'];
-			}
+			$val = self::GetDeviceManager()->GetAdditionalUserSyncFolderStore($backendid);
 		}
 
 		if (!$noDebug) {

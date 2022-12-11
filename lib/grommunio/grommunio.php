@@ -1578,6 +1578,43 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		return gmdate("Y-m-d-H");
 	}
 
+	/**
+	 * Get a list of all folders in the public store that have PR_SYNC_TO_MOBILE set.
+	 *
+	 * @return array
+	 */
+	public function GetPublicSyncEnabledFolders() {
+		$f = [];
+		if (!defined("PR_SYNC_TO_MOBILE")) {
+			return $f;
+		}
+		$store = $this->openMessageStore("SYSTEM");
+		$pubStore = mapi_msgstore_openentry($store, null);
+		$hierarchyTable = mapi_folder_gethierarchytable($pubStore, CONVENIENT_DEPTH);
+		$restriction = [ RES_PROPERTY,
+			[
+				RELOP => RELOP_EQ,
+				ULPROPTAG => PR_SYNC_TO_MOBILE,
+				VALUE => [ PR_SYNC_TO_MOBILE => True],
+			]
+		];
+		mapi_table_restrict($hierarchyTable, $restriction, TBL_BATCH);
+		$rows = mapi_table_queryallrows($hierarchyTable, [ PR_DISPLAY_NAME, PR_CONTAINER_CLASS, PR_SOURCE_KEY ]);
+		$f = [];
+		foreach ($rows as $row) {
+			$folderid = bin2hex($row[PR_SOURCE_KEY]);
+			$f[$folderid] = [
+				'store' => 'SYSTEM',
+				'flags' => DeviceManager::FLD_FLAGS_NONE,
+				'folderid' => $folderid,
+				'parentid' => '0',
+				'name' => $row[PR_DISPLAY_NAME],
+				'type' => MAPIUtils::GetFolderTypeFromContainerClass($row[PR_CONTAINER_CLASS]),
+			];
+		}
+		return $f;
+	}
+
 	/*----------------------------------------------------------------------------------------------------------
 	 * Implementation of the IStateMachine interface
 	 */

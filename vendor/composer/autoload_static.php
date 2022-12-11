@@ -82,6 +82,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'SendMail' => __DIR__ . '/../..' . '/lib/request/sendmail.php',
         'ServiceUnavailableException' => __DIR__ . '/../..' . '/lib/exceptions/serviceunavailableexception.php',
         'Settings' => __DIR__ . '/../..' . '/lib/request/settings.php',
+        'SharedFolders' => __DIR__ . '/../..' . '/lib/core/sharedfolders.php',
         'StateInvalidException' => __DIR__ . '/../..' . '/lib/exceptions/stateinvalidexception.php',
         'StateManager' => __DIR__ . '/../..' . '/lib/core/statemanager.php',
         'StateNotFoundException' => __DIR__ . '/../..' . '/lib/exceptions/statenotfoundexception.php',

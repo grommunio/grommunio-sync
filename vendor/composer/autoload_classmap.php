@@ -75,6 +75,7 @@ return array(
     'SendMail' => $baseDir . '/lib/request/sendmail.php',
     'ServiceUnavailableException' => $baseDir . '/lib/exceptions/serviceunavailableexception.php',
     'Settings' => $baseDir . '/lib/request/settings.php',
+    'SharedFolders' => $baseDir . '/lib/core/sharedfolders.php',
     'StateInvalidException' => $baseDir . '/lib/exceptions/stateinvalidexception.php',
     'StateManager' => $baseDir . '/lib/core/statemanager.php',
     'StateNotFoundException' => $baseDir . '/lib/exceptions/statenotfoundexception.php',

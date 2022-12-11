@@ -356,17 +356,17 @@ class MAPIUtils {
 					// item.end > window.start && item.start < window.end
 					$p[$props["endtime"]] > $start && $p[$props["starttime"]] < $end
 				) ||
-			(
-				isset($p[$props["isrecurring"]], $p[$props["recurrenceend"]]) &&
-					// (EXIST(recurrence_enddate_property) && item[isRecurring] == true && recurrence_enddate_property >= start)
-					 $p[$props["isrecurring"]] == true && $p[$props["recurrenceend"]] >= $start
-			) ||
-			(
-				isset($p[$props["isrecurring"]], $p[$props["starttime"]]) &&
-					// (!EXIST(recurrence_enddate_property) && item[isRecurring] == true && item[start] <= end)
-					!isset($p[$props["recurrenceend"]]) && $p[$props["isrecurring"]] == true && $p[$props["starttime"]] <= $end
-			)
-		   ) {
+				(
+					isset($p[$props["isrecurring"]], $p[$props["recurrenceend"]]) &&
+						// (EXIST(recurrence_enddate_property) && item[isRecurring] == true && recurrence_enddate_property >= start)
+						$p[$props["isrecurring"]] == true && $p[$props["recurrenceend"]] >= $start
+				) ||
+				(
+					isset($p[$props["isrecurring"]], $p[$props["starttime"]]) &&
+						// (!EXIST(recurrence_enddate_property) && item[isRecurring] == true && item[start] <= end)
+						!isset($p[$props["recurrenceend"]]) && $p[$props["isrecurring"]] == true && $p[$props["starttime"]] <= $end
+				)
+			) {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIUtils->IsInCalendarSyncInterval: Message is in the synchronization interval");
 
 			return true;
@@ -444,8 +444,6 @@ class MAPIUtils {
 	 * Checks if a store supports properties containing unicode characters.
 	 *
 	 * @param MAPIStore $store
-	 *
-	 * @return
 	 */
 	public static function IsUnicodeStore($store) {
 		$supportmask = mapi_getprops($store, [PR_STORE_SUPPORT_MASK]);
@@ -504,6 +502,37 @@ class MAPIUtils {
 		}
 	}
 
+	/**
+	 * Returns the ActiveSync (USER) Foldertype from MAPI PR_CONTAINER_CLASS.
+	 *
+	 * @param string $foldertype
+	 * @param mixed  $class
+	 *
+	 * @return int
+	 */
+	public static function GetFolderTypeFromContainerClass($class) {
+		if ($class == "IPF.Note") {
+			return SYNC_FOLDER_TYPE_USER_MAIL;
+		}
+		if ($class == "IPF.Task") {
+			return SYNC_FOLDER_TYPE_USER_TASK;
+		}
+		if ($class == "IPF.Appointment") {
+			return SYNC_FOLDER_TYPE_USER_APPOINTMENT;
+		}
+		if ($class == "IPF.Contact") {
+			return SYNC_FOLDER_TYPE_USER_CONTACT;
+		}
+		if ($class == "IPF.StickyNote") {
+			return SYNC_FOLDER_TYPE_USER_NOTE;
+		}
+		if ($class == "IPF.Journal") {
+			return SYNC_FOLDER_TYPE_USER_JOURNAL;
+		}
+
+		return SYNC_FOLDER_TYPE_OTHER;
+	}
+
 	public static function GetSignedAttachmentRestriction() {
 		return [
 			RES_PROPERTY,
@@ -559,7 +588,7 @@ class MAPIUtils {
 				($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 				($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_IN_SYNC])) {
+				$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 5
@@ -572,7 +601,7 @@ class MAPIUtils {
 		if ( // 6
 				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 				($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_IN_SYNC])) {
+				$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 7
@@ -584,7 +613,7 @@ class MAPIUtils {
 		if ( // 8
 				($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_IN_SYNC])) {
+				$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 9.1

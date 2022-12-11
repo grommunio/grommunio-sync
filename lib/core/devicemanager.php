@@ -270,9 +270,9 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @param string $class The class requested
 	 *
-	 * @throws NoHierarchyCacheAvailableException
-	 *
 	 * @return string
+	 *
+	 * @throws NoHierarchyCacheAvailableException
 	 */
 	public function GetFolderIdFromCacheByClass($class) {
 		$folderidforClass = false;
@@ -307,9 +307,9 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @param string $folderid
 	 *
-	 * @throws NoHierarchyCacheAvailableException, NotImplementedException
-	 *
 	 * @return int
+	 *
+	 * @throws NoHierarchyCacheAvailableException, NotImplementedException
 	 */
 	public function GetFolderClassFromCacheByID($folderid) {
 		// TODO check if the parent folder exists and is also being synchronized
@@ -338,8 +338,8 @@ class DeviceManager extends InterProcessData {
 		if (Request::GetImpersonatedUser()) {
 			return $folders;
 		}
-
-		foreach ($this->device->GetAdditionalFolders() as $df) {
+		$shares = $this->device->GetAdditionalFolders() + SharedFolders::GetSharedFolders();
+		foreach ($shares as $df) {
 			if (!isset($df['flags'])) {
 				$df['flags'] = 0;
 				SLog::Write(LOGLEVEL_WARN, sprintf("DeviceManager->GetAdditionalUserSyncFolders(): Additional folder '%s' has no flags.", $df['name']));
@@ -363,10 +363,17 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @return bool|string
 	 */
-	public function GetAdditionalUserSyncFolder($folderid) {
-		$f = $this->device->GetAdditionalFolder($folderid);
-		if ($f) {
-			return $f;
+	public function GetAdditionalUserSyncFolderStore($folderid) {
+		$sfolders = SharedFolders::GetSharedFolders();
+		if (isset($sfolders[$folderid])) {
+			$f = $sfolders[$folderid];
+		}
+		else {
+			$f = $this->device->GetAdditionalFolder($folderid);
+		}
+
+		if ($f && isset($f['store'])) {
+			return $f['store'];
 		}
 
 		return false;
@@ -647,7 +654,7 @@ class DeviceManager extends InterProcessData {
 	}
 
 	private function getAdditionalFoldersHash() {
-		return md5(serialize($this->device->GetAdditionalFolders()));
+		return md5(serialize($this->device->GetAdditionalFolders() + array_values(SharedFolders::GetSharedFolders())));
 	}
 
 	/**
@@ -724,8 +731,6 @@ class DeviceManager extends InterProcessData {
 	 * @param string $folderid folder id
 	 * @param string $uuid     synkkey
 	 * @param string $counter  synckey counter
-	 *
-	 * @return
 	 */
 	public function SetHeartbeatStateIntegrity($folderid, $uuid, $counter) {
 		return $this->loopdetection->SetSyncStateUsage($folderid, $uuid, $counter);
@@ -762,8 +767,6 @@ class DeviceManager extends InterProcessData {
 	 *
 	 * @param string $folderid   folder id
 	 * @param int    $statusflag current status: DeviceManager::FLD_SYNC_INITIALIZED, DeviceManager::FLD_SYNC_INPROGRESS, DeviceManager::FLD_SYNC_COMPLETED
-	 *
-	 * @return
 	 */
 	public function SetFolderSyncStatus($folderid, $statusflag) {
 		$currentStatus = $this->device->GetFolderSyncStatus($folderid);
