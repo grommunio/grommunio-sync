@@ -1834,14 +1834,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (!$this->stateFolder) {
 			$folderentryid = $this->getDeviceUserData($this->userDeviceData, $devid, $this->mainUser, "statefolder");
 			if ($folderentryid) {
-				$this->stateFolder = mapi_msgstore_openentry($this->store, hex2bin($folderentryid));
+				$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, hex2bin($folderentryid));
 			}
 		}
 
 		// fallback code
-		if (!$this->stateFolder && $this->store) {
+		if (!$this->stateFolder && $this->defaultstore) {
 			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getStateFolder(): state folder not set. Use fallback"));
-			$rootfolder = mapi_msgstore_openentry($this->store);
+			$rootfolder = mapi_msgstore_openentry($this->defaultstore);
 			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
 			$restriction = $this->getStateFolderRestriction($devid);
 			// restrict the hierarchy to the grommunio-sync search folder only
@@ -1850,7 +1850,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d device state folders", $rowCnt));
 			if ($rowCnt == 1) {
 				$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
-				$this->stateFolder = mapi_msgstore_openentry($this->store, $hierarchyRows[0][PR_ENTRYID]);
+				$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex($hierarchyRows[0][PR_ENTRYID])));
 				// put found id in redis
 				if ($devid) {
@@ -1868,7 +1868,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d store state folders", $rowCnt));
 				if ($rowCnt == 1) {
 					$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
-					$stateFolder = mapi_msgstore_openentry($this->store, $hierarchyRows[0][PR_ENTRYID]);
+					$stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
 				}
 				elseif ($rowCnt == 0) {
 					$stateFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
@@ -1880,7 +1880,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				if (isset($stateFolder) && $stateFolder) {
 					$devStateFolder = mapi_folder_createfolder($stateFolder, $devid, "");
 					$devStateFolderProps = mapi_getprops($devStateFolder);
-					$this->stateFolder = mapi_msgstore_openentry($this->store, $devStateFolderProps[PR_ENTRYID]);
+					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
 					mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
 					// we don't cache the entryid in redis, because this will happen on the next request anyway
 				}
@@ -1929,7 +1929,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			if ($rowCnt == 1) {
 				$stateFolderRows = mapi_table_queryrows($stateFolderContents, [PR_ENTRYID], 0, 1);
 
-				return mapi_msgstore_openentry($this->store, $stateFolderRows[0][PR_ENTRYID]);
+				return mapi_msgstore_openentry($this->defaultstore, $stateFolderRows[0][PR_ENTRYID]);
 			}
 
 			if ($rowCnt > 1) {
