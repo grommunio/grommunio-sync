@@ -1578,60 +1578,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		return gmdate("Y-m-d-H");
 	}
 
-	/**
-	 * Returns information about the user's store:
-	 * number of folders, store size, full name, email address.
-	 *
-	 * @return UserStoreInfo
-	 */
-	public function GetUserStoreInfo() {
-		$userStoreInfo = new UserStoreInfo();
-
-		$rootfolder = mapi_msgstore_openentry($this->store);
-		$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
-		// Do not take hidden and system folders into account
-		// TODO make this restriction generic and use for hierarchy?
-		$restrict = [
-			RES_AND,
-			[
-				[
-					RES_PROPERTY,
-					[
-						RELOP => RELOP_NE,
-						ULPROPTAG => PR_ATTR_HIDDEN,
-						VALUE => true, ],
-				],
-				[
-					RES_PROPERTY,
-					[
-						RELOP => RELOP_EQ,
-						ULPROPTAG => PR_FOLDER_TYPE,
-						VALUE => FOLDER_GENERIC, ],
-				],
-				[
-					RES_EXIST,
-					[ULPROPTAG => PR_CONTAINER_CLASS],
-				],
-			], ];
-		mapi_table_restrict($hierarchy, $restrict);
-		$foldercount = mapi_table_getrowcount($hierarchy);
-
-		$storeProps = mapi_getprops($this->store, [PR_MESSAGE_SIZE_EXTENDED]);
-		$storesize = isset($storeProps[PR_MESSAGE_SIZE_EXTENDED]) ? $storeProps[PR_MESSAGE_SIZE_EXTENDED] : 0;
-
-		$userDetails = $this->GetUserDetails($this->impersonateUser ?: $this->mainUser);
-		$userStoreInfo->SetData($foldercount, $storesize, $userDetails['fullname'], $userDetails['emailaddress']);
-		SLog::Write(LOGLEVEL_DEBUG, sprintf(
-			"Grommunio->GetUserStoreInfo(): user %s (%s) store size is %d bytes and contains %d folders",
-			Utils::PrintAsString($userDetails['fullname']),
-			Utils::PrintAsString($userDetails['emailaddress']),
-			$storesize,
-			$foldercount
-		));
-
-		return $userStoreInfo;
-	}
-
 	/*----------------------------------------------------------------------------------------------------------
 	 * Implementation of the IStateMachine interface
 	 */

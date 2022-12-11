@@ -280,12 +280,4 @@ interface IBackend {
 	 * @return string
 	 */
 	public function GetFolderStat($store, $folderid);
-
-	/**
-	 * Returns information about the user's store:
-	 * number of folders, store size, full name, email address.
-	 *
-	 * @return UserStoreInfo
-	 */
-	public function GetUserStoreInfo();
 }
