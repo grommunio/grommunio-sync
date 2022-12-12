@@ -630,7 +630,10 @@ class MAPIProvider {
 			// remove encapsulating double quotes from the representingname
 			$fromname = preg_replace('/^\"(.*)\"$/', "\${1}", $messageprops[$emailproperties["representingname"]]);
 		}
-		if (isset($messageprops[$emailproperties["representingentryid"]])) {
+		if (isset($messageprops[$emailproperties["representingsendersmtpaddress"]])) {
+			$fromaddr = $messageprops[$emailproperties["representingsendersmtpaddress"]];
+		}
+		if ($fromaddr == "" && isset($messageprops[$emailproperties["representingentryid"]])) {
 			$fromaddr = $this->getSMTPAddressFromEntryID($messageprops[$emailproperties["representingentryid"]]);
 		}
 
@@ -2428,12 +2431,6 @@ class MAPIProvider {
 		if ($addrtype == "SMTP" && isset($props[PR_EMAIL_ADDRESS])) {
 			return $props[PR_EMAIL_ADDRESS];
 		}
-		if ($addrtype == "ZARAFA" && isset($props[PR_EMAIL_ADDRESS])) {
-			$userinfo = nsp_getuserinfo($props[PR_EMAIL_ADDRESS]);
-			if (is_array($userinfo) && isset($userinfo["primary_email"])) {
-				return $userinfo["primary_email"];
-			}
-		}
 
 		return "";
 	}
@@ -2843,7 +2840,7 @@ class MAPIProvider {
 				return true;
 			}
 		}
-		SLog::Write(LOGLEVEL_ERROR, "MAPIProvider->imtoinet(): got no stream or content from mapi_inetmapi_imtoinet()");
+		SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIProvider->imtoinet(): got no stream or content from mapi_inetmapi_imtoinet(): 0x%08X", mapi_last_hresult()));
 
 		return false;
 	}
