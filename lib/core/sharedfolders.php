@@ -7,7 +7,9 @@
  */
 
 class SharedFolders extends InterProcessData {
-	public static $instance = false;
+	private static $instance = false;
+	private $shared;
+	private $updateTime; 
 
 	public static function GetSharedFolders() {
 		if (!self::$instance) {
@@ -33,23 +35,33 @@ class SharedFolders extends InterProcessData {
 		parent::__construct();
 		// initialize params
 		$this->initializeParams();
-
-		// get cached data from redis
-		$shared = $this->getDeviceUserData($this->type, $this->localpart, -1);
-
-		// no shared folder in redis for this user, get them from the public folder
-		if (empty($shared)) {
-			$shared = GSync::GetBackend()->GetPublicSyncEnabledFolders();
-			$this->setDeviceUserData($this->type, $shared, $this->localpart, -1);
-		}
+		$this->shared = [];
+		$this->updateTime = 0;
 	}
 
+	/**
+	 * Returns cached shared folder data from this instance or from redis.
+	 * As this is potentially called for each folder in a sync we only need to update it 
+	 * from redis every ping intervals to push new folders.
+	 *
+	 * If no data is available it's retrieved from the store via MAPI.
+	 * 
+	 * @return array
+	 */
 	public function GetSharedFoldersRaw() {
-		// get cached data from redis
-		$shared = $this->getDeviceUserData($this->type, $this->localpart, -1);
-		if (!$shared) {
-			return [];
+		// update instance data from redis once every 29s (to catch changes between the ping intervals)
+		if ($this->updateTime + 29 < time()) {
+			// get cached data from redis
+			list($shared, $sharedRaw) = $this->getDeviceUserData($this->type, $this->localpart, -1, -1, true);
+
+			// no shared folder data in redis for this user, get them from the public folder and put it in redis
+			if (!$sharedRaw) {
+				$shared = GSync::GetBackend()->GetPublicSyncEnabledFolders();
+				$this->setDeviceUserData($this->type, $shared, $this->localpart, -1);
+			}
+			$this->shared = $shared;
+			$this->updateTime = time();
 		}
-		return $shared;
+		return $this->shared;
 	}
 }
