@@ -1584,20 +1584,24 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return array
 	 */
 	public function GetPublicSyncEnabledFolders() {
-		$f = [];
-		if (!defined("PR_SYNC_TO_MOBILE")) {
-			return $f;
-		}
 		$store = $this->openMessageStore("SYSTEM");
 		$pubStore = mapi_msgstore_openentry($store, null);
 		$hierarchyTable = mapi_folder_gethierarchytable($pubStore, CONVENIENT_DEPTH);
-		$restriction = [ RES_PROPERTY,
-			[
-				RELOP => RELOP_EQ,
-				ULPROPTAG => PR_SYNC_TO_MOBILE,
-				VALUE => [ PR_SYNC_TO_MOBILE => True],
-			]
-		];
+		
+		$properties = getPropIdsFromStrings($store, ["synctomobile" => "PT_BOOLEAN:PSETID_GROMOX:synctomobile"]);
+
+		$restriction = [RES_AND, [
+				[ RES_EXIST,
+						[ ULPROPTAG => $properties['synctomobile'], ],
+				],
+				[ RES_PROPERTY,
+						[
+							RELOP => RELOP_EQ,
+							ULPROPTAG => $properties['synctomobile'],
+							VALUE => [ $properties['synctomobile'] => true],
+						]
+				]
+		]];
 		mapi_table_restrict($hierarchyTable, $restriction, TBL_BATCH);
 		$rows = mapi_table_queryallrows($hierarchyTable, [ PR_DISPLAY_NAME, PR_CONTAINER_CLASS, PR_SOURCE_KEY ]);
 		$f = [];
