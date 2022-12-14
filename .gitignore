@@ -5,3 +5,4 @@ composer.phar
 settings.json
 vendor/phpstan*
 vendor/bin/phpstan*
+mapi
