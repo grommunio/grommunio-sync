@@ -173,8 +173,6 @@ class Find extends RequestProcessor {
 			}
 
 			if ($searchtotal > 0) {
-//				$cpo->BodyPreference(SYNC_BODYPREFERENCE_PLAIN);
-//				$cpo->BodyPreference(SYNC_BODYPREFERENCE_PLAIN)->SetTruncationSize(254);
 				foreach ($rows as $u) {
 					// fetch the SyncObject for this result
 					$message = self::$backend->Fetch(false, $u['longid'], $cpo);
