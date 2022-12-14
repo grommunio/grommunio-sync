@@ -29,6 +29,8 @@ class GSync {
 	public const ASV_121 = "12.1";
 	public const ASV_14 = "14.0";
 	public const ASV_141 = "14.1";
+	public const ASV_16 = "16.0";
+	public const ASV_161 = "16.1";
 
 	/**
 	 * Command codes for base64 encoded requests (AS >= 12.1).
@@ -52,6 +54,7 @@ class GSync {
 	public const COMMAND_PROVISION = 20;
 	public const COMMAND_RESOLVERECIPIENTS = 21;
 	public const COMMAND_VALIDATECERT = 22;
+	public const COMMAND_FIND = 23;
 
 	// Deprecated commands
 	public const COMMAND_GETHIERARCHY = -1;
@@ -69,6 +72,8 @@ class GSync {
 		self::ASV_121,
 		self::ASV_14,
 		self::ASV_141,
+		self::ASV_16,
+		self::ASV_161,
 	];
 
 	private static $supportedCommands = [
@@ -97,6 +102,7 @@ class GSync {
 		self::COMMAND_NOTIFY => [self::ASV_1, self::REQUESTHANDLER => "Notify"], // deprecated & not implemented
 		self::COMMAND_ITEMOPERATIONS => [self::ASV_12, self::REQUESTHANDLER => "ItemOperations"],
 		self::COMMAND_SETTINGS => [self::ASV_12, self::REQUESTHANDLER => "Settings"],
+		self::COMMAND_FIND => [self::ASV_141, self::REQUESTHANDLER => "Find"],
 	];
 
 	private static $classes = [
