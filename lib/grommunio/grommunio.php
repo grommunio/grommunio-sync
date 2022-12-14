@@ -2047,7 +2047,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return string
 	 */
 	private function getHierarchyHash() {
-		$rootfolder = mapi_msgstore_openentry($this->defaultstore);
+		$storeProps = mapi_getprops($this->defaultstore, array(PR_IPM_SUBTREE_ENTRYID));
+		$rootfolder = mapi_msgstore_openentry($this->defaultstore, $storeProps[PR_IPM_SUBTREE_ENTRYID]);
 		$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
 
 		return md5(serialize(mapi_table_queryallrows($hierarchy, [PR_DISPLAY_NAME, PR_PARENT_ENTRYID])));
