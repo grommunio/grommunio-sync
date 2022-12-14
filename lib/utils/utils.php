@@ -516,6 +516,8 @@ class Utils {
 			case GSync::COMMAND_MOVECOLLECTION:       return 'MoveCollection';
 
 			case GSync::COMMAND_NOTIFY:               return 'Notify';
+
+			case GSync::COMMAND_FIND:                 return 'Find';
 		}
 
 		return false;
@@ -577,6 +579,8 @@ class Utils {
 			case 'MoveCollection':       return GSync::COMMAND_MOVECOLLECTION;
 
 			case 'Notify':               return GSync::COMMAND_NOTIFY;
+
+			case 'Find':                 return GSync::COMMAND_FIND;
 		}
 
 		return false;

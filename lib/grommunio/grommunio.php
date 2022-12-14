@@ -1333,11 +1333,37 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return array
 	 */
 	public function GetMailboxSearchResults($cpo) {
+		$items = [];
+		$flags = 0;
 		$searchFolder = $this->getSearchFolder();
-		$searchRestriction = $this->getSearchRestriction($cpo);
-		$searchRange = explode('-', $cpo->GetSearchRange());
-		$searchFolderId = $cpo->GetSearchFolderid();
 		$searchFolders = [];
+
+		if ($cpo->GetFindSearchId()) {
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetMailboxSearchResults(): Do FIND"));
+			$searchRange = explode('-', $cpo->GetFindRange());
+
+			$searchRestriction = $this->getFindRestriction($cpo);
+			$searchFolderId = $cpo->GetFindFolderId();
+			$range = $cpo->GetFindRange();
+			
+			// if subfolders are required, do a recursive search
+			if ($cpo->GetFindDeepTraversal()) {
+				$flags |= SEARCH_RECURSIVE;
+			}
+		}
+		else {
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetMailboxSearchResults(): Do SEARCH"));
+			$searchRestriction = $this->getSearchRestriction($cpo);
+			$searchRange = explode('-', $cpo->GetSearchRange());
+			$searchFolderId = $cpo->GetSearchFolderid();
+			$range = $cpo->GetSearchRange();
+
+			// if subfolders are required, do a recursive search
+			if ($cpo->GetSearchDeepTraversal()) {
+				$flags |= SEARCH_RECURSIVE;
+			}
+		}
+
 		// search only in required folders
 		if (!empty($searchFolderId)) {
 			$searchFolderEntryId = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($searchFolderId));
@@ -1348,13 +1374,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$tmp = mapi_getprops($this->store, [PR_ENTRYID, PR_DISPLAY_NAME, PR_IPM_SUBTREE_ENTRYID]);
 			$searchFolders[] = $tmp[PR_IPM_SUBTREE_ENTRYID];
 		}
-		$items = [];
-		$flags = 0;
-		// if subfolders are required, do a recursive search
-		if ($cpo->GetSearchDeepTraversal()) {
-			$flags |= SEARCH_RECURSIVE;
-		}
-
 		mapi_folder_setsearchcriteria($searchFolder, $searchRestriction, $searchFolders, $flags);
 
 		$table = mapi_folder_getcontentstable($searchFolder);
@@ -1370,16 +1389,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// if the search range is set limit the result to it, otherwise return all found messages
 		$rows = (is_array($searchRange) && isset($searchRange[0], $searchRange[1])) ?
-			mapi_table_queryrows($table, [PR_ENTRYID], $searchRange[0], $searchRange[1] - $searchRange[0] + 1) :
-			mapi_table_queryrows($table, [PR_ENTRYID], 0, SEARCH_MAXRESULTS);
+			mapi_table_queryrows($table, [PR_ENTRYID, PR_SOURCE_KEY], $searchRange[0], $searchRange[1] - $searchRange[0] + 1) :
+			mapi_table_queryrows($table, [PR_ENTRYID, PR_SOURCE_KEY], 0, SEARCH_MAXRESULTS);
 
 		$cnt = count($rows);
 		$items['searchtotal'] = $cnt;
-		$items["range"] = $cpo->GetSearchRange();
+		$items["range"] = $range;
 		for ($i = 0; $i < $cnt; ++$i) {
 			$items[$i]['class'] = 'Email';
 			$items[$i]['longid'] = bin2hex($rows[$i][PR_ENTRYID]);
-			// $items[$i]['folderid'] = bin2hex($rows[$i][PR_PARENT_SOURCE_KEY]);
+			$items[$i]['serverid'] = bin2hex($rows[$i][PR_SOURCE_KEY]);
 		}
 
 		return $items;
@@ -2528,9 +2547,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$searchGreater = strtotime($cpo->GetSearchValueGreater());
 		$searchLess = strtotime($cpo->GetSearchValueLess());
 
-		if (version_compare(phpversion(), '5.3.4') < 0) {
-			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->getSearchRestriction(): Your system's PHP version (%s) might not correctly process unicode strings. Search containing such characters might not return correct results. It is recommended to update to at least PHP 5.3.4. See ZP-541 for more information.", phpversion()));
-		}
 		// split the search on whitespache and look for every word
 		$searchText = preg_split("/\\W+/u", $searchText);
 		$searchProps = [PR_BODY, PR_SUBJECT, PR_DISPLAY_TO, PR_DISPLAY_CC, PR_SENDER_NAME, PR_SENDER_EMAIL_ADDRESS, PR_SENT_REPRESENTING_NAME, PR_SENT_REPRESENTING_EMAIL_ADDRESS];
@@ -2562,6 +2578,40 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return [RES_AND, $resAnd];
+	}
+
+	/**
+	 * Creates a FIND restriction.
+	 *
+	 * @param ContentParameter $cpo
+	 *
+	 * @return array
+	 */
+	private function getFindRestriction($cpo) {
+		$findText = $cpo->GetFindFreeText();
+
+		$findFor = "";
+		if (!(stripos($findText, ":") && (stripos($findText, "OR") || stripos($findText, "AND")))) {
+			$findFor = $findText;
+		}
+		else {
+			// just extract a list of words we search for ignoring the fields to be searched in
+			// this list of words is then passed to getSearchRestriction()
+			$words = [];
+			foreach (explode(" OR ", $findText) as $search) {
+				if (stripos($search, ':')) {
+					$value = explode(":", $search)[1];
+				}
+				else {
+					$value = $search;
+				}
+				$words[str_replace('"', '', $value)] = true;
+			}
+			$findFor = implode(" ", array_keys($words));
+		}
+		Slog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getFindRestriction(): extracted words: %s", $findFor));
+		$cpo->SetSearchFreeText($findFor);
+		return $this->getSearchRestriction($cpo);
 	}
 
 	/**

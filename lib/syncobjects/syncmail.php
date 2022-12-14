@@ -55,6 +55,11 @@ class SyncMail extends SyncObject {
 	public $rightsManagementLicense;
 	public $asbodypart;
 
+	// hidden properties for FIND Command
+	public $Displaycc;
+	public $Displaybcc;
+	public $ParentSourceKey;
+	
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMMAIL_TO => [
@@ -215,6 +220,19 @@ class SyncMail extends SyncObject {
 			];
 		}
 
+		// hidden property for the FIND command result
+		$mapping[SYNC_POOMMAIL_IGNORE_DISPLAYCC] = [
+			self::STREAMER_VAR => "Displaycc",
+			self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+		];
+		$mapping[SYNC_POOMMAIL_IGNORE_DISPLAYBCC] = [
+			self::STREAMER_VAR => "Displaybcc",
+			self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+		];
+		$mapping[SYNC_POOMMAIL_IGNORE_PARENTSOURCEKEY] = [
+			self::STREAMER_VAR => "ParentSourceKey",
+			self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+		];
 		parent::__construct($mapping);
 	}
 }

@@ -102,7 +102,7 @@ class GSync {
 		self::COMMAND_NOTIFY => [self::ASV_1, self::REQUESTHANDLER => "Notify"], // deprecated & not implemented
 		self::COMMAND_ITEMOPERATIONS => [self::ASV_12, self::REQUESTHANDLER => "ItemOperations"],
 		self::COMMAND_SETTINGS => [self::ASV_12, self::REQUESTHANDLER => "Settings"],
-		self::COMMAND_FIND => [self::ASV_141, self::REQUESTHANDLER => "Find"],
+		self::COMMAND_FIND => [self::ASV_161, self::REQUESTHANDLER => "Find"],
 	];
 
 	private static $classes = [
