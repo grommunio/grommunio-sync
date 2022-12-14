@@ -158,6 +158,7 @@ class MAPIMapping {
 			"representingentryid" => PR_SENT_REPRESENTING_ENTRYID,
 			"representingsearchkey" => PR_SENT_REPRESENTING_SEARCH_KEY,
 			"representingsendersmtpaddress" => PR_SENT_REPRESENTING_SMTP_ADDRESS,
+			"senderemailaddress" => PR_SENDER_EMAIL_ADDRESS,
 			"sourcekey" => PR_SOURCE_KEY,
 			"entryid" => PR_ENTRYID,
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,

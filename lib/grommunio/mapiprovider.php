@@ -642,6 +642,16 @@ class MAPIProvider {
 			$fromaddr = $this->getEmailAddressFromSearchKey($messageprops[$emailproperties["representingsearchkey"]]);
 		}
 
+		// if we couldn't still not get any $fromaddr, fall back to PR_SENDER_EMAIL_ADDRESS
+		if ($fromaddr == "" && isset($messageprops[$emailproperties["senderemailaddress"]])) {
+			$fromaddr = $messageprops[$emailproperties["senderemailaddress"]];
+		}
+
+		// there is some name, but no email address (e.g. mails from System Administrator) - use a generic invalid address
+		if ($fromname != "" && $fromaddr == ""){
+			$fromaddr = "invalid@invalid";
+		}
+
 		if ($fromname == $fromaddr) {
 			$fromname = "";
 		}
