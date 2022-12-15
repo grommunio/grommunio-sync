@@ -143,6 +143,9 @@ class MAPIMapping {
 			"lastverbexecuted" => PR_LAST_VERB_EXECUTED,
 			"lastverbexectime" => PR_LAST_VERB_EXECUTION_TIME,
 			"categories" => "PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords",
+			"Displaycc" => PR_DISPLAY_CC,
+			"Displaybcc" => PR_DISPLAY_BCC,
+			"ParentSourceKey" => PR_PARENT_SOURCE_KEY,
 		];
 	}
 

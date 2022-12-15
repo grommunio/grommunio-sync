@@ -286,6 +286,7 @@ class WBXMLDefs {
 				0x39 => "FirstDayOfWeek", // Since 14.1
 				0x3A => "OnlineMeetingConfLink", // Since 14.1
 				0x3B => "OnlineMeetingExternalLink", // Since 14.1
+				0x3C => "ClientUid", // Since 16.0
 			],
 			5 => [
 				0x05 => "Moves",
@@ -342,6 +343,9 @@ class WBXMLDefs {
 				0x0C => "UserResponse",
 				0x0D => "Version", // 2.0 - not defined in 20100501
 				0x0E => "InstanceId", // Since AS 14.1
+				0X10 => "ProposedStartTime", // Since 16.1
+				0X11 => "ProposedEndTime", // Since 16.1
+				0X10 => "SendResponse", // Since 16.0
 			],
 			9 => [
 				0x05 => "Body", // AirSyncBase Body is used since 12.0
@@ -494,6 +498,7 @@ class WBXMLDefs {
 				0x38 => "ApplicationName", // Since 12.1
 				0x39 => "ApprovedApplicationList", // Since 12.1
 				0x3A => "Hash", // Since 12.1
+				0x3B => "AccountOnlyRemoteWipe", // Since 16.1
 			],
 			0xF => [
 				0x05 => "Search",
@@ -565,6 +570,24 @@ class WBXMLDefs {
 				0x19 => "BodyPartPreference", // Since 14.1
 				0x1A => "BodyPart", // Since 14.1
 				0x1B => "Status", // Since 14.1
+				0x1C => "Add", // Since 16.0
+				0x1D => "Delete", // Since 16.0
+				0x1E => "ClientId", // Since 16.0
+				0x1F => "Content", // Since 16.0
+				0x20 => "Location", // Since 16.0
+				0x21 => "Annotation", // Since 16.0
+				0x22 => "Street", // Since 16.0
+				0x23 => "City", // Since 16.0
+				0x24 => "State", // Since 16.0
+				0x25 => "Country", // Since 16.0
+				0x26 => "PostalCode", // Since 16.0
+				0x27 => "Latitude", // Since 16.0
+				0x28 => "Longitude", // Since 16.0
+				0x29 => "Accuracy", // Since 16.0
+				0x2A => "Altitude", // Since 16.0
+				0x2B => "AltitudeAccuracy", // Since 16.0
+				0x2C => "LocationUri", // Since 16.0
+				0x2D => "InstanceId", // Since 16.0
 			],
 			0x12 => [ // Since 12.0
 				0x05 => "Settings",
@@ -655,6 +678,10 @@ class WBXMLDefs {
 				0x11 => "ClientId",
 				0x12 => "Status",
 				0x13 => "AccountId", // Since 14.1
+				0X15 => "Forwardees", // Since 16.0
+				0X16 => "Forwardee", // Since 16.0
+				0X17 => "Name", // Since 16.0
+				0X18 => "Email", // Since 16.0
 			],
 			0x16 => [ // Since 14.0
 				0x05 => "UmCallerId",
@@ -672,6 +699,9 @@ class WBXMLDefs {
 				0x11 => "AccountId", // Since 14.1
 				0x12 => "FirstDayOfWeek", // Since 14.1
 				0x13 => "MeetingMessageType", // Since 14.1
+				0X15 => "IsDraft", // Since 16.0
+				0X16 => "Bcc", // Since 16.0
+				0X17 => "Send", // Since 16.0
 			],
 			0x17 => [ // Since 14.0
 				0x05 => "Subject",
@@ -702,6 +732,31 @@ class WBXMLDefs {
 				0x17 => "ContentOwner",
 				0x18 => "RemoveRightsManagementProtection",
 			],
+			// FIND
+			0x19 => [ // Since 16.1
+				0x05 => "Find", // Since 16.1
+				0x06 => "SearchId", // Since 16.1
+				0x07 => "ExecuteSearch", // Since 16.1
+				0x08 => "MailBoxSearchCriterion", // Since 16.1
+				0x09 => "Query", // Since 16.1
+				0x0A => "Status", // Since 16.1
+				0x0B => "FreeText", // Since 16.1
+				0x0C => "Options", // Since 16.1
+				0x0D => "Range", // Since 16.1
+				0x0E => "DeepTraversal", // SinceE 16.1
+				0x11 => "Response", // Since 16.1
+				0x12 => "Result", // Since 16.1
+				0x13 => "Properties", // Since 16.1
+				0x14 => "Preview", // Since 16.1
+				0x15 => "HasAttachments", // Since 16.1
+				0x16 => "Total", // Since 16.1
+				0x17 => "DisplayCc", // Since 16.1
+				0x18 => "DisplayBcc", // Since 16.1
+				0x19 => "GalSearchCriterion", // Since 16.1
+				0x20 => "MaxPictures", // Since 16.1
+				0x21 => "MaxSize", // Since 16.1
+				0x22 => "Picture", // Since 16.1
+			],
 		],
 		"namespaces" => [
 			// 0 => "AirSync", //
@@ -729,6 +784,7 @@ class WBXMLDefs {
 			0x16 => "POOMMAIL2", // 14.0
 			0x17 => "Notes", // 14.0
 			0x18 => "RightsManagement",
+			0x19 => "Find", // 16.1
 		],
 	];
 }
