@@ -43,10 +43,10 @@ function listfolders_configure() {
 
 	set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__, 3) . '/');
 
-	require 'mapi/mapi.util.php';
-	require 'mapi/mapidefs.php';
-	require 'mapi/mapitags.php';
-	require 'mapi/mapiguid.php';
+	require 'umapi/mapi.util.php';
+	require 'umapi/mapidefs.php';
+	require 'umapi/mapitags.php';
+	require 'umapi/mapiguid.php';
 }
 
 function listfolders_handle() {

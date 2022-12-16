@@ -11,10 +11,10 @@
  */
 
 // include PHP-MAPI classes
-include_once 'mapi/mapi.util.php';
-include_once 'mapi/mapidefs.php';
-include_once 'mapi/mapitags.php';
-include_once 'mapi/mapiguid.php';
+include_once 'umapi/mapi.util.php';
+include_once 'umapi/mapidefs.php';
+include_once 'umapi/mapitags.php';
+include_once 'umapi/mapiguid.php';
 
 // setlocale to UTF-8 in order to support properties containing Unicode characters
 setlocale(LC_CTYPE, "en_US.UTF-8");
