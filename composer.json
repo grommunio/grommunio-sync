@@ -1,6 +1,6 @@
 {
     "autoload": {
-        "classmap": ["mapi/", "lib/"],
+        "classmap": ["/usr/share/php-mapi/", "lib/"],
         "files": ["version.php", "lib/core/gsyncdefs.php", "lib/utils/compat.php"]
     }
 }
