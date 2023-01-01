@@ -32,7 +32,7 @@ include_once GSYNC_CONFIG;
 	try {
 		GSync::CheckConfig();
 		if (!function_exists("pcntl_signal")) {
-			throw new FatalException("Function pcntl_signal() is not available. Please install package 'php5-pcntl' (or similar) on your system.");
+			throw new FatalException("Function pcntl_signal() is not available. Please install package 'php8-pcntl' (or similar) on your system.");
 		}
 
 		if (php_sapi_name() != "cli") {
