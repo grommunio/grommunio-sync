@@ -2828,7 +2828,8 @@ class MAPIProvider {
 	private function imtoinet($mapimessage, &$message) {
 		$addrbook = $this->getAddressbook();
 		$stream = mapi_inetmapi_imtoinet($this->session, $addrbook, $mapimessage, ['use_tnef' => -1, 'ignore_missing_attachments' => 1]);
-		if (is_resource($stream)) {
+		// is_resource($stream) returns false in PHP8
+		if ($stream !== null && mapi_last_hresult() === ecSuccess) {
 			$mstreamstat = mapi_stream_stat($stream);
 			$streamsize = $mstreamstat["cb"];
 			if (isset($streamsize)) {
