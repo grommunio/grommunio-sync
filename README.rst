@@ -1,13 +1,13 @@
 grommunio Sync
 ==============
 
-grommunio Sync is an open-source application to synchronize Exchange ActiveSync
-(EAS) compatible devices such as mobile phones and tablets.
+**grommunio Sync is an open-source application to synchronize Exchange ActiveSync
+(EAS) compatible devices such as mobile phones and tablets.**
 
-_While Microsoft Outlook supports EAS, it is not recommended to use grommunio
+*While Microsoft Outlook supports EAS, it is not recommended to use grommunio
 Sync due to a very small subset of features only supported. For Microsoft
 Outlook, users should rather use the native MAPI/HTTP and MAPI/RPC protocols,
-available through `grommunio Gromox <https://github.com/grommunio/gromox>`_.
+available through `grommunio Gromox <https://github.com/grommunio/gromox>`.*
 
 |shield-agpl|_ |shield-release|_ |shield-scrut|_ |shield-loc|
 
@@ -55,12 +55,12 @@ Getting started
 Prerequisites
 -------------
 
-* A working web server (nginx is recommended), with a working TLS configuration
-* PHP, preferably available as fpm pool
-* Redis for high-performance interprocess communication states
-* Zcore MAPI transport (provided by `Gromox
+* A working **web server** (nginx is recommended), with a working **TLS** configuration
+* **PHP**, preferably available as fpm pool
+* **Redis** for high-performance interprocess communication states
+* **Zcore** MAPI transport (provided by `Gromox
   <https://github.com/grommunio/gromox>`_.
-* Working AutoDiscover setup (recommended, provided by `Gromox
+* Working **AutoDiscover** setup (recommended, provided by `Gromox
   <https://github.com/grommunio/gromox>`_)
 
 Installation
@@ -82,7 +82,7 @@ Installation
 Usage
 -----
 
-* Point your EAS client of choice with the "Microsoft Exchange" mail account
+* Point your EAS client of choice with the **"Microsoft Exchange"** mail account
   type made available.
 * With AutoDiscover, only your account credentials (username and password) are
   required for device setup.
