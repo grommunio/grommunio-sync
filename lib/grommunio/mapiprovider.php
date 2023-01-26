@@ -3107,7 +3107,7 @@ class MAPIProvider {
 				$persistData = $rootProps[PR_ADDITIONAL_REN_ENTRYIDS_EX];
 				while (strlen($persistData) > 0) {
 					// PERSIST_SENTINEL marks the end of the persist data
-					if (strlen($persistData) == 4 && $persistData == PERSIST_SENTINEL) {
+					if (strlen($persistData) == 4 && intval($persistData) == PERSIST_SENTINEL) {
 						break;
 					}
 					$unpackedData = unpack("vdataSize/velementID/velDataSize", substr($persistData, 2, 6));
