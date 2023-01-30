@@ -423,7 +423,7 @@ class MAPIUtils {
 			return "";
 		}
 		if ($ret) {
-			SLog::Write(LOGLEVEL_ERROR, "MAPIUtils->readPropStream error opening stream: 0x%08X", $ret);
+			SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIUtils->readPropStream error opening stream: 0x%08X", $ret));
 
 			return "";
 		}
