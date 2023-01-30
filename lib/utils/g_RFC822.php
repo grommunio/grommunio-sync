@@ -471,7 +471,7 @@ class Mail_RFC822 {
 		$parts = explode($char, $string);
 		$partsCount = count($parts);
 
-		for ($i = 0; $i < partsCount; ++$i) {
+		for ($i = 0; $i < $partsCount; ++$i) {
 			if (substr($parts[$i], -1) == '\\' || $this->_hasUnclosedQuotes($parts[$i])) {
 				--$num;
 			}
