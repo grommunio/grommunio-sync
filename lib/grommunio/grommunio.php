@@ -160,7 +160,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			if (mapi_last_hresult()) {
 				SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->Logon(): login failed with error code: 0x%X", mapi_last_hresult()));
 				if (mapi_last_hresult() == MAPI_E_NETWORK_ERROR) {
-					throw new ServiceUnavailableException("Error connecting to KC (login)");
+					throw new ServiceUnavailableException("Error connecting to gromox-zcore (login)");
 				}
 			}
 		}
@@ -185,7 +185,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		if (mapi_last_hresult() == MAPI_E_FAILONEPROVIDER) {
-			throw new ServiceUnavailableException("Error connecting to KC (open store)");
+			throw new ServiceUnavailableException("Error connecting to gromox-zcore (open store)");
 		}
 
 		if ($this->defaultstore === false) {
