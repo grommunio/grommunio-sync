@@ -483,7 +483,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// @see http://jira.zarafa.com/browse/ZP-68
 		$meetingRequestProps = MAPIMapping::GetMeetingRequestProperties();
 		$meetingRequestProps = getPropIdsFromStrings($this->defaultstore, $meetingRequestProps);
-		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"]]);
+		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"], $sendMailProps['emailaddress']]);
 
 		// If the device is WindowsMail and the FROM field is empty, use the user's primary email
 		// @see https://github.com/grommunio/grommunio-sync/issues/9
