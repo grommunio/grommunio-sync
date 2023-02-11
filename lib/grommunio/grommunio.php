@@ -485,6 +485,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$meetingRequestProps = getPropIdsFromStrings($this->defaultstore, $meetingRequestProps);
 		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"]]);
 
+		// If the device is WindowsMail and the FROM field is empty, use the user's primary email
+		// @see https://github.com/grommunio/grommunio-sync/issues/9
+		if (strtolower(Request::GetDeviceType()) == "windowsmail" && isset($props[$sendMailProps['emailaddress']]) && $props[$sendMailProps['emailaddress']] == "") {
+                	$userDetails = $this->GetUserDetails($this->mainUser);
+                	$mapiprops[$sendMailProps["emailaddress"]] = $userDetails['emailaddress'];
+                	mapi_setprops($mapimessage, $mapiprops);
+                }
+		
 		// Convert sent message's body to UTF-8 if it was a HTML message.
 		// @see http://jira.zarafa.com/browse/ZP-505 and http://jira.zarafa.com/browse/ZP-555
 		if (isset($props[$sendMailProps["internetcpid"]]) && $props[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8 && MAPIUtils::GetNativeBodyType($props) == SYNC_BODYPREFERENCE_HTML) {
