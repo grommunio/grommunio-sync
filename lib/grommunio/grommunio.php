@@ -483,7 +483,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// @see http://jira.zarafa.com/browse/ZP-68
 		$meetingRequestProps = MAPIMapping::GetMeetingRequestProperties();
 		$meetingRequestProps = getPropIdsFromStrings($this->defaultstore, $meetingRequestProps);
-		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"]]);
+		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"], $sendMailProps['sentrepresentingname'], $sendMailProps['sentrepresentingemail']]);
+		
+		// If the device is WindowsMail and the FROM field is the system address, use the user's primary email
+		// @see https://github.com/grommunio/grommunio-sync/issues/9
+		if (strtolower(Request::GetDeviceType()) == "windowsmail" && isset($props[$sendMailProps['sentrepresentingemail']]) && $props[$sendMailProps['sentrepresentingemail']] == "invalid@invalid") {
+			SLog::Write(LOGLEVEL_WARN, "Grommunio->SendMail(): Overriding FROM");
+			$userDetails = $this->GetUserDetails($this->mainUser);
+                        $mapiprops[$sendMailProps["sentrepresentingemail"]] = $userDetails['emailaddress'];
+                        $mapiprops[$sendMailProps["sentrepresentingname"]] = $userDetails['fullname'];
+                        mapi_setprops($mapimessage, $mapiprops);
+                }
 
 		// Convert sent message's body to UTF-8 if it was a HTML message.
 		// @see http://jira.zarafa.com/browse/ZP-505 and http://jira.zarafa.com/browse/ZP-555
@@ -516,17 +526,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// PR_SENT_REPRESENTING_EMAIL_ADDRESS properties and "broken" PR_SENT_REPRESENTING_ENTRYID
 		// which results in spooler not being able to send the message.
 		// @see http://jira.zarafa.com/browse/ZP-85
-		mapi_deleteprops(
-			$mapimessage,
-			[
-				$sendMailProps["sentrepresentingname"],
-				$sendMailProps["sentrepresentingemail"],
-				$sendMailProps["representingentryid"],
-				$sendMailProps["sentrepresentingaddt"],
-				$sendMailProps["sentrepresentinsrchk"],
-			]
-		);
-
+		if (strtolower(Request::GetDeviceType()) != "windowsmail") {
+			mapi_deleteprops(
+				$mapimessage,
+				[
+					$sendMailProps["sentrepresentingname"],
+					$sendMailProps["sentrepresentingemail"],
+					$sendMailProps["representingentryid"],
+					$sendMailProps["sentrepresentingaddt"],
+					$sendMailProps["sentrepresentinsrchk"],
+				]
+			);
+		}
+		
 		if (isset($sm->source->itemid) && $sm->source->itemid) {
 			// answering an email in a public/shared folder
 			// TODO as the store is setup, we should actually user $this->store instead of $this->defaultstore - nevertheless we need to make sure this store is able to send mail (has an outbox)
