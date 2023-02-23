@@ -1045,7 +1045,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$hierarchyNotifications = [];
 		$sinkresult = @mapi_sink_timedwait($this->changesSink, $timeout * 1000);
 
-		if (!is_array($sinkresult)) {
+		if (!is_array($sinkresult) || !$this->checkAdvisedSinkStores()) {
 			throw new StatusException("Grommunio->ChangesSink(): Sink returned invalid notification, aborting", SyncCollections::OBSOLETE_CONNECTION);
 		}
 
@@ -1917,7 +1917,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 *
 	 * @return MAPIMessage
 	 */
-	private function getStateMessage($devid, $type, $key, $counter) {
+	private function getStateMessage($devid, $type, $key, $counter, $logStateNotFound = true) {
 		if (!$this->stateFolder) {
 			$this->getStateFolder(Request::GetDeviceID());
 			if (!$this->stateFolder) {
@@ -1946,10 +1946,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		throw new StateNotFoundException(sprintf(
-			"Grommunio->getStateMessage(): Could not locate the state message '%s' (counter: %s)",
-			$messageName,
-			Utils::PrintAsString($counter)
-		));
+				"Grommunio->getStateMessage(): Could not locate the state message '%s' (counter: %s)",
+				$messageName,
+				Utils::PrintAsString($counter)
+			), 
+			0,
+			null,
+			$logStateNotFound ? false : LOGLEVEL_WBXMLSTACK
+		);
 	}
 
 	/**
@@ -1971,7 +1975,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		try {
-			$stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
+			$stateMessage = $this->getStateMessage($devid, $type, $key, $counter, false);
 		}
 		catch (StateNotFoundException $e) {
 			// if message is not available, try to create a new one
@@ -2061,6 +2065,38 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 
 	/**
+	 * Checks if all stores check in the changes sink are still available
+	 * 
+	 * @return bool
+	 */
+	private function checkAdvisedSinkStores() {
+		foreach ($this->changesSinkStores as $store) {
+				$error_state = false;
+				$stateFolderCount = 0;
+				try {
+						$stateFolderContents = @mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
+						if ($stateFolderContents) {
+								$stateFolderCount = mapi_table_getrowcount($stateFolderContents);
+						}
+						else {
+								$error_state = true;
+						}
+				}
+				catch (TypeError $te) {
+						$error_state = true;
+				}
+				catch (Exception $e) {
+						$error_state = true;
+				}
+				if ($error_state || (isset($stateFolderContents) && $stateFolderContents === false) || $stateFolderCount == 0 || mapi_last_hresult()) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->checkAdvisedSinkStores(): could not access advised store store '%s' - failed with code 0x%08X", $store, mapi_last_hresult()));
+						return false;
+				}
+		}
+		return true;
+	}
+
+	/**
 	 * Returns a hash representing changes in the hierarchy of the main user.
 	 * It changes if a folder is added, renamed or deleted.
 	 *
@@ -2087,7 +2123,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			mapi_msgstore_advise($store, null, fnevNewMail |fnevObjectModified | fnevObjectCreated | fnevObjectMoved | fnevObjectDeleted, $this->changesSink);
 
 			if (mapi_last_hresult()) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->adviseStoreToSink(): failed to advised store '%s' with code 0x%X. Polling will be performed.", $store, mapi_last_hresult()));
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->adviseStoreToSink(): failed to advised store '%s' with code 0x%08X. Polling will be performed.", $store, mapi_last_hresult()));
 
 				return false;
 			}
