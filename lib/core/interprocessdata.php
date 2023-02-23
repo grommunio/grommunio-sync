@@ -97,6 +97,9 @@ abstract class InterProcessData {
 	 * @return bool
 	 */
 	public function IsActive() {
+		if (!$this->getRedis()) {
+			return false;
+		}
 		return true;
 	}
 
