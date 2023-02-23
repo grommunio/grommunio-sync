@@ -370,8 +370,8 @@ abstract class SyncObject extends Streamer {
 								return false;
 							}
 							if (
-									($rule == self::STREAMER_CHECK_CMPHIGHER && $this->{$v[self::STREAMER_VAR]} < $cmp) ||
-									($rule == self::STREAMER_CHECK_CMPLOWER && $this->{$v[self::STREAMER_VAR]} > $cmp)
+									($rule == self::STREAMER_CHECK_CMPHIGHER && intval($this->{$v[self::STREAMER_VAR]}) < $cmp) ||
+									($rule == self::STREAMER_CHECK_CMPLOWER && intval($this->{$v[self::STREAMER_VAR]}) > $cmp)
 									) {
 								SLog::Write(LOGLEVEL_WARN, sprintf(
 									"SyncObject->Check(): Unmet condition in object from type %s: parameter '%s' is %s than '%s'. Check failed!",

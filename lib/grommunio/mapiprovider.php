@@ -630,13 +630,26 @@ class MAPIProvider {
 			// remove encapsulating double quotes from the representingname
 			$fromname = preg_replace('/^\"(.*)\"$/', "\${1}", $messageprops[$emailproperties["representingname"]]);
 		}
-		if (isset($messageprops[$emailproperties["representingentryid"]])) {
+		if (isset($messageprops[$emailproperties["representingsendersmtpaddress"]])) {
+			$fromaddr = $messageprops[$emailproperties["representingsendersmtpaddress"]];
+		}
+		if ($fromaddr == "" && isset($messageprops[$emailproperties["representingentryid"]])) {
 			$fromaddr = $this->getSMTPAddressFromEntryID($messageprops[$emailproperties["representingentryid"]]);
 		}
 
 		// if the email address can't be resolved, fall back to PR_SENT_REPRESENTING_SEARCH_KEY
 		if ($fromaddr == "" && isset($messageprops[$emailproperties["representingsearchkey"]])) {
 			$fromaddr = $this->getEmailAddressFromSearchKey($messageprops[$emailproperties["representingsearchkey"]]);
+		}
+
+		// if we couldn't still not get any $fromaddr, fall back to PR_SENDER_EMAIL_ADDRESS
+		if ($fromaddr == "" && isset($messageprops[$emailproperties["senderemailaddress"]])) {
+			$fromaddr = $messageprops[$emailproperties["senderemailaddress"]];
+		}
+
+		// there is some name, but no email address (e.g. mails from System Administrator) - use a generic invalid address
+		if ($fromname != "" && $fromaddr == ""){
+			$fromaddr = "invalid@invalid";
 		}
 
 		if ($fromname == $fromaddr) {
@@ -2428,12 +2441,6 @@ class MAPIProvider {
 		if ($addrtype == "SMTP" && isset($props[PR_EMAIL_ADDRESS])) {
 			return $props[PR_EMAIL_ADDRESS];
 		}
-		if ($addrtype == "ZARAFA" && isset($props[PR_EMAIL_ADDRESS])) {
-			$userinfo = nsp_getuserinfo($props[PR_EMAIL_ADDRESS]);
-			if (is_array($userinfo) && isset($userinfo["primary_email"])) {
-				return $userinfo["primary_email"];
-			}
-		}
 
 		return "";
 	}
@@ -2821,7 +2828,8 @@ class MAPIProvider {
 	private function imtoinet($mapimessage, &$message) {
 		$addrbook = $this->getAddressbook();
 		$stream = mapi_inetmapi_imtoinet($this->session, $addrbook, $mapimessage, ['use_tnef' => -1, 'ignore_missing_attachments' => 1]);
-		if (is_resource($stream)) {
+		// is_resource($stream) returns false in PHP8
+		if ($stream !== null && mapi_last_hresult() === ecSuccess) {
 			$mstreamstat = mapi_stream_stat($stream);
 			$streamsize = $mstreamstat["cb"];
 			if (isset($streamsize)) {
@@ -2843,7 +2851,7 @@ class MAPIProvider {
 				return true;
 			}
 		}
-		SLog::Write(LOGLEVEL_ERROR, "MAPIProvider->imtoinet(): got no stream or content from mapi_inetmapi_imtoinet()");
+		SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIProvider->imtoinet(): got no stream or content from mapi_inetmapi_imtoinet(): 0x%08X", mapi_last_hresult()));
 
 		return false;
 	}
@@ -3099,7 +3107,7 @@ class MAPIProvider {
 				$persistData = $rootProps[PR_ADDITIONAL_REN_ENTRYIDS_EX];
 				while (strlen($persistData) > 0) {
 					// PERSIST_SENTINEL marks the end of the persist data
-					if (strlen($persistData) == 4 && $persistData == PERSIST_SENTINEL) {
+					if (strlen($persistData) == 4 && intval($persistData) == PERSIST_SENTINEL) {
 						break;
 					}
 					$unpackedData = unpack("vdataSize/velementID/velDataSize", substr($persistData, 2, 6));

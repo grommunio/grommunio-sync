@@ -1,0 +1,7 @@
+#!/bin/sh
+# Wrapper script for grommunio-sync-top.
+user="$(id -u)"
+if [ "$user" != "0" ]; then
+	exec /usr/share/grommunio-sync/grommunio-sync-top.php "$@"
+fi
+exec runuser -u grosync -- /usr/share/grommunio-sync/grommunio-sync-top.php "$@"

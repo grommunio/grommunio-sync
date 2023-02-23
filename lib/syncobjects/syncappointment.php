@@ -330,6 +330,11 @@ class SyncAppointment extends SyncObject {
 			return false;
 		}
 
+		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
+			SLog::Write(LOGLEVEL_WARN, "SyncAppointment->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
+			$this->busystatus = fbBusy;
+		}
+
 		return true;
 	}
 }

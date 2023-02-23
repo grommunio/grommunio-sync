@@ -41,12 +41,13 @@ function listfolders_configure() {
 		exit(1);
 	}
 
-	set_include_path(get_include_path() . PATH_SEPARATOR . dirname(__FILE__, 3) . '/');
+	// include PHP-MAPI classes
+	define('UMAPI_PATH', '/usr/share/php-mapi');
+	require_once UMAPI_PATH . '/mapi.util.php';
+	require_once UMAPI_PATH . '/mapidefs.php';
+	require_once UMAPI_PATH . '/mapitags.php';
+	require_once UMAPI_PATH . '/mapiguid.php';
 
-	require 'mapi/mapi.util.php';
-	require 'mapi/mapidefs.php';
-	require 'mapi/mapitags.php';
-	require 'mapi/mapiguid.php';
 }
 
 function listfolders_handle() {

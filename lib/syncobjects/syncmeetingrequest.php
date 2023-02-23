@@ -150,4 +150,23 @@ class SyncMeetingRequest extends SyncObject {
 
 		parent::__construct($mapping);
 	}
+
+	/**
+	 * Method checks if the object has the minimum of required parameters
+	 * and fulfills semantic dependencies.
+	 *
+	 * This overloads the general check() with special checks to be executed
+	 *
+	 * @param bool $logAsDebug (opt) default is false, so messages are logged in WARN log level
+	 *
+	 * @return bool
+	 */
+	public function Check($logAsDebug = false) {
+		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
+			SLog::Write(LOGLEVEL_WARN, "SyncMeetingRequest->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
+			$this->busystatus = fbBusy;
+		}
+
+		return parent::Check($logAsDebug);
+	}
 }

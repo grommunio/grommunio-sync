@@ -285,7 +285,7 @@
  *    folders can be synchronized to the mobile. Else they are ignored.
  *
  *  - this feature is only partly suitable for multi-tenancy environments,
- *    as ALL users from ALL tenents need access to the configured store & folder.
+ *    as ALL users from ALL tenants need access to the configured store & folder.
  *    When configuring a public folder, this will cause problems, as each user has
  *    a different public folder in his tenant, so the folder are not available.
  *

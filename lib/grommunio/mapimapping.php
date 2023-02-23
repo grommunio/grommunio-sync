@@ -161,6 +161,7 @@ class MAPIMapping {
 			"representingentryid" => PR_SENT_REPRESENTING_ENTRYID,
 			"representingsearchkey" => PR_SENT_REPRESENTING_SEARCH_KEY,
 			"representingsendersmtpaddress" => PR_SENT_REPRESENTING_SMTP_ADDRESS,
+			"senderemailaddress" => PR_SENDER_EMAIL_ADDRESS,
 			"sourcekey" => PR_SOURCE_KEY,
 			"entryid" => PR_ENTRYID,
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
@@ -383,7 +384,7 @@ class MAPIMapping {
 		return [
 			"todoitemsflags" => PR_TODO_ITEM_FLAGS,
 			"todotitle" => "PT_STRING8:PSETID_Common:0x85A4",
-			"flagicon" => PR_FLAG_ICON,
+			"flagicon" => PR_FOLLOWUP_ICON,
 			"replyrequested" => PR_REPLY_REQUESTED,
 			"responserequested" => PR_RESPONSE_REQUESTED,
 			"status" => "PT_LONG:PSETID_Task:0x8101",
