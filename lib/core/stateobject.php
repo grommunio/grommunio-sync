@@ -229,6 +229,18 @@ class StateObject implements JsonSerializable {
 					}
 				}
 			}
+			elseif(is_array($val)) {
+				foreach($val as $index => $elem) {
+					if (is_object($elem) && isset($elem->gsSyncStateClass) && !empty($elem->data)) {
+						$this->data[$prop][$index] = new $elem->gsSyncStateClass();
+						$this->data[$prop][$index]->jsonDeserialize($elem);
+						$this->data[$prop][$index]->postUnserialize();
+					}
+					else {
+						$this->data[$prop][$index] = $elem;
+					}
+				}
+			}
 			else {
 				$this->data[$prop] = $val;
 			}
