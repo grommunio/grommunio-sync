@@ -2647,7 +2647,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 			$findFor = implode(" ", array_keys($words));
 		}
-		Slog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getFindRestriction(): extracted words: %s", $findFor));
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getFindRestriction(): extracted words: %s", $findFor));
 		$cpo->SetSearchFreeText($findFor);
 		return $this->getSearchRestriction($cpo);
 	}
