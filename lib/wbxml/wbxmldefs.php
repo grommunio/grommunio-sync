@@ -345,7 +345,7 @@ class WBXMLDefs {
 				0x0E => "InstanceId", // Since AS 14.1
 				0X10 => "ProposedStartTime", // Since 16.1
 				0X11 => "ProposedEndTime", // Since 16.1
-				0X10 => "SendResponse", // Since 16.0
+				0X12 => "SendResponse", // Since 16.0
 			],
 			9 => [
 				0x05 => "Body", // AirSyncBase Body is used since 12.0
