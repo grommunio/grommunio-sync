@@ -27,7 +27,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private $store;
 	private $storeName;
 	private $storeCache;
-	private $notifications;
 	private $changesSink;
 	private $changesSinkFolders;
 	private $changesSinkHierarchyHash;
@@ -55,7 +54,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$this->store = false;
 		$this->storeName = false;
 		$this->storeCache = [];
-		$this->notifications = false;
 		$this->changesSink = false;
 		$this->changesSinkFolders = [];
 		$this->changesSinkStores = [];
@@ -138,16 +136,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$deviceId = Request::GetDeviceID();
 
 		try {
-			// check if notifications are available in php-mapi
-			if (function_exists('mapi_feature') && mapi_feature('LOGONFLAGS')) {
-				$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0);
-				$this->notifications = true;
-			}
-			// old fashioned session
-			else {
-				$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER);
-				$this->notifications = false;
-			}
+			$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0);
 
 			if (mapi_last_hresult()) {
 				SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->Logon(): login failed with error code: 0x%X", mapi_last_hresult()));
@@ -974,12 +963,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return bool
 	 */
 	public function HasChangesSink() {
-		if (!$this->notifications) {
-			SLog::Write(LOGLEVEL_DEBUG, "Grommunio->HasChangesSink(): sink is not available");
-
-			return false;
-		}
-
 		$this->changesSink = @mapi_sink_create();
 
 		if (!$this->changesSink || mapi_last_hresult()) {
