@@ -1690,9 +1690,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	public function GetState($devid, $type, $key = false, $counter = false, $cleanstates = true) {
 		if ($counter && $cleanstates) {
 			$this->CleanStates($devid, $type, $key, $counter);
-			// also clean Failsave state for previous counter
+			// also clean failsafe state for previous counter
 			if ($key == false) {
-				$this->CleanStates($devid, $type, IStateMachine::FAILSAVE, $counter);
+				$this->CleanStates($devid, $type, IStateMachine::FAILSAFE, $counter);
 			}
 		}
 		$stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
@@ -1753,13 +1753,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				));
 			}
 		}
+		if ($type == IStateMachine::FAILSAFE && $counter && $counter > 1) {
+			$counter--;
+		}
 		$messageName = rtrim((($key !== false) ? $key . "-" : "") . (($type !== "") ? $type : ""), "-");
 		$restriction = $this->getStateMessageRestriction($messageName, $counter, $thisCounterOnly);
 		$stateFolderContents = mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
 		if ($stateFolderContents) {
 			mapi_table_restrict($stateFolderContents, $restriction);
 			$rowCnt = mapi_table_getrowcount($stateFolderContents);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->CleanStates(): Found %d states to clean (%s)", $rowCnt, $messageName));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->CleanStates(): Found %d states to clean (%s) %s", $rowCnt, $messageName, Utils::PrintAsString($counter)));
 			if ($rowCnt > 0) {
 				$rows = mapi_table_queryallrows($stateFolderContents, [PR_ENTRYID]);
 				$entryids = [];
