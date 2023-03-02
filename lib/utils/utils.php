@@ -198,30 +198,6 @@ class Utils {
 	}
 
 	/**
-	 * Checks if the PHP-MAPI extension is available and in a requested version.
-	 *
-	 * @param string $version the version to be checked ("6.30.10-18495", parts or build number)
-	 *
-	 * @return bool installed version is superior to the checked string
-	 */
-	public static function CheckMapiExtVersion($version = "") {
-		if (!extension_loaded("mapi")) {
-			return false;
-		}
-		// compare build number if requested
-		if (preg_match('/^\d+$/', $version) && strlen($version) > 3) {
-			$vs = preg_split('/-/', phpversion("mapi"));
-
-			return $version <= $vs[1];
-		}
-		if (version_compare(phpversion("mapi"), $version) == -1) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
 	 * Parses and returns an ecoded vCal-Uid from an OL compatible GlobalObjectID.
 	 *
 	 * @param string $olUid an OL compatible GlobalObjectID

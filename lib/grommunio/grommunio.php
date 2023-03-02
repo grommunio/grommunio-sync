@@ -100,7 +100,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return string AS version constant
 	 */
 	public function GetSupportedASVersion() {
-		return GSync::ASV_141;
+		return GSync::ASV_161;
 	}
 
 	/**
@@ -140,15 +140,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		try {
 			// check if notifications are available in php-mapi
 			if (function_exists('mapi_feature') && mapi_feature('LOGONFLAGS')) {
-				// send grommunio-sync version and user agent to ZCP - ZP-589
-				if (Utils::CheckMapiExtVersion('7.2.0')) {
-					$gsync_version = 'Grommunio-Sync_' . @constant('GROMMUNIOSYNC_VERSION');
-					$user_agent = ($deviceId) ? GSync::GetDeviceManager()->GetUserAgent() : "unknown";
-					$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0, $gsync_version, $user_agent);
-				}
-				else {
-					$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0);
-				}
+				$this->session = @mapi_logon_zarafa($this->mainUser, $pass, MAPI_SERVER, null, null, 0);
 				$this->notifications = true;
 			}
 			// old fashioned session

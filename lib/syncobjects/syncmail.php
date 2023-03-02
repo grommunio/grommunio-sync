@@ -59,7 +59,7 @@ class SyncMail extends SyncObject {
 	public $Displaycc;
 	public $Displaybcc;
 	public $ParentSourceKey;
-	
+
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMMAIL_TO => [
@@ -217,6 +217,31 @@ class SyncMail extends SyncObject {
 			$mapping[SYNC_AIRSYNCBASE_BODYPART] = [
 				self::STREAMER_VAR => "asbodypart",
 				self::STREAMER_TYPE => "SyncBaseBodyPart",
+			];
+		}
+
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_POOMMAIL2_ISDRAFT] = [
+				self::STREAMER_VAR => "isdraft",
+				self::STREAMER_CHECKS => [
+					self::STREAMER_CHECK_ONEVALUEOF => [0, 1],
+				],
+				self::STREAMER_RONOTIFY => true,
+				self::STREAMER_VALUEMAP => [
+					0 => "No",
+					1 => "Yes",
+				],
+			];
+			$mapping[SYNC_POOMMAIL2_BCC] = [
+				self::STREAMER_VAR => "bcc",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_COMMA_SEPARATED,
+				self::STREAMER_CHECKS => [
+					self::STREAMER_CHECK_LENGTHMAX => 32768,
+					self::STREAMER_CHECK_EMAIL => "",
+				],
+			];
+			$mapping[SYNC_POOMMAIL2_SEND] = [
+				self::STREAMER_VAR => "send",
 			];
 		}
 
