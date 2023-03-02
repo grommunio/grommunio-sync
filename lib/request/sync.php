@@ -443,7 +443,7 @@ class Sync extends RequestProcessor {
 					}
 
 					// Check if this is a DRAFTS folder - if so, disable FilterType
-					if (self::$deviceManager->GetFolderClassFromCacheByID($spa->GetFolderId())) {
+					if (self::$deviceManager->GetFolderTypeFromCacheById($spa->GetFolderId()) == SYNC_FOLDER_TYPE_DRAFTS) {
 						$spa->SetFilterType(SYNC_FILTERTYPE_DISABLE);
 						SLog::Write(LOGLEVEL_DEBUG, "HandleSync(): FilterType has been disabled as this is a DRAFTS folder.");
 					}
