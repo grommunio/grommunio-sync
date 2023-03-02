@@ -220,7 +220,7 @@ class StateManager {
 	}
 
 	/**
-	 * Gets the failsave sync state for the current synckey.
+	 * Gets the failsafe sync state for the current synckey.
 	 *
 	 * @return array|bool false if not available
 	 */
@@ -230,7 +230,7 @@ class StateManager {
 		}
 
 		try {
-			return $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::FAILSAVE, $this->uuid, $this->oldStateCounter, $this->deleteOldStates);
+			return $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::FAILSAFE, $this->uuid, $this->oldStateCounter, $this->deleteOldStates);
 		}
 		catch (StateNotFoundException $snfex) {
 			return false;
@@ -238,7 +238,7 @@ class StateManager {
 	}
 
 	/**
-	 * Writes the failsave sync state for the current (old) synckey.
+	 * Writes the failsafe sync state for the current (old) synckey.
 	 *
 	 * @param mixed $syncstate
 	 *
@@ -249,7 +249,7 @@ class StateManager {
 			return false;
 		}
 
-		return $this->statemachine->SetState($syncstate, $this->device->GetDeviceId(), IStateMachine::FAILSAVE, $this->uuid, $this->oldStateCounter);
+		return $this->statemachine->SetState($syncstate, $this->device->GetDeviceId(), IStateMachine::FAILSAFE, $this->uuid, $this->oldStateCounter);
 	}
 
 	/**
@@ -386,7 +386,7 @@ class StateManager {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("StateManager::UnLinkState('%s'): saved state '%s' will be deleted.", $folderid, $savedUuid));
 			GSync::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::DEFTYPE, $savedUuid, self::FIXEDHIERARCHYCOUNTER * 2);
 			GSync::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FOLDERDATA, $savedUuid, false, true); // CPO
-			GSync::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FAILSAVE, $savedUuid, self::FIXEDHIERARCHYCOUNTER * 2);
+			GSync::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::FAILSAFE, $savedUuid, self::FIXEDHIERARCHYCOUNTER * 2);
 			GSync::GetStateMachine()->CleanStates($device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, $savedUuid, self::FIXEDHIERARCHYCOUNTER * 2);
 
 			// remove all messages which could not be synched before

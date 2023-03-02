@@ -574,7 +574,7 @@ class Sync extends RequestProcessor {
 						}
 					}
 
-					// save the failsave state
+					// save the failsafe state
 					if (!empty($actiondata["statusids"])) {
 						unset($actiondata["failstate"]);
 						$actiondata["failedsyncstate"] = $sc->GetParameter($spa, "state");
@@ -1343,11 +1343,11 @@ class Sync extends RequestProcessor {
 	 * @param SyncCollection $sc           SyncCollection object
 	 * @param SyncParameters $spa          SyncParameters object
 	 * @param array          $actiondata   Actiondata array
-	 * @param bool           $loadFailsave (opt) default false - indicates if the failsave states should be loaded
+	 * @param bool           $loadFailsafe (opt) default false - indicates if the failsafe states should be loaded
 	 *
 	 * @return status indicating if there were errors. If no errors, status is SYNC_STATUS_SUCCESS
 	 */
-	private function loadStates($sc, $spa, &$actiondata, $loadFailsave = false) {
+	private function loadStates($sc, $spa, &$actiondata, $loadFailsafe = false) {
 		$status = SYNC_STATUS_SUCCESS;
 
 		if ($sc->GetParameter($spa, "state") == null) {
@@ -1356,7 +1356,7 @@ class Sync extends RequestProcessor {
 			try {
 				$sc->AddParameter($spa, "state", self::$deviceManager->GetStateManager()->GetSyncState($spa->GetSyncKey()));
 
-				if ($loadFailsave) {
+				if ($loadFailsafe) {
 					// if this request was made before, there will be a failstate available
 					$actiondata["failstate"] = self::$deviceManager->GetStateManager()->GetSyncFailState();
 				}
@@ -1383,7 +1383,7 @@ class Sync extends RequestProcessor {
 
 	/**
 	 * Initializes the importer for the SyncParameters folder, loads necessary
-	 * states (incl. failsave states) and initializes the conflict detection.
+	 * states (incl. failsafe states) and initializes the conflict detection.
 	 *
 	 * @param SyncCollection $sc         SyncCollection object
 	 * @param SyncParameters $spa        SyncParameters object
@@ -1395,7 +1395,7 @@ class Sync extends RequestProcessor {
 		SLog::Write(LOGLEVEL_DEBUG, "Sync->getImporter(): initialize importer");
 		$status = SYNC_STATUS_SUCCESS;
 
-		// load the states with failsave data
+		// load the states with failsafe data
 		$status = $this->loadStates($sc, $spa, $actiondata, true);
 
 		try {

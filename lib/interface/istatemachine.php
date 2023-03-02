@@ -18,7 +18,7 @@ interface IStateMachine {
 	public const DEFTYPE = "";
 	public const DEVICEDATA = "devicedata";
 	public const FOLDERDATA = "fd";
-	public const FAILSAVE = "fs";
+	public const FAILSAFE = "fs";
 	public const HIERARCHY = "hc";
 	public const BACKENDSTORAGE = "bs";
 
