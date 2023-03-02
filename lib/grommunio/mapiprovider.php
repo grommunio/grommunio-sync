@@ -1015,6 +1015,10 @@ class MAPIProvider {
 			$message->lastverbexecuted = Utils::GetLastVerbExecuted($message->lastverbexecuted);
 		}
 
+		if ($messageprops[$emailproperties["messageflags"]] & MSGFLAG_UNSENT) {
+			$message->isdraft = true;
+		}
+
 		return $message;
 	}
 
@@ -1308,6 +1312,7 @@ class MAPIProvider {
 			$message->categories = [];
 		}
 		$emailmap = MAPIMapping::GetEmailMapping();
+		$emailprops = MAPIMapping::GetEmailProperties();
 		$this->setPropsInMAPI($mapimessage, $message, ["categories" => $emailmap["categories"]]);
 
 		$flagmapping = MAPIMapping::GetMailFlagsMapping();
@@ -1315,6 +1320,27 @@ class MAPIProvider {
 		$flagprops = array_merge($this->getPropIdsFromStrings($flagmapping), $this->getPropIdsFromStrings($flagprops));
 		// flag specific properties to be set
 		$props = $delprops = [];
+		
+		// save DRAFTs
+		if (isset($message->asbody) &&  $message->asbody instanceof SyncBaseBody) {
+			// iOS sends a RFC822 message
+			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
+				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setEmail(): Use the mapi_inetmapi_imtomapi function to save draft email");
+				$mime = stream_get_contents($message->asbody->data);
+				$ab = mapi_openaddressbook($this->session);
+				mapi_inetmapi_imtomapi($this->session, $this->store, $ab, $mapimessage, $mime, []);
+			}
+			else {
+				$props[$emailmap["messageclass"]] = "IPM.Note";
+				$this->setPropsInMAPI($mapimessage, $message, $emailmap);
+			}
+			$props[$emailmap["read"]] = MSGFLAG_UNSENT;
+
+			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
+				$props[$emailprops["html"]] = stream_get_contents($message->asbody->data);
+			}
+		}
+
 		// unset message flags if:
 		// flag is not set
 		if (empty($message->flag) ||

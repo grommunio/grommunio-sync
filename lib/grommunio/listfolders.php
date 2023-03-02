@@ -201,23 +201,3 @@ function listfolders_getlist($adminStore, $session, $user) {
 		}
 	}
 }
-
-function CheckMapiExtVersion($version = "") {
-	// compare build number if requested
-	if (preg_match('/^\d+$/', $version) && strlen($version) > 3) {
-		$vs = preg_split('/-/', phpversion("mapi"));
-
-		return $version <= $vs[1];
-	}
-
-	if (extension_loaded("mapi")) {
-		if (version_compare(phpversion("mapi"), $version) == -1) {
-			return false;
-		}
-	}
-	else {
-		return false;
-	}
-
-	return true;
-}

@@ -442,6 +442,12 @@ class Sync extends RequestProcessor {
 						SLog::Write(LOGLEVEL_DEBUG, "HierarchyCache is also not available. Triggering HierarchySync to device");
 					}
 
+					// Check if this is a DRAFTS folder - if so, disable FilterType
+					if (self::$deviceManager->GetFolderClassFromCacheByID($spa->GetFolderId())) {
+						$spa->SetFilterType(SYNC_FILTERTYPE_DISABLE);
+						SLog::Write(LOGLEVEL_DEBUG, "HandleSync(): FilterType has been disabled as this is a DRAFTS folder.");
+					}
+
 					if (($el = self::$decoder->getElementStartTag(SYNC_PERFORM)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
 						// We can not proceed here as the content class is unknown
 						if ($status != SYNC_STATUS_SUCCESS) {
@@ -1031,9 +1037,9 @@ class Sync extends RequestProcessor {
 	 * @param int                 $status         current status of the folder processing
 	 * @param string              $newFolderStat  the new folder stat to be set if everything was exported
 	 *
-	 * @throws StatusException
-	 *
 	 * @return int sync status code
+	 *
+	 * @throws StatusException
 	 */
 	private function syncFolder($sc, $spa, $exporter, $changecount, $streamimporter, $status, $newFolderStat) {
 		$actiondata = $sc->GetParameter($spa, "actiondata");
@@ -1094,7 +1100,7 @@ class Sync extends RequestProcessor {
 					self::$encoder->endTag();
 				}
 				self::$encoder->startTag(SYNC_STATUS);
-				self::$encoder->content((isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR));
+				self::$encoder->content(isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
 				self::$encoder->endTag();
 				self::$encoder->endTag();
 			}
@@ -1198,7 +1204,7 @@ class Sync extends RequestProcessor {
 
 		// Stream outgoing changes
 		if ($status == SYNC_STATUS_SUCCESS && $sc->GetParameter($spa, "getchanges") == true && $windowSize > 0 && (bool) $exporter) {
-			self::$topCollector->AnnounceInformation(sprintf("Streaming data of %d objects", (($changecount > $windowSize) ? $windowSize : $changecount)));
+			self::$topCollector->AnnounceInformation(sprintf("Streaming data of %d objects", ($changecount > $windowSize) ? $windowSize : $changecount));
 
 			// Output message changes per folder
 			self::$encoder->startTag(SYNC_PERFORM);
@@ -1213,7 +1219,7 @@ class Sync extends RequestProcessor {
 					}
 					++$n;
 					if ($n % 10 == 0) {
-						self::$topCollector->AnnounceInformation(sprintf("Streamed data of %d objects out of %d", $n, (($changecount > $windowSize) ? $windowSize : $changecount)));
+						self::$topCollector->AnnounceInformation(sprintf("Streamed data of %d objects out of %d", $n, ($changecount > $windowSize) ? $windowSize : $changecount));
 					}
 				}
 				catch (SyncObjectBrokenException $mbe) {
@@ -1441,9 +1447,9 @@ class Sync extends RequestProcessor {
 	 * @param string         $foldertype   On sms sync, this says "SMS", else false
 	 * @param int            $messageCount Counter of already imported messages
 	 *
-	 * @throws StatusException in case the importer is not available
-	 *
 	 * @return - message related status are returned in the actiondata
+	 *
+	 * @throws StatusException in case the importer is not available
 	 */
 	private function importMessage($spa, &$actiondata, $todo, $message, $clientid, $serverid, $foldertype, $messageCount) {
 		// the importer needs to be available!
@@ -1604,8 +1610,6 @@ class Sync extends RequestProcessor {
 	 *
 	 * @param mixed $key
 	 * @param mixed $value
-	 *
-	 * @return
 	 */
 	private function saveMultiFolderInfo($key, $value) {
 		if ($key == "incoming" || $key == "outgoing" || $key == "queued" || $key == "fetching") {
@@ -1663,8 +1667,6 @@ class Sync extends RequestProcessor {
 	 *
 	 * @param SyncParameters $spa
 	 * @param string         $newFolderStat
-	 *
-	 * @return
 	 */
 	private function setFolderStat($spa, $newFolderStat) {
 		$spa->SetFolderStat($newFolderStat);

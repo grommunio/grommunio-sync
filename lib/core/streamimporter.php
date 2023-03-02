@@ -62,7 +62,7 @@ class ImportChangesStream implements IImportChanges {
 	 */
 	public function ImportMessageChange($id, $message) {
 		// ignore other SyncObjects
-		if (!($message instanceof $this->classAsString)) {
+		if (!$message instanceof $this->classAsString) {
 			return false;
 		}
 
@@ -92,8 +92,11 @@ class ImportChangesStream implements IImportChanges {
 			$this->encoder->startTag(SYNC_ADD);
 		}
 		else {
+			$this->encoder->startTag(SYNC_MODIFY);
+
 			// on update of an SyncEmail we only export the flags and categories
-			if ($message instanceof SyncMail && ((isset($message->flag) && $message->flag instanceof SyncMailFlags) || isset($message->categories))) {
+			// draft emails are fully exported
+			if ($message instanceof SyncMail && (!isset($message->isdraft) || $message->isdraft == false) && ((isset($message->flag) && $message->flag instanceof SyncMailFlags) || isset($message->categories))) {
 				$newmessage = new SyncMail();
 				$newmessage->read = $message->read;
 				if (isset($message->flag)) {
@@ -112,8 +115,6 @@ class ImportChangesStream implements IImportChanges {
 				unset($newmessage);
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesStream->ImportMessageChange('%s'): SyncMail message updated. Message content is striped, only flags/categories are streamed.", $id));
 			}
-
-			$this->encoder->startTag(SYNC_MODIFY);
 		}
 
 		// TAG: SYNC_ADD / SYNC_MODIFY
@@ -167,7 +168,7 @@ class ImportChangesStream implements IImportChanges {
 	 * @return bool
 	 */
 	public function ImportMessageReadFlag($id, $flags, $categories = []) {
-		if (!($this->objclass instanceof SyncMail)) {
+		if (!$this->objclass instanceof SyncMail) {
 			return false;
 		}
 
