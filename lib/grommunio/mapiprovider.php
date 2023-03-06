@@ -514,13 +514,24 @@ class MAPIProvider {
 				$exception->endtime = $this->getGMTTimeByTZ($change["end"], $tz);
 			}
 			if (isset($change["basedate"])) {
-				$exception->exceptionstarttime = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				// pre 16.0 use exceptionstarttime
+				if (Request::GetProtocolVersion() < 16.0) {
+					$exception->exceptionstarttime = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				}
+				// AS 16.0+ use instanceid
+				else {
+					$exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				}
 
 				// open body because getting only property might not work because of memory limit
 				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
 				if ($exceptionatt) {
 					$exceptionobj = mapi_attach_openobj($exceptionatt, 0);
 					$this->setMessageBodyForType($exceptionobj, SYNC_BODYPREFERENCE_PLAIN, $exception);
+					if (Request::GetProtocolVersion() >= 16.0) {
+						$data = mapi_message_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_SOURCE_KEY]);
+						$this->setAttachment($exceptionobj, $exception, bin2hex($data[PR_ENTRYID]), bin2hex($data[PR_PARENT_SOURCE_KEY]), bin2hex($change["basedate"]));
+					}
 				}
 			}
 			if (isset($change["subject"])) {
@@ -2942,7 +2953,7 @@ class MAPIProvider {
 	 * @param string		$entryid
 	 * @param string		$parentSourcekey
 	 */
-	private function setAttachment($mapimessage, &$message, $entryid, $parentSourcekey) {
+	private function setAttachment($mapimessage, &$message, $entryid, $parentSourcekey, $exceptionBasedate = 0) {
 		// Add attachments
 		$attachtable = mapi_message_getattachmenttable($mapimessage);
 		$rows = mapi_table_queryallrows($attachtable, [PR_ATTACH_NUM]);
@@ -2977,7 +2988,7 @@ class MAPIProvider {
 
 				// set AS version specific parameters
 				if (Request::GetProtocolVersion() >= 12.0) {
-					$attach->filereference = sprintf("%s:%s:%s", $entryid, $row[PR_ATTACH_NUM], $parentSourcekey);
+					$attach->filereference = sprintf("%s:%s:%s:%s", $entryid, $row[PR_ATTACH_NUM], $parentSourcekey, $exceptionBasedate);
 					$attach->method = (isset($attachprops[PR_ATTACH_METHOD])) ? $attachprops[PR_ATTACH_METHOD] : ATTACH_BY_VALUE;
 
 					// if displayname does not have the eml extension for embedde messages, android and WP devices won't open it
