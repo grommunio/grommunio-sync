@@ -306,6 +306,8 @@ class MAPIMapping {
 			"rtfcompressed" => PR_RTF_COMPRESSED,
 			"html" => PR_HTML,
 			"rtfinsync" => PR_RTF_IN_SYNC,
+			"entryid" => PR_ENTRYID,
+			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
 		];
 	}
 
