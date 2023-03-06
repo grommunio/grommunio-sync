@@ -47,6 +47,9 @@ class SyncAppointment extends SyncObject {
 	public $onlineMeetingConfLink;
 	public $onlineMeetingExternalLink;
 
+	// AS 16.0 props
+	public $asattachments;
+
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMCAL_TIMEZONE => [
@@ -247,6 +250,14 @@ class SyncAppointment extends SyncObject {
 			$mapping[SYNC_POOMCAL_ONLINEMEETINGEXTERNALLINK] = [
 				self::STREAMER_VAR => "onlineMeetingExternalLink",
 				self::STREAMER_RONOTIFY => true,
+			];
+		}
+
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_AIRSYNCBASE_ATTACHMENTS] = [
+				self::STREAMER_VAR => "asattachments",
+				self::STREAMER_TYPE => "SyncBaseAttachment",
+				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
 			];
 		}
 
