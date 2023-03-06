@@ -705,7 +705,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->GetAttachmentData('%s'): Error, attachment requested for non-existing item", $attname), SYNC_ITEMOPERATIONSSTATUS_INVALIDATT);
 		}
 
-		list($id, $attachnum, $parentEntryid) = explode(":", $attname);
+		list($id, $attachnum, $parentEntryid, $exceptionBasedate) = explode(":", $attname);
 		if (isset($parentEntryid)) {
 			$this->Setup(GSync::GetAdditionalSyncFolderStore($parentEntryid));
 		}
@@ -720,6 +720,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$attach = mapi_message_openattach($message, $attachnum);
 		if (!$attach) {
 			throw new StatusException(sprintf("Grommunio->GetAttachmentData('%s'): Error, unable to open attachment number '%s' with: 0x%X", $attname, $attachnum, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_INVALIDATT);
+		}
+
+		// attachment of a recurring appointment execption
+		if(strlen($exceptionBasedate) > 1) {
+			$recurrence = new Recurrence($this->store, $message);
+			$exceptionatt = $recurrence->getExceptionAttachment(hex2bin($exceptionBasedate));
+			$exceptionobj = mapi_attach_openobj($exceptionatt, 0);
+			$attach = mapi_message_openattach($exceptionobj, $attachnum);
 		}
 
 		// get necessary attachment props
