@@ -514,14 +514,8 @@ class MAPIProvider {
 				$exception->endtime = $this->getGMTTimeByTZ($change["end"], $tz);
 			}
 			if (isset($change["basedate"])) {
-				// pre 16.0 use exceptionstarttime
-				if (Request::GetProtocolVersion() < 16.0) {
-					$exception->exceptionstarttime = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
-				}
-				// AS 16.0+ use instanceid
-				else {
-					$exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
-				}
+				// depending on the AS version the streamer is going to send the correct value
+				$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
 
 				// open body because getting only property might not work because of memory limit
 				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
@@ -588,7 +582,8 @@ class MAPIProvider {
 		foreach ($recurrence->recur["deleted_occurrences"] as $deleted) {
 			$exception = new SyncAppointmentException();
 
-			$exception->exceptionstarttime = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+			// depending on the AS version the streamer is going to send the correct value
+			$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
 			$exception->deleted = "1";
 
 			if (!isset($syncMessage->exceptions)) {
@@ -1361,6 +1356,72 @@ class MAPIProvider {
 			$tz = false;
 		}
 
+		$appointmentmapping = MAPIMapping::GetAppointmentMapping();
+		$appointmentprops = MAPIMapping::GetAppointmentProperties();
+		$appointmentprops = array_merge($this->getPropIdsFromStrings($appointmentmapping), $this->getPropIdsFromStrings($appointmentprops));
+
+		// AS 16: incoming instanceid means we need to create/update an appointment exception
+		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->instanceid) && $appointment->instanceid) {
+			// this property wasn't decoded so use Streamer->parseDate to convert it into a timestamp and get basedate from it
+			$instanceid = $appointment->parseDate($appointment->instanceid);
+			$basedate = $this->getDayStartOfTimestamp($instanceid);
+
+			// get compatible TZ data
+			$props = [ $appointmentprops["timezonetag"] ];
+			$tzprop = $this->getProps($mapimessage, $props);
+			$tz = $this->getTZFromMAPIBlob($tzprop[$appointmentprops["timezonetag"]]);
+			
+			// get a recurrence object
+			$recurrence = new Recurrence($this->store, $mapimessage);
+
+			// check if the exception is to be deleted
+			if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
+				// Delete exception
+				$recurrence->createException([], $basedate, true);
+			}
+			// create or update the exception
+			else {
+				$exceptionprops = [];
+
+				if (isset($appointment->starttime)) {
+					$exceptionprops[$appointmentprops["starttime"]] = $appointment->starttime;
+				}
+				if (isset($appointment->endtime)) {
+					$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
+				}
+				if (isset($appointment->subject)) {
+					$exceptionprops[$appointmentprops["subject"]] = u2w($appointment->subject);
+				}
+				if (isset($appointment->location)) {
+					$exceptionprops[$appointmentprops["location"]] = u2w($appointment->location);
+				}
+				if (isset($appointment->busystatus)) {
+					$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
+				}
+				if (isset($appointment->reminder)) {
+					$exceptionprops[$appointmentprops["reminderset"]] = 1;
+					$exceptionprops[$appointmentprops["remindertime"]] = $appointment->reminder;
+				}
+				if (isset($appointment->alldayevent)) {
+					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $appointment->alldayevent;
+				}
+				if (isset($appointment->body)) {
+					$exceptionprops[$appointmentprops["body"]] = u2w($appointment->body);
+				}
+				if (isset($appointment->asbody)) {
+					$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
+				}
+				// modify if exists else create exception
+				if ($recurrence->isException($basedate)) {
+					$recurrence->modifyException($exceptionprops, $basedate);
+				}
+				else {
+					$recurrence->createException($exceptionprops, $basedate);
+				}
+			}
+			return true;
+		}
+
 		// start and end time may not be set - try to get them from the existing appointment for further calculation - see https://jira.z-hub.io/browse/ZP-983
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
 			$amapping = MAPIMapping::GetAppointmentMapping();
@@ -1400,10 +1461,8 @@ class MAPIProvider {
 
 		mapi_setprops($mapimessage, [PR_MESSAGE_CLASS => "IPM.Appointment"]);
 
-		$appointmentmapping = MAPIMapping::GetAppointmentMapping();
 		$this->setPropsInMAPI($mapimessage, $appointment, $appointmentmapping);
-		$appointmentprops = MAPIMapping::GetAppointmentProperties();
-		$appointmentprops = array_merge($this->getPropIdsFromStrings($appointmentmapping), $this->getPropIdsFromStrings($appointmentprops));
+
 		// appointment specific properties to be set
 		$props = [];
 

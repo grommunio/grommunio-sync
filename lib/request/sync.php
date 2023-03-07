@@ -499,6 +499,15 @@ class Sync extends RequestProcessor {
 									}
 								}
 							}
+							// get the instanceId if available
+							$instanceid = false;
+							if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_INSTANCEID)) {
+								if (($instanceid = self::$decoder->getElementContent()) !== false) {
+									if (!self::$decoder->getElementEndTag()) { // end instanceid
+										return false;
+									}
+								}
+							}
 
 							if (self::$decoder->getElementStartTag(SYNC_CLIENTENTRYID)) {
 								$clientid = self::$decoder->getElementContent();
@@ -527,6 +536,20 @@ class Sync extends RequestProcessor {
 								$message = false;
 							}
 
+							// InstanceID sent: do action to a recurrency exception
+							if ($instanceid) {
+								// for delete actions we don't have an ASObject
+								if (!$message) {
+									$message = GSync::getSyncObjectFromFolderClass($spa->GetContentClass());
+									$message->Decode(self::$decoder);
+								}
+								$message->instanceid = $instanceid;
+								if ($element[EN_TAG] == SYNC_REMOVE) {
+									$message->instanceiddelete = true;
+									$element[EN_TAG] = SYNC_MODIFY;
+								}
+							}
+							
 							switch ($element[EN_TAG]) {
 								case SYNC_FETCH:
 									array_push($actiondata["fetchids"], $serverid);
