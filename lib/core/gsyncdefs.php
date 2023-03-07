@@ -556,6 +556,7 @@ define("SYNC_AIRSYNCBASE_ALTITUDE", "AirSyncBase:Altitude"); // Since 16.0
 define("SYNC_AIRSYNCBASE_ALTITUDEACCURACY", "AirSyncBase:AltitudeAccuracy"); // Since 16.0
 define("SYNC_AIRSYNCBASE_LOCATIONURI", "AirSyncBase:LocationUri"); // Since 16.0
 define("SYNC_AIRSYNCBASE_INSTANCEID", "AirSyncBase:InstanceId"); // Since 16.0
+define("SYNC_AIRSYNCBASE_INSTANCEID_DELETE", "AirSyncBase:InstanceId:Delete"); // Internal to transport delete request
 
 // Code Page 18: Settings, Since 12.0
 define("SYNC_SETTINGS_SETTINGS", "Settings:Settings");

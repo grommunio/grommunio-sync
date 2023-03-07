@@ -49,6 +49,9 @@ class SyncAppointment extends SyncObject {
 
 	// AS 16.0 props
 	public $asattachments;
+	public $clientuid;
+	public $instanceid;
+	public $instanceiddelete;
 
 	public function __construct() {
 		$mapping = [
@@ -259,6 +262,26 @@ class SyncAppointment extends SyncObject {
 				self::STREAMER_TYPE => "SyncBaseAttachment",
 				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
 			];
+			$mapping[SYNC_AIRSYNCBASE_LOCATION] = [
+				self::STREAMER_VAR => "location",
+				self::STREAMER_RONOTIFY => true,
+			];
+			$mapping[SYNC_POOMCAL_CLIENTUID] = [
+				self::STREAMER_VAR => "clientuid",
+				self::STREAMER_RONOTIFY => true,
+			];
+			// Placeholder for the InstanceId (recurrence exceptions) and its deletion request
+			$mapping[SYNC_AIRSYNCBASE_INSTANCEID] = [
+				self::STREAMER_VAR => "instanceid",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			];
+			$mapping[SYNC_AIRSYNCBASE_INSTANCEID_DELETE] = [
+				self::STREAMER_VAR => "instanceiddelete",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			];
+			
+			// unset these properties because airsyncbase location will be used instead
+			unset($mapping[SYNC_POOMCAL_LOCATION]);
 		}
 
 		parent::__construct($mapping);

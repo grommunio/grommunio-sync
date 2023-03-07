@@ -36,6 +36,7 @@ class SyncAppointmentException extends SyncAppointment {
 		}
 		// AS 16.0+ use instanceid
 		else {
+			// overwrite SYNC_AIRSYNCBASE_INSTANCEID definition here
 			$this->mapping[SYNC_AIRSYNCBASE_INSTANCEID] = [
 				self::STREAMER_VAR => "instanceid",
 				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
