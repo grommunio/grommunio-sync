@@ -18,6 +18,7 @@ class SyncAppointment extends SyncObject {
 	public $organizername;
 	public $organizeremail;
 	public $location;
+	public $location2; // AS 16: SyncLocation object
 	public $endtime;
 	public $recurrence;
 	public $sensitivity;
@@ -263,7 +264,8 @@ class SyncAppointment extends SyncObject {
 				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
 			];
 			$mapping[SYNC_AIRSYNCBASE_LOCATION] = [
-				self::STREAMER_VAR => "location",
+				self::STREAMER_VAR => "location2",
+				self::STREAMER_TYPE => "SyncLocation",
 				self::STREAMER_RONOTIFY => true,
 			];
 			$mapping[SYNC_POOMCAL_CLIENTUID] = [

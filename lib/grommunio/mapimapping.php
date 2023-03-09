@@ -308,6 +308,8 @@ class MAPIMapping {
 			"rtfinsync" => PR_RTF_IN_SYNC,
 			"entryid" => PR_ENTRYID,
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
+			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
+			"locations" => "PT_STRING8:PSETID_CustomerLocation:Locations",
 		];
 	}
 
