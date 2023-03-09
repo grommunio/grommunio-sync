@@ -102,6 +102,7 @@ return array(
     'SyncFindProperties' => $baseDir . '/lib/syncobjects/syncfindproperties.php',
     'SyncFolder' => $baseDir . '/lib/syncobjects/syncfolder.php',
     'SyncItemOperationsAttachment' => $baseDir . '/lib/syncobjects/syncitemoperationsattachment.php',
+    'SyncLocation' => $baseDir . '/lib/syncobjects/synclocation.php',
     'SyncMail' => $baseDir . '/lib/syncobjects/syncmail.php',
     'SyncMailFlags' => $baseDir . '/lib/syncobjects/syncmailflags.php',
     'SyncMeetingRequest' => $baseDir . '/lib/syncobjects/syncmeetingrequest.php',

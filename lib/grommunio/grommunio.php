@@ -1590,7 +1590,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$store = $this->openMessageStore("SYSTEM");
 		$pubStore = mapi_msgstore_openentry($store, null);
 		$hierarchyTable = mapi_folder_gethierarchytable($pubStore, CONVENIENT_DEPTH);
-		
+
 		$properties = getPropIdsFromStrings($store, ["synctomobile" => "PT_BOOLEAN:PSETID_GROMOX:synctomobile"]);
 
 		$restriction = [RES_AND, [
