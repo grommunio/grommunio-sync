@@ -863,6 +863,7 @@ class MAPIProvider {
 		// in the SMTP addresses as well, while displayto and displaycc could just contain the display names
 		$message->to = [];
 		$message->cc = [];
+		$message->bcc = [];
 
 		$reciptable = mapi_message_getrecipienttable($mapimessage);
 		$rows = mapi_table_queryallrows($reciptable, [PR_RECIPIENT_TYPE, PR_DISPLAY_NAME, PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_ENTRYID, PR_SEARCH_KEY]);
@@ -909,6 +910,9 @@ class MAPIProvider {
 			elseif ($row[PR_RECIPIENT_TYPE] == MAPI_CC) {
 				array_push($message->cc, $fulladdr);
 			}
+			elseif ($row[PR_RECIPIENT_TYPE] == MAPI_BCC) {
+				array_push($message->bcc, $fulladdr);
+			}
 		}
 
 		if (is_array($message->to) && !empty($message->to)) {
@@ -916,6 +920,9 @@ class MAPIProvider {
 		}
 		if (is_array($message->cc) && !empty($message->cc)) {
 			$message->cc = implode(", ", $message->cc);
+		}
+		if (is_array($message->bcc) && !empty($message->bcc)) {
+			$message->bcc = implode(", ", $message->bcc);
 		}
 
 		// without importance some mobiles assume "0" (low) - Mantis #439
