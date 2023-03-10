@@ -1272,10 +1272,20 @@ class MAPIProvider {
 				$props[$emailmap["messageclass"]] = "IPM.Note";
 				$this->setPropsInMAPI($mapimessage, $message, $emailmap);
 			}
-			$props[$emailprops["messageflags"]] = MSGFLAG_UNSENT & MSGFLAG_READ;
+			$props[$emailprops["messageflags"]] = MSGFLAG_UNSENT | MSGFLAG_READ;
 
 			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
 				$props[$emailprops["html"]] = stream_get_contents($message->asbody->data);
+			}
+
+			// Android devices send the recipients in to, cc and bcc tags
+			if (isset($message->to) || isset($message->cc) || isset($message->bcc)) {
+				$recips = [];
+				$this->addRecips($message->to, MAPI_TO, $recips);
+				$this->addRecips($message->cc, MAPI_CC, $recips);
+				$this->addRecips($message->bcc, MAPI_BCC, $recips);
+
+				mapi_message_modifyrecipients($mapimessage, MODRECIP_MODIFY, $recips);
 			}
 			// remove PR_CLIENT_SUBMIT_TIME
 			mapi_deleteprops(
@@ -3436,5 +3446,70 @@ class MAPIProvider {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Adds recipients to the recips array.
+	 *
+	 * @param string $recip
+	 * @param int $type
+	 * @param array $recips
+	 *
+	 * @return void
+	 */
+	private function addRecips($recip, $type, &$recips) {
+		if (!empty($recip) && is_array($recip)) {
+			$emails = $recip;
+			// Recipients should be comma separated, but android devices separate
+			// them with semicolon, hence the additional processing
+			if (count($recip) === 1 && strpos($recip[0], ';') !== false) {
+				$emails = explode(';', $recip[0]);
+			}
+
+			foreach ($emails as $email) {
+				$extEmail = $this->extractEmailAddress($email);
+				if ($extEmail !== false) {
+					$r = $this->createMapiRecipient($extEmail, $type);
+					$recips[] = $r;
+				}
+			}
+		}
+	}
+
+	/**
+	 * Creates a MAPI recipient to use with mapi_message_modifyrecipients().
+	 *
+	 * @param string $email
+	 * @param int $type
+	 *
+	 * @return array
+	 */
+	private function createMapiRecipient($email, $type) {
+		// Open address book for user resolve
+		$addrbook = $this->getAddressbook();
+		$recip = [];
+		$recip[PR_EMAIL_ADDRESS] = $email;
+		$recip[PR_SMTP_ADDRESS] = $email;
+
+		// lookup information in GAB if possible so we have up-to-date name for given address
+		$userinfo = [[PR_DISPLAY_NAME => $recip[PR_EMAIL_ADDRESS]]];
+		$userinfo = mapi_ab_resolvename($addrbook, $userinfo, EMS_AB_ADDRESS_LOOKUP);
+		if (mapi_last_hresult() == NOERROR) {
+			$recip[PR_DISPLAY_NAME] = $userinfo[0][PR_DISPLAY_NAME];
+			$recip[PR_EMAIL_ADDRESS] = $userinfo[0][PR_EMAIL_ADDRESS];
+			$recip[PR_SEARCH_KEY] = $userinfo[0][PR_SEARCH_KEY];
+			$recip[PR_ADDRTYPE] = $userinfo[0][PR_ADDRTYPE];
+			$recip[PR_ENTRYID] = $userinfo[0][PR_ENTRYID];
+			$recip[PR_RECIPIENT_TYPE] = $type;
+		}
+		else {
+			$recip[PR_DISPLAY_NAME] = $email;
+			$recip[PR_SEARCH_KEY] = "SMTP:" . $recip[PR_EMAIL_ADDRESS] . "\0";
+			$recip[PR_ADDRTYPE] = "SMTP";
+			$recip[PR_RECIPIENT_TYPE] = $type;
+			$recip[PR_ENTRYID] = mapi_createoneoff($recip[PR_DISPLAY_NAME], $recip[PR_ADDRTYPE], $recip[PR_EMAIL_ADDRESS]);
+		}
+
+		return $recip;
 	}
 }
