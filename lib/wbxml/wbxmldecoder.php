@@ -291,32 +291,34 @@ class WBXMLDecoder extends WBXMLDefs {
 		switch ($el[EN_TYPE]) {
 			case EN_TYPE_STARTTAG:
 				if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
-					SLog::Write(LOGLEVEL_WBXML, "I " . $spaces . " <" . $el[EN_TAG] . ">");
+					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s>", $spaces,  $el[EN_TAG]));
 					array_push($this->logStack, $el[EN_TAG]);
 				}
 				else {
-					SLog::Write(LOGLEVEL_WBXML, "I " . $spaces . " <" . $el[EN_TAG] . "/>");
+					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s/>", $spaces,  $el[EN_TAG]));
 				}
 				break;
 
 			case EN_TYPE_ENDTAG:
 				$tag = array_pop($this->logStack);
-				SLog::Write(LOGLEVEL_WBXML, "I " . $spaces . "</" . $tag . ">");
+				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s </%s>", $spaces, $tag));
 				break;
 
 			case EN_TYPE_CONTENT:
-				// as we concatenate the string here, the entire content is copied.
-				// when sending an email with an attachment this single log line (which is never logged in INFO)
-				// requires easily additional 20 MB of RAM. See https://jira.z-hub.io/browse/ZP-1159
 				$messagesize = strlen($el[EN_CONTENT]);
-				if ($messagesize > 10240 && !defined('WBXML_DEBUGGING')) {
-					$content = substr($el[EN_CONTENT], 0, 10240) . sprintf(" <log message with %d bytes truncated>", $messagesize);
+				// don't log binary data
+				if (false === mb_detect_encoding($el[EN_CONTENT], null, true)) {
+					$content = sprintf("(BINARY DATA: %d bytes long)", $messagesize);
+				}
+				// truncate logged data to 10K
+				elseif ($messagesize > 10240 && !defined('WBXML_DEBUGGING')) {
+					$content = sprintf("%s (log message with %d bytes truncated)", substr($el[EN_CONTENT], 0, 10240), $messagesize);
 				}
 				else {
 					$content = $el[EN_CONTENT];
 				}
-				// Log but make sure it's not truncated again (will be slightly bigger than 10KB)
-				SLog::Write(LOGLEVEL_WBXML, "I " . $spaces . " " . $content, false);
+
+				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s %s", $spaces, $content) , false);
 				break;
 		}
 	}
