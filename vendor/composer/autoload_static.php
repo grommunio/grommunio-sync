@@ -99,6 +99,8 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'SyncAttachment' => __DIR__ . '/../..' . '/lib/syncobjects/syncattachment.php',
         'SyncAttendee' => __DIR__ . '/../..' . '/lib/syncobjects/syncattendee.php',
         'SyncBaseAttachment' => __DIR__ . '/../..' . '/lib/syncobjects/syncbaseattachment.php',
+        'SyncBaseAttachmentAdd' => __DIR__ . '/../..' . '/lib/syncobjects/syncbaseattachment.php',
+        'SyncBaseAttachmentDelete' => __DIR__ . '/../..' . '/lib/syncobjects/syncbaseattachment.php',
         'SyncBaseBody' => __DIR__ . '/../..' . '/lib/syncobjects/syncbasebody.php',
         'SyncBaseBodyPart' => __DIR__ . '/../..' . '/lib/syncobjects/syncbasebodypart.php',
         'SyncCollections' => __DIR__ . '/../..' . '/lib/core/synccollections.php',

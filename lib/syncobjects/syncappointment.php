@@ -260,8 +260,12 @@ class SyncAppointment extends SyncObject {
 		if (Request::GetProtocolVersion() >= 16.0) {
 			$mapping[SYNC_AIRSYNCBASE_ATTACHMENTS] = [
 				self::STREAMER_VAR => "asattachments",
-				self::STREAMER_TYPE => "SyncBaseAttachment",
-				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
+				// Different tags can be used to encapsulate the SyncBaseAttachmentSubtypes depending on its usecase
+				self::STREAMER_ARRAY => [
+					SYNC_AIRSYNCBASE_ATTACHMENT => "SyncBaseAttachment",
+					SYNC_AIRSYNCBASE_ADD => "SyncBaseAttachmentAdd",
+					SYNC_AIRSYNCBASE_DELETE => "SyncBaseAttachmentDelete",
+				],
 			];
 			$mapping[SYNC_AIRSYNCBASE_LOCATION] = [
 				self::STREAMER_VAR => "location2",
@@ -281,7 +285,7 @@ class SyncAppointment extends SyncObject {
 				self::STREAMER_VAR => "instanceiddelete",
 				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
 			];
-			
+
 			// unset these properties because airsyncbase location will be used instead
 			unset($mapping[SYNC_POOMCAL_LOCATION]);
 		}

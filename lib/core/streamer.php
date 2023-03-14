@@ -97,15 +97,31 @@ class Streamer implements JsonSerializable {
 				if (isset($map[self::STREAMER_ARRAY])) {
 					WBXMLDecoder::ResetInWhile("decodeArray");
 					while (WBXMLDecoder::InWhile("decodeArray")) {
+						$streamertype = false;
 						// do not get start tag for an array without a container
 						if (!(isset($map[self::STREAMER_PROP]) && $map[self::STREAMER_PROP] == self::STREAMER_TYPE_NO_CONTAINER)) {
-							if (!$decoder->getElementStartTag($map[self::STREAMER_ARRAY])) {
+							// are there multiple possibilities for element encapsulation tags?
+							if (is_array($map[self::STREAMER_ARRAY])) {
+								$encapTagsTypes = $map[self::STREAMER_ARRAY];
+							}
+							else {
+								// set $streamertype to null if the element is a single string (e.g. category)
+								$encapTagsTypes = [$map[self::STREAMER_ARRAY] => $map[self::STREAMER_TYPE]] ?? null;
+							}
+
+							// Identify the used tag
+							$streamertype = false;
+							foreach ($encapTagsTypes as $tag => $type) {
+								if ($decoder->getElementStartTag($tag)) {
+									$streamertype = $type;
+								}
+							}
+							if ($streamertype === false) {
 								break;
 							}
 						}
-						if (isset($map[self::STREAMER_TYPE])) {
-							$decoded = new $map[self::STREAMER_TYPE]();
-
+						if ($streamertype) {
+							$decoded = new $streamertype();
 							$decoded->Decode($decoder);
 						}
 						else {
@@ -262,19 +278,25 @@ class Streamer implements JsonSerializable {
 
 						foreach ($this->{$map[self::STREAMER_VAR]} as $element) {
 							if (is_object($element)) {
-								$encoder->startTag($map[self::STREAMER_ARRAY]); // Outputs object container (eg Attachment)
+								// find corresponding encapsulation tag for element
+								if (!is_array($map[self::STREAMER_ARRAY])) {
+									$eltag = $map[self::STREAMER_ARRAY];
+								}
+								else {
+									$eltag = array_search(get_class($element), $map[self::STREAMER_ARRAY]);
+								}
+								$encoder->startTag($eltag); // Outputs object container (eg Attachment)
 								$element->Encode($encoder);
 								$encoder->endTag();
 							}
 							else {
-								if (strlen($element) == 0)
-									  // Do not output empty items. Not sure if we should output an empty tag with $encoder->startTag($map[self::STREAMER_ARRAY], false, true);
-									  ; else {
-									  	$encoder->startTag($map[self::STREAMER_ARRAY]);
-									  	$encoder->content($element);
-									  	$encoder->endTag();
-									  	$streamed = true;
-									  }
+								// Do not output empty items. Not sure if we should output an empty tag with $encoder->startTag($map[self::STREAMER_ARRAY], false, true);
+								if (strlen($element) > 0) {
+									$encoder->startTag($map[self::STREAMER_ARRAY]);
+									$encoder->content($element);
+									$encoder->endTag();
+									$streamed = true;
+								}
 							}
 						}
 

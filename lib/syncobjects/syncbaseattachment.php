@@ -29,6 +29,30 @@ class SyncBaseAttachment extends SyncObject {
 			SYNC_AIRSYNCBASE_ISINLINE => [self::STREAMER_VAR => "isinline"],
 		];
 
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_AIRSYNCBASE_CLIENTID] = [
+				self::STREAMER_VAR => "clientid",
+				self::STREAMER_RONOTIFY => true,
+			];
+			$mapping[SYNC_AIRSYNCBASE_CONTENTTYPE] = [
+				self::STREAMER_VAR => "contenttype",
+				self::STREAMER_RONOTIFY => true,
+			];
+			$mapping[SYNC_AIRSYNCBASE_CONTENT] = [
+				self::STREAMER_VAR => "content",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_STREAM_ASPLAIN,
+				self::STREAMER_RONOTIFY => true,
+			];
+		}
 		parent::__construct($mapping);
 	}
+}
+
+// Subclasses
+class SyncBaseAttachmentAdd extends SyncBaseAttachment {
+	// overload
+}
+
+class SyncBaseAttachmentDelete extends SyncBaseAttachment {
+	// overload
 }
