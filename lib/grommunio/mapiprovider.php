@@ -191,8 +191,7 @@ class MAPIProvider {
 		}
 
 		// Always set organizer information because some devices do not work properly without it
-		if (isset($messageprops[$appointmentprops["representingentryid"]], $messageprops[$appointmentprops["representingname"]])
-			) {
+		if (isset($messageprops[$appointmentprops["representingentryid"]], $messageprops[$appointmentprops["representingname"]])) {
 			$message->organizeremail = w2u($this->getSMTPAddressFromEntryID($messageprops[$appointmentprops["representingentryid"]]));
 			// if the email address can't be resolved, fall back to PR_SENT_REPRESENTING_SEARCH_KEY
 			if ($message->organizeremail == "" && isset($messageprops[$appointmentprops["sentrepresentinsrchk"]])) {
@@ -361,7 +360,8 @@ class MAPIProvider {
 					$message->meetingstatus == 3 ||
 					$message->meetingstatus == 7 ||
 					$message->meetingstatus == 11 ||
-					$message->meetingstatus == 15)
+					$message->meetingstatus == 15
+				)
 			) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight.");
 				$duration = $message->endtime - $message->starttime;
@@ -381,20 +381,19 @@ class MAPIProvider {
 			$message->location2 = new SyncLocation();
 			$this->getASlocation($mapimessage, $message->location2, $appointmentprops);
 		}
+
 		return $message;
 	}
 
 	/**
 	 * Reads recurrence information from MAPI.
 	 *
-	 * @param mixed			$mapimessage
-	 * @param array			$recurprops
-	 * @param SyncObject	&$syncMessage		the message
-	 * @param SyncObject	&$syncRecurrence	the  recurrence message
-	 * @param array			$tz					timezone information
-	 * @param array			$appointmentprops	property defintions
-	 *
-	 * @return
+	 * @param mixed      $mapimessage
+	 * @param array      $recurprops
+	 * @param SyncObject &$syncMessage     the message
+	 * @param SyncObject &$syncRecurrence  the  recurrence message
+	 * @param array      $tz               timezone information
+	 * @param array      $appointmentprops property defintions
 	 */
 	private function getRecurrence($mapimessage, $recurprops, &$syncMessage, &$syncRecurrence, $tz, $appointmentprops) {
 		if ($syncRecurrence instanceof SyncTaskRecurrence) {
@@ -669,7 +668,7 @@ class MAPIProvider {
 		}
 
 		// there is some name, but no email address (e.g. mails from System Administrator) - use a generic invalid address
-		if ($fromname != "" && $fromaddr == ""){
+		if ($fromname != "" && $fromaddr == "") {
 			$fromaddr = "invalid@invalid";
 		}
 
@@ -1204,9 +1203,6 @@ class MAPIProvider {
 		return false;
 	}
 
-
-
-		
 	/*----------------------------------------------------------------------------------------------------------
 	 * PreDeleteMessage
 	 */
@@ -1214,12 +1210,9 @@ class MAPIProvider {
 	/**
 	 * Performs any actions before a message is imported for deletion.
 	 *
-	 * @param mixed      $mapimessage
-	 *
-	 * @return void
+	 * @param mixed $mapimessage
 	 */
 	public function PreDeleteMessage($mapimessage) {
-		
 		// Currently this is relevant only for MeetingRequests so cancellation emails can be sent to attendees.
 		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
 		$messageClass = isset($props[PR_MESSAGE_CLASS]) ? $props[PR_MESSAGE_CLASS] : false;
@@ -1287,7 +1280,7 @@ class MAPIProvider {
 		$props = $delprops = [];
 
 		// save DRAFTs
-		if (isset($message->asbody) &&  $message->asbody instanceof SyncBaseBody) {
+		if (isset($message->asbody) && $message->asbody instanceof SyncBaseBody) {
 			// iOS sends a RFC822 message
 			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setEmail(): Use the mapi_inetmapi_imtomapi function to save draft email");
@@ -1420,12 +1413,13 @@ class MAPIProvider {
 			$basedate = $this->getDayStartOfTimestamp($instanceid);
 
 			// get compatible TZ data
-			$props = [ $appointmentprops["timezonetag"], $appointmentprops["isrecurring"] ];
+			$props = [$appointmentprops["timezonetag"], $appointmentprops["isrecurring"]];
 			$tzprop = $this->getProps($mapimessage, $props);
 			$tz = $this->getTZFromMAPIBlob($tzprop[$appointmentprops["timezonetag"]]);
 
 			if ($appointmentprops["isrecurring"] == false) {
 				SLog::Write(LOGLEVEL_INFO, sprintf("MAPIProvider->setAppointment(): Cannot modify exception instanceId '%s' as target appointment is not recurring. Ignoring.", $appointment->instanceid));
+
 				return false;
 			}
 			// get a recurrence object
@@ -1486,6 +1480,7 @@ class MAPIProvider {
 			$mr->updateMeetingRequest($basedate);
 			$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
 			$mr->sendMeetingRequest($deleteException, false, $basedate);
+
 			return true;
 		}
 
@@ -1688,7 +1683,7 @@ class MAPIProvider {
 		else {
 			$props[$appointmentprops["isrecurring"]] = false;
 			// remove recurringstate
-			mapi_deleteprops($mapimessage,	[$appointmentprops["recurringstate"]]);
+			mapi_deleteprops($mapimessage, [$appointmentprops["recurringstate"]]);
 		}
 
 		// always set the PR_SENT_REPRESENTING_* props so that the attendee status update also works with the webaccess
@@ -1730,9 +1725,10 @@ class MAPIProvider {
 
 		// Do attendees
 		// For AS-16 get a list of the current attendees (pre update)
-		if(Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
-			$old_receipstable = mapi_table_queryallrows($old_recipienttable,
+			$old_receipstable = mapi_table_queryallrows(
+				$old_recipienttable,
 				[
 					PR_ENTRYID,
 					PR_DISPLAY_NAME,
@@ -1751,15 +1747,16 @@ class MAPIProvider {
 					PR_ROWID,
 					PR_OBJECT_TYPE,
 					PR_SEARCH_KEY,
-				]);
+				]
+			);
 			$old_receips = [];
-			foreach($old_receipstable as $oldrec) {
+			foreach ($old_receipstable as $oldrec) {
 				if (isset($oldrec[PR_EMAIL_ADDRESS])) {
 					$old_receips[$oldrec[PR_EMAIL_ADDRESS]] = $oldrec;
 				}
 			}
 		}
-		
+
 		if (isset($appointment->attendees) && is_array($appointment->attendees)) {
 			$recips = [];
 
@@ -1776,7 +1773,7 @@ class MAPIProvider {
 			array_push($recips, $org);
 
 			// remove organizer from old_receips
-			if(isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
+			if (isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
 				unset($old_receips[$org[PR_EMAIL_ADDRESS]]);
 			}
 
@@ -1809,7 +1806,7 @@ class MAPIProvider {
 				}
 
 				// remove still existing attendees from the list of pre-update attendees - remaining pre-update are considered deleted attendees
-				if(isset($old_receips[$recip[PR_EMAIL_ADDRESS]])) {
+				if (isset($old_receips[$recip[PR_EMAIL_ADDRESS]])) {
 					unset($old_receips[$recip[PR_EMAIL_ADDRESS]]);
 				}
 				array_push($recips, $recip);
@@ -1820,7 +1817,7 @@ class MAPIProvider {
 		mapi_setprops($mapimessage, $props);
 
 		// Since AS 16 we have to take care of MeetingRequest updates
-		if(Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// initialize MR and/or update internal counters
 			$mr->updateMeetingRequest();
@@ -1828,8 +1825,9 @@ class MAPIProvider {
 			if (!isset($appointment->clientuid)) {
 				$mr->checkSignificantChanges($oldProps, false, false);
 			}
-			$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips) );
+			$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 		}
+
 		return true;
 	}
 
@@ -2152,8 +2150,6 @@ class MAPIProvider {
 	 * @param mixed      $mapimessage
 	 * @param SyncObject $message
 	 * @param array      $mapping
-	 *
-	 * @return
 	 */
 	private function setPropsInMAPI($mapimessage, $message, $mapping) {
 		$mapiprops = $this->getPropIdsFromStrings($mapping);
@@ -2236,8 +2232,6 @@ class MAPIProvider {
 	 * @param mixed &$mapimessage
 	 * @param array &$propsToSet
 	 * @param array &$mapiprops
-	 *
-	 * @return
 	 */
 	private function setPropsIndividually(&$mapimessage, &$propsToSet, &$mapiprops) {
 		foreach ($propsToSet as $prop => $value) {
@@ -2254,8 +2248,6 @@ class MAPIProvider {
 	 * @param SyncObject &$message
 	 * @param mixed      $mapimessage
 	 * @param array      $mapping
-	 *
-	 * @return
 	 */
 	private function getPropsFromMAPI(&$message, $mapimessage, $mapping) {
 		$messageprops = $this->getProps($mapimessage, $mapping);
@@ -2307,8 +2299,6 @@ class MAPIProvider {
 	 * Wraps getPropIdsFromStrings() calls.
 	 *
 	 * @param mixed &$mapiprops
-	 *
-	 * @return
 	 */
 	private function getPropIdsFromStrings(&$mapiprops) {
 		return getPropIdsFromStrings($this->store, $mapiprops);
@@ -2320,8 +2310,6 @@ class MAPIProvider {
 	 * @param mixed &$mapiprops
 	 * @param mixed $mapimessage
 	 * @param mixed $mapiproperties
-	 *
-	 * @return
 	 */
 	protected function getProps($mapimessage, &$mapiproperties) {
 		$mapiproperties = $this->getPropIdsFromStrings($mapiproperties);
@@ -2401,7 +2389,7 @@ class MAPIProvider {
 	 */
 	private function getMAPIBlobFromTZ($tz) {
 		return pack(
-			"lll" . "vvvvvvvvv" . "vvvvvvvvv",
+			"lllvvvvvvvvvvvvvvvvvv",
 			$tz["bias"],
 			$tz["stdbias"],
 			$tz["dstbias"],
@@ -2649,8 +2637,6 @@ class MAPIProvider {
 	 * @param array  &$properties
 	 * @param array  &$nremails
 	 * @param int    &$abprovidertype
-	 *
-	 * @return
 	 */
 	private function setEmailAddress($emailAddress, $displayName, $cnt, &$props, &$properties, &$nremails, &$abprovidertype) {
 		if (isset($emailAddress)) {
@@ -2677,8 +2663,6 @@ class MAPIProvider {
 	 * @param string $street
 	 * @param array  &$props
 	 * @param array  &$properties
-	 *
-	 * @return
 	 */
 	private function setAddress($type, &$city, &$country, &$postalcode, &$state, &$street, &$props, &$properties) {
 		if (isset($city)) {
@@ -2719,8 +2703,6 @@ class MAPIProvider {
 	 * @param string $address
 	 * @param array  &$props
 	 * @param array  &$properties
-	 *
-	 * @return
 	 */
 	private function setMailingAddress($city, $country, $postalcode, $state, $street, $address, &$props, &$properties) {
 		if (isset($city)) {
@@ -2748,8 +2730,6 @@ class MAPIProvider {
 	 *
 	 * @param SyncObject $message
 	 * @param array      &$recur
-	 *
-	 * @return
 	 */
 	private function setRecurrence($message, &$recur) {
 		if (isset($message->complete)) {
@@ -3139,10 +3119,11 @@ class MAPIProvider {
 	/**
 	 * Sets attachments from an email message to a SyncObject.
 	 *
-	 * @param mixed			$mapimessage
-	 * @param SyncObject	$message
-	 * @param string		$entryid
-	 * @param string		$parentSourcekey
+	 * @param mixed      $mapimessage
+	 * @param SyncObject $message
+	 * @param string     $entryid
+	 * @param string     $parentSourcekey
+	 * @param mixed      $exceptionBasedate
 	 */
 	private function setAttachment($mapimessage, &$message, $entryid, $parentSourcekey, $exceptionBasedate = 0) {
 		// Add attachments
@@ -3239,18 +3220,17 @@ class MAPIProvider {
 		}
 	}
 
-
 	/**
 	 * Sets information from SyncLocation type for a MAPI message.
 	 *
-	 * @param SyncBaseBody	$aslocation
-	 * @param array			$props
-	 * @param array			$appointmentprops
+	 * @param SyncBaseBody $aslocation
+	 * @param array        $props
+	 * @param array        $appointmentprops
 	 */
 	private function setASlocation($aslocation, &$props, $appointmentprops) {
 		$fullAddress = "";
 		if ($aslocation->street || $aslocation->city || $aslocation->state || $aslocation->country || $aslocation->postalcode) {
-			$fullAddress = $aslocation->street .", ". $aslocation->city ."-". $aslocation->state .",". $aslocation->country .",". $aslocation->postalcode;
+			$fullAddress = $aslocation->street . ", " . $aslocation->city . "-" . $aslocation->state . "," . $aslocation->country . "," . $aslocation->postalcode;
 		}
 
 		// Determine which data to use as DisplayName. This is also set to the traditional location property for backwards compatibility (this is currently displayed in OL).
@@ -3258,11 +3238,11 @@ class MAPIProvider {
 		if ($aslocation->displayname) {
 			$props[$appointmentprops["location"]] = $aslocation->displayname;
 		}
-		elseif($aslocation->street) {
+		elseif ($aslocation->street) {
 			$useStreet = true;
 			$props[$appointmentprops["location"]] = $fullAddress;
 		}
-		elseif($aslocation->city) {
+		elseif ($aslocation->city) {
 			$props[$appointmentprops["location"]] = $aslocation->city;
 		}
 		$loc = [];
@@ -3270,32 +3250,31 @@ class MAPIProvider {
 		$loc["LocationAnnotation"] = ($aslocation->annotation) ? $aslocation->annotation : "";
 		$loc["LocationSource"] = "None";
 		$loc["Unresolved"] = ($aslocation->locationuri) ? false : true;
-		$loc["LocationUri"] = ($aslocation->locationuri) ?? "";
+		$loc["LocationUri"] = $aslocation->locationuri ?? "";
 		$loc["Latitude"] = ($aslocation->latitude) ? floatval($aslocation->latitude) : null;
 		$loc["Longitude"] = ($aslocation->longitude) ? floatval($aslocation->longitude) : null;
-		$loc["Altitude"] = ($aslocation->altitude) ?? null;
-		$loc["Accuracy"] = ($aslocation->accuracy) ?? null;
-		$loc["AltitudeAccuracy"] = ($aslocation->altitudeaccuracy) ?? null;
-		$loc["LocationStreet"] = ($aslocation->street) ?? "";
-		$loc["LocationCity"] = ($aslocation->city) ?? "";
-		$loc["LocationState"] = ($aslocation->state) ?? "";
-		$loc["LocationCountry"] = ($aslocation->country) ?? "";
-		$loc["LocationPostalCode"] = ($aslocation->postalcode) ?? "";
+		$loc["Altitude"] = $aslocation->altitude ?? null;
+		$loc["Accuracy"] = $aslocation->accuracy ?? null;
+		$loc["AltitudeAccuracy"] = $aslocation->altitudeaccuracy ?? null;
+		$loc["LocationStreet"] = $aslocation->street ?? "";
+		$loc["LocationCity"] = $aslocation->city ?? "";
+		$loc["LocationState"] = $aslocation->state ?? "";
+		$loc["LocationCountry"] = $aslocation->country ?? "";
+		$loc["LocationPostalCode"] = $aslocation->postalcode ?? "";
 		$loc["LocationFullAddress"] = $fullAddress;
 
 		$props[$appointmentprops["locations"]] = json_encode([$loc], JSON_UNESCAPED_UNICODE);
 	}
 
-
 	/**
 	 * Gets information from a MAPI message and applies it to a SyncLocation object.
 	 *
-	 * @param MAPIMessage		$mapimessage
-	 * @param SyncObject		$aslocation
-	 * @param array				$appointmentprops
+	 * @param MAPIMessage $mapimessage
+	 * @param SyncObject  $aslocation
+	 * @param array       $appointmentprops
 	 */
 	private function getASlocation($mapimessage, &$aslocation, $appointmentprops) {
-		$props = mapi_getprops($mapimessage, [ $appointmentprops["locations"],  $appointmentprops["location"] ]);
+		$props = mapi_getprops($mapimessage, [$appointmentprops["locations"], $appointmentprops["location"]]);
 		// set the old location as displayname - this is also the "correct" approach if there is more than one location in the "locations" property json
 		if (isset($props[$appointmentprops["location"]])) {
 			$aslocation->displayname = $props[$appointmentprops["location"]];
@@ -3539,10 +3518,8 @@ class MAPIProvider {
 	 * Adds recipients to the recips array.
 	 *
 	 * @param string $recip
-	 * @param int $type
-	 * @param array $recips
-	 *
-	 * @return void
+	 * @param int    $type
+	 * @param array  $recips
 	 */
 	private function addRecips($recip, $type, &$recips) {
 		if (!empty($recip) && is_array($recip)) {
@@ -3567,7 +3544,7 @@ class MAPIProvider {
 	 * Creates a MAPI recipient to use with mapi_message_modifyrecipients().
 	 *
 	 * @param string $email
-	 * @param int $type
+	 * @param int    $type
 	 *
 	 * @return array
 	 */
