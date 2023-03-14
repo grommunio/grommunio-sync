@@ -92,6 +92,8 @@ return array(
     'SyncAttachment' => $baseDir . '/lib/syncobjects/syncattachment.php',
     'SyncAttendee' => $baseDir . '/lib/syncobjects/syncattendee.php',
     'SyncBaseAttachment' => $baseDir . '/lib/syncobjects/syncbaseattachment.php',
+    'SyncBaseAttachmentAdd' => $baseDir . '/lib/syncobjects/syncbaseattachment.php',
+    'SyncBaseAttachmentDelete' => $baseDir . '/lib/syncobjects/syncbaseattachment.php',
     'SyncBaseBody' => $baseDir . '/lib/syncobjects/syncbasebody.php',
     'SyncBaseBodyPart' => $baseDir . '/lib/syncobjects/syncbasebodypart.php',
     'SyncCollections' => $baseDir . '/lib/core/synccollections.php',

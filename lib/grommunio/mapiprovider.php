@@ -1828,6 +1828,42 @@ class MAPIProvider {
 			$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 		}
 
+		if (!empty($appointment->asattachments)) {
+			foreach ($appointment->asattachments as $att) {
+				// new attachment to be saved
+				if ($att instanceof SyncBaseAttachmentAdd) {
+					SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointment(): Saving attachment %s", $att->displayname));
+					// TODO: check: clientid (looks like an UUID), contentid, contentlocation
+					$props = [
+						PR_ATTACH_LONG_FILENAME => $att->displayname,
+						PR_DISPLAY_NAME => $att->displayname,
+						PR_ATTACH_METHOD => $att->method, // is this correct ??
+						PR_ATTACH_DATA_BIN => "",
+						PR_ATTACH_MIME_TAG => $att->contenttype,
+						PR_ATTACHMENT_HIDDEN => false,
+						PR_ATTACH_EXTENSION => pathinfo($att->displayname, PATHINFO_EXTENSION),
+					];
+
+					$attachment = mapi_message_createattach($mapimessage);
+					mapi_setprops($attachment, $props);
+
+					// Stream the file to the PR_ATTACH_DATA_BIN property
+					$stream = mapi_openproperty($attachment, PR_ATTACH_DATA_BIN, IID_IStream, 0, MAPI_CREATE | MAPI_MODIFY);
+					mapi_stream_write($stream, stream_get_contents($att->content));
+
+					// Commit the stream and save changes
+					mapi_stream_commit($stream);
+					mapi_savechanges($attachment);
+				}
+				// attachment to be removed
+				elseif ($att instanceof SyncBaseAttachmentDelete) {
+					list($id, $attachnum, $parentEntryid, $exceptionBasedate) = explode(":", $att->filereference);
+					SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointment(): Deleting attachment with num: %s", $attachnum));
+					mapi_message_deleteattach($mapimessage, (int) $attachnum);
+				}
+			}
+		}
+
 		return true;
 	}
 
