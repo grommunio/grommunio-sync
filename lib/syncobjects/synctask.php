@@ -187,3 +187,7 @@ class SyncTask extends SyncObject {
 		return true;
 	}
 }
+
+class SyncTaskResponse extends SyncTask {
+	use ResponseTrait;
+}

@@ -378,3 +378,7 @@ class SyncAppointment extends SyncObject {
 		return true;
 	}
 }
+
+class SyncAppointmentResponse extends SyncAppointment {
+	use ResponseTrait;
+}

@@ -359,3 +359,7 @@ class SyncContact extends SyncObject {
 		parent::__construct($mapping);
 	}
 }
+
+class SyncContactResponse extends SyncContact {
+	use ResponseTrait;
+}

@@ -1235,7 +1235,7 @@ class MAPIProvider {
 	 * @param mixed      $mapimessage
 	 * @param SyncObject $message
 	 *
-	 * @return bool
+	 * @return SyncObject
 	 */
 	public function SetMessage($mapimessage, $message) {
 		// TODO check with instanceof
@@ -1263,8 +1263,11 @@ class MAPIProvider {
 	 *
 	 * @param mixed    $mapimessage
 	 * @param SyncMail $message
+	 *
+	 * @return SyncObject
 	 */
 	private function setEmail($mapimessage, $message) {
+		$response = new SyncMailResponse();
 		// update categories
 		if (!isset($message->categories)) {
 			$message->categories = [];
@@ -1314,6 +1317,11 @@ class MAPIProvider {
 					$emailprops["clientsubmittime"],
 				]
 			);
+		}
+
+		// save DRAFTs attachments
+		if (!empty($message->asattachments)) {
+			$this->editAttachments($mapimessage, $message->asattachments, $response);
 		}
 
 		// unset message flags if:
@@ -1382,6 +1390,8 @@ class MAPIProvider {
 		if (!empty($delprops)) {
 			mapi_deleteprops($mapimessage, $delprops);
 		}
+
+		return $response;
 	}
 
 	/**
@@ -1391,9 +1401,11 @@ class MAPIProvider {
 	 * @param SyncAppointment $message
 	 * @param mixed           $appointment
 	 *
-	 * @return bool
+	 * @return SyncObject
 	 */
 	private function setAppointment($mapimessage, $appointment) {
+		$response = new SyncAppointmentResponse();
+
 		// Get timezone info
 		if (isset($appointment->timezone)) {
 			$tz = $this->getTZFromSyncBlob(base64_decode($appointment->timezone));
@@ -1523,11 +1535,20 @@ class MAPIProvider {
 		// use clientUID if set
 		if ($appointment->clientuid && !$appointment->uid) {
 			$appointment->uid = $appointment->clientuid;
+			// Facepalm: iOS sends weird ids (without dashes and a trailing null character)
+			if (strlen($appointment->uid) == 33) {
+				$appointment->uid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split($appointment->uid, 4));
+			}
 		}
 		// is the transmitted UID OL compatible?
 		if ($appointment->uid && substr($appointment->uid, 0, 16) != "040000008200E000") {
 			// if not, encapsulate the transmitted uid
 			$appointment->uid = getGoidFromUid($appointment->uid);
+		}
+		// if there was a clientuid transport the new UID to the response
+		if ($appointment->clientuid) {
+			$response->uid = bin2hex($appointment->uid);
+			$response->hasResponse = true;
 		}
 
 		mapi_setprops($mapimessage, [PR_MESSAGE_CLASS => "IPM.Appointment"]);
@@ -1828,43 +1849,12 @@ class MAPIProvider {
 			$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 		}
 
+		// update attachments send by the mobile
 		if (!empty($appointment->asattachments)) {
-			foreach ($appointment->asattachments as $att) {
-				// new attachment to be saved
-				if ($att instanceof SyncBaseAttachmentAdd) {
-					SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointment(): Saving attachment %s", $att->displayname));
-					// TODO: check: clientid (looks like an UUID), contentid, contentlocation
-					$props = [
-						PR_ATTACH_LONG_FILENAME => $att->displayname,
-						PR_DISPLAY_NAME => $att->displayname,
-						PR_ATTACH_METHOD => $att->method, // is this correct ??
-						PR_ATTACH_DATA_BIN => "",
-						PR_ATTACH_MIME_TAG => $att->contenttype,
-						PR_ATTACHMENT_HIDDEN => false,
-						PR_ATTACH_EXTENSION => pathinfo($att->displayname, PATHINFO_EXTENSION),
-					];
-
-					$attachment = mapi_message_createattach($mapimessage);
-					mapi_setprops($attachment, $props);
-
-					// Stream the file to the PR_ATTACH_DATA_BIN property
-					$stream = mapi_openproperty($attachment, PR_ATTACH_DATA_BIN, IID_IStream, 0, MAPI_CREATE | MAPI_MODIFY);
-					mapi_stream_write($stream, stream_get_contents($att->content));
-
-					// Commit the stream and save changes
-					mapi_stream_commit($stream);
-					mapi_savechanges($attachment);
-				}
-				// attachment to be removed
-				elseif ($att instanceof SyncBaseAttachmentDelete) {
-					list($id, $attachnum, $parentEntryid, $exceptionBasedate) = explode(":", $att->filereference);
-					SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointment(): Deleting attachment with num: %s", $attachnum));
-					mapi_message_deleteattach($mapimessage, (int) $attachnum);
-				}
-			}
+			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
 		}
 
-		return true;
+		return $response;
 	}
 
 	/**
@@ -1876,6 +1866,7 @@ class MAPIProvider {
 	 * @return bool
 	 */
 	private function setContact($mapimessage, $contact) {
+		$response = new SyncContactResponse();
 		mapi_setprops($mapimessage, [PR_MESSAGE_CLASS => "IPM.Contact"]);
 
 		// normalize email addresses
@@ -2008,7 +1999,7 @@ class MAPIProvider {
 
 		mapi_setprops($mapimessage, $props);
 
-		return true;
+		return $response;
 	}
 
 	/**
@@ -2020,6 +2011,7 @@ class MAPIProvider {
 	 * @return bool
 	 */
 	private function setTask($mapimessage, $task) {
+		$response = new SyncTaskResponse();
 		mapi_setprops($mapimessage, [PR_MESSAGE_CLASS => "IPM.Task"]);
 
 		$taskmapping = MAPIMapping::GetTaskMapping();
@@ -2102,7 +2094,7 @@ class MAPIProvider {
 		}
 		mapi_setprops($mapimessage, $props);
 
-		return true;
+		return $response;
 	}
 
 	/**
@@ -2114,6 +2106,7 @@ class MAPIProvider {
 	 * @return bool
 	 */
 	private function setNote($mapimessage, $note) {
+		$response = new SyncNoteResponse();
 		// Touchdown does not send categories if all are unset or there is none.
 		// Setting it to an empty array will unset the property in KC as well
 		if (!isset($note->categories)) {
@@ -2141,7 +2134,7 @@ class MAPIProvider {
 		$props[$noteprops["internetcpid"]] = INTERNET_CPID_UTF8;
 		mapi_setprops($mapimessage, $props);
 
-		return true;
+		return $response;
 	}
 
 	/*----------------------------------------------------------------------------------------------------------
@@ -2985,6 +2978,40 @@ class MAPIProvider {
 	}
 
 	/**
+	 * Build a filereference key by the clientid.
+	 *
+	 * @param MAPIMessage $mapimessage
+	 * @param SyncObject  $message
+	 * @param mixed       $clientid
+	 * @param mixed       $entryid
+	 * @param mixed       $parentSourcekey
+	 * @param mixed       $exceptionBasedate
+	 *
+	 * @return bool
+	 */
+	private function getFileReferenceForClientId($mapimessage, $clientid, $entryid = 0, $parentSourcekey = 0, $exceptionBasedate = 0) {
+		if (!$entryid || !$parentSourcekey) {
+			$props = mapi_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_SOURCE_KEY]);
+			if (!$entryid && isset($props[PR_ENTRYID])) {
+				$entryid = bin2hex($props[PR_ENTRYID]);
+			}
+			if (!$parentSourcekey && isset($props[PR_PARENT_SOURCE_KEY])) {
+				$parentSourcekey = bin2hex($props[PR_PARENT_SOURCE_KEY]);
+			}
+		}
+
+		$attachtable = mapi_message_getattachmenttable($mapimessage);
+		$rows = mapi_table_queryallrows($attachtable, [PR_EC_WA_ATTACHMENT_ID, PR_ATTACH_NUM]);
+		foreach ($rows as $row) {
+			if ($row[PR_EC_WA_ATTACHMENT_ID] == $clientid) {
+				return sprintf("%s:%s:%s:%s", $entryid, $row[PR_ATTACH_NUM], $parentSourcekey, $exceptionBasedate);
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * A wrapper for mapi_inetmapi_imtoinet function.
 	 *
 	 * @param MAPIMessage $mapimessage
@@ -3252,6 +3279,68 @@ class MAPIProvider {
 
 					array_push($message->attachments, $attach);
 				}
+			}
+		}
+	}
+
+	/**
+	 * Update attachments of a mapimessage based on asattachments received.
+	 *
+	 * @param MAPIMessage $mapimessage
+	 * @param array       $asattachments
+	 * @param SyncObject  $response
+	 */
+	public function editAttachments($mapimessage, $asattachments, &$response) {
+		foreach ($asattachments as $att) {
+			// new attachment to be saved
+			if ($att instanceof SyncBaseAttachmentAdd) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Saving attachment %s with name: %s", $att->clientid, $att->displayname));
+				// only create if the attachment does not already exist
+				if ($this->getFileReferenceForClientId($mapimessage, $att->clientid, 0, 0) === false) {
+					// TODO: check: contentlocation
+					$props = [
+						PR_ATTACH_LONG_FILENAME => $att->displayname,
+						PR_DISPLAY_NAME => $att->displayname,
+						PR_ATTACH_METHOD => $att->method, // is this correct ??
+						PR_ATTACH_DATA_BIN => "",
+						PR_ATTACHMENT_HIDDEN => false,
+						PR_ATTACH_EXTENSION => pathinfo($att->displayname, PATHINFO_EXTENSION),
+						PR_EC_WA_ATTACHMENT_ID => $att->clientid,
+					];
+					if (!empty($att->contenttype)) {
+						$props[PR_ATTACH_MIME_TAG] = $att->contenttype;
+					}
+					if (!empty($att->contentid)) {
+						$props[PR_ATTACH_CONTENT_ID] = $att->contentid;
+						$props[PR_ATTACHMENT_HIDDEN] = true;
+					}
+
+					$attachment = mapi_message_createattach($mapimessage);
+					mapi_setprops($attachment, $props);
+
+					// Stream the file to the PR_ATTACH_DATA_BIN property
+					$stream = mapi_openproperty($attachment, PR_ATTACH_DATA_BIN, IID_IStream, 0, MAPI_CREATE | MAPI_MODIFY);
+					mapi_stream_write($stream, stream_get_contents($att->content));
+
+					// Commit the stream and save changes
+					mapi_stream_commit($stream);
+					mapi_savechanges($attachment);
+				}
+				if (!isset($response->asattachments)) {
+					$response->asattachments = [];
+				}
+				// respond linking the clientid with the newly created filereference
+				$attResp = new SyncBaseAttachment();
+				$attResp->clientid = $att->clientid;
+				$attResp->filereference = $this->getFileReferenceForClientId($mapimessage, $att->clientid, 0, 0);
+				$response->asattachments[] = $attResp;
+				$response->hasResponse = true;
+			}
+			// attachment to be removed
+			elseif ($att instanceof SyncBaseAttachmentDelete) {
+				list($id, $attachnum, $parentEntryid, $exceptionBasedate) = explode(":", $att->filereference);
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Deleting attachment with num: %s", $attachnum));
+				mapi_message_deleteattach($mapimessage, (int) $attachnum);
 			}
 		}
 	}
