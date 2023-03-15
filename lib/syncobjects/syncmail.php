@@ -175,8 +175,12 @@ class SyncMail extends SyncObject {
 			];
 			$mapping[SYNC_AIRSYNCBASE_ATTACHMENTS] = [
 				self::STREAMER_VAR => "asattachments",
-				self::STREAMER_TYPE => "SyncBaseAttachment",
-				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
+				// Different tags can be used to encapsulate the SyncBaseAttachmentSubtypes depending on its usecase
+				self::STREAMER_ARRAY => [
+					SYNC_AIRSYNCBASE_ATTACHMENT => "SyncBaseAttachment",
+					SYNC_AIRSYNCBASE_ADD => "SyncBaseAttachmentAdd",
+					SYNC_AIRSYNCBASE_DELETE => "SyncBaseAttachmentDelete",
+				],
 			];
 			$mapping[SYNC_POOMMAIL_CONTENTCLASS] = [
 				self::STREAMER_VAR => "contentclass",
@@ -265,4 +269,8 @@ class SyncMail extends SyncObject {
 		];
 		parent::__construct($mapping);
 	}
+}
+
+class SyncMailResponse extends SyncMail {
+	use ResponseTrait;
 }

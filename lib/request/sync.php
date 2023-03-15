@@ -549,7 +549,7 @@ class Sync extends RequestProcessor {
 									$element[EN_TAG] = SYNC_MODIFY;
 								}
 							}
-							
+
 							switch ($element[EN_TAG]) {
 								case SYNC_FETCH:
 									array_push($actiondata["fetchids"], $serverid);
@@ -1112,25 +1112,30 @@ class Sync extends RequestProcessor {
 		)) {
 			self::$encoder->startTag(SYNC_REPLIES);
 			// output result of all new incoming items
-			foreach ($actiondata["clientids"] as $clientid => $serverid) {
+			foreach ($actiondata["clientids"] as $clientid => $response) {
 				self::$encoder->startTag(SYNC_ADD);
 				self::$encoder->startTag(SYNC_CLIENTENTRYID);
 				self::$encoder->content($clientid);
 				self::$encoder->endTag();
-				if ($serverid) {
+				if (!empty($response->serverid)) {
 					self::$encoder->startTag(SYNC_SERVERENTRYID);
-					self::$encoder->content($serverid);
+					self::$encoder->content($response->serverid);
 					self::$encoder->endTag();
 				}
 				self::$encoder->startTag(SYNC_STATUS);
 				self::$encoder->content(isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
 				self::$encoder->endTag();
+				if (!empty($response->hasResponse)) {
+					self::$encoder->startTag(SYNC_DATA);
+					$response->Encode(self::$encoder);
+					self::$encoder->endTag();
+				}
 				self::$encoder->endTag();
 			}
 
 			// loop through modify operations which were not a success, send status
-			foreach ($actiondata["modifyids"] as $serverid) {
-				if (isset($actiondata["statusids"][$serverid]) && $actiondata["statusids"][$serverid] !== SYNC_STATUS_SUCCESS) {
+			foreach ($actiondata["modifyids"] as $serverid => $response) {
+				if (isset($actiondata["statusids"][$serverid]) && ($actiondata["statusids"][$serverid] !== SYNC_STATUS_SUCCESS || !empty($response->hasResponse))) {
 					self::$encoder->startTag(SYNC_MODIFY);
 					self::$encoder->startTag(SYNC_SERVERENTRYID);
 					self::$encoder->content($serverid);
@@ -1138,6 +1143,11 @@ class Sync extends RequestProcessor {
 					self::$encoder->startTag(SYNC_STATUS);
 					self::$encoder->content($actiondata["statusids"][$serverid]);
 					self::$encoder->endTag();
+					if (!empty($response->hasResponse)) {
+						self::$encoder->startTag(SYNC_DATA);
+						$response->Encode(self::$encoder);
+						self::$encoder->endTag();
+					}
 					self::$encoder->endTag();
 				}
 			}
@@ -1521,8 +1531,6 @@ class Sync extends RequestProcessor {
 					self::$topCollector->AnnounceInformation(sprintf("Saving modified message %d", $messageCount));
 
 					try {
-						$actiondata["modifyids"][] = $serverid;
-
 						// ignore sms messages
 						if ($foldertype == "SMS" || stripos($serverid, self::GSYNCIGNORESMS) !== false) {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
@@ -1539,15 +1547,16 @@ class Sync extends RequestProcessor {
 								$this->importer->ImportMessageReadFlag($serverid, $message->read);
 							}
 							elseif (!isset($message->flag)) {
-								$this->importer->ImportMessageChange($serverid, $message);
+								$response = $this->importer->ImportMessageChange($serverid, $message);
 							}
 
 							// email todoflags - some devices send todos flags together with read flags,
 							// so they have to be handled separately
 							if (isset($message->flag)) {
-								$this->importer->ImportMessageChange($serverid, $message);
+								$response = $this->importer->ImportMessageChange($serverid, $message);
 							}
-
+							$response->serverid = $serverid;
+							$actiondata["modifyids"][$serverid] = $response;
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
 						}
 					}
