@@ -110,9 +110,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param mixed  $user
 	 * @param mixed  $pass
 	 *
-	 * @throws AuthenticationRequiredException
-	 *
 	 * @return bool
+	 *
+	 * @throws AuthenticationRequiredException
 	 */
 	public function Logon($user, $domain, $pass) {
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): Trying to authenticate user '%s'..", $user));
@@ -176,7 +176,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$this->store = $this->defaultstore;
 		$this->storeName = $defaultUser;
 
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): User '%s' is authenticated%s", $this->mainUser, ($this->impersonateUser ? " impersonating '" . $this->impersonateUser . "'" : '')));
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): User '%s' is authenticated%s", $this->mainUser, $this->impersonateUser ? " impersonating '" . $this->impersonateUser . "'" : ''));
 
 		$this->isGSyncEnabled();
 
@@ -328,7 +328,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				(isset($row[PR_FOLDER_TYPE]) && $row[PR_FOLDER_TYPE] == FOLDER_SEARCH) ||
 				// for SYSTEM user $row[PR_PARENT_SOURCE_KEY] == $rootfolderprops[PR_SOURCE_KEY] is true, but we need those folders
 				(isset($row[PR_PARENT_SOURCE_KEY]) && $row[PR_PARENT_SOURCE_KEY] == $rootfolderprops[PR_SOURCE_KEY] && strtoupper($this->storeName) != "SYSTEM")) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetHierarchy(): ignoring folder '%s' as it's a hidden/search/root folder", (isset($row[PR_DISPLAY_NAME]) ? $row[PR_DISPLAY_NAME] : "unknown")));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetHierarchy(): ignoring folder '%s' as it's a hidden/search/root folder", isset($row[PR_DISPLAY_NAME]) ? $row[PR_DISPLAY_NAME] : "unknown"));
 
 				continue;
 			}
@@ -337,7 +337,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$folders[] = $folder;
 			}
 			else {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetHierarchy(): ignoring folder '%s' as MAPIProvider->GetFolder() did not return a SyncFolder object", (isset($row[PR_DISPLAY_NAME]) ? $row[PR_DISPLAY_NAME] : "unknown")));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetHierarchy(): ignoring folder '%s' as MAPIProvider->GetFolder() did not return a SyncFolder object", isset($row[PR_DISPLAY_NAME]) ? $row[PR_DISPLAY_NAME] : "unknown"));
 			}
 		}
 
@@ -384,9 +384,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 *
 	 * @param string $folderid (opt)
 	 *
-	 * @throws StatusException
-	 *
 	 * @return object(ExportChanges)
+	 *
+	 * @throws StatusException
 	 */
 	public function GetExporter($folderid = false) {
 		if ($folderid !== false) {
@@ -409,9 +409,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 *
 	 * @param SyncSendMail $sm SyncSendMail object
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function SendMail($sm) {
 		// Check if imtomapi function is available and use it to send the mime message.
@@ -428,8 +428,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$mimeLength,
 			Utils::PrintAsString($sm->forwardflag),
 			Utils::PrintAsString($sm->replyflag),
-			Utils::PrintAsString((isset($sm->source->folderid) ? $sm->source->folderid : false)),
-			Utils::PrintAsString(($sm->saveinsent)),
+			Utils::PrintAsString(isset($sm->source->folderid) ? $sm->source->folderid : false),
+			Utils::PrintAsString($sm->saveinsent),
 			Utils::PrintAsString(isset($sm->replacemime))
 		));
 		if ($mimeLength == 0) {
@@ -629,9 +629,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string            $id
 	 * @param ContentParameters $contentparameters flag
 	 *
-	 * @throws StatusException
-	 *
 	 * @return object(SyncObject)
+	 *
+	 * @throws StatusException
 	 */
 	public function Fetch($folderid, $id, $contentparameters) {
 		// SEARCH fetches with folderid == false and PR_ENTRYID as ID
@@ -694,9 +694,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 *
 	 * @param string $attname
 	 *
-	 * @throws StatusException
-	 *
 	 * @return SyncItemOperationsAttachment
+	 *
+	 * @throws StatusException
 	 */
 	public function GetAttachmentData($attname) {
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetAttachmentData('%s')", $attname));
@@ -705,9 +705,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->GetAttachmentData('%s'): Error, attachment requested for non-existing item", $attname), SYNC_ITEMOPERATIONSSTATUS_INVALIDATT);
 		}
 
-		list($id, $attachnum, $parentEntryid, $exceptionBasedate) = explode(":", $attname);
+		list($id, $attachnum, $parentSourceKey, $exceptionBasedate) = explode(":", $attname);
 		if (isset($parentEntryid)) {
-			$this->Setup(GSync::GetAdditionalSyncFolderStore($parentEntryid));
+			$this->Setup(GSync::GetAdditionalSyncFolderStore($parentSourceKey));
 		}
 
 		$entryid = hex2bin($id);
@@ -723,7 +723,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// attachment of a recurring appointment execption
-		if(strlen($exceptionBasedate) > 1) {
+		if (strlen($exceptionBasedate) > 1) {
 			$recurrence = new Recurrence($this->store, $message);
 			$exceptionatt = $recurrence->getExceptionAttachment(hex2bin($exceptionBasedate));
 			$exceptionobj = mapi_attach_openobj($exceptionatt, 0);
@@ -766,9 +766,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $folderid
 	 * @param bool   $includeSubfolders (opt) also delete sub folders, default true
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function EmptyFolder($folderid, $includeSubfolders = true) {
 		$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
@@ -805,9 +805,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $folderid  id of the parent folder of $requestid
 	 * @param string $response
 	 *
-	 * @throws StatusException
-	 *
 	 * @return string id of the created/updated calendar obj
+	 *
+	 * @throws StatusException
 	 */
 	public function MeetingResponse($requestid, $folderid, $response) {
 		// Use standard meeting response code to process meeting request
@@ -1191,9 +1191,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string                       $searchrange   specified searchrange
 	 * @param SyncResolveRecipientsPicture $searchpicture limitations for picture
 	 *
-	 * @throws StatusException
-	 *
 	 * @return array search results
+	 *
+	 * @throws StatusException
 	 */
 	public function GetGALSearchResults($searchquery, $searchrange, $searchpicture) {
 		// only return users whose displayName or the username starts with $name
@@ -1230,7 +1230,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if ($searchrange != '0') {
 			$pos = strpos($searchrange, '-');
 			$rangestart = substr($searchrange, 0, $pos);
-			$rangeend = substr($searchrange, ($pos + 1));
+			$rangeend = substr($searchrange, $pos + 1);
 		}
 		$items = [];
 
@@ -1329,7 +1329,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$searchRestriction = $this->getFindRestriction($cpo);
 			$searchFolderId = $cpo->GetFindFolderId();
 			$range = $cpo->GetFindRange();
-			
+
 			// if subfolders are required, do a recursive search
 			if ($cpo->GetFindDeepTraversal()) {
 				$flags |= SEARCH_RECURSIVE;
@@ -1594,19 +1594,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$properties = getPropIdsFromStrings($store, ["synctomobile" => "PT_BOOLEAN:PSETID_GROMOX:synctomobile"]);
 
 		$restriction = [RES_AND, [
-				[ RES_EXIST,
-						[ ULPROPTAG => $properties['synctomobile'], ],
+			[RES_EXIST,
+				[ULPROPTAG => $properties['synctomobile']],
+			],
+			[RES_PROPERTY,
+				[
+					RELOP => RELOP_EQ,
+					ULPROPTAG => $properties['synctomobile'],
+					VALUE => [$properties['synctomobile'] => true],
 				],
-				[ RES_PROPERTY,
-						[
-							RELOP => RELOP_EQ,
-							ULPROPTAG => $properties['synctomobile'],
-							VALUE => [ $properties['synctomobile'] => true],
-						]
-				]
+			],
 		]];
 		mapi_table_restrict($hierarchyTable, $restriction, TBL_BATCH);
-		$rows = mapi_table_queryallrows($hierarchyTable, [ PR_DISPLAY_NAME, PR_CONTAINER_CLASS, PR_SOURCE_KEY ]);
+		$rows = mapi_table_queryallrows($hierarchyTable, [PR_DISPLAY_NAME, PR_CONTAINER_CLASS, PR_SOURCE_KEY]);
 		$f = [];
 		foreach ($rows as $row) {
 			$folderid = bin2hex($row[PR_SOURCE_KEY]);
@@ -1619,6 +1619,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				'type' => MAPIUtils::GetFolderTypeFromContainerClass($row[PR_CONTAINER_CLASS]),
 			];
 		}
+
 		return $f;
 	}
 
@@ -1637,9 +1638,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $key     (opt)
 	 * @param string $counter (opt)
 	 *
-	 * @throws StateNotFoundException
-	 *
 	 * @return string
+	 *
+	 * @throws StateNotFoundException
 	 */
 	public function GetStateHash($devid, $type, $key = false, $counter = false) {
 		try {
@@ -1666,9 +1667,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $counter     (opt)
 	 * @param string $cleanstates (opt)
 	 *
-	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
-	 *
 	 * @return mixed
+	 *
+	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
 	 */
 	public function GetState($devid, $type, $key = false, $counter = false, $cleanstates = true) {
 		if ($counter && $cleanstates) {
@@ -1702,9 +1703,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $key     (opt)
 	 * @param int    $counter (opt)
 	 *
-	 * @throws StateInvalidException, UnavailableException
-	 *
 	 * @return bool
+	 *
+	 * @throws StateInvalidException, UnavailableException
 	 */
 	public function SetState($state, $devid, $type, $key = false, $counter = false) {
 		return $this->setStateMessage($state, $devid, $type, $key, $counter);
@@ -1723,8 +1724,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $thisCounterOnly (opt) if provided, the exact counter only will be removed
 	 *
 	 * @throws StateInvalidException
-	 *
-	 * @return
 	 */
 	public function CleanStates($devid, $type, $key, $counter = false, $thisCounterOnly = false) {
 		if (!$this->stateFolder) {
@@ -1879,10 +1878,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 
 			// This case is rather unlikely that there would be several
-				// hidden folders having PR_DISPLAY_NAME the same as device id.
+			// hidden folders having PR_DISPLAY_NAME the same as device id.
 
-				// TODO: get the hierarchy table again, get entry id of STORE_STATE_FOLDER
-				// and compare it to the parent id of those folders.
+			// TODO: get the hierarchy table again, get entry id of STORE_STATE_FOLDER
+			// and compare it to the parent id of those folders.
 		}
 
 		return $this->stateFolder;
@@ -1891,14 +1890,15 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	/**
 	 * Returns the associated MAPIMessage which contains the state information.
 	 *
-	 * @param string $devid   the device id
-	 * @param string $type    the state type
-	 * @param string $key     (opt)
-	 * @param string $counter state counter
-	 *
-	 * @throws StateNotFoundException
+	 * @param string $devid            the device id
+	 * @param string $type             the state type
+	 * @param string $key              (opt)
+	 * @param string $counter          state counter
+	 * @param mixed  $logStateNotFound
 	 *
 	 * @return MAPIMessage
+	 *
+	 * @throws StateNotFoundException
 	 */
 	private function getStateMessage($devid, $type, $key, $counter, $logStateNotFound = true) {
 		if (!$this->stateFolder) {
@@ -1928,11 +1928,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 		}
 
-		throw new StateNotFoundException(sprintf(
+		throw new StateNotFoundException(
+			sprintf(
 				"Grommunio->getStateMessage(): Could not locate the state message '%s' (counter: %s)",
 				$messageName,
 				Utils::PrintAsString($counter)
-			), 
+			),
 			0,
 			null,
 			$logStateNotFound ? false : LOGLEVEL_WBXMLSTACK
@@ -1948,9 +1949,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $key     (opt)
 	 * @param int    $counter (opt)
 	 *
-	 * @throws StateInvalidException, UnavailableException
-	 *
 	 * @return bool
+	 *
+	 * @throws StateInvalidException, UnavailableException
 	 */
 	private function setStateMessage($state, $devid, $type, $key = false, $counter = false) {
 		if (!$this->stateFolder) {
@@ -2048,34 +2049,37 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 
 	/**
-	 * Checks if all stores check in the changes sink are still available
-	 * 
+	 * Checks if all stores check in the changes sink are still available.
+	 *
 	 * @return bool
 	 */
 	private function checkAdvisedSinkStores() {
 		foreach ($this->changesSinkStores as $store) {
-				$error_state = false;
-				$stateFolderCount = 0;
-				try {
-						$stateFolderContents = @mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
-						if ($stateFolderContents) {
-								$stateFolderCount = mapi_table_getrowcount($stateFolderContents);
-						}
-						else {
-								$error_state = true;
-						}
+			$error_state = false;
+			$stateFolderCount = 0;
+
+			try {
+				$stateFolderContents = @mapi_folder_getcontentstable($this->stateFolder, MAPI_ASSOCIATED);
+				if ($stateFolderContents) {
+					$stateFolderCount = mapi_table_getrowcount($stateFolderContents);
 				}
-				catch (TypeError $te) {
-						$error_state = true;
+				else {
+					$error_state = true;
 				}
-				catch (Exception $e) {
-						$error_state = true;
-				}
-				if ($error_state || (isset($stateFolderContents) && $stateFolderContents === false) || $stateFolderCount == 0 || mapi_last_hresult()) {
-						SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->checkAdvisedSinkStores(): could not access advised store store '%s' - failed with code 0x%08X", $store, mapi_last_hresult()));
-						return false;
-				}
+			}
+			catch (TypeError $te) {
+				$error_state = true;
+			}
+			catch (Exception $e) {
+				$error_state = true;
+			}
+			if ($error_state || (isset($stateFolderContents) && $stateFolderContents === false) || $stateFolderCount == 0 || mapi_last_hresult()) {
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->checkAdvisedSinkStores(): could not access advised store store '%s' - failed with code 0x%08X", $store, mapi_last_hresult()));
+
+				return false;
+			}
 		}
+
 		return true;
 	}
 
@@ -2086,7 +2090,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @return string
 	 */
 	private function getHierarchyHash() {
-		$storeProps = mapi_getprops($this->defaultstore, array(PR_IPM_SUBTREE_ENTRYID));
+		$storeProps = mapi_getprops($this->defaultstore, [PR_IPM_SUBTREE_ENTRYID]);
 		$rootfolder = mapi_msgstore_openentry($this->defaultstore, $storeProps[PR_IPM_SUBTREE_ENTRYID]);
 		$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
 
@@ -2103,7 +2107,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private function adviseStoreToSink($store) {
 		// check if we already advised the store
 		if (!in_array($store, $this->changesSinkStores)) {
-			mapi_msgstore_advise($store, null, fnevNewMail |fnevObjectModified | fnevObjectCreated | fnevObjectMoved | fnevObjectDeleted, $this->changesSink);
+			mapi_msgstore_advise($store, null, fnevNewMail | fnevObjectModified | fnevObjectCreated | fnevObjectMoved | fnevObjectDeleted, $this->changesSink);
 
 			if (mapi_last_hresult()) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->adviseStoreToSink(): failed to advised store '%s' with code 0x%08X. Polling will be performed.", $store, mapi_last_hresult()));
@@ -2151,7 +2155,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$result = mapi_last_hresult();
 				if ($result != NOERROR || !is_array($rows)) {
 					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->openMessageStore('%s'): Could not get storestables information 0x%08X", $user, $result));
-	
+
 					return false;
 				}
 
@@ -2187,7 +2191,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$this->storeCache[$user] = $store;
 			}
 
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->openMessageStore('%s'): Found '%s' store: '%s'", $user, (($return_public) ? 'PUBLIC' : 'DEFAULT'), $store));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->openMessageStore('%s'): Found '%s' store: '%s'", $user, ($return_public) ? 'PUBLIC' : 'DEFAULT', $store));
 
 			return $store;
 		}
@@ -2301,8 +2305,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			elseif ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && (isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) || isset($oofprops[PR_EC_OUTOFOFFICE_UNTIL]))) {
 				SLog::Write(LOGLEVEL_WARN, sprintf(
 					"Grommunio->settingsOofGet(): Time based out of office set but either start time ('%s') or end time ('%s') is missing.",
-					(isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_FROM]) : 'empty'),
-					(isset($oofprops[PR_EC_OUTOFOFFICE_UNTIL]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_UNTIL]) : 'empty')
+					isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_FROM]) : 'empty',
+					isset($oofprops[PR_EC_OUTOFOFFICE_UNTIL]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_UNTIL]) : 'empty'
 				));
 				$oof->Status = SYNC_SETTINGSSTATUS_PROTOCOLLERROR;
 			}
@@ -2632,6 +2636,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 		Slog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getFindRestriction(): extracted words: %s", $findFor));
 		$cpo->SetSearchFreeText($findFor);
+
 		return $this->getSearchRestriction($cpo);
 	}
 
@@ -3005,9 +3010,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	/**
 	 * Checks if the user is not disabled for grommunio-sync.
 	 *
-	 * @throws FatalException if user is disabled for grommunio-sync
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalException if user is disabled for grommunio-sync
 	 */
 	private function isGSyncEnabled() {
 		$addressbook = $this->getAddressbook();
