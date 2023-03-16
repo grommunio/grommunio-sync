@@ -1544,7 +1544,7 @@ class Sync extends RequestProcessor {
 						else {
 							if (isset($message->read)) {
 								// Currently, 'read' is only sent by the PDA when it is ONLY setting the read flag.
-								$this->importer->ImportMessageReadFlag($serverid, $message->read);
+								$response = $this->importer->ImportMessageReadFlag($serverid, $message->read);
 							}
 							elseif (!isset($message->flag)) {
 								$response = $this->importer->ImportMessageChange($serverid, $message);
