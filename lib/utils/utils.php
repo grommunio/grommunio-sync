@@ -211,7 +211,7 @@ class Utils {
 			// get the length of the ical id - go back 4 position from where "vCal-Uid" was found
 			$begin = unpack("V", substr($olUid, strlen($icalUid) * (-1) - 4, 4));
 			// remove "vCal-Uid" and packed "1" and use the ical id length
-			return substr($icalUid, 12, ($begin[1] - 13));
+			return substr($icalUid, 12, $begin[1] - 13);
 		}
 
 		return strtoupper(bin2hex($olUid));
@@ -409,7 +409,7 @@ class Utils {
 			$foldertype == SYNC_FOLDER_TYPE_CONTACT ||
 			$foldertype == SYNC_FOLDER_TYPE_NOTE ||
 			$foldertype == SYNC_FOLDER_TYPE_JOURNAL
-			) ? true : false;
+		) ? true : false;
 	}
 
 	/**
@@ -482,7 +482,7 @@ class Utils {
 			case GSync::COMMAND_RESOLVERECIPIENTS:    return 'ResolveRecipients';
 
 			case GSync::COMMAND_VALIDATECERT:         return 'ValidateCert';
-			// Deprecated commands
+				// Deprecated commands
 			case GSync::COMMAND_GETHIERARCHY:         return 'GetHierarchy';
 
 			case GSync::COMMAND_CREATECOLLECTION:     return 'CreateCollection';
@@ -545,7 +545,7 @@ class Utils {
 			case 'ResolveRecipients':    return GSync::COMMAND_RESOLVERECIPIENTS;
 
 			case 'ValidateCert':         return GSync::COMMAND_VALIDATECERT;
-			// Deprecated commands
+				// Deprecated commands
 			case 'GetHierarchy':         return GSync::COMMAND_GETHIERARCHY;
 
 			case 'CreateCollection':     return GSync::COMMAND_CREATECOLLECTION;
@@ -882,6 +882,38 @@ class Utils {
 		SLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFbStatusFromType(): Unknown free busy type '%s'", $fbType));
 
 		return fbNoData;
+	}
+
+	/**
+	 * Transforms an AS timestamp into a unix timestamp.
+	 *
+	 * @param string $ts
+	 *
+	 * @return long
+	 */
+	public static function parseDate($ts) {
+		if (preg_match("/(\\d{4})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(T(\\d{2})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(.\\d+)?Z){0,1}$/", $ts, $matches)) {
+			if ($matches[1] >= 2038) {
+				$matches[1] = 2038;
+				$matches[2] = 1;
+				$matches[3] = 18;
+				$matches[5] = $matches[6] = $matches[7] = 0;
+			}
+
+			if (!isset($matches[5])) {
+				$matches[5] = 0;
+			}
+			if (!isset($matches[6])) {
+				$matches[6] = 0;
+			}
+			if (!isset($matches[7])) {
+				$matches[7] = 0;
+			}
+
+			return gmmktime($matches[5], $matches[6], $matches[7], $matches[2], $matches[3], $matches[1]);
+		}
+
+		return 0;
 	}
 }
 

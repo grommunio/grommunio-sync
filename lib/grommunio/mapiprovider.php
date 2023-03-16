@@ -1213,6 +1213,9 @@ class MAPIProvider {
 	 * @param mixed $mapimessage
 	 */
 	public function PreDeleteMessage($mapimessage) {
+		if ($mapimessage === false) {
+			return;
+		}
 		// Currently this is relevant only for MeetingRequests so cancellation emails can be sent to attendees.
 		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
 		$messageClass = isset($props[PR_MESSAGE_CLASS]) ? $props[PR_MESSAGE_CLASS] : false;
@@ -1840,13 +1843,16 @@ class MAPIProvider {
 		// Since AS 16 we have to take care of MeetingRequest updates
 		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
-			// initialize MR and/or update internal counters
-			$mr->updateMeetingRequest();
-			// when updating, check for significant changes and if needed will clear the existing recipient responses
-			if (!isset($appointment->clientuid)) {
-				$mr->checkSignificantChanges($oldProps, false, false);
+			// Only send updates if this is a new MR or we are the organizer
+			if ($appointment->clientuid || $mr->isLocalOrganiser()) {
+				// initialize MR and/or update internal counters
+				$mr->updateMeetingRequest();
+				// when updating, check for significant changes and if needed will clear the existing recipient responses
+				if (!isset($appointment->clientuid)) {
+					$mr->checkSignificantChanges($oldProps, false, false);
+				}
+				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 			}
-			$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 		}
 
 		// update attachments send by the mobile

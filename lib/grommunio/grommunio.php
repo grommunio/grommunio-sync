@@ -801,15 +801,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * Processes a response to a meeting request.
 	 * CalendarID is a reference and has to be set if a new calendar item is created.
 	 *
-	 * @param string $requestid id of the object containing the request
-	 * @param string $folderid  id of the parent folder of $requestid
-	 * @param string $response
+	 * @param string $folderid id of the parent folder of $requestid
+	 * @param array  $request
 	 *
 	 * @return string id of the created/updated calendar obj
 	 *
 	 * @throws StatusException
 	 */
-	public function MeetingResponse($requestid, $folderid, $response) {
+	public function MeetingResponse($folderid, $request) {
+		$requestid = $calendarid = $request['requestid'];
+		$response = $request['response'];
 		// Use standard meeting response code to process meeting request
 		list($fid, $requestid) = Utils::SplitMessageId($requestid);
 		$reqentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid), hex2bin($requestid));
@@ -822,11 +823,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, unable to open request message for response 0x%X", $requestid, $folderid, $response, mapi_last_hresult()), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 		}
 
-		// ios sends calendar item in MeetingResponse
-		// @see https://jira.z-hub.io/browse/ZP-1524
+		$searchForResultCalendarItem = false;
 		$folderClass = GSync::GetDeviceManager()->GetFolderClassFromCacheByID($fid);
-		// find the corresponding meeting request
-		if ($folderClass != 'Email') {
+		if ($folderClass == 'Email') {
+			// The mobile requested this on a MR, when finishing we need to search for the resulting calendar item!
+			$searchForResultCalendarItem = true;
+		}
+		// we are operating on the calendar item - try searching for the corresponding meeting request first
+		else {
 			$props = MAPIMapping::GetMeetingRequestProperties();
 			$props = getPropIdsFromStrings($this->store, $props);
 
@@ -850,18 +854,25 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 			$inboxcontents = mapi_folder_getcontentstable($folder);
 
-			$rows = mapi_table_queryallrows($inboxcontents, [PR_ENTRYID], $restrict);
-			if (empty($rows)) {
-				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, meeting request not found in the inbox", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			$rows = mapi_table_queryallrows($inboxcontents, [PR_ENTRYID, PR_SOURCE_KEY], $restrict);
+
+			// AS 14.0 and older can only respond to a MR in the Inbox!
+			if (empty($rows) && Request::GetProtocolVersion() <= 14.0) {
+				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, meeting request not found in the inbox. Can't proceed, aborting!", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 			}
-			SLog::Write(LOGLEVEL_DEBUG, "Grommunio->MeetingResponse found meeting request in the inbox");
-			$mapimessage = mapi_msgstore_openentry($this->store, $rows[0][PR_ENTRYID]);
-			$reqentryid = $rows[0][PR_ENTRYID];
+			if (!empty($rows)) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse found meeting request in the inbox with ID: %s", bin2hex($rows[0][PR_SOURCE_KEY])));
+				$reqentryid = $rows[0][PR_ENTRYID];
+				$mapimessage = mapi_msgstore_openentry($this->store, $reqentryid);
+
+				// As we are using an MR from the inbox, when finishing we need to search for the resulting calendar item!
+				$searchForResultCalendarItem = true;
+			}
 		}
 
 		$meetingrequest = new Meetingrequest($this->store, $mapimessage, $this->session);
 
-		if (!$meetingrequest->isMeetingRequest() && !$meetingrequest->isMeetingRequestResponse() && !$meetingrequest->isMeetingCancellation()) {
+		if (Request::GetProtocolVersion() <= 14.0 && !$meetingrequest->isMeetingRequest() && !$meetingrequest->isMeetingRequestResponse() && !$meetingrequest->isMeetingCancellation()) {
 			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, attempt to respond to non-meeting request", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 		}
 
@@ -869,19 +880,30 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, attempt to response to meeting request that we organized", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 		}
 
-		// Process the meeting response. We don't have to send the actual meeting response
-		// e-mail, because the device will send it itself. This seems not to be the case
-		// anymore for the ios devices since at least version 12.4. grommunio-sync will send the
-		// accepted email in such a case.
-		// @see https://jira.z-hub.io/browse/ZP-1524
-		$sendresponse = false;
-		$deviceType = strtolower(Request::GetDeviceType());
-		if ($deviceType == 'iphone' || $deviceType == 'ipad' || $deviceType == 'ipod') {
-			$matches = [];
-			if (preg_match("/^Apple-.*?\\/(\\d{4})\\./", Request::GetUserAgent(), $matches) && isset($matches[1]) && $matches[1] >= 1607 && $matches[1] <= 1707) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse: iOS device %s->%s", Request::GetDeviceType(), Request::GetUserAgent()));
-				$sendresponse = true;
-			}
+		// AS-16.1: did the attendee propose a new time ?
+		if (!empty($request['proposedstarttime'])) {
+			$request['proposedstarttime'] = Utils::parseDate($request['proposedstarttime']);
+		}
+		else {
+			$request['proposedstarttime'] = false;
+		}
+		if (!empty($request['proposedendtime'])) {
+			$request['proposedendtime'] = Utils::parseDate($request['proposedendtime']);
+		}
+		else {
+			$request['proposedendtime'] = false;
+		}
+		if (!isset($request['body'])) {
+			$request['body'] = false;
+		}
+
+		// from AS-14.0 we have to take care of sending out meeting request responses
+		if (Request::GetProtocolVersion() >= 14.0) {
+			$sendresponse = true;
+		}
+		else {
+			// Old AS versions send MR updates by themselves - so our MR processing doesn't need to do this
+			$sendresponse = false;
 		}
 
 		switch ($response) {
@@ -891,7 +913,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				break;
 
 			case 2:        // tentative
-				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, false, false, false, true); // last true is the $userAction
+				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $request['body'], true); // last true is the $userAction
 				break;
 
 			case 3:        // decline
@@ -899,67 +921,68 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				break;
 		}
 
-		// F/B will be updated on logoff
+		// We have to return the ID of the new calendar item if it was created from an email
+		if ($searchForResultCalendarItem) {
+			$calendarid = "";
+			$calFolderId = "";
+			if (isset($entryid)) {
+				$newitem = mapi_msgstore_openentry($this->store, $entryid);
+				// new item might be in a delegator's store. ActiveSync does not support accepting them.
+				if (!$newitem) {
+					throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Object with entryid '%s' was not found in user's store (0x%X). It might be in a delegator's store.", $requestid, $folderid, $response, bin2hex($entryid), mapi_last_hresult()), SYNC_MEETRESPSTATUS_SERVERERROR, null, LOGLEVEL_WARN);
+				}
 
-		// We have to return the ID of the new calendar item, so do that here
-		$calendarid = "";
-		$calFolderId = "";
-		if (isset($entryid)) {
-			$newitem = mapi_msgstore_openentry($this->store, $entryid);
-			// new item might be in a delegator's store. ActiveSync does not support accepting them.
-			if (!$newitem) {
-				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Object with entryid '%s' was not found in user's store (0x%X). It might be in a delegator's store.", $requestid, $folderid, $response, bin2hex($entryid), mapi_last_hresult()), SYNC_MEETRESPSTATUS_SERVERERROR, null, LOGLEVEL_WARN);
-			}
-
-			$newprops = mapi_getprops($newitem, [PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY]);
-			$calendarid = bin2hex($newprops[PR_SOURCE_KEY]);
-			$calFolderId = bin2hex($newprops[PR_PARENT_SOURCE_KEY]);
-		}
-
-		// on recurring items, the MeetingRequest class responds with a wrong entryid
-		if ($requestid == $calendarid) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): returned calendar id is the same as the requestid - re-searching", $requestid, $folderid, $response));
-
-			if (empty($props)) {
-				$props = MAPIMapping::GetMeetingRequestProperties();
-				$props = getPropIdsFromStrings($this->store, $props);
-
-				$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
-				$goid = $messageprops[$props["goidtag"]];
-			}
-
-			$items = $meetingrequest->findCalendarItems($goid);
-
-			if (is_array($items)) {
-				$newitem = mapi_msgstore_openentry($this->store, $items[0]);
 				$newprops = mapi_getprops($newitem, [PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY]);
 				$calendarid = bin2hex($newprops[PR_SOURCE_KEY]);
 				$calFolderId = bin2hex($newprops[PR_PARENT_SOURCE_KEY]);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): found other calendar entryid", $requestid, $folderid, $response));
 			}
 
+			// on recurring items, the MeetingRequest class responds with a wrong entryid
 			if ($requestid == $calendarid) {
-				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error finding the accepted meeting response in the calendar", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): returned calendar id is the same as the requestid - re-searching", $requestid, $folderid, $response));
+
+				if (empty($props)) {
+					$props = MAPIMapping::GetMeetingRequestProperties();
+					$props = getPropIdsFromStrings($this->store, $props);
+
+					$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
+					$goid = $messageprops[$props["goidtag"]];
+				}
+
+				$items = $meetingrequest->findCalendarItems($goid);
+
+				if (is_array($items)) {
+					$newitem = mapi_msgstore_openentry($this->store, $items[0]);
+					$newprops = mapi_getprops($newitem, [PR_SOURCE_KEY, PR_PARENT_SOURCE_KEY]);
+					$calendarid = bin2hex($newprops[PR_SOURCE_KEY]);
+					$calFolderId = bin2hex($newprops[PR_PARENT_SOURCE_KEY]);
+					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): found other calendar id: %s", $requestid, $folderid, $response, $calendarid));
+				}
+
+				if ($requestid == $calendarid) {
+					throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error finding the accepted meeting response in the calendar", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+				}
 			}
-		}
 
-		// delete meeting request from Inbox
-		if ($folderClass == 'Email') {
-			$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
-			$folder = mapi_msgstore_openentry($this->store, $folderentryid);
-		}
-		mapi_folder_deletemessages($folder, [$reqentryid], 0);
-
-		$prefix = '';
-		// prepend the short folderid of the target calendar: if available and short ids are used
-		if ($calFolderId) {
-			$shortFolderId = GSync::GetDeviceManager()->GetFolderIdForBackendId($calFolderId);
-			if ($calFolderId != $shortFolderId) {
-				$prefix = $shortFolderId . ':';
+			// delete meeting request from Inbox
+			if (isset($folderClass) && $folderClass == 'Email') {
+				$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
+				$folder = mapi_msgstore_openentry($this->store, $folderentryid);
 			}
+			mapi_folder_deletemessages($folder, [$reqentryid], 0);
+
+			$prefix = '';
+			// prepend the short folderid of the target calendar: if available and short ids are used
+			if ($calFolderId) {
+				$shortFolderId = GSync::GetDeviceManager()->GetFolderIdForBackendId($calFolderId);
+				if ($calFolderId != $shortFolderId) {
+					$prefix = $shortFolderId . ':';
+				}
+			}
+			$calendarid = $prefix . $calendarid;
 		}
 
-		return $prefix . $calendarid;
+		return $calendarid;
 	}
 
 	/**
@@ -1736,7 +1759,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 		}
 		if ($type == IStateMachine::FAILSAFE && $counter && $counter > 1) {
-			$counter--;
+			--$counter;
 		}
 		$messageName = rtrim((($key !== false) ? $key . "-" : "") . (($type !== "") ? $type : ""), "-");
 		$restriction = $this->getStateMessageRestriction($messageName, $counter, $thisCounterOnly);

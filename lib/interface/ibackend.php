@@ -45,9 +45,9 @@ interface IBackend {
 	 * @param string $domain
 	 * @param string $password
 	 *
-	 * @throws FatalException e.g. some required libraries are unavailable
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalException e.g. some required libraries are unavailable
 	 */
 	public function Logon($username, $domain, $password);
 
@@ -96,9 +96,9 @@ interface IBackend {
 	 *
 	 * @param string $folderid (opt)
 	 *
-	 * @throws StatusException
-	 *
 	 * @return object implements IImportChanges
+	 *
+	 * @throws StatusException
 	 */
 	public function GetImporter($folderid = false);
 
@@ -109,9 +109,9 @@ interface IBackend {
 	 *
 	 * @param string $folderid (opt)
 	 *
-	 * @throws StatusException
-	 *
 	 * @return object implements IExportChanges
+	 *
+	 * @throws StatusException
 	 */
 	public function GetExporter($folderid = false);
 
@@ -125,9 +125,9 @@ interface IBackend {
 	 *
 	 * @param SyncSendMail $sm SyncSendMail object
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function SendMail($sm);
 
@@ -138,9 +138,9 @@ interface IBackend {
 	 * @param string            $id
 	 * @param ContentParameters $contentparameters flag
 	 *
-	 * @throws StatusException
-	 *
 	 * @return object(SyncObject)
+	 *
+	 * @throws StatusException
 	 */
 	public function Fetch($folderid, $id, $contentparameters);
 
@@ -163,9 +163,9 @@ interface IBackend {
 	 *
 	 * @param string $attname
 	 *
-	 * @throws StatusException
-	 *
 	 * @return SyncItemOperationsAttachment
+	 *
+	 * @throws StatusException
 	 */
 	public function GetAttachmentData($attname);
 
@@ -177,9 +177,9 @@ interface IBackend {
 	 * @param string $folderid
 	 * @param bool   $includeSubfolders (opt) also delete sub folders, default true
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function EmptyFolder($folderid, $includeSubfolders = true);
 
@@ -187,15 +187,14 @@ interface IBackend {
 	 * Processes a response to a meeting request.
 	 * CalendarID is a reference and has to be set if a new calendar item is created.
 	 *
-	 * @param string $requestid id of the object containing the request
-	 * @param string $folderid  id of the parent folder of $requestid
-	 * @param string $response
-	 *
-	 * @throws StatusException
+	 * @param string $folderid id of the parent folder of $requestid
+	 * @param array  $request
 	 *
 	 * @return string id of the created/updated calendar obj
+	 *
+	 * @throws StatusException
 	 */
-	public function MeetingResponse($requestid, $folderid, $response);
+	public function MeetingResponse($folderid, $request);
 
 	/**
 	 * Indicates if the backend has a ChangesSink.
