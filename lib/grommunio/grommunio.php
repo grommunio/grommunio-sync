@@ -2746,7 +2746,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return $recipientGal;
 		}
 
-		SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientGAL(): No recipient found for: '%s' in GAL", $to));
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientGAL(): No recipient found for: '%s' in GAL", $to));
 
 		return SYNC_RESOLVERECIPSSTATUS_RESPONSE_UNRESOLVEDRECIP;
 
