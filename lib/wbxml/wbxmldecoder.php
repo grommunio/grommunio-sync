@@ -26,9 +26,9 @@ class WBXMLDecoder extends WBXMLDefs {
 	 *
 	 * @param string $name
 	 *
-	 * @throws WBXMLException
-	 *
 	 * @return bool
+	 *
+	 * @throws WBXMLException
 	 */
 	public static function InWhile($name) {
 		if (!isset(self::$loopCounter[$name])) {
@@ -102,6 +102,9 @@ class WBXMLDecoder extends WBXMLDefs {
 	 */
 	public function getElement() {
 		$element = $this->getToken();
+		if (is_null($element)) {
+			return false;
+		}
 
 		switch ($element[EN_TYPE]) {
 			case EN_TYPE_STARTTAG:
@@ -148,7 +151,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Get the element of a StartTag.
 	 *
-	 * @param $tag
+	 * @param mixed $tag
 	 *
 	 * @return bool|element returns false if not available
 	 */
@@ -163,7 +166,7 @@ class WBXMLDecoder extends WBXMLDefs {
 			return $element;
 		}
 
-		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementStartTag(): unmatched WBXML tag: '%s' matching '%s' type '%s' flags '%s'", $tag, ((isset($element[EN_TAG])) ? $element[EN_TAG] : ""), ((isset($element[EN_TYPE])) ? $element[EN_TYPE] : ""), ((isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : "")));
+		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementStartTag(): unmatched WBXML tag: '%s' matching '%s' type '%s' flags '%s'", $tag, (isset($element[EN_TAG])) ? $element[EN_TAG] : "", (isset($element[EN_TYPE])) ? $element[EN_TYPE] : "", (isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : ""));
 		$this->ungetElement($element);
 
 		return false;
@@ -181,7 +184,7 @@ class WBXMLDecoder extends WBXMLDefs {
 			return $element;
 		}
 
-		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementEndTag(): unmatched WBXML tag: '%s' type '%s' flags '%s'", ((isset($element[EN_TAG])) ? $element[EN_TAG] : ""), ((isset($element[EN_TYPE])) ? $element[EN_TYPE] : ""), ((isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : "")));
+		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementEndTag(): unmatched WBXML tag: '%s' type '%s' flags '%s'", (isset($element[EN_TAG])) ? $element[EN_TAG] : "", (isset($element[EN_TYPE])) ? $element[EN_TYPE] : "", (isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : ""));
 
 		$bt = debug_backtrace();
 		SLog::Write(LOGLEVEL_ERROR, sprintf("WBXMLDecoder->getElementEndTag(): could not read end tag in '%s'. Please enable the LOGLEVEL_WBXML and send the log to the grommunio-sync dev team.", $bt[0]["file"] . ":" . $bt[0]["line"]));
@@ -205,7 +208,7 @@ class WBXMLDecoder extends WBXMLDefs {
 			return $element[EN_CONTENT];
 		}
 
-		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementContent(): unmatched WBXML content: '%s' type '%s' flags '%s'", ((isset($element[EN_TAG])) ? $element[EN_TAG] : ""), ((isset($element[EN_TYPE])) ? $element[EN_TYPE] : ""), ((isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : "")));
+		SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("WBXMLDecoder->getElementContent(): unmatched WBXML content: '%s' type '%s' flags '%s'", (isset($element[EN_TAG])) ? $element[EN_TAG] : "", (isset($element[EN_TYPE])) ? $element[EN_TYPE] : "", (isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : ""));
 		$this->ungetElement($element);
 
 		return false;
@@ -215,12 +218,10 @@ class WBXMLDecoder extends WBXMLDefs {
 	 * 'Ungets' an element writing it into a buffer to be 'get' again.
 	 *
 	 * @param element $element the element to get ungetten
-	 *
-	 * @return
 	 */
 	public function ungetElement($element) {
 		if ($this->ungetbuffer) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("WBXMLDecoder->ungetElement(): WBXML double unget on tag: '%s' type '%s' flags '%s'", ((isset($element[EN_TAG])) ? $element[EN_TAG] : ""), ((isset($element[EN_TYPE])) ? $element[EN_TYPE] : ""), ((isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : "")));
+			SLog::Write(LOGLEVEL_ERROR, sprintf("WBXMLDecoder->ungetElement(): WBXML double unget on tag: '%s' type '%s' flags '%s'", (isset($element[EN_TAG])) ? $element[EN_TAG] : "", (isset($element[EN_TYPE])) ? $element[EN_TYPE] : "", (isset($element[EN_FLAGS])) ? $element[EN_FLAGS] : ""));
 		}
 
 		$this->ungetbuffer = $element;
@@ -282,8 +283,6 @@ class WBXMLDecoder extends WBXMLDefs {
 	 * Log the a token to SLog.
 	 *
 	 * @param string $el token
-	 *
-	 * @return
 	 */
 	private function logToken($el) {
 		$spaces = str_repeat(" ", count($this->logStack));
@@ -291,23 +290,23 @@ class WBXMLDecoder extends WBXMLDefs {
 		switch ($el[EN_TYPE]) {
 			case EN_TYPE_STARTTAG:
 				if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
-					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s>", $spaces,  $el[EN_TAG]));
+					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s>", $spaces, $el[EN_TAG]));
 					array_push($this->logStack, $el[EN_TAG]);
 				}
 				else {
-					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s/>", $spaces,  $el[EN_TAG]));
+					SLog::Write(LOGLEVEL_WBXML, sprintf("I %s <%s/>", $spaces, $el[EN_TAG]));
 				}
 				break;
 
 			case EN_TYPE_ENDTAG:
 				$tag = array_pop($this->logStack);
-				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s </%s>", $spaces, $tag));
+				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s</%s>", $spaces, $tag));
 				break;
 
 			case EN_TYPE_CONTENT:
 				$messagesize = strlen($el[EN_CONTENT]);
 				// don't log binary data
-				if (false === mb_detect_encoding($el[EN_CONTENT], null, true)) {
+				if (mb_detect_encoding($el[EN_CONTENT], null, true) === false) {
 					$content = sprintf("(BINARY DATA: %d bytes long)", $messagesize);
 				}
 				// truncate logged data to 10K
@@ -318,15 +317,13 @@ class WBXMLDecoder extends WBXMLDefs {
 					$content = $el[EN_CONTENT];
 				}
 
-				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s %s", $spaces, $content) , false);
+				SLog::Write(LOGLEVEL_WBXML, sprintf("I %s %s", $spaces, $content), false);
 				break;
 		}
 	}
 
 	/**
 	 * Returns either a start tag, content or end tag.
-	 *
-	 * @return
 	 */
 	private function _getToken() {
 		// Get the data from the input stream
@@ -456,8 +453,6 @@ class WBXMLDecoder extends WBXMLDefs {
 
 	/**
 	 * Reads string length from the input stream.
-	 *
-	 * @return
 	 */
 	private function getMBUInt() {
 		$uint = 0;
@@ -482,7 +477,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	 * Returns the mapping for a specified codepage and id.
 	 *
 	 * @param $cp   codepage
-	 * @param $id
+	 * @param mixed $id
 	 *
 	 * @return string
 	 */
