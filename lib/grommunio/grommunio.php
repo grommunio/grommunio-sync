@@ -2077,7 +2077,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$error_state = true;
 			}
 			if ($error_state || (isset($stateFolderContents) && $stateFolderContents === false) || $stateFolderCount == 0 || mapi_last_hresult()) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->checkAdvisedSinkStores(): could not access advised store store '%s' - failed with code 0x%08X", $store, mapi_last_hresult()));
+				SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->checkAdvisedSinkStores(): could not access advised store store '%s' - failed with code 0x%08X", $store, mapi_last_hresult()));
 
 				return false;
 			}
