@@ -3300,6 +3300,12 @@ class MAPIProvider {
 		foreach ($asattachments as $att) {
 			// new attachment to be saved
 			if ($att instanceof SyncBaseAttachmentAdd) {
+				if (!isset($att->content)) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("MAPIProvider->editAttachments(): Ignoring attachment %s to be added as it has no content: %s", $att->clientid, $att->displayname));
+
+					continue;
+				}
+
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Saving attachment %s with name: %s", $att->clientid, $att->displayname));
 				// only create if the attachment does not already exist
 				if ($this->getFileReferenceForClientId($mapimessage, $att->clientid, 0, 0) === false) {
