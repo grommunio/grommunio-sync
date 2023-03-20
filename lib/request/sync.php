@@ -1508,7 +1508,7 @@ class Sync extends RequestProcessor {
 				$actiondata["clientids"][$clientid] = $actiondata["failstate"]["clientids"][$clientid];
 				$actiondata["statusids"][$clientid] = $actiondata["failstate"]["statusids"][$clientid];
 
-				SLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Incoming new message '%s' was created on the server before. Replying with known new server id: %s", $clientid, $actiondata["clientids"][$clientid]));
+				SLog::Write(LOGLEVEL_INFO, sprintf("Mobile loop detected! Incoming new message '%s' was created on the server before. Replying with known new server id: %s", $clientid, $actiondata["clientids"][$clientid]));
 			}
 
 			// message was REMOVED before, do NOT attempt to remove it again
@@ -1521,7 +1521,7 @@ class Sync extends RequestProcessor {
 				$actiondata["removeids"][$serverid] = $actiondata["failstate"]["removeids"][$serverid];
 				$actiondata["statusids"][$serverid] = $actiondata["failstate"]["statusids"][$serverid];
 
-				SLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Message '%s' was deleted by the mobile before. Replying with known status: %s", $clientid, $actiondata["statusids"][$serverid]));
+				SLog::Write(LOGLEVEL_INFO, sprintf("Mobile loop detected! Message '%s' was deleted by the mobile before. Replying with known status: %s", $clientid, $actiondata["statusids"][$serverid]));
 			}
 		}
 
