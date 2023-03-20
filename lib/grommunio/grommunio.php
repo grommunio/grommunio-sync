@@ -1427,7 +1427,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		$storeProps = mapi_getprops($this->store, [PR_STORE_SUPPORT_MASK, PR_FINDER_ENTRYID]);
-		if (($storeProps[PR_STORE_SUPPORT_MASK] & STORE_SEARCH_OK) != STORE_SEARCH_OK) {
+		if (isset($storeProps[PR_STORE_SUPPORT_MASK]) && (($storeProps[PR_STORE_SUPPORT_MASK] & STORE_SEARCH_OK) != STORE_SEARCH_OK)) {
 			SLog::Write(LOGLEVEL_WARN, "Grommunio->TerminateSearch(): Store doesn't support search folders. Public store doesn't have FINDER_ROOT folder");
 
 			return false;
