@@ -114,7 +114,7 @@ class SyncMeetingRequest extends SyncObject {
 			SYNC_POOMMAIL_TIMEZONE => [
 				self::STREAMER_VAR => "timezone",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_REQUIRED => base64_encode(pack("la64vvvvvvvv" . "la64vvvvvvvv" . "l", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0)),
+					self::STREAMER_CHECK_REQUIRED => base64_encode(pack("la64vvvvvvvvla64vvvvvvvvl", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0)),
 				],
 			],
 			SYNC_POOMMAIL_GLOBALOBJID => [self::STREAMER_VAR => "globalobjid"],
@@ -163,7 +163,7 @@ class SyncMeetingRequest extends SyncObject {
 	 */
 	public function Check($logAsDebug = false) {
 		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
-			SLog::Write(LOGLEVEL_WARN, "SyncMeetingRequest->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
+			SLog::Write(LOGLEVEL_INFO, "SyncMeetingRequest->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
 			$this->busystatus = fbBusy;
 		}
 

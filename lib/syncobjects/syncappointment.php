@@ -359,19 +359,19 @@ class SyncAppointment extends SyncObject {
 
 		if ($this->meetingstatus > 0) {
 			if (!isset($this->organizername) || !isset($this->organizeremail)) {
-				SLog::Write(LOGLEVEL_WARN, "SyncAppointment->Check(): Parameter 'organizername' and 'organizeremail' should be set for a meeting request");
+				SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): Parameter 'organizername' and 'organizeremail' should be set for a meeting request");
 			}
 		}
 
 		// do not sync a recurrent appointment without a timezone (except all day events)
 		if (isset($this->recurrence) && !isset($this->timezone) && empty($this->alldayevent)) {
-			SLog::Write(LOGLEVEL_ERROR, "SyncAppointment->Check(): timezone for a recurring appointment is not set.");
+			SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): timezone for a recurring appointment is not set.");
 
 			return false;
 		}
 
 		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
-			SLog::Write(LOGLEVEL_WARN, "SyncAppointment->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
+			SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
 			$this->busystatus = fbBusy;
 		}
 
