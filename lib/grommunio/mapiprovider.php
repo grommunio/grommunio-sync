@@ -1730,8 +1730,6 @@ class MAPIProvider {
 				$props[$appointmentprops["icon"]] = 1026;
 				// the user is the organizer
 				// set these properties to show tracking tab in webapp
-
-				$props[$appointmentprops["mrwassent"]] = true;
 				$props[$appointmentprops["responsestatus"]] = olResponseOrganized;
 				$props[$appointmentprops["meetingstatus"]] = olMeeting;
 			}
@@ -1746,6 +1744,9 @@ class MAPIProvider {
 				$props[$appointmentprops["responsestatus"]] = olResponseNone;
 			}
 		}
+
+		// when updating a normal appointment to a MR we need to send MR emails
+		$forceMRUpdateSend = false;
 
 		// Do attendees
 		// For AS-16 get a list of the current attendees (pre update)
@@ -1833,6 +1834,10 @@ class MAPIProvider {
 				if (isset($old_receips[$recip[PR_EMAIL_ADDRESS]])) {
 					unset($old_receips[$recip[PR_EMAIL_ADDRESS]]);
 				}
+				// if there is a new attendee a MR update must be send -> Appointment to MR update
+				else {
+					$forceMRUpdateSend = true;
+				}
 				array_push($recips, $recip);
 			}
 
@@ -1844,11 +1849,11 @@ class MAPIProvider {
 		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// Only send updates if this is a new MR or we are the organizer
-			if ($appointment->clientuid || $mr->isLocalOrganiser()) {
+			if ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
 				// initialize MR and/or update internal counters
 				$mr->updateMeetingRequest();
 				// when updating, check for significant changes and if needed will clear the existing recipient responses
-				if (!isset($appointment->clientuid)) {
+				if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
 					$mr->checkSignificantChanges($oldProps, false, false);
 				}
 				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
