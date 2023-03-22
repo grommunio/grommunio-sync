@@ -352,9 +352,9 @@ class WBXMLDefs {
 				0x0C => "UserResponse",
 				0x0D => "Version", // 2.0 - not defined in 20100501
 				0x0E => "InstanceId", // Since AS 14.1
-				0X10 => "ProposedStartTime", // Since 16.1
-				0X11 => "ProposedEndTime", // Since 16.1
-				0X12 => "SendResponse", // Since 16.0
+				0x10 => "ProposedStartTime", // Since 16.1
+				0x11 => "ProposedEndTime", // Since 16.1
+				0x12 => "SendResponse", // Since 16.0
 			],
 			// POOMTASKS
 			9 => [
@@ -469,8 +469,8 @@ class WBXMLDefs {
 				0x0D => "EASProvisionDoc", // Since 12.0
 				0x0E => "DevicePasswordEnabled", // Since 12.0
 				0x0F => "AlphanumericDevicePasswordRequired", // Since 12.0
-				0x10 => "DeviceEncryptionEnabled", // Since 12.1
-				// 0x10 => "RequireStorageCardEncryption", //Since 12.1
+				// 0x10 => "DeviceEncryptionEnabled", // Since 12.1
+				0x10 => "RequireStorageCardEncryption", // Since 12.1
 				0x11 => "PasswordRecoveryEnabled", // Since 12.0
 				0x12 => "DocumentBrowseEnabled", // not defined / deprecated
 				0x13 => "AttachmentsEnabled", // Since 12.0
@@ -700,10 +700,10 @@ class WBXMLDefs {
 				0x11 => "ClientId",
 				0x12 => "Status",
 				0x13 => "AccountId", // Since 14.1
-				0X15 => "Forwardees", // Since 16.0
-				0X16 => "Forwardee", // Since 16.0
-				0X17 => "Name", // Since 16.0
-				0X18 => "Email", // Since 16.0
+				0x15 => "Forwardees", // Since 16.0
+				0x16 => "Forwardee", // Since 16.0
+				0x17 => "Name", // Since 16.0
+				0x18 => "Email", // Since 16.0
 			],
 			// POOMMAIL2
 			0x16 => [ // Since 14.0
@@ -722,9 +722,9 @@ class WBXMLDefs {
 				0x11 => "AccountId", // Since 14.1
 				0x12 => "FirstDayOfWeek", // Since 14.1
 				0x13 => "MeetingMessageType", // Since 14.1
-				0X15 => "IsDraft", // Since 16.0
-				0X16 => "Bcc", // Since 16.0
-				0X17 => "Send", // Since 16.0
+				0x15 => "IsDraft", // Since 16.0
+				0x16 => "Bcc", // Since 16.0
+				0x17 => "Send", // Since 16.0
 			],
 			// Notes
 			0x17 => [ // Since 14.0

@@ -13,7 +13,7 @@ class SyncProvisioning extends SyncObject {
 	// AS 12.0, 12.1 and 14.0 props
 	public $devpwenabled;
 	public $alphanumpwreq;
-	public $devencenabled;
+	public $reqstoragecardenc;
 	public $pwrecoveryenabled;
 	public $docbrowseenabled;
 	public $attenabled;
@@ -71,6 +71,7 @@ class SyncProvisioning extends SyncObject {
 				self::STREAMER_VAR => "pwrecoveryenabled",
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],
 			],
+			// deprecated
 			SYNC_PROVISION_DEVENCENABLED => [
 				self::STREAMER_VAR => "devencenabled",
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],
@@ -242,6 +243,10 @@ class SyncProvisioning extends SyncObject {
 					self::STREAMER_PROP => self::STREAMER_TYPE_SEND_EMPTY,
 					self::STREAMER_ARRAY => SYNC_PROVISION_HASH,
 				], // TODO check
+				SYNC_PROVISION_REQSTORAGECARDENC => [
+					self::STREAMER_VAR => "reqstoragecardenc",
+					self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],
+				],
 			];
 		}
 
@@ -278,7 +283,7 @@ class SyncProvisioning extends SyncObject {
 		// AS 12.0, 12.1 and 14.0 props
 		$this->devpwenabled = 0;
 		$this->alphanumpwreq = 0;
-		$this->devencenabled = 0;
+		$this->reqstoragecardenc = 0;
 		$this->pwrecoveryenabled = 0;
 		$this->attenabled = 1;
 		$this->mindevpwlenngth = 4;
@@ -328,7 +333,9 @@ class SyncProvisioning extends SyncObject {
 	 * @return string
 	 */
 	public function GetPolicyHash() {
-		return md5(serialize($this));
+		$data = ksort($this->jsonSerialize()['data']);
+
+		return md5(serialize($data));
 	}
 
 	/**
