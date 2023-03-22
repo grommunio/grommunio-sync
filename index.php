@@ -156,6 +156,7 @@ catch (NoPostRequestException $nopostex) {
 		header(GSync::GetServerHeader());
 		header(GSync::GetSupportedProtocolVersions());
 		header(GSync::GetSupportedCommands());
+		header("X-AspNet-Version: 4.0.30319");
 		SLog::Write(LOGLEVEL_INFO, $nopostex->getMessage());
 	}
 	elseif ($nopostex->getCode() == NoPostRequestException::GET_REQUEST) {

@@ -1287,7 +1287,7 @@ class MAPIProvider {
 
 		// save DRAFTs
 		if (isset($message->asbody) && $message->asbody instanceof SyncBaseBody) {
-			// iOS sends a RFC822 message
+			// iOS+Nine send a RFC822 message
 			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setEmail(): Use the mapi_inetmapi_imtomapi function to save draft email");
 				$mime = stream_get_contents($message->asbody->data);
@@ -3324,7 +3324,6 @@ class MAPIProvider {
 					}
 					if (!empty($att->contentid)) {
 						$props[PR_ATTACH_CONTENT_ID] = $att->contentid;
-						$props[PR_ATTACHMENT_HIDDEN] = true;
 					}
 
 					$attachment = mapi_message_createattach($mapimessage);

@@ -26,10 +26,12 @@ abstract class SyncObject extends Streamer {
 
 	protected $unsetVars;
 	protected $supportsPrivateStripping;
+	protected $checkedParameters;
 
 	public function __construct($mapping) {
 		$this->unsetVars = [];
 		$this->supportsPrivateStripping = false;
+		$this->checkedParameters = false;
 		parent::__construct($mapping);
 	}
 
@@ -43,7 +45,7 @@ abstract class SyncObject extends Streamer {
 	 */
 	public function emptySupported($supportedFields) {
 		// Some devices do not send supported tag. In such a case remove all not set properties.
-		if (($supportedFields === false || !is_array($supportedFields) || (empty($supportedFields)))) {
+		if ($supportedFields === false || !is_array($supportedFields) || (empty($supportedFields))) {
 			if (defined('UNSET_UNDEFINED_PROPERTIES') &&
 					UNSET_UNDEFINED_PROPERTIES &&
 					(
@@ -94,7 +96,7 @@ abstract class SyncObject extends Streamer {
 		}
 
 		// check objecttype
-		if (!($odo instanceof SyncObject)) {
+		if (!$odo instanceof SyncObject) {
 			SLog::Write(LOGLEVEL_DEBUG, "SyncObject->equals() the target object is not a SyncObject");
 
 			return false;
@@ -235,6 +237,15 @@ abstract class SyncObject extends Streamer {
 	}
 
 	/**
+	 * Indicates the amount of paramters that were set before Checks were executed and potentially set other parameters.
+	 *
+	 * @return bool/int	- returns false if Check() was not executed
+	 */
+	public function getCheckedParameters() {
+		return $this->checkedParameters;
+	}
+
+	/**
 	 * Method checks if the object has the minimum of required parameters
 	 * and fulfills semantic dependencies.
 	 *
@@ -261,6 +272,7 @@ abstract class SyncObject extends Streamer {
 		}
 
 		$defaultLogLevel = LOGLEVEL_WARN;
+		$this->checkedParameters = 0;
 
 		// in some cases non-false checks should not provoke a WARN log but only a DEBUG log
 		if ($logAsDebug) {
@@ -287,6 +299,11 @@ abstract class SyncObject extends Streamer {
 
 			if (isset($v[self::STREAMER_CHECKS])) {
 				foreach ($v[self::STREAMER_CHECKS] as $rule => $condition) {
+					// count parameter if it's set
+					if (isset($this->{$v[self::STREAMER_VAR]})) {
+						++$this->checkedParameters;
+					}
+
 					// check REQUIRED settings
 					if ($rule === self::STREAMER_CHECK_REQUIRED && (!isset($this->{$v[self::STREAMER_VAR]}) || $this->{$v[self::STREAMER_VAR]} === '')) {
 						// parameter is not set but ..
@@ -370,15 +387,15 @@ abstract class SyncObject extends Streamer {
 								return false;
 							}
 							if (
-									($rule == self::STREAMER_CHECK_CMPHIGHER && intval($this->{$v[self::STREAMER_VAR]}) < $cmp) ||
-									($rule == self::STREAMER_CHECK_CMPLOWER && intval($this->{$v[self::STREAMER_VAR]}) > $cmp)
-									) {
+								($rule == self::STREAMER_CHECK_CMPHIGHER && intval($this->{$v[self::STREAMER_VAR]}) < $cmp) ||
+								($rule == self::STREAMER_CHECK_CMPLOWER && intval($this->{$v[self::STREAMER_VAR]}) > $cmp)
+							) {
 								SLog::Write(LOGLEVEL_WARN, sprintf(
 									"SyncObject->Check(): Unmet condition in object from type %s: parameter '%s' is %s than '%s'. Check failed!",
 									$objClass,
 									$v[self::STREAMER_VAR],
-									(($rule === self::STREAMER_CHECK_CMPHIGHER) ? 'LOWER' : 'HIGHER'),
-									((isset($cmpPar) ? $cmpPar : $condition))
+									($rule === self::STREAMER_CHECK_CMPHIGHER) ? 'LOWER' : 'HIGHER',
+									isset($cmpPar) ? $cmpPar : $condition
 								));
 
 								return false;

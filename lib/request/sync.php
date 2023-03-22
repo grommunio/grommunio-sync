@@ -1542,19 +1542,14 @@ class Sync extends RequestProcessor {
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
 						}
 						else {
-							if (isset($message->read)) {
-								// Currently, 'read' is only sent by the PDA when it is ONLY setting the read flag.
+							// if there is just a read flag change, import it via ImportMessageReadFlag()
+							if (isset($message->read) && !isset($message->flag) && $message->getCheckedParameters() < 3) {
 								$response = $this->importer->ImportMessageReadFlag($serverid, $message->read);
 							}
-							elseif (!isset($message->flag)) {
+							else {
 								$response = $this->importer->ImportMessageChange($serverid, $message);
 							}
 
-							// email todoflags - some devices send todos flags together with read flags,
-							// so they have to be handled separately
-							if (isset($message->flag)) {
-								$response = $this->importer->ImportMessageChange($serverid, $message);
-							}
 							$response->serverid = $serverid;
 							$actiondata["modifyids"][$serverid] = $response;
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
