@@ -71,12 +71,6 @@ class SyncProvisioning extends SyncObject {
 				self::STREAMER_VAR => "pwrecoveryenabled",
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],
 			],
-			// deprecated
-			SYNC_PROVISION_DEVENCENABLED => [
-				self::STREAMER_VAR => "devencenabled",
-				self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],
-			],
-			// deprecated
 			SYNC_PROVISION_DOCBROWSEENABLED => [self::STREAMER_VAR => "docbrowseenabled"],
 			SYNC_PROVISION_ATTENABLED => [
 				self::STREAMER_VAR => "attenabled",
