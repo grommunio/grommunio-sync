@@ -175,7 +175,7 @@ class MAPIProvider {
 
 		// Set reminder time if reminderset is true
 		if (isset($messageprops[$appointmentprops["reminderset"]]) && $messageprops[$appointmentprops["reminderset"]] == true) {
-			if ($messageprops[$appointmentprops["remindertime"]] == 0x5AE980E1) {
+			if (!isset($messageprops[$appointmentprops["remindertime"]]) || $messageprops[$appointmentprops["remindertime"]] == 0x5AE980E1) {
 				$message->reminder = 15;
 			}
 			else {
