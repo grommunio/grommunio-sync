@@ -3394,9 +3394,9 @@ class MAPIProvider {
 		$loc["LocationUri"] = $aslocation->locationuri ?? "";
 		$loc["Latitude"] = ($aslocation->latitude) ? floatval($aslocation->latitude) : null;
 		$loc["Longitude"] = ($aslocation->longitude) ? floatval($aslocation->longitude) : null;
-		$loc["Altitude"] = $aslocation->altitude ?? null;
-		$loc["Accuracy"] = $aslocation->accuracy ?? null;
-		$loc["AltitudeAccuracy"] = $aslocation->altitudeaccuracy ?? null;
+		$loc["Altitude"] = ($aslocation->altitude) ? floatval($aslocation->altitude) : null;
+		$loc["Accuracy"] = ($aslocation->accuracy) ? floatval($aslocation->accuracy) : null;
+		$loc["AltitudeAccuracy"] = ($aslocation->altitudeaccuracy) ? floatval($aslocation->altitudeaccuracy) : null;
 		$loc["LocationStreet"] = $aslocation->street ?? "";
 		$loc["LocationCity"] = $aslocation->city ?? "";
 		$loc["LocationState"] = $aslocation->state ?? "";
@@ -3453,13 +3453,13 @@ class MAPIProvider {
 					$aslocation->longitude = floatval($l['Longitude']);
 				}
 				if (isset($l['Accuracy']) && is_numeric($l['Accuracy'])) {
-					$aslocation->accuracy = $l['Accuracy'];
+					$aslocation->accuracy = floatval($l['Accuracy']);
 				}
 				if (isset($l['Altitude']) && is_numeric($l['Altitude'])) {
-					$aslocation->altitude = $l['Altitude'];
+					$aslocation->altitude = floatval($l['Altitude']);
 				}
 				if (isset($l['AltitudeAccuracy']) && is_numeric($l['AltitudeAccuracy'])) {
-					$aslocation->altitudeaccuracy = $l['AltitudeAccuracy'];
+					$aslocation->altitudeaccuracy = floatval($l['AltitudeAccuracy']);
 				}
 				if (!empty($l['LocationUri'])) {
 					$aslocation->locationuri = $l['LocationUri'];
