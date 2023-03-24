@@ -2992,13 +2992,12 @@ class MAPIProvider {
 	 * Build a filereference key by the clientid.
 	 *
 	 * @param MAPIMessage $mapimessage
-	 * @param SyncObject  $message
 	 * @param mixed       $clientid
 	 * @param mixed       $entryid
 	 * @param mixed       $parentSourcekey
 	 * @param mixed       $exceptionBasedate
 	 *
-	 * @return bool
+	 * @return string/bool
 	 */
 	private function getFileReferenceForClientId($mapimessage, $clientid, $entryid = 0, $parentSourcekey = 0, $exceptionBasedate = 0) {
 		if (!$entryid || !$parentSourcekey) {
