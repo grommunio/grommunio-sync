@@ -55,11 +55,16 @@ class SyncMail extends SyncObject {
 	public $rightsManagementLicense;
 	public $asbodypart;
 
+	// AS 16.0 props
+	public $isdraft;
+	public $bcc;
+	public $send;
+
 	// hidden properties for FIND Command
 	public $Displaycc;
 	public $Displaybcc;
 	public $ParentSourceKey;
-	
+
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMMAIL_TO => [
@@ -170,8 +175,12 @@ class SyncMail extends SyncObject {
 			];
 			$mapping[SYNC_AIRSYNCBASE_ATTACHMENTS] = [
 				self::STREAMER_VAR => "asattachments",
-				self::STREAMER_TYPE => "SyncBaseAttachment",
-				self::STREAMER_ARRAY => SYNC_AIRSYNCBASE_ATTACHMENT,
+				// Different tags can be used to encapsulate the SyncBaseAttachmentSubtypes depending on its usecase
+				self::STREAMER_ARRAY => [
+					SYNC_AIRSYNCBASE_ATTACHMENT => "SyncBaseAttachment",
+					SYNC_AIRSYNCBASE_ADD => "SyncBaseAttachmentAdd",
+					SYNC_AIRSYNCBASE_DELETE => "SyncBaseAttachmentDelete",
+				],
 			];
 			$mapping[SYNC_POOMMAIL_CONTENTCLASS] = [
 				self::STREAMER_VAR => "contentclass",
@@ -220,6 +229,31 @@ class SyncMail extends SyncObject {
 			];
 		}
 
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_POOMMAIL2_ISDRAFT] = [
+				self::STREAMER_VAR => "isdraft",
+				self::STREAMER_CHECKS => [
+					self::STREAMER_CHECK_ONEVALUEOF => [0, 1],
+				],
+				self::STREAMER_RONOTIFY => true,
+				self::STREAMER_VALUEMAP => [
+					0 => "No",
+					1 => "Yes",
+				],
+			];
+			$mapping[SYNC_POOMMAIL2_BCC] = [
+				self::STREAMER_VAR => "bcc",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_COMMA_SEPARATED,
+				self::STREAMER_CHECKS => [
+					self::STREAMER_CHECK_LENGTHMAX => 32768,
+					self::STREAMER_CHECK_EMAIL => "",
+				],
+			];
+			$mapping[SYNC_POOMMAIL2_SEND] = [
+				self::STREAMER_VAR => "send",
+			];
+		}
+
 		// hidden property for the FIND command result
 		$mapping[SYNC_POOMMAIL_IGNORE_DISPLAYCC] = [
 			self::STREAMER_VAR => "Displaycc",
@@ -235,4 +269,8 @@ class SyncMail extends SyncObject {
 		];
 		parent::__construct($mapping);
 	}
+}
+
+class SyncMailResponse extends SyncMail {
+	use ResponseTrait;
 }

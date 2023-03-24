@@ -150,13 +150,16 @@ class ExportChangesICS implements IExportChanges {
 	public function ConfigContentParameters($contentparameters) {
 		$filtertype = $contentparameters->GetFilterType();
 
+		if ($filtertype == SYNC_FILTERTYPE_DISABLE) {
+			$filtertype = false;
+		}
 		switch ($contentparameters->GetContentClass()) {
 			case "Email":
-				$this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetEmailRestriction(Utils::GetCutOffDate($filtertype)) : false;
+				$this->restriction = ($filtertype) ? MAPIUtils::GetEmailRestriction(Utils::GetCutOffDate($filtertype)) : false;
 				break;
 
 			case "Calendar":
-				$this->restriction = ($filtertype || !Utils::CheckMapiExtVersion('7')) ? MAPIUtils::GetCalendarRestriction($this->store, Utils::GetCutOffDate($filtertype)) : false;
+				$this->restriction = ($filtertype) ? MAPIUtils::GetCalendarRestriction($this->store, Utils::GetCutOffDate($filtertype)) : false;
 				break;
 
 			default:

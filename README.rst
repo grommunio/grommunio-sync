@@ -24,8 +24,8 @@ At a glance
 
 * Provides native groupware (emails, contacts, calendar, tasks and notes)
   connectivity for mobile devices, such as phones and tablets.
-* Delivers Exchange ActiveSync (EAS) 2.5, 12.0, 12.1, 14.0 and 14.1 protocol
-  compatibility.
+* Delivers Exchange ActiveSync (EAS) 2.5, 12.0, 12.1, 14.0, 14.1, 16.0 and 16.1
+  protocol compatibility.
 * Multi-platform support for most recent Android, Apple (iOS powered iPhones
   and iPads) and even outdated Windows Mobile, Nokia and Blackberry devices.
 * Supports device management policies such as remote-wipe, password-strength,

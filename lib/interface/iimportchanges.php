@@ -21,9 +21,9 @@ interface IImportChanges extends IChanges {
 	 * @param ContentParameters $contentparameters
 	 * @param string            $state
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function LoadConflicts($contentparameters, $state);
 
@@ -33,9 +33,9 @@ interface IImportChanges extends IChanges {
 	 * @param string     $id
 	 * @param SyncObject $message
 	 *
-	 * @throws StatusException
+	 * @return bool|string failure / SyncObject
 	 *
-	 * @return bool|string failure / id of message
+	 * @throws StatusException
 	 */
 	public function ImportMessageChange($id, $message);
 
@@ -57,9 +57,9 @@ interface IImportChanges extends IChanges {
 	 * @param int    $flags
 	 * @param array  $categories
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportMessageReadFlag($id, $flags, $categories = []);
 
@@ -69,9 +69,9 @@ interface IImportChanges extends IChanges {
 	 * @param string $id
 	 * @param string $newfolder destination folder
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportMessageMove($id, $newfolder);
 
@@ -84,9 +84,9 @@ interface IImportChanges extends IChanges {
 	 *
 	 * @param object $folder SyncFolder
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool|SyncObject status/object with the ath least the serverid of the folder set
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportFolderChange($folder);
 
@@ -95,9 +95,9 @@ interface IImportChanges extends IChanges {
 	 *
 	 * @param SyncFolder $folder at least "serverid" needs to be set
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool|int success/SYNC_FOLDERHIERARCHY_STATUS
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportFolderDeletion($folder);
 }

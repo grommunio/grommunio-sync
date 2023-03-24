@@ -170,6 +170,8 @@ class MAPIMapping {
 			"html" => PR_HTML,
 			"rtfinsync" => PR_RTF_IN_SYNC,
 			"processed" => PR_PROCESSED,
+			"messageflags" => PR_MESSAGE_FLAGS,
+			"clientsubmittime" => PR_CLIENT_SUBMIT_TIME,
 		];
 	}
 
@@ -304,6 +306,10 @@ class MAPIMapping {
 			"rtfcompressed" => PR_RTF_COMPRESSED,
 			"html" => PR_HTML,
 			"rtfinsync" => PR_RTF_IN_SYNC,
+			"entryid" => PR_ENTRYID,
+			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
+			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
+			"locations" => "PT_STRING8:PSETID_CustomerLocation:Locations",
 		];
 	}
 

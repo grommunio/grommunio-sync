@@ -54,6 +54,38 @@ class MeetingResponse extends RequestProcessor {
 					}
 				}
 
+				if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_SENDRESPONSE)) {
+					if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODY)) {
+						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
+							$req["bodytype"] = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_DATA)) {
+							$req["body"] = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}
+					} // end body
+					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME)) {
+						$req["proposedstarttime"] = self::$decoder->getElementContent();
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}
+					}
+					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDENDTIME)) {
+						$req["proposedendtime"] = self::$decoder->getElementContent();
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}
+					}
+				} // end send response
+
 				$e = self::$decoder->peek();
 				if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
 					self::$decoder->getElementEndTag();
@@ -84,7 +116,7 @@ class MeetingResponse extends RequestProcessor {
 					throw new StatusException(sprintf("HandleMoveItems() could not Setup() the backend for folder id %s/%s", $req["folderid"], $backendFolderId), SYNC_MEETRESPSTATUS_SERVERERROR);
 				}
 
-				$calendarid = self::$backend->MeetingResponse($req["requestid"], $backendFolderId, $req["response"]);
+				$calendarid = self::$backend->MeetingResponse($backendFolderId, $req);
 				if ($calendarid === false) {
 					throw new StatusException("HandleMeetingResponse() not possible", SYNC_MEETRESPSTATUS_SERVERERROR);
 				}

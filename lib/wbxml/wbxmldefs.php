@@ -49,6 +49,7 @@ class WBXMLDefs {
 	 */
 	protected $dtd = [
 		"codes" => [
+			// AirSync
 			0 => [
 				0x05 => "Synchronize",
 				0x06 => "Replies", // Responses
@@ -88,6 +89,7 @@ class WBXMLDefs {
 				0x28 => "MaxItems", // Since 14.0
 				0x29 => "HeartbeatInterval", // Since 14.0 Either this tag or the Wait tag can be present, but not both.
 			],
+			// POOMCONTACTS
 			1 => [
 				0x05 => "Anniversary",
 				0x06 => "AssistantName",
@@ -148,6 +150,7 @@ class WBXMLDefs {
 				0x3D => "Alias", // Since 14.0
 				0x3E => "WeightedRank", // Since 14.0
 			],
+			// POOMMAIL
 			2 => [
 				0x05 => "Attachment", // AirSyncBase Attachments is used since 12.0
 				0x06 => "Attachments", // AirSyncBase Attachments is used since 12.0
@@ -209,6 +212,7 @@ class WBXMLDefs {
 				0x3E => "CompleteTime", // Since 12.0
 				0x3F => "DisallowNewTimeProposal", // Since 14.0
 			],
+			// AirNotify
 			3 => [ // Code page 3 is no longer in use, however, tokens 05 through 17 have been defined. 20100501
 				0x05 => "Notify",
 				0x06 => "Notification",
@@ -230,6 +234,7 @@ class WBXMLDefs {
 				0x15 => "Expiry",
 				0x16 => "NotifyGUID",
 			],
+			// POOMCAL
 			4 => [
 				0x05 => "Timezone",
 				0x06 => "AllDayEvent",
@@ -288,6 +293,7 @@ class WBXMLDefs {
 				0x3B => "OnlineMeetingExternalLink", // Since 14.1
 				0x3C => "ClientUid", // Since 16.0
 			],
+			// Move
 			5 => [
 				0x05 => "Moves",
 				0x06 => "Move",
@@ -298,6 +304,7 @@ class WBXMLDefs {
 				0x0B => "Status",
 				0x0C => "DstMsgId",
 			],
+			// GetItemEstimate
 			6 => [
 				0x05 => "GetItemEstimate",
 				0x06 => "Version", // deprecated
@@ -310,6 +317,7 @@ class WBXMLDefs {
 				0x0D => "Response",
 				0x0E => "Status",
 			],
+			// FolderHierarchy
 			7 => [
 				0x05 => "Folders", // 2.5, 12.0 and 12.1
 				0x06 => "Folder", // 2.5, 12.0 and 12.1
@@ -332,6 +340,7 @@ class WBXMLDefs {
 				0x17 => "Count",
 				0x18 => "Version", // 2.0 - not defined in 20100501
 			],
+			// MeetingResponse
 			8 => [
 				0x05 => "CalendarId",
 				0x06 => "FolderId", // CollectionId
@@ -343,10 +352,11 @@ class WBXMLDefs {
 				0x0C => "UserResponse",
 				0x0D => "Version", // 2.0 - not defined in 20100501
 				0x0E => "InstanceId", // Since AS 14.1
-				0X10 => "ProposedStartTime", // Since 16.1
-				0X11 => "ProposedEndTime", // Since 16.1
-				0X12 => "SendResponse", // Since 16.0
+				0x10 => "ProposedStartTime", // Since 16.1
+				0x11 => "ProposedEndTime", // Since 16.1
+				0x12 => "SendResponse", // Since 16.0
 			],
+			// POOMTASKS
 			9 => [
 				0x05 => "Body", // AirSyncBase Body is used since 12.0
 				0x06 => "BodySize", // AirSyncBase Body is used since 12.0
@@ -383,6 +393,7 @@ class WBXMLDefs {
 				0x25 => "IsLeapMonth", // Since 14.0
 				0x26 => "FirstDayOfWeek", // Since 14.1
 			],
+			// ResolveRecipients
 			0xA => [
 				0x05 => "ResolveRecipients",
 				0x06 => "Response",
@@ -410,6 +421,7 @@ class WBXMLDefs {
 				0x1C => "Data", // Since 14.1
 				0x1D => "MaxPictures", // Since 14.1
 			],
+			// ValidateCert
 			0xB => [
 				0x05 => "ValidateCert",
 				0x06 => "Certificates",
@@ -418,6 +430,7 @@ class WBXMLDefs {
 				0x09 => "CheckCRL",
 				0x0A => "Status",
 			],
+			// POOMCONTACTS2
 			0xC => [
 				0x05 => "CustomerId",
 				0x06 => "GovernmentId",
@@ -430,6 +443,7 @@ class WBXMLDefs {
 				0x0D => "NickName",
 				0x0E => "MMS",
 			],
+			// Ping
 			0xD => [
 				0x05 => "Ping",
 				0x06 => "AutdState", // (Not used by protocol)
@@ -442,6 +456,7 @@ class WBXMLDefs {
 				0x0D => "MaxFolders",
 				0x0E => "Version", // not defined / deprecated
 			],
+			// Provision
 			0xE => [
 				0x05 => "Provision",
 				0x06 => "Policies",
@@ -454,8 +469,8 @@ class WBXMLDefs {
 				0x0D => "EASProvisionDoc", // Since 12.0
 				0x0E => "DevicePasswordEnabled", // Since 12.0
 				0x0F => "AlphanumericDevicePasswordRequired", // Since 12.0
-				0x10 => "DeviceEncryptionEnabled", // Since 12.1
-				// 0x10 => "RequireStorageCardEncryption", //Since 12.1
+				// 0x10 => "DeviceEncryptionEnabled", // Since 12.1
+				0x10 => "RequireStorageCardEncryption", // Since 12.1
 				0x11 => "PasswordRecoveryEnabled", // Since 12.0
 				0x12 => "DocumentBrowseEnabled", // not defined / deprecated
 				0x13 => "AttachmentsEnabled", // Since 12.0
@@ -500,6 +515,7 @@ class WBXMLDefs {
 				0x3A => "Hash", // Since 12.1
 				0x3B => "AccountOnlyRemoteWipe", // Since 16.1
 			],
+			// Search
 			0xF => [
 				0x05 => "Search",
 				0x07 => "Store",
@@ -531,6 +547,7 @@ class WBXMLDefs {
 				0x22 => "MaxSize", // Since 14.1
 				0x23 => "MaxPictures", // Since 14.1
 			],
+			// GAL
 			0x10 => [
 				0x05 => "DisplayName",
 				0x06 => "Phone",
@@ -547,6 +564,7 @@ class WBXMLDefs {
 				0x11 => "Status", // Since 14.1
 				0x12 => "Data", // Since 14.1
 			],
+			// AirSyncBase
 			0x11 => [ // Since 12.0
 				0x05 => "BodyPreference",
 				0x06 => "Type",
@@ -589,6 +607,7 @@ class WBXMLDefs {
 				0x2C => "LocationUri", // Since 16.0
 				0x2D => "InstanceId", // Since 16.0
 			],
+			// Settings
 			0x12 => [ // Since 12.0
 				0x05 => "Settings",
 				0x06 => "Status",
@@ -629,6 +648,7 @@ class WBXMLDefs {
 				0x29 => "SendDisabled", // Since 14.1
 				0x2B => "RightsManagementInformation", // Since 14.1
 			],
+			// DocumentLibrary
 			0x13 => [ // Since 12.0
 				0x05 => "LinkId",
 				0x06 => "DisplayName",
@@ -639,6 +659,7 @@ class WBXMLDefs {
 				0x0B => "ContentLength",
 				0x0C => "ContentType",
 			],
+			// ItemOperations
 			0x14 => [ // Since 12.0
 				0x05 => "ItemOperations",
 				0x06 => "Fetch",
@@ -662,6 +683,7 @@ class WBXMLDefs {
 				0x18 => "ConversationId", // Since 14.0
 				0x19 => "MoveAlways", // Since 14.0
 			],
+			// ComposeMail
 			0x15 => [ // Since 14.0
 				0x05 => "SendMail",
 				0x06 => "SmartForward",
@@ -678,11 +700,12 @@ class WBXMLDefs {
 				0x11 => "ClientId",
 				0x12 => "Status",
 				0x13 => "AccountId", // Since 14.1
-				0X15 => "Forwardees", // Since 16.0
-				0X16 => "Forwardee", // Since 16.0
-				0X17 => "Name", // Since 16.0
-				0X18 => "Email", // Since 16.0
+				0x15 => "Forwardees", // Since 16.0
+				0x16 => "Forwardee", // Since 16.0
+				0x17 => "Name", // Since 16.0
+				0x18 => "Email", // Since 16.0
 			],
+			// POOMMAIL2
 			0x16 => [ // Since 14.0
 				0x05 => "UmCallerId",
 				0x06 => "UmUserNotes",
@@ -699,10 +722,11 @@ class WBXMLDefs {
 				0x11 => "AccountId", // Since 14.1
 				0x12 => "FirstDayOfWeek", // Since 14.1
 				0x13 => "MeetingMessageType", // Since 14.1
-				0X15 => "IsDraft", // Since 16.0
-				0X16 => "Bcc", // Since 16.0
-				0X17 => "Send", // Since 16.0
+				0x15 => "IsDraft", // Since 16.0
+				0x16 => "Bcc", // Since 16.0
+				0x17 => "Send", // Since 16.0
 			],
+			// Notes
 			0x17 => [ // Since 14.0
 				0x05 => "Subject",
 				0x06 => "MessageClass",
@@ -710,6 +734,7 @@ class WBXMLDefs {
 				0x08 => "Categories",
 				0x09 => "Category",
 			],
+			// RightsManagement
 			0x18 => [ // Since 14.1
 				0x05 => "RightsManagementSupport",
 				0x06 => "RightsManagementTemplates",

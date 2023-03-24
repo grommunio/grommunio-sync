@@ -18,6 +18,7 @@ class SyncAppointment extends SyncObject {
 	public $organizername;
 	public $organizeremail;
 	public $location;
+	public $location2; // AS 16: SyncLocation object
 	public $endtime;
 	public $recurrence;
 	public $sensitivity;
@@ -46,6 +47,12 @@ class SyncAppointment extends SyncObject {
 	// AS 14.1 props
 	public $onlineMeetingConfLink;
 	public $onlineMeetingExternalLink;
+
+	// AS 16.0 props
+	public $asattachments;
+	public $clientuid;
+	public $instanceid;
+	public $instanceiddelete;
 
 	public function __construct() {
 		$mapping = [
@@ -250,6 +257,39 @@ class SyncAppointment extends SyncObject {
 			];
 		}
 
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_AIRSYNCBASE_ATTACHMENTS] = [
+				self::STREAMER_VAR => "asattachments",
+				// Different tags can be used to encapsulate the SyncBaseAttachmentSubtypes depending on its usecase
+				self::STREAMER_ARRAY => [
+					SYNC_AIRSYNCBASE_ATTACHMENT => "SyncBaseAttachment",
+					SYNC_AIRSYNCBASE_ADD => "SyncBaseAttachmentAdd",
+					SYNC_AIRSYNCBASE_DELETE => "SyncBaseAttachmentDelete",
+				],
+			];
+			$mapping[SYNC_AIRSYNCBASE_LOCATION] = [
+				self::STREAMER_VAR => "location2",
+				self::STREAMER_TYPE => "SyncLocation",
+				self::STREAMER_RONOTIFY => true,
+			];
+			$mapping[SYNC_POOMCAL_CLIENTUID] = [
+				self::STREAMER_VAR => "clientuid",
+				self::STREAMER_RONOTIFY => true,
+			];
+			// Placeholder for the InstanceId (recurrence exceptions) and its deletion request
+			$mapping[SYNC_AIRSYNCBASE_INSTANCEID] = [
+				self::STREAMER_VAR => "instanceid",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			];
+			$mapping[SYNC_AIRSYNCBASE_INSTANCEID_DELETE] = [
+				self::STREAMER_VAR => "instanceiddelete",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
+			];
+
+			// unset these properties because airsyncbase location will be used instead
+			unset($mapping[SYNC_POOMCAL_LOCATION]);
+		}
+
 		parent::__construct($mapping);
 
 		// Indicates that this SyncObject supports the private flag and stripping of private data.
@@ -319,22 +359,26 @@ class SyncAppointment extends SyncObject {
 
 		if ($this->meetingstatus > 0) {
 			if (!isset($this->organizername) || !isset($this->organizeremail)) {
-				SLog::Write(LOGLEVEL_WARN, "SyncAppointment->Check(): Parameter 'organizername' and 'organizeremail' should be set for a meeting request");
+				SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): Parameter 'organizername' and 'organizeremail' should be set for a meeting request");
 			}
 		}
 
 		// do not sync a recurrent appointment without a timezone (except all day events)
 		if (isset($this->recurrence) && !isset($this->timezone) && empty($this->alldayevent)) {
-			SLog::Write(LOGLEVEL_ERROR, "SyncAppointment->Check(): timezone for a recurring appointment is not set.");
+			SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): timezone for a recurring appointment is not set.");
 
 			return false;
 		}
 
 		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
-			SLog::Write(LOGLEVEL_WARN, "SyncAppointment->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
+			SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");
 			$this->busystatus = fbBusy;
 		}
 
 		return true;
 	}
+}
+
+class SyncAppointmentResponse extends SyncAppointment {
+	use ResponseTrait;
 }

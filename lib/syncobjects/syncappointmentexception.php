@@ -12,6 +12,7 @@
 class SyncAppointmentException extends SyncAppointment {
 	public $deleted;
 	public $exceptionstarttime;
+	public $instanceid;
 
 	public function __construct() {
 		parent::__construct();
@@ -22,13 +23,29 @@ class SyncAppointmentException extends SyncAppointment {
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_ZEROORONE => self::STREAMER_CHECK_SETZERO],
 				self::STREAMER_RONOTIFY => true,
 			],
-			SYNC_POOMCAL_EXCEPTIONSTARTTIME => [
+		];
+
+		// pre 16.0 use exceptionstarttime
+		if (Request::GetProtocolVersion() < 16.0) {
+			$this->mapping[SYNC_POOMCAL_EXCEPTIONSTARTTIME] = [
 				self::STREAMER_VAR => "exceptionstarttime",
 				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETONE],
 				self::STREAMER_RONOTIFY => true,
-			],
-		];
+			];
+		}
+		// AS 16.0+ use instanceid
+		else {
+			// overwrite SYNC_AIRSYNCBASE_INSTANCEID definition here
+			$this->mapping[SYNC_AIRSYNCBASE_INSTANCEID] = [
+				self::STREAMER_VAR => "instanceid",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
+				self::STREAMER_CHECKS => [self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETONE],
+				self::STREAMER_RONOTIFY => true,
+			];
+		}
+
+		
 
 		// some parameters are not required in an exception, others are not allowed to be set in SyncAppointmentExceptions
 		$this->mapping[SYNC_POOMCAL_TIMEZONE][self::STREAMER_CHECKS] = [];

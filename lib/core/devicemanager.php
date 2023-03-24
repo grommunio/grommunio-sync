@@ -476,7 +476,7 @@ class DeviceManager extends InterProcessData {
 		}
 
 		if ($items >= 0 && $items <= 2) {
-			SLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Messages sent to the mobile will be restricted to %d items in order to identify the conflict", $items));
+			SLog::Write(LOGLEVEL_INFO, sprintf("Mobile loop detected! Messages sent to the mobile will be restricted to %d items in order to identify the conflict", $items));
 		}
 
 		return $items;

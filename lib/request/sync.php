@@ -442,6 +442,12 @@ class Sync extends RequestProcessor {
 						SLog::Write(LOGLEVEL_DEBUG, "HierarchyCache is also not available. Triggering HierarchySync to device");
 					}
 
+					// AS16: Check if this is a DRAFTS folder - if so, disable FilterType
+					if (Request::GetProtocolVersion() >= 16.0 && self::$deviceManager->GetFolderTypeFromCacheById($spa->GetFolderId()) == SYNC_FOLDER_TYPE_DRAFTS) {
+						$spa->SetFilterType(SYNC_FILTERTYPE_DISABLE);
+						SLog::Write(LOGLEVEL_DEBUG, "HandleSync(): FilterType has been disabled as this is a DRAFTS folder.");
+					}
+
 					if (($el = self::$decoder->getElementStartTag(SYNC_PERFORM)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
 						// We can not proceed here as the content class is unknown
 						if ($status != SYNC_STATUS_SUCCESS) {
@@ -493,6 +499,15 @@ class Sync extends RequestProcessor {
 									}
 								}
 							}
+							// get the instanceId if available
+							$instanceid = false;
+							if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_INSTANCEID)) {
+								if (($instanceid = self::$decoder->getElementContent()) !== false) {
+									if (!self::$decoder->getElementEndTag()) { // end instanceid
+										return false;
+									}
+								}
+							}
 
 							if (self::$decoder->getElementStartTag(SYNC_CLIENTENTRYID)) {
 								$clientid = self::$decoder->getElementContent();
@@ -519,6 +534,20 @@ class Sync extends RequestProcessor {
 							}
 							else {
 								$message = false;
+							}
+
+							// InstanceID sent: do action to a recurrency exception
+							if ($instanceid) {
+								// for delete actions we don't have an ASObject
+								if (!$message) {
+									$message = GSync::getSyncObjectFromFolderClass($spa->GetContentClass());
+									$message->Decode(self::$decoder);
+								}
+								$message->instanceid = $instanceid;
+								if ($element[EN_TAG] == SYNC_REMOVE) {
+									$message->instanceiddelete = true;
+									$element[EN_TAG] = SYNC_MODIFY;
+								}
 							}
 
 							switch ($element[EN_TAG]) {
@@ -1031,9 +1060,9 @@ class Sync extends RequestProcessor {
 	 * @param int                 $status         current status of the folder processing
 	 * @param string              $newFolderStat  the new folder stat to be set if everything was exported
 	 *
-	 * @throws StatusException
-	 *
 	 * @return int sync status code
+	 *
+	 * @throws StatusException
 	 */
 	private function syncFolder($sc, $spa, $exporter, $changecount, $streamimporter, $status, $newFolderStat) {
 		$actiondata = $sc->GetParameter($spa, "actiondata");
@@ -1083,25 +1112,30 @@ class Sync extends RequestProcessor {
 		)) {
 			self::$encoder->startTag(SYNC_REPLIES);
 			// output result of all new incoming items
-			foreach ($actiondata["clientids"] as $clientid => $serverid) {
+			foreach ($actiondata["clientids"] as $clientid => $response) {
 				self::$encoder->startTag(SYNC_ADD);
 				self::$encoder->startTag(SYNC_CLIENTENTRYID);
 				self::$encoder->content($clientid);
 				self::$encoder->endTag();
-				if ($serverid) {
+				if (!empty($response->serverid)) {
 					self::$encoder->startTag(SYNC_SERVERENTRYID);
-					self::$encoder->content($serverid);
+					self::$encoder->content($response->serverid);
 					self::$encoder->endTag();
 				}
 				self::$encoder->startTag(SYNC_STATUS);
-				self::$encoder->content((isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR));
+				self::$encoder->content(isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
 				self::$encoder->endTag();
+				if (!empty($response->hasResponse)) {
+					self::$encoder->startTag(SYNC_DATA);
+					$response->Encode(self::$encoder);
+					self::$encoder->endTag();
+				}
 				self::$encoder->endTag();
 			}
 
 			// loop through modify operations which were not a success, send status
-			foreach ($actiondata["modifyids"] as $serverid) {
-				if (isset($actiondata["statusids"][$serverid]) && $actiondata["statusids"][$serverid] !== SYNC_STATUS_SUCCESS) {
+			foreach ($actiondata["modifyids"] as $serverid => $response) {
+				if (isset($actiondata["statusids"][$serverid]) && ($actiondata["statusids"][$serverid] !== SYNC_STATUS_SUCCESS || !empty($response->hasResponse))) {
 					self::$encoder->startTag(SYNC_MODIFY);
 					self::$encoder->startTag(SYNC_SERVERENTRYID);
 					self::$encoder->content($serverid);
@@ -1109,6 +1143,11 @@ class Sync extends RequestProcessor {
 					self::$encoder->startTag(SYNC_STATUS);
 					self::$encoder->content($actiondata["statusids"][$serverid]);
 					self::$encoder->endTag();
+					if (!empty($response->hasResponse)) {
+						self::$encoder->startTag(SYNC_DATA);
+						$response->Encode(self::$encoder);
+						self::$encoder->endTag();
+					}
 					self::$encoder->endTag();
 				}
 			}
@@ -1198,7 +1237,7 @@ class Sync extends RequestProcessor {
 
 		// Stream outgoing changes
 		if ($status == SYNC_STATUS_SUCCESS && $sc->GetParameter($spa, "getchanges") == true && $windowSize > 0 && (bool) $exporter) {
-			self::$topCollector->AnnounceInformation(sprintf("Streaming data of %d objects", (($changecount > $windowSize) ? $windowSize : $changecount)));
+			self::$topCollector->AnnounceInformation(sprintf("Streaming data of %d objects", ($changecount > $windowSize) ? $windowSize : $changecount));
 
 			// Output message changes per folder
 			self::$encoder->startTag(SYNC_PERFORM);
@@ -1213,7 +1252,7 @@ class Sync extends RequestProcessor {
 					}
 					++$n;
 					if ($n % 10 == 0) {
-						self::$topCollector->AnnounceInformation(sprintf("Streamed data of %d objects out of %d", $n, (($changecount > $windowSize) ? $windowSize : $changecount)));
+						self::$topCollector->AnnounceInformation(sprintf("Streamed data of %d objects out of %d", $n, ($changecount > $windowSize) ? $windowSize : $changecount));
 					}
 				}
 				catch (SyncObjectBrokenException $mbe) {
@@ -1441,9 +1480,9 @@ class Sync extends RequestProcessor {
 	 * @param string         $foldertype   On sms sync, this says "SMS", else false
 	 * @param int            $messageCount Counter of already imported messages
 	 *
-	 * @throws StatusException in case the importer is not available
-	 *
 	 * @return - message related status are returned in the actiondata
+	 *
+	 * @throws StatusException in case the importer is not available
 	 */
 	private function importMessage($spa, &$actiondata, $todo, $message, $clientid, $serverid, $foldertype, $messageCount) {
 		// the importer needs to be available!
@@ -1469,7 +1508,7 @@ class Sync extends RequestProcessor {
 				$actiondata["clientids"][$clientid] = $actiondata["failstate"]["clientids"][$clientid];
 				$actiondata["statusids"][$clientid] = $actiondata["failstate"]["statusids"][$clientid];
 
-				SLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Incoming new message '%s' was created on the server before. Replying with known new server id: %s", $clientid, $actiondata["clientids"][$clientid]));
+				SLog::Write(LOGLEVEL_INFO, sprintf("Mobile loop detected! Incoming new message '%s' was created on the server before. Replying with known new server id: %s", $clientid, $actiondata["clientids"][$clientid]));
 			}
 
 			// message was REMOVED before, do NOT attempt to remove it again
@@ -1482,7 +1521,7 @@ class Sync extends RequestProcessor {
 				$actiondata["removeids"][$serverid] = $actiondata["failstate"]["removeids"][$serverid];
 				$actiondata["statusids"][$serverid] = $actiondata["failstate"]["statusids"][$serverid];
 
-				SLog::Write(LOGLEVEL_WARN, sprintf("Mobile loop detected! Message '%s' was deleted by the mobile before. Replying with known status: %s", $clientid, $actiondata["statusids"][$serverid]));
+				SLog::Write(LOGLEVEL_INFO, sprintf("Mobile loop detected! Message '%s' was deleted by the mobile before. Replying with known status: %s", $clientid, $actiondata["statusids"][$serverid]));
 			}
 		}
 
@@ -1492,8 +1531,6 @@ class Sync extends RequestProcessor {
 					self::$topCollector->AnnounceInformation(sprintf("Saving modified message %d", $messageCount));
 
 					try {
-						$actiondata["modifyids"][] = $serverid;
-
 						// ignore sms messages
 						if ($foldertype == "SMS" || stripos($serverid, self::GSYNCIGNORESMS) !== false) {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
@@ -1505,20 +1542,16 @@ class Sync extends RequestProcessor {
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
 						}
 						else {
-							if (isset($message->read)) {
-								// Currently, 'read' is only sent by the PDA when it is ONLY setting the read flag.
-								$this->importer->ImportMessageReadFlag($serverid, $message->read);
+							// if there is just a read flag change, import it via ImportMessageReadFlag()
+							if (isset($message->read) && !isset($message->flag) && $message->getCheckedParameters() < 3) {
+								$response = $this->importer->ImportMessageReadFlag($serverid, $message->read);
 							}
-							elseif (!isset($message->flag)) {
-								$this->importer->ImportMessageChange($serverid, $message);
-							}
-
-							// email todoflags - some devices send todos flags together with read flags,
-							// so they have to be handled separately
-							if (isset($message->flag)) {
-								$this->importer->ImportMessageChange($serverid, $message);
+							else {
+								$response = $this->importer->ImportMessageChange($serverid, $message);
 							}
 
+							$response->serverid = $serverid;
+							$actiondata["modifyids"][$serverid] = $response;
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
 						}
 					}
@@ -1604,8 +1637,6 @@ class Sync extends RequestProcessor {
 	 *
 	 * @param mixed $key
 	 * @param mixed $value
-	 *
-	 * @return
 	 */
 	private function saveMultiFolderInfo($key, $value) {
 		if ($key == "incoming" || $key == "outgoing" || $key == "queued" || $key == "fetching") {
@@ -1663,8 +1694,6 @@ class Sync extends RequestProcessor {
 	 *
 	 * @param SyncParameters $spa
 	 * @param string         $newFolderStat
-	 *
-	 * @return
 	 */
 	private function setFolderStat($spa, $newFolderStat) {
 		$spa->SetFolderStat($newFolderStat);

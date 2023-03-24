@@ -97,15 +97,31 @@ class Streamer implements JsonSerializable {
 				if (isset($map[self::STREAMER_ARRAY])) {
 					WBXMLDecoder::ResetInWhile("decodeArray");
 					while (WBXMLDecoder::InWhile("decodeArray")) {
+						$streamertype = false;
 						// do not get start tag for an array without a container
 						if (!(isset($map[self::STREAMER_PROP]) && $map[self::STREAMER_PROP] == self::STREAMER_TYPE_NO_CONTAINER)) {
-							if (!$decoder->getElementStartTag($map[self::STREAMER_ARRAY])) {
+							// are there multiple possibilities for element encapsulation tags?
+							if (is_array($map[self::STREAMER_ARRAY])) {
+								$encapTagsTypes = $map[self::STREAMER_ARRAY];
+							}
+							else {
+								// set $streamertype to null if the element is a single string (e.g. category)
+								$encapTagsTypes = [$map[self::STREAMER_ARRAY] => isset($map[self::STREAMER_TYPE]) ? $map[self::STREAMER_TYPE] : null];
+							}
+
+							// Identify the used tag
+							$streamertype = false;
+							foreach ($encapTagsTypes as $tag => $type) {
+								if ($decoder->getElementStartTag($tag)) {
+									$streamertype = $type;
+								}
+							}
+							if ($streamertype === false) {
 								break;
 							}
 						}
-						if (isset($map[self::STREAMER_TYPE])) {
-							$decoded = new $map[self::STREAMER_TYPE]();
-
+						if ($streamertype) {
+							$decoded = new $streamertype();
 							$decoded->Decode($decoder);
 						}
 						else {
@@ -149,7 +165,7 @@ class Streamer implements JsonSerializable {
 					if (isset($map[self::STREAMER_TYPE])) {
 						// Complex type, decode recursively
 						if ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE_DASHES) {
-							$decoded = $this->parseDate($decoder->getElementContent());
+							$decoded = Utils::parseDate($decoder->getElementContent());
 							if (!$decoder->getElementEndTag()) {
 								return false;
 							}
@@ -262,19 +278,25 @@ class Streamer implements JsonSerializable {
 
 						foreach ($this->{$map[self::STREAMER_VAR]} as $element) {
 							if (is_object($element)) {
-								$encoder->startTag($map[self::STREAMER_ARRAY]); // Outputs object container (eg Attachment)
+								// find corresponding encapsulation tag for element
+								if (!is_array($map[self::STREAMER_ARRAY])) {
+									$eltag = $map[self::STREAMER_ARRAY];
+								}
+								else {
+									$eltag = array_search(get_class($element), $map[self::STREAMER_ARRAY]);
+								}
+								$encoder->startTag($eltag); // Outputs object container (eg Attachment)
 								$element->Encode($encoder);
 								$encoder->endTag();
 							}
 							else {
-								if (strlen($element) == 0)
-									  // Do not output empty items. Not sure if we should output an empty tag with $encoder->startTag($map[self::STREAMER_ARRAY], false, true);
-									  ; else {
-									  	$encoder->startTag($map[self::STREAMER_ARRAY]);
-									  	$encoder->content($element);
-									  	$encoder->endTag();
-									  	$streamed = true;
-									  }
+								// Do not output empty items. Not sure if we should output an empty tag with $encoder->startTag($map[self::STREAMER_ARRAY], false, true);
+								if (strlen($element) > 0) {
+									$encoder->startTag($map[self::STREAMER_ARRAY]);
+									$encoder->content($element);
+									$encoder->endTag();
+									$streamed = true;
+								}
 							}
 						}
 
@@ -467,37 +489,5 @@ class Streamer implements JsonSerializable {
 		}
 		// fallback to dashes (should never be reached)
 		return gmstrftime("%Y-%m-%dT%H:%M:%S.000Z", $ts);
-	}
-
-	/**
-	 * Transforms an AS timestamp into a unix timestamp.
-	 *
-	 * @param string $ts
-	 *
-	 * @return long
-	 */
-	public function parseDate($ts) {
-		if (preg_match("/(\\d{4})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(T(\\d{2})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(.\\d+)?Z){0,1}$/", $ts, $matches)) {
-			if ($matches[1] >= 2038) {
-				$matches[1] = 2038;
-				$matches[2] = 1;
-				$matches[3] = 18;
-				$matches[5] = $matches[6] = $matches[7] = 0;
-			}
-
-			if (!isset($matches[5])) {
-				$matches[5] = 0;
-			}
-			if (!isset($matches[6])) {
-				$matches[6] = 0;
-			}
-			if (!isset($matches[7])) {
-				$matches[7] = 0;
-			}
-
-			return gmmktime($matches[5], $matches[6], $matches[7], $matches[2], $matches[3], $matches[1]);
-		}
-
-		return 0;
 	}
 }

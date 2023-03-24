@@ -183,8 +183,14 @@ class ProvisioningManager extends InterProcessData {
 				$status = $data['data'][self::$devid]["status"];
 				// reset status to pending if it was already executed
 				if ($status >= SYNC_PROVISION_RWSTATUS_PENDING) {
-					SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", self::$user, self::$devid, $status));
-					$status = SYNC_PROVISION_RWSTATUS_PENDING;
+					if ($status < SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY) {
+						$status = SYNC_PROVISION_RWSTATUS_PENDING;
+						SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", self::$user, self::$devid, $status));
+					}
+					else {
+						$status = SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY;
+						SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): ACCOUNT ONLY REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", self::$user, self::$devid, $status));
+					}
 				}
 				else {
 					SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): no remote wipe pending - status: '%s'", $status));

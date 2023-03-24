@@ -100,9 +100,9 @@ class ImportChangesICS implements IImportChanges {
 	 * @param string $state
 	 * @param int    $flags
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function Config($state, $flags = 0) {
 		$this->flags = $flags;
@@ -144,12 +144,16 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ConfigContentParameters($contentparameters) {
 		$filtertype = $contentparameters->GetFilterType();
+
+		if ($filtertype == SYNC_FILTERTYPE_DISABLE) {
+			$filtertype = false;
+		}
 
 		switch ($contentparameters->GetContentClass()) {
 			case "Email":
@@ -174,9 +178,9 @@ class ImportChangesICS implements IImportChanges {
 	/**
 	 * Reads state from the Importer.
 	 *
-	 * @throws StatusException
-	 *
 	 * @return string
+	 *
+	 * @throws StatusException
 	 */
 	public function GetState() {
 		$error = false;
@@ -191,7 +195,7 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		if ($error === true) {
-			throw new StatusException(sprintf("ImportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
+			throw new StatusException(sprintf("ImportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), ($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
 		}
 
 		mapi_stream_seek($this->statestream, 0, STREAM_SEEK_SET);
@@ -275,9 +279,9 @@ class ImportChangesICS implements IImportChanges {
 	 * @param ContentParameters $contentparameters class of objects
 	 * @param string            $state
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function LoadConflicts($contentparameters, $state) {
 		if (!isset($this->session) || !isset($this->store) || !isset($this->folderid)) {
@@ -321,7 +325,7 @@ class ImportChangesICS implements IImportChanges {
 			// if this takes "too long" we cancel this operation!
 			$potConflicts = $exporter->GetChangeCount();
 			if ($potConflicts > 100) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection abandoned as there are too many (%d) changes to be exported.", $potConflicts));
+				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection abandoned as there are too many (%d) changes to be exported.", $potConflicts));
 				$this->conflictsLoaded = true;
 
 				return false;
@@ -336,7 +340,7 @@ class ImportChangesICS implements IImportChanges {
 					// stop if this takes more than 15 seconds and there are more than 5 changes still to be exported
 					// within 20 seconds this should be finished or it will not be performed
 					if ((time() - $started) > 15 && ($potConflicts - $exported) > 5) {
-						SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection cancelled as operation is too slow. In %d seconds only %d from %d changes were processed.", (time() - $started), $exported, $potConflicts));
+						SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection cancelled as operation is too slow. In %d seconds only %d from %d changes were processed.", time() - $started, $exported, $potConflicts));
 						$this->conflictsLoaded = true;
 
 						return false;
@@ -359,9 +363,9 @@ class ImportChangesICS implements IImportChanges {
 	 * @param string     $id
 	 * @param SyncObject $message
 	 *
-	 * @throws StatusException
+	 * @return bool|SyncObject - failure / response
 	 *
-	 * @return bool|string - failure / id of message
+	 * @throws StatusException
 	 */
 	public function ImportMessageChange($id, $message) {
 		$flags = 0;
@@ -401,7 +405,7 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		if (mapi_importcontentschanges_importmessagechange($this->importer, $props, $flags, $mapimessage)) {
-			$this->mapiprovider->SetMessage($mapimessage, $message);
+			$response = $this->mapiprovider->SetMessage($mapimessage, $message);
 			mapi_savechanges($mapimessage);
 
 			if (mapi_last_hresult()) {
@@ -410,7 +414,9 @@ class ImportChangesICS implements IImportChanges {
 
 			$sourcekeyprops = mapi_getprops($mapimessage, [PR_SOURCE_KEY]);
 
-			return $this->prefix . bin2hex($sourcekeyprops[PR_SOURCE_KEY]);
+			$response->serverid = $this->prefix . bin2hex($sourcekeyprops[PR_SOURCE_KEY]);
+
+			return $response;
 		}
 
 		throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error updating object: 0x%X", $id, get_class($message), mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
@@ -443,8 +449,17 @@ class ImportChangesICS implements IImportChanges {
 			return true;
 		}
 
+		// check if we need to do actions before deleting this message (e.g. send meeting cancellations to attendees)
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $this->folderid, hex2bin($sk));
+		if ($entryid) {
+			// open the source message
+			$mapimessage = mapi_msgstore_openentry($this->store, $entryid);
+			$this->mapiprovider->PreDeleteMessage($mapimessage);
+		}
+
 		// do a 'soft' delete so people can un-delete if necessary
-		if (mapi_importcontentschanges_importmessagedeletion($this->importer, 1, [hex2bin($sk)])) {
+		mapi_importcontentschanges_importmessagedeletion($this->importer, 1, [hex2bin($sk)]);
+		if (mapi_last_hresult()) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportMessageDeletion('%s'): Error updating object: 0x%X", $sk, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
 		}
 
@@ -459,11 +474,12 @@ class ImportChangesICS implements IImportChanges {
 	 * @param int    $flags      - read/unread
 	 * @param array  $categories
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportMessageReadFlag($id, $flags, $categories = []) {
+		$response = new SyncMailResponse();
 		list($fsk, $sk) = Utils::SplitMessageId($id);
 
 		// if $fsk is set, we convert it into a backend id.
@@ -512,7 +528,7 @@ class ImportChangesICS implements IImportChanges {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportMessageReadFlag('%s','%d'): setting readflag on message: 0x%X", $id, $flags, mapi_last_hresult()));
 		}
 
-		return true;
+		return $response;
 	}
 
 	/**
@@ -528,9 +544,9 @@ class ImportChangesICS implements IImportChanges {
 	 * @param string $id
 	 * @param string $newfolder destination folder
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool|string
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportMessageMove($id, $newfolder) {
 		list(, $sk) = Utils::SplitMessageId($id);
@@ -636,9 +652,9 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @param object $folder SyncFolder
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool|SyncFolder false on error or a SyncFolder object with serverid and BackendId set (if available)
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportFolderChange($folder) {
 		$id = isset($folder->BackendId) ? $folder->BackendId : false;
@@ -791,9 +807,9 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @param SyncFolder $folder at least "serverid" needs to be set
 	 *
-	 * @throws StatusException
-	 *
 	 * @return int SYNC_FOLDERHIERARCHY_STATUS
+	 *
+	 * @throws StatusException
 	 */
 	public function ImportFolderDeletion($folder) {
 		$id = $folder->BackendId;

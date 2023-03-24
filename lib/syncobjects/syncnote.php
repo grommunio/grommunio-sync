@@ -116,3 +116,7 @@ class SyncNote extends SyncObject {
 		return false;
 	}
 }
+
+class SyncNoteResponse extends SyncNote {
+	use ResponseTrait;
+}

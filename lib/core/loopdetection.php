@@ -373,7 +373,11 @@ class LoopDetection extends InterProcessData {
 			// update loop data
 			$ok = $this->setDeviceUserData($this->type, $nstack, parent::$devid, parent::$user, self::INTERPROCESSLD, $doCas = "replace", $stackRaw);
 			if (!$ok) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("LoopDetection->updateProcessStack(): CAS failed on try %d!", $tryCount));
+				$l = LOGLEVEL_INFO;
+				if ($tryCount > 1) {
+					$l = LOGLEVEL_WARN;
+				}
+				SLog::Write($l, sprintf("LoopDetection->updateProcessStack(): CAS failed on try %d!", $tryCount));
 				usleep(100000);
 				++$tryCount;
 			}
