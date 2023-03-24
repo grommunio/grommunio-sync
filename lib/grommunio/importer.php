@@ -325,7 +325,7 @@ class ImportChangesICS implements IImportChanges {
 			// if this takes "too long" we cancel this operation!
 			$potConflicts = $exporter->GetChangeCount();
 			if ($potConflicts > 100) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection abandoned as there are too many (%d) changes to be exported.", $potConflicts));
+				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->lazyLoadConflicts(): conflict detection abandoned as there are too many (%d) changes to be exported.", $potConflicts));
 				$this->conflictsLoaded = true;
 
 				return false;
