@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2023 grommunio GmbH
  *
  * Shows realtime information about connected devices and active connections
  * in a top-style format.
@@ -319,7 +319,7 @@ class GSyncTop {
 		++$lc;
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, "\033[4m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information']) . str_repeat(" ", 20) . "\033[0m");
+		$this->scrPrintAt($lc, 0, "\033[4m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m");
 		++$lc;
 
 		// print help text if requested
@@ -688,14 +688,14 @@ class GSyncTop {
 	 * @return string
 	 */
 	private function getLine($l) {
-		if (!isset($l['pid']) || !isset($l['ip']) || !isset($l['user']) || !isset($l['command']) || !isset($l['time']) || !isset($l['devagent']) || !isset($l['devid']) || !isset($l['addinfo'])) {
+		if (!isset($l['pid']) || !isset($l['ip']) || !isset($l['user']) || !isset($l['command']) || !isset($l['time']) || !isset($l['devagent']) || !isset($l['devid']) || !isset($l['addinfo']) || !isset($l['asversion'])) {
 			return "";
 		}
 		if ($this->wide === true) {
-			return sprintf("%s%s%s%s%s%s%s%s", $this->ptStr($l['pid'], 6), $this->ptStr($l['ip'], 16), $this->ptStr($l['user'], 24), $this->ptStr($l['command'], 16), $this->ptStr($this->sec2min($l['time']), 8), $this->ptStr($l['devagent'], 28), $this->ptStr($l['devid'], 33, true), $l['addinfo']);
+			return sprintf("%s%s%s%s%s%s%s%s%s", $this->ptStr($l['pid'], 6), $this->ptStr($l['ip'], 16), $this->ptStr($l['user'], 24), $this->ptStr($l['command'], 16), $this->ptStr($this->sec2min($l['time']), 8), $this->ptStr($l['devagent'], 28), $this->ptStr($l['asversion'], 5), $this->ptStr($l['devid'], 33, true), $l['addinfo']);
 		}
 
-		return sprintf("%s%s%s%s%s%s%s%s", $this->ptStr($l['pid'], 6), $this->ptStr($l['ip'], 16), $this->ptStr($l['user'], 8), $this->ptStr($l['command'], 8), $this->ptStr($this->sec2min($l['time']), 6), $this->ptStr($l['devagent'], 20), $this->ptStr($l['devid'], 12, true), $l['addinfo']);
+		return sprintf("%s%s%s%s%s%s%s%s%s", $this->ptStr($l['pid'], 6), $this->ptStr($l['ip'], 16), $this->ptStr($l['user'], 8), $this->ptStr($l['command'], 8), $this->ptStr($this->sec2min($l['time']), 6), $this->ptStr($l['devagent'], 20), $this->ptStr($l['asversion'], 5), $this->ptStr($l['devid'], 12, true), $l['addinfo']);
 	}
 
 	/**

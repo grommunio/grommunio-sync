@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2023 grommunio GmbH
  *
  * Available everywhere to collect data which could be displayed in
  * grommunio-sync-top the 'persistent' flag should be used with care, so
@@ -44,6 +44,7 @@ class TopCollector extends InterProcessData {
 			"command" => Request::GetCommandCode(),
 			"ended" => 0,
 			"push" => false,
+			"asversion" => Request::GetProtocolVersion(),
 		];
 		$this->disabled = (bool) (defined('TOPCOLLECTOR_DISABLED') && constant('TOPCOLLECTOR_DISABLED') === true);
 		$this->checkEnabledTime = time() - self::ENABLED_CACHETIME - 1;
