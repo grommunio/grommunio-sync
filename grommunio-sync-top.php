@@ -19,52 +19,52 @@ include_once GSYNC_CONFIG;
 /*
  * MAIN
  */
-	declare(ticks=1);
-	define('BASE_PATH_CLI', dirname(__FILE__) . "/");
-	set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
+declare(ticks=1);
+define('BASE_PATH_CLI', dirname(__FILE__) . "/");
+set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
 
-	if (!defined('GSYNC_CONFIG')) {
-		define('GSYNC_CONFIG', BASE_PATH_CLI . 'config.php');
+if (!defined('GSYNC_CONFIG')) {
+	define('GSYNC_CONFIG', BASE_PATH_CLI . 'config.php');
+}
+
+include_once GSYNC_CONFIG;
+
+try {
+	GSync::CheckConfig();
+	if (!function_exists("pcntl_signal")) {
+		throw new FatalException("Function pcntl_signal() is not available. Please install package 'php8-pcntl' (or similar) on your system.");
 	}
 
-	include_once GSYNC_CONFIG;
-
-	try {
-		GSync::CheckConfig();
-		if (!function_exists("pcntl_signal")) {
-			throw new FatalException("Function pcntl_signal() is not available. Please install package 'php8-pcntl' (or similar) on your system.");
-		}
-
-		if (php_sapi_name() != "cli") {
-			throw new FatalException("This script can only be called from the CLI.");
-		}
-
-		$zpt = new GSyncTop();
-
-		// check if help was requested from CLI
-		if (in_array('-h', $argv) || in_array('--help', $argv)) {
-			echo $zpt->UsageInstructions();
-
-			exit(0);
-		}
-
-		if ($zpt->IsAvailable()) {
-			pcntl_signal(SIGINT, [$zpt, "SignalHandler"]);
-			$zpt->run();
-			$zpt->scrClear();
-			system("stty sane");
-		}
-		else {
-			echo "grommunio-sync interprocess communication (IPC) is not available or TopCollector is disabled.\n";
-		}
-	}
-	catch (GSyncException $zpe) {
-		fwrite(STDERR, get_class($zpe) . ": " . $zpe->getMessage() . "\n");
-
-		exit(1);
+	if (php_sapi_name() != "cli") {
+		throw new FatalException("This script can only be called from the CLI.");
 	}
 
-	echo "terminated\n";
+	$zpt = new GSyncTop();
+
+	// check if help was requested from CLI
+	if (in_array('-h', $argv) || in_array('--help', $argv)) {
+		echo $zpt->UsageInstructions();
+
+		exit(0);
+	}
+
+	if ($zpt->IsAvailable()) {
+		pcntl_signal(SIGINT, [$zpt, "SignalHandler"]);
+		$zpt->run();
+		$zpt->scrClear();
+		system("stty sane");
+	}
+	else {
+		echo "grommunio-sync interprocess communication (IPC) is not available or TopCollector is disabled.\n";
+	}
+}
+catch (GSyncException $zpe) {
+	fwrite(STDERR, get_class($zpe) . ": " . $zpe->getMessage() . "\n");
+
+	exit(1);
+}
+
+echo "terminated\n";
 
 /*
  * grommunio-sync-top
@@ -130,8 +130,6 @@ class GSyncTop {
 
 	/**
 	 * Requests data from the running grommunio-sync processes.
-	 *
-	 * @return
 	 */
 	private function initialize() {
 		// request feedback from active processes
@@ -147,8 +145,6 @@ class GSyncTop {
 	/**
 	 * Main loop of grommunio-sync-top
 	 * Runs until termination is requested.
-	 *
-	 * @return
 	 */
 	public function run() {
 		$this->initialize();
@@ -210,8 +206,6 @@ class GSyncTop {
 	 * Processes data written by the running processes.
 	 *
 	 * @param array $data
-	 *
-	 * @return
 	 */
 	private function processData($data) {
 		$this->linesActive = [];
@@ -281,15 +275,15 @@ class GSyncTop {
 						if ($this->filter !== false) {
 							$f = $this->filter;
 							if (
-									!(
-										$line['pid'] == $f ||
-										$line['ip'] == $f ||
-										strtolower($line['command']) == strtolower($f) ||
-										preg_match("/.*?{$f}.*?/i", $line['user']) ||
-										preg_match("/.*?{$f}.*?/i", $line['devagent']) ||
-										preg_match("/.*?{$f}.*?/i", $line['devid']) ||
-										preg_match("/.*?{$f}.*?/i", $line['addinfo'])
-									)) {
+								!(
+									$line['pid'] == $f ||
+									$line['ip'] == $f ||
+									strtolower($line['command']) == strtolower($f) ||
+									preg_match("/.*?{$f}.*?/i", $line['user']) ||
+									preg_match("/.*?{$f}.*?/i", $line['devagent']) ||
+									preg_match("/.*?{$f}.*?/i", $line['devid']) ||
+									preg_match("/.*?{$f}.*?/i", $line['addinfo'])
+								)) {
 								continue;
 							}
 						}
@@ -310,8 +304,6 @@ class GSyncTop {
 
 	/**
 	 * Prints data to the terminal.
-	 *
-	 * @return
 	 */
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
@@ -396,7 +388,9 @@ class GSyncTop {
 			if ($linesprinted >= $toPrintUnknown) {
 				break;
 			}
-
+			if (is_nan($time)) {
+				$time = 0;
+			}
 			$color = "0;31m";
 			if (!isset($l['start'])) {
 				$l['start'] = $time;
@@ -437,7 +431,7 @@ class GSyncTop {
 
 		// show request information and help command
 		if ($this->starttime + 6 > $this->currenttime) {
-			$this->status = sprintf("Requesting information (takes up to %dsecs)", $this->pingInterval) . str_repeat(".", ($this->currenttime - $this->starttime)) . "  type \033[01;31mh\033[00;31m or \033[01;31mhelp\033[00;31m for usage instructions";
+			$this->status = sprintf("Requesting information (takes up to %dsecs)", $this->pingInterval) . str_repeat(".", $this->currenttime - $this->starttime) . "  type \033[01;31mh\033[00;31m or \033[01;31mhelp\033[00;31m for usage instructions";
 			$this->statusexpire = $this->currenttime + 1;
 		}
 
@@ -475,8 +469,6 @@ class GSyncTop {
 
 	/**
 	 * Waits for a keystroke and processes the requested command.
-	 *
-	 * @return
 	 */
 	private function readLineProcess() {
 		$ans = explode("^^", `bash -c "read -n 1 -t 1 ANS ; echo \\\$?^^\\\$ANS;"`);
@@ -569,7 +561,7 @@ class GSyncTop {
 					$this->statusexpire = time() + 5; // it might be much "later" now
 				}
 				// tail the log file
-				elseif (($cmds[0] == "tail" || $cmds[0] == "t")) {
+				elseif ($cmds[0] == "tail" || $cmds[0] == "t") {
 					if (!file_exists(LOGFILE)) {
 						$this->status = "Logfile can not be found: " . LOGFILE;
 					}
@@ -588,7 +580,7 @@ class GSyncTop {
 					$this->statusexpire = time() + 5; // it might be much "later" now
 				}
 				// tail the error log file
-				elseif (($cmds[0] == "error" || $cmds[0] == "e")) {
+				elseif ($cmds[0] == "error" || $cmds[0] == "e") {
 					if (!file_exists(LOGERRORFILE)) {
 						$this->status = "Error logfile can not be found: " . LOGERRORFILE;
 					}
@@ -619,8 +611,6 @@ class GSyncTop {
 	 * Signal handler function.
 	 *
 	 * @param int $signo signal number
-	 *
-	 * @return
 	 */
 	public function SignalHandler($signo) {
 		// don't terminate if the signal was sent by terminating tail
@@ -698,6 +688,9 @@ class GSyncTop {
 	 * @return string
 	 */
 	private function getLine($l) {
+		if (!isset($l['pid']) || !isset($l['ip']) || !isset($l['user']) || !isset($l['command']) || !isset($l['time']) || !isset($l['devagent']) || !isset($l['devid']) || !isset($l['addinfo'])) {
+			return "";
+		}
 		if ($this->wide === true) {
 			return sprintf("%s%s%s%s%s%s%s%s", $this->ptStr($l['pid'], 6), $this->ptStr($l['ip'], 16), $this->ptStr($l['user'], 24), $this->ptStr($l['command'], 16), $this->ptStr($this->sec2min($l['time']), 8), $this->ptStr($l['devagent'], 28), $this->ptStr($l['devid'], 33, true), $l['addinfo']);
 		}
@@ -769,8 +762,6 @@ class GSyncTop {
 
 	/**
 	 * Resets the default colors of the terminal.
-	 *
-	 * @return
 	 */
 	private function scrDefaultColors() {
 		echo "\033[0m";
@@ -780,8 +771,6 @@ class GSyncTop {
 	 * Clears screen of the terminal.
 	 *
 	 * @param array $data
-	 *
-	 * @return
 	 */
 	public function scrClear() {
 		echo "\033[2J";
@@ -793,8 +782,6 @@ class GSyncTop {
 	 * @param int    $row  row number
 	 * @param int    $col  column number
 	 * @param string $text to be printed
-	 *
-	 * @return
 	 */
 	private function scrPrintAt($row, $col, $text = "") {
 		echo "\033[" . $row . ";" . $col . "H" . $text;

@@ -17,83 +17,83 @@ class TimezoneUtil {
 	 * Updated at: 01.06.2012
 	 */
 	private static $mstzones = [
-		"000" => ["Dateline Standard Time",                    "(GMT-12:00) International Date Line West"],
-		"001" => ["Samoa Standard Time",                       "(GMT-11:00) Midway Island, Samoa"],
-		"002" => ["Hawaiian Standard Time",                    "(GMT-10:00) Hawaii"],
-		"003" => ["Alaskan Standard Time",                     "(GMT-09:00) Alaska"],
-		"004" => ["Pacific Standard Time",                     "(GMT-08:00) Pacific Time (US and Canada); Tijuana"],
-		"010" => ["Mountain Standard Time",                    "(GMT-07:00) Mountain Time (US and Canada)"],
-		"013" => ["Mexico Standard Time 2",                    "(GMT-07:00) Chihuahua, La Paz, Mazatlan"],
-		"015" => ["US Mountain Standard Time",                 "(GMT-07:00) Arizona"],
-		"020" => ["Central Standard Time",                     "(GMT-06:00) Central Time (US and Canada"],
-		"025" => ["Canada Central Standard Time",              "(GMT-06:00) Saskatchewan"],
-		"030" => ["Mexico Standard Time",                      "(GMT-06:00) Guadalajara, Mexico City, Monterrey"],
-		"033" => ["Central America Standard Time",             "(GMT-06:00) Central America"],
-		"035" => ["Eastern Standard Time",                     "(GMT-05:00) Eastern Time (US and Canada)"],
-		"040" => ["US Eastern Standard Time",                  "(GMT-05:00) Indiana (East)"],
-		"045" => ["SA Pacific Standard Time",                  "(GMT-05:00) Bogota, Lima, Quito"],
-		"uk1" => ["Venezuela Standard Time",                   "(GMT-04:30) Caracas"],                     // added
-		"050" => ["Atlantic Standard Time",                    "(GMT-04:00) Atlantic Time (Canada)"],
-		"055" => ["SA Western Standard Time",                  "(GMT-04:00) Caracas, La Paz"],
-		"056" => ["Pacific SA Standard Time",                  "(GMT-04:00) Santiago"],
-		"060" => ["Newfoundland and Labrador Standard Time",   "(GMT-03:30) Newfoundland and Labrador"],
-		"065" => ["E South America Standard Time",             "(GMT-03:00) Brasilia"],
-		"070" => ["SA Eastern Standard Time",                  "(GMT-03:00) Buenos Aires, Georgetown"],
-		"073" => ["Greenland Standard Time",                   "(GMT-03:00) Greenland"],
-		"075" => ["Mid-Atlantic Standard Time",                "(GMT-02:00) Mid-Atlantic"],
-		"080" => ["Azores Standard Time",                      "(GMT-01:00) Azores"],
-		"083" => ["Cape Verde Standard Time",                  "(GMT-01:00) Cape Verde Islands"],
-		"085" => ["GMT Standard Time",                         "(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London"],
-		"090" => ["Greenwich Standard Time",                   "(GMT) Casablanca, Monrovia"],
-		"095" => ["Central Europe Standard Time",              "(GMT+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"],
-		"100" => ["Central European Standard Time",            "(GMT+01:00) Sarajevo, Skopje, Warsaw, Zagreb"],
-		"105" => ["Romance Standard Time",                     "(GMT+01:00) Brussels, Copenhagen, Madrid, Paris"],
-		"110" => ["W Europe Standard Time",                    "(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna"],
-		"111" => ["W. Europe Standard Time",                   "(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna"],
-		"113" => ["W Central Africa Standard Time",            "(GMT+01:00) West Central Africa"],
-		"115" => ["E Europe Standard Time",                    "(GMT+02:00) Bucharest"],
-		"120" => ["Egypt Standard Time",                       "(GMT+02:00) Cairo"],
-		"125" => ["FLE Standard Time",                         "(GMT+02:00) Helsinki, Kiev, Riga, Sofia, Tallinn, Vilnius"],
-		"130" => ["GTB Standard Time",                         "(GMT+02:00) Athens, Istanbul, Minsk"],
-		"135" => ["Israel Standard Time",                      "(GMT+02:00) Jerusalem"],
-		"140" => ["South Africa Standard Time",                "(GMT+02:00) Harare, Pretoria"],
-		"145" => ["Russian Standard Time",                     "(GMT+03:00) Moscow, St. Petersburg, Volgograd"],
-		"150" => ["Arab Standard Time",                        "(GMT+03:00) Kuwait, Riyadh"],
-		"155" => ["E Africa Standard Time",                    "(GMT+03:00) Nairobi"],
-		"158" => ["Arabic Standard Time",                      "(GMT+03:00) Baghdad"],
-		"160" => ["Iran Standard Time",                        "(GMT+03:30) Tehran"],
-		"165" => ["Arabian Standard Time",                     "(GMT+04:00) Abu Dhabi, Muscat"],
-		"170" => ["Caucasus Standard Time",                    "(GMT+04:00) Baku, Tbilisi, Yerevan"],
+		"000" => ["Dateline Standard Time", "(GMT-12:00) International Date Line West"],
+		"001" => ["Samoa Standard Time", "(GMT-11:00) Midway Island, Samoa"],
+		"002" => ["Hawaiian Standard Time", "(GMT-10:00) Hawaii"],
+		"003" => ["Alaskan Standard Time", "(GMT-09:00) Alaska"],
+		"004" => ["Pacific Standard Time", "(GMT-08:00) Pacific Time (US and Canada); Tijuana"],
+		"010" => ["Mountain Standard Time", "(GMT-07:00) Mountain Time (US and Canada)"],
+		"013" => ["Mexico Standard Time 2", "(GMT-07:00) Chihuahua, La Paz, Mazatlan"],
+		"015" => ["US Mountain Standard Time", "(GMT-07:00) Arizona"],
+		"020" => ["Central Standard Time", "(GMT-06:00) Central Time (US and Canada"],
+		"025" => ["Canada Central Standard Time", "(GMT-06:00) Saskatchewan"],
+		"030" => ["Mexico Standard Time", "(GMT-06:00) Guadalajara, Mexico City, Monterrey"],
+		"033" => ["Central America Standard Time", "(GMT-06:00) Central America"],
+		"035" => ["Eastern Standard Time", "(GMT-05:00) Eastern Time (US and Canada)"],
+		"040" => ["US Eastern Standard Time", "(GMT-05:00) Indiana (East)"],
+		"045" => ["SA Pacific Standard Time", "(GMT-05:00) Bogota, Lima, Quito"],
+		"uk1" => ["Venezuela Standard Time", "(GMT-04:30) Caracas"],                     // added
+		"050" => ["Atlantic Standard Time", "(GMT-04:00) Atlantic Time (Canada)"],
+		"055" => ["SA Western Standard Time", "(GMT-04:00) Caracas, La Paz"],
+		"056" => ["Pacific SA Standard Time", "(GMT-04:00) Santiago"],
+		"060" => ["Newfoundland and Labrador Standard Time", "(GMT-03:30) Newfoundland and Labrador"],
+		"065" => ["E South America Standard Time", "(GMT-03:00) Brasilia"],
+		"070" => ["SA Eastern Standard Time", "(GMT-03:00) Buenos Aires, Georgetown"],
+		"073" => ["Greenland Standard Time", "(GMT-03:00) Greenland"],
+		"075" => ["Mid-Atlantic Standard Time", "(GMT-02:00) Mid-Atlantic"],
+		"080" => ["Azores Standard Time", "(GMT-01:00) Azores"],
+		"083" => ["Cape Verde Standard Time", "(GMT-01:00) Cape Verde Islands"],
+		"085" => ["GMT Standard Time", "(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London"],
+		"090" => ["Greenwich Standard Time", "(GMT) Casablanca, Monrovia"],
+		"095" => ["Central Europe Standard Time", "(GMT+01:00) Belgrade, Bratislava, Budapest, Ljubljana, Prague"],
+		"100" => ["Central European Standard Time", "(GMT+01:00) Sarajevo, Skopje, Warsaw, Zagreb"],
+		"105" => ["Romance Standard Time", "(GMT+01:00) Brussels, Copenhagen, Madrid, Paris"],
+		"110" => ["W Europe Standard Time", "(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna"],
+		"111" => ["W. Europe Standard Time", "(GMT+01:00) Amsterdam, Berlin, Bern, Rome, Stockholm, Vienna"],
+		"113" => ["W Central Africa Standard Time", "(GMT+01:00) West Central Africa"],
+		"115" => ["E Europe Standard Time", "(GMT+02:00) Bucharest"],
+		"120" => ["Egypt Standard Time", "(GMT+02:00) Cairo"],
+		"125" => ["FLE Standard Time", "(GMT+02:00) Helsinki, Kiev, Riga, Sofia, Tallinn, Vilnius"],
+		"130" => ["GTB Standard Time", "(GMT+02:00) Athens, Istanbul, Minsk"],
+		"135" => ["Israel Standard Time", "(GMT+02:00) Jerusalem"],
+		"140" => ["South Africa Standard Time", "(GMT+02:00) Harare, Pretoria"],
+		"145" => ["Russian Standard Time", "(GMT+03:00) Moscow, St. Petersburg, Volgograd"],
+		"150" => ["Arab Standard Time", "(GMT+03:00) Kuwait, Riyadh"],
+		"155" => ["E Africa Standard Time", "(GMT+03:00) Nairobi"],
+		"158" => ["Arabic Standard Time", "(GMT+03:00) Baghdad"],
+		"160" => ["Iran Standard Time", "(GMT+03:30) Tehran"],
+		"165" => ["Arabian Standard Time", "(GMT+04:00) Abu Dhabi, Muscat"],
+		"170" => ["Caucasus Standard Time", "(GMT+04:00) Baku, Tbilisi, Yerevan"],
 		"175" => ["Transitional Islamic State of Afghanistan Standard Time", "(GMT+04:30) Kabul"],
-		"180" => ["Ekaterinburg Standard Time",                "(GMT+05:00) Ekaterinburg"],
-		"185" => ["West Asia Standard Time",                   "(GMT+05:00) Islamabad, Karachi, Tashkent"],
-		"190" => ["India Standard Time",                       "(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi"],
-		"193" => ["Nepal Standard Time",                       "(GMT+05:45) Kathmandu"],
-		"195" => ["Central Asia Standard Time",                "(GMT+06:00) Astana, Dhaka"],
-		"200" => ["Sri Lanka Standard Time",                   "(GMT+06:00) Sri Jayawardenepura"],
-		"201" => ["N Central Asia Standard Time",              "(GMT+06:00) Almaty, Novosibirsk"],
-		"203" => ["Myanmar Standard Time",                     "(GMT+06:30) Yangon Rangoon"],
-		"205" => ["SE Asia Standard Time",                     "(GMT+07:00) Bangkok, Hanoi, Jakarta"],
-		"207" => ["North Asia Standard Time",                  "(GMT+07:00) Krasnoyarsk"],
-		"210" => ["China Standard Time",                       "(GMT+08:00) Beijing, Chongqing, Hong Kong SAR, Urumqi"],
-		"215" => ["Singapore Standard Time",                   "(GMT+08:00) Kuala Lumpur, Singapore"],
-		"220" => ["Taipei Standard Time",                      "(GMT+08:00) Taipei"],
-		"225" => ["W Australia Standard Time",                 "(GMT+08:00) Perth"],
-		"227" => ["North Asia East Standard Time",             "(GMT+08:00) Irkutsk, Ulaanbaatar"],
-		"230" => ["Korea Standard Time",                       "(GMT+09:00) Seoul"],
-		"235" => ["Tokyo Standard Time",                       "(GMT+09:00) Osaka, Sapporo, Tokyo"],
-		"240" => ["Yakutsk Standard Time",                     "(GMT+09:00) Yakutsk"],
-		"245" => ["AUS Central Standard Time",                 "(GMT+09:30) Darwin"],
-		"250" => ["Cen Australia Standard Time",               "(GMT+09:30) Adelaide"],
-		"255" => ["AUS Eastern Standard Time",                 "(GMT+10:00) Canberra, Melbourne, Sydney"],
-		"260" => ["E Australia Standard Time",                 "(GMT+10:00) Brisbane"],
-		"265" => ["Tasmania Standard Time",                    "(GMT+10:00) Hobart"],
-		"270" => ["Vladivostok Standard Time",                 "(GMT+10:00) Vladivostok"],
-		"275" => ["West Pacific Standard Time",                "(GMT+10:00) Guam, Port Moresby"],
-		"280" => ["Central Pacific Standard Time",             "(GMT+11:00) Magadan, Solomon Islands, New Caledonia"],
-		"285" => ["Fiji Islands Standard Time",                "(GMT+12:00) Fiji Islands, Kamchatka, Marshall Islands"],
-		"290" => ["New Zealand Standard Time",                 "(GMT+12:00) Auckland, Wellington"],
-		"300" => ["Tonga Standard Time",                       "(GMT+13:00) Nuku'alofa"],
+		"180" => ["Ekaterinburg Standard Time", "(GMT+05:00) Ekaterinburg"],
+		"185" => ["West Asia Standard Time", "(GMT+05:00) Islamabad, Karachi, Tashkent"],
+		"190" => ["India Standard Time", "(GMT+05:30) Chennai, Kolkata, Mumbai, New Delhi"],
+		"193" => ["Nepal Standard Time", "(GMT+05:45) Kathmandu"],
+		"195" => ["Central Asia Standard Time", "(GMT+06:00) Astana, Dhaka"],
+		"200" => ["Sri Lanka Standard Time", "(GMT+06:00) Sri Jayawardenepura"],
+		"201" => ["N Central Asia Standard Time", "(GMT+06:00) Almaty, Novosibirsk"],
+		"203" => ["Myanmar Standard Time", "(GMT+06:30) Yangon Rangoon"],
+		"205" => ["SE Asia Standard Time", "(GMT+07:00) Bangkok, Hanoi, Jakarta"],
+		"207" => ["North Asia Standard Time", "(GMT+07:00) Krasnoyarsk"],
+		"210" => ["China Standard Time", "(GMT+08:00) Beijing, Chongqing, Hong Kong SAR, Urumqi"],
+		"215" => ["Singapore Standard Time", "(GMT+08:00) Kuala Lumpur, Singapore"],
+		"220" => ["Taipei Standard Time", "(GMT+08:00) Taipei"],
+		"225" => ["W Australia Standard Time", "(GMT+08:00) Perth"],
+		"227" => ["North Asia East Standard Time", "(GMT+08:00) Irkutsk, Ulaanbaatar"],
+		"230" => ["Korea Standard Time", "(GMT+09:00) Seoul"],
+		"235" => ["Tokyo Standard Time", "(GMT+09:00) Osaka, Sapporo, Tokyo"],
+		"240" => ["Yakutsk Standard Time", "(GMT+09:00) Yakutsk"],
+		"245" => ["AUS Central Standard Time", "(GMT+09:30) Darwin"],
+		"250" => ["Cen Australia Standard Time", "(GMT+09:30) Adelaide"],
+		"255" => ["AUS Eastern Standard Time", "(GMT+10:00) Canberra, Melbourne, Sydney"],
+		"260" => ["E Australia Standard Time", "(GMT+10:00) Brisbane"],
+		"265" => ["Tasmania Standard Time", "(GMT+10:00) Hobart"],
+		"270" => ["Vladivostok Standard Time", "(GMT+10:00) Vladivostok"],
+		"275" => ["West Pacific Standard Time", "(GMT+10:00) Guam, Port Moresby"],
+		"280" => ["Central Pacific Standard Time", "(GMT+11:00) Magadan, Solomon Islands, New Caledonia"],
+		"285" => ["Fiji Islands Standard Time", "(GMT+12:00) Fiji Islands, Kamchatka, Marshall Islands"],
+		"290" => ["New Zealand Standard Time", "(GMT+12:00) Auckland, Wellington"],
+		"300" => ["Tonga Standard Time", "(GMT+13:00) Nuku'alofa"],
 	];
 
 	/**
@@ -127,104 +127,104 @@ class TimezoneUtil {
 	 * Created at: 01.06.2012
 	 */
 	private static $tzonesoffsets = [
-		"Transitional Islamic State of Afghanistan Standard Time" => [-270, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Alaskan Standard Time" => [540, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"Arab Standard Time" => [-180, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Arabian Standard Time" => [-240, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Arabic Standard Time" => [-180, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"Transitional Islamic State of Afghanistan Standard Time" => [-270, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Alaskan Standard Time" => [540, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"Arab Standard Time" => [-180, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Arabian Standard Time" => [-240, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Arabic Standard Time" => [-180, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "Argentina Standard Time"                   => array(180, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"Atlantic Standard Time" => [240, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"AUS Central Standard Time" => [-570, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"AUS Eastern Standard Time" => [-600, 0, -60,  0, 4, 0, 1, 3, 0, 0, 0,  0, 10, 0, 1, 2, 0, 0, 0],
+		"Atlantic Standard Time" => [240, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"AUS Central Standard Time" => [-570, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"AUS Eastern Standard Time" => [-600, 0, -60, 0, 4, 0, 1, 3, 0, 0, 0, 0, 10, 0, 1, 2, 0, 0, 0],
 		// "Azerbaijan Standard Time"                  => array(-240, 0, -60,  0, 10, 0, 5, 5, 0, 0, 0,  0, 3, 0, 5, 4, 0, 0, 0),
-		"Azores Standard Time" => [60, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
+		"Azores Standard Time" => [60, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
 		// "Bangladesh Standard Time"                  => array(-360, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"Canada Central Standard Time" => [360, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Cape Verde Standard Time" => [60, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Caucasus Standard Time" => [-240, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Cen Australia Standard Time" => [-570, 0, -60,  0, 4, 0, 1, 3, 0, 0, 0,  0, 10, 0, 1, 2, 0, 0, 0],
-		"Central America Standard Time" => [360, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Central Asia Standard Time" => [-360, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"Canada Central Standard Time" => [360, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Cape Verde Standard Time" => [60, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Caucasus Standard Time" => [-240, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Cen Australia Standard Time" => [-570, 0, -60, 0, 4, 0, 1, 3, 0, 0, 0, 0, 10, 0, 1, 2, 0, 0, 0],
+		"Central America Standard Time" => [360, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Central Asia Standard Time" => [-360, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "Central Brazilian Standard Time"           => array(240, 0, -60,  0, 2, 6, 4, 23, 59, 59, 999,  0, 10, 6, 3, 23, 59, 59, 999),
-		"Central Europe Standard Time" => [-60, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Central European Standard Time" => [-60, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Central Pacific Standard Time" => [-660, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Central Standard Time" => [360, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"Mexico Standard Time" => [360, 0, -60,  0, 10, 0, 5, 2, 0, 0, 0,  0, 4, 0, 1, 2, 0, 0, 0],
-		"China Standard Time" => [-480, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Dateline Standard Time" => [720, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"E Africa Standard Time" => [-180, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"E Australia Standard Time" => [-600, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"E Europe Standard Time" => [-120, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"E South America Standard Time" => [180, 0, -60,  0, 2, 6, 4, 23, 59, 59, 999,  0, 10, 6, 3, 23, 59, 59, 999],
-		"Eastern Standard Time" => [300, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"Egypt Standard Time" => [-120, 0, -60,  0, 9, 4, 5, 23, 59, 59, 999,  0, 4, 4, 5, 23, 59, 59, 999],
-		"Ekaterinburg Standard Time" => [-300, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Fiji Islands Standard Time" => [-720, 0, -60,  0, 3, 0, 5, 3, 0, 0, 0,  0, 10, 0, 4, 2, 0, 0, 0],
-		"FLE Standard Time" => [-120, 0, -60,  0, 10, 0, 5, 4, 0, 0, 0,  0, 3, 0, 5, 3, 0, 0, 0],
+		"Central Europe Standard Time" => [-60, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Central European Standard Time" => [-60, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Central Pacific Standard Time" => [-660, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Central Standard Time" => [360, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"Mexico Standard Time" => [360, 0, -60, 0, 10, 0, 5, 2, 0, 0, 0, 0, 4, 0, 1, 2, 0, 0, 0],
+		"China Standard Time" => [-480, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Dateline Standard Time" => [720, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"E Africa Standard Time" => [-180, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"E Australia Standard Time" => [-600, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"E Europe Standard Time" => [-120, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"E South America Standard Time" => [180, 0, -60, 0, 2, 6, 4, 23, 59, 59, 999, 0, 10, 6, 3, 23, 59, 59, 999],
+		"Eastern Standard Time" => [300, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"Egypt Standard Time" => [-120, 0, -60, 0, 9, 4, 5, 23, 59, 59, 999, 0, 4, 4, 5, 23, 59, 59, 999],
+		"Ekaterinburg Standard Time" => [-300, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Fiji Islands Standard Time" => [-720, 0, -60, 0, 3, 0, 5, 3, 0, 0, 0, 0, 10, 0, 4, 2, 0, 0, 0],
+		"FLE Standard Time" => [-120, 0, -60, 0, 10, 0, 5, 4, 0, 0, 0, 0, 3, 0, 5, 3, 0, 0, 0],
 		// "Georgian Standard Time"                    => array(-240, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"GMT Standard Time" => [0, 0, -60,  0, 10, 0, 5, 2, 0, 0, 0,  0, 3, 0, 5, 1, 0, 0, 0],
-		"Greenland Standard Time" => [180, 0, -60,  0, 10, 6, 5, 23, 0, 0, 0,  0, 3, 6, 4, 22, 0, 0, 0],
-		"Greenwich Standard Time" => [0, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"GTB Standard Time" => [-120, 0, -60,  0, 10, 0, 5, 4, 0, 0, 0,  0, 3, 0, 5, 3, 0, 0, 0],
-		"Hawaiian Standard Time" => [600, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"India Standard Time" => [-330, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Iran Standard Time" => [-210, 0, -60,  0, 9, 1, 3, 23, 59, 59, 999,  0, 3, 6, 3, 23, 59, 59, 999],
-		"Israel Standard Time" => [-120, 0, -60,  0, 9, 0, 4, 2, 0, 0, 0,  0, 3, 5, 5, 2, 0, 0, 0],
+		"GMT Standard Time" => [0, 0, -60, 0, 10, 0, 5, 2, 0, 0, 0, 0, 3, 0, 5, 1, 0, 0, 0],
+		"Greenland Standard Time" => [180, 0, -60, 0, 10, 6, 5, 23, 0, 0, 0, 0, 3, 6, 4, 22, 0, 0, 0],
+		"Greenwich Standard Time" => [0, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"GTB Standard Time" => [-120, 0, -60, 0, 10, 0, 5, 4, 0, 0, 0, 0, 3, 0, 5, 3, 0, 0, 0],
+		"Hawaiian Standard Time" => [600, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"India Standard Time" => [-330, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Iran Standard Time" => [-210, 0, -60, 0, 9, 1, 3, 23, 59, 59, 999, 0, 3, 6, 3, 23, 59, 59, 999],
+		"Israel Standard Time" => [-120, 0, -60, 0, 9, 0, 4, 2, 0, 0, 0, 0, 3, 5, 5, 2, 0, 0, 0],
 		// "Jordan Standard Time"                      => array(-120, 0, -60,  0, 10, 5, 5, 1, 0, 0, 0,  0, 3, 4, 5, 23, 59, 59, 999),
 		// "Kamchatka Standard Time"                   => array(-720, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0),
-		"Korea Standard Time" => [-540, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"Korea Standard Time" => [-540, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "Magadan Standard Time"                     => array(-660, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0),
 		// "Mauritius Standard Time"                   => array(-240, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"Mid-Atlantic Standard Time" => [120, 0, -60,  0, 9, 0, 5, 2, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
+		"Mid-Atlantic Standard Time" => [120, 0, -60, 0, 9, 0, 5, 2, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
 		// "Middle East Standard Time"                 => array(-120, 0, -60,  0, 10, 6, 5, 23, 59, 59, 999,  0, 3, 6, 4, 23, 59, 59, 999),
 		// "Montevideo Standard Time"                  => array(180, 0, -60,  0, 3, 0, 2, 2, 0, 0, 0,  0, 10, 0, 1, 2, 0, 0, 0),
 		// "Morocco Standard Time"                     => array(0, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"Mountain Standard Time" => [420, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"Mexico Standard Time 2" => [420, 0, -60,  0, 10, 0, 5, 2, 0, 0, 0,  0, 4, 0, 1, 2, 0, 0, 0],
-		"Myanmar Standard Time" => [-390, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"N Central Asia Standard Time" => [-360, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
+		"Mountain Standard Time" => [420, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"Mexico Standard Time 2" => [420, 0, -60, 0, 10, 0, 5, 2, 0, 0, 0, 0, 4, 0, 1, 2, 0, 0, 0],
+		"Myanmar Standard Time" => [-390, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"N Central Asia Standard Time" => [-360, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
 		// "Namibia Standard Time"                     => array(-60, 0, -60,  0, 4, 0, 1, 2, 0, 0, 0,  0, 9, 0, 1, 2, 0, 0, 0),
-		"Nepal Standard Time" => [-345, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"New Zealand Standard Time" => [-720, 0, -60,  0, 4, 0, 1, 3, 0, 0, 0,  0, 9, 0, 5, 2, 0, 0, 0],
-		"Newfoundland and Labrador Standard Time" => [210, 0, -60,  0, 11, 0, 1, 0, 1, 0, 0,  0, 3, 0, 2, 0, 1, 0, 0],
-		"North Asia East Standard Time" => [-480, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"North Asia Standard Time" => [-420, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Pacific SA Standard Time" => [240, 0, -60,  0, 3, 6, 2, 23, 59, 59, 999,  0, 10, 6, 2, 23, 59, 59, 999],
-		"Pacific Standard Time" => [480, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
+		"Nepal Standard Time" => [-345, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"New Zealand Standard Time" => [-720, 0, -60, 0, 4, 0, 1, 3, 0, 0, 0, 0, 9, 0, 5, 2, 0, 0, 0],
+		"Newfoundland and Labrador Standard Time" => [210, 0, -60, 0, 11, 0, 1, 0, 1, 0, 0, 0, 3, 0, 2, 0, 1, 0, 0],
+		"North Asia East Standard Time" => [-480, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"North Asia Standard Time" => [-420, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Pacific SA Standard Time" => [240, 0, -60, 0, 3, 6, 2, 23, 59, 59, 999, 0, 10, 6, 2, 23, 59, 59, 999],
+		"Pacific Standard Time" => [480, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
 		// "Pacific Standard Time (Mexico)"            => array(480, 0, -60,  0, 10, 0, 5, 2, 0, 0, 0,  0, 4, 0, 1, 2, 0, 0, 0),
 		// "Pakistan Standard Time"                    => array(-300, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
 		// "Paraguay Standard Time"                    => array(240, 0, -60,  0, 4, 6, 1, 23, 59, 59, 999,  0, 10, 6, 1, 23, 59, 59, 999),
-		"Romance Standard Time" => [-60, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"Russian Standard Time" => [-180, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"SA Eastern Standard Time" => [180, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"SA Pacific Standard Time" => [300, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"SA Western Standard Time" => [240, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Samoa Standard Time" => [660, 0, -60,  0, 3, 6, 5, 23, 59, 59, 999,  0, 9, 6, 5, 23, 59, 59, 999],
-		"SE Asia Standard Time" => [-420, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Singapore Standard Time" => [-480, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"South Africa Standard Time" => [-120, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Sri Lanka Standard Time" => [-330, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"Romance Standard Time" => [-60, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"Russian Standard Time" => [-180, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"SA Eastern Standard Time" => [180, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"SA Pacific Standard Time" => [300, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"SA Western Standard Time" => [240, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Samoa Standard Time" => [660, 0, -60, 0, 3, 6, 5, 23, 59, 59, 999, 0, 9, 6, 5, 23, 59, 59, 999],
+		"SE Asia Standard Time" => [-420, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Singapore Standard Time" => [-480, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"South Africa Standard Time" => [-120, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Sri Lanka Standard Time" => [-330, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "Syria Standard Time"                       => array(-120, 0, -60,  0, 10, 4, 5, 23, 59, 59, 999,  0, 4, 4, 1, 23, 59, 59, 999),
-		"Taipei Standard Time" => [-480, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Tasmania Standard Time" => [-600, 0, -60,  0, 4, 0, 1, 3, 0, 0, 0,  0, 10, 0, 1, 2, 0, 0, 0],
-		"Tokyo Standard Time" => [-540, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Tonga Standard Time" => [-780, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"Taipei Standard Time" => [-480, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Tasmania Standard Time" => [-600, 0, -60, 0, 4, 0, 1, 3, 0, 0, 0, 0, 10, 0, 1, 2, 0, 0, 0],
+		"Tokyo Standard Time" => [-540, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Tonga Standard Time" => [-780, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "Ulaanbaatar Standard Time"                 => array(-480, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"US Eastern Standard Time" => [300, 0, -60,  0, 11, 0, 1, 2, 0, 0, 0,  0, 3, 0, 2, 2, 0, 0, 0],
-		"US Mountain Standard Time" => [420, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
+		"US Eastern Standard Time" => [300, 0, -60, 0, 11, 0, 1, 2, 0, 0, 0, 0, 3, 0, 2, 2, 0, 0, 0],
+		"US Mountain Standard Time" => [420, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 		// "UTC"                                       => array(0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
 		// "UTC+12"                                    => array(-720, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
 		// "UTC-02"                                    => array(120, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
 		// "UTC-11"                                    => array(660, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0),
-		"Venezuela Standard Time" => [270, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Vladivostok Standard Time" => [-600, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"W Australia Standard Time" => [-480, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"W Central Africa Standard Time" => [-60, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"W Europe Standard Time" => [-60, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
-		"West Asia Standard Time" => [-300, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"West Pacific Standard Time" => [-600, 0, -60,  0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0],
-		"Yakutsk Standard Time" => [-540, 0, -60,  0, 10, 0, 5, 3, 0, 0, 0,  0, 3, 0, 5, 2, 0, 0, 0],
+		"Venezuela Standard Time" => [270, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Vladivostok Standard Time" => [-600, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"W Australia Standard Time" => [-480, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"W Central Africa Standard Time" => [-60, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"W Europe Standard Time" => [-60, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
+		"West Asia Standard Time" => [-300, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"West Pacific Standard Time" => [-600, 0, -60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+		"Yakutsk Standard Time" => [-540, 0, -60, 0, 10, 0, 5, 3, 0, 0, 0, 0, 3, 0, 5, 2, 0, 0, 0],
 	];
 
 	/**
@@ -1049,6 +1049,30 @@ class TimezoneUtil {
 	];
 
 	/**
+	 * Returns the binary timezone definition.
+	 *
+	 * @param string $phptimezone (opt) a php timezone string.
+	 *                            If omitted the env. default timezone is used.
+	 *
+	 * @return array|bool
+	 */
+	public static function GetBinaryTZ($phptimezone = false) {
+		if ($phptimezone === false) {
+			$phptimezone = date_default_timezone_get();
+		}
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("TimezoneUtil::GetBinaryTZ() for %s", $phptimezone));
+
+		try {
+			return mapi_ianatz_to_tzdef($phptimezone);
+		}
+		catch (Exception $e) {
+			SLog::Write(LOGLEVEL_WARN, sprintf("TimezoneUtil::GetBinaryTZ() mapi_ianatz_to_tzdef() for '%s' failed!", $phptimezone));
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns a full timezone array.
 	 *
 	 * @param string $phptimezone (opt) a php timezone string.
@@ -1224,7 +1248,9 @@ class TimezoneUtil {
 				}
 			}
 		}
-
+		if (strpos($name, '.') !== false) {
+			return self::getMSTZnameFromTZName(str_replace('.', '', $name));
+		}
 		SLog::Write(LOGLEVEL_WARN, sprintf("TimezoneUtil::getMSTZnameFromTZName() no MS name found for '%s'. Returning '(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London'", $name));
 
 		return self::$mstzones["085"][1];
@@ -1244,8 +1270,6 @@ class TimezoneUtil {
 	/**
 	 * Test to check if $mstzones and $tzonesoffsets can be resolved
 	 * in both directions.
-	 *
-	 * @return
 	 */
 	public static function TZtest() {
 		foreach (self::$mstzones as $mskey => $msdefs) {
@@ -1283,7 +1307,7 @@ class TimezoneUtil {
 		}
 
 		return pack(
-			"la64vvvvvvvv" . "la64vvvvvvvv" . "l",
+			"la64vvvvvvvvla64vvvvvvvvl",
 			$tz["bias"],
 			$tz["tzname"],
 			0,
@@ -1405,5 +1429,171 @@ class TimezoneUtil {
 		}
 
 		return self::$mstzones['085'][0];
+	}
+
+	/**
+	 * Returns an GMT timezone array.
+	 *
+	 * @return array
+	 */
+	public static function GetGMTTz() {
+		return [
+			"bias" => 0,
+			"tzname" => "",
+			"dstendyear" => 0,
+			"dstendmonth" => 10,
+			"dstendday" => 0,
+			"dstendweek" => 5,
+			"dstendhour" => 2,
+			"dstendminute" => 0,
+			"dstendsecond" => 0,
+			"dstendmillis" => 0,
+			"stdbias" => 0,
+			"tznamedst" => "",
+			"dststartyear" => 0,
+			"dststartmonth" => 3,
+			"dststartday" => 0,
+			"dststartweek" => 5,
+			"dststarthour" => 1,
+			"dststartminute" => 0,
+			"dststartsecond" => 0,
+			"dststartmillis" => 0,
+			"dstbias" => -60,
+		];
+	}
+
+	/**
+	 * Creates an array that has split up all the components of a timezone
+	 * definition binary.
+	 *
+	 * Timezone definition structure:
+	 *
+	 * Major ver : UINT, 1 byte,  2 hex characters
+	 * Minor ver : UINT, 1 byte,  2 hex characters
+	 * cbHeader  : UINT, 2 bytes, 4 hex characters
+	 * Reserved  : UINT, 2 bytes, 4 hex characters
+	 * cchKeyName: UINT, 2 bytes, 4 hex characters
+	 * KeyName   : CHAR, variable length (defined by cckeyname value)
+	 * cRules    : UINT, 2 bytes, 4 hex characters
+	 * rules     : STRUCT, variable length (defined by cRules value):
+	 *   Major ver     : UINT, 1 byte,  2 hex characters
+	 *   Minor ver     : UINT, 1 byte,  2 hex characters
+	 *   Reserved      : UINT, 2 bytes, 4 hex characters
+	 *   TZRule flags  : UINT, 2 bytes, 4 hex characters
+	 *   wYear         : UINT, 2 bytes, 4 hex characters
+	 *   X             : TCHAR[14]
+	 *   lBias         : LONG, 4 bytes, 8 hex characters
+	 *   lStandardBias : LONG, 4 bytes, 8 hex characters
+	 *   lDaylightBias : LONG, 4 bytes, 8 hex characters
+	 *   stStandardDate: STRUCT
+	 *   stDaylightDate: STRUCT
+	 *
+	 * stStandardDate/stDaylightDate:
+	 *   wYear        : UINT, 2 bytes, 4 hex characters
+	 *   wMonth       : UINT, 2 bytes, 4 hex characters
+	 *   wDayOfWeek   : UINT, 2 bytes, 4 hex characters
+	 *   wDay         : UINT, 2 bytes, 4 hex characters
+	 *   wHour        : UINT, 2 bytes, 4 hex characters
+	 *   wMinute      : UINT, 2 bytes, 4 hex characters
+	 *   wSecond      : UINT, 2 bytes, 4 hex characters
+	 *   wMilliseconds: UINT, 2 bytes, 4 hex characters
+	 *
+	 * @param string $tzdef Timezone definition binary
+	 *
+	 * @return array timezone definition array
+	 */
+	public static function CreateTimezoneDefinitionObject($tzdef) {
+		if (!$tzdef) {
+			return [];
+		}
+
+		$offset = 0;
+
+		$res = unpack("Cmajorver/Cminorver/vcbheader/vreserved/vcchkeyname", substr($tzdef, $offset, 8));
+		$offset += 8;
+
+		$cchKeyName = $res['cchkeyname'] * 2;
+		$data = unpack("a{$cchKeyName}keyname/vcrules", substr($tzdef, $offset, $cchKeyName + 2));
+		$res['keyname'] = $data['keyname'];
+		$res['crules'] = $data['crules'];
+		$offset += $cchKeyName + 2;
+
+		for ($i = 0; $i < $res['crules']; ++$i) {
+			$rule = [];
+			$rule = unpack(
+				"Cmajorver/Cminorver/vreserved/vtzruleflags/vwyear/a14x/lbias/lstdbias/ldstbias/",
+				substr($tzdef, $offset, 34)
+			);
+			$offset += 34;
+
+			$rule['stStandardDate'] = unpack(
+				"vyear/vmonth/vdayofweek/vday/vhour/vminute/vsecond/vmiliseconds/",
+				substr($tzdef, $offset, 16)
+			);
+			$offset += 16;
+
+			$rule['stDaylightDate'] = unpack(
+				"vyear/vmonth/vdayofweek/vday/vhour/vminute/vsecond/vmiliseconds/",
+				substr($tzdef, $offset, 16)
+			);
+			$offset += 16;
+
+			$res['rules'][] = $rule;
+		}
+
+		return $res;
+	}
+
+	/**
+	 * Converts timezone definition to timezonetag prop
+	 * ("PT_BINARY:PSETID_Appointment:0x8233" aka
+	 * "PT_BINARY:PSETID_Appointment:" . PidLidTimeZoneStruct)
+	 * compatible structure.
+	 *
+	 * @param array $tzdef timezone definition array
+	 *
+	 * @return array
+	 */
+	public static function GetTzFromTimezoneDef($tzdef) {
+		$tz = [];
+		// convert timezone name because in zcore the chars are nul-padded
+		if (!empty($tzdef['keyname'])) {
+			$tz['tzname'] = $tz['tznamedst'] = self::getMSTZnameFromTZName(iconv('UTF-16', 'UTF-8', $tzdef['keyname']));
+		}
+
+		foreach ($tzdef['rules'] as $rule) {
+			if ($rule['tzruleflags'] & TZRULE_FLAG_EFFECTIVE_TZREG) {
+				$tz['bias'] = $rule['bias'];
+				$tz['dstendyear'] = $rule['stStandardDate']['year'];
+				$tz['dstendmonth'] = $rule['stStandardDate']['month'];
+				$tz['dstendday'] = $rule['stStandardDate']['day'];
+				$tz['dstendweek'] = $rule['stStandardDate']['dayofweek'];
+				$tz['dstendhour'] = $rule['stStandardDate']['hour'];
+				$tz['dstendminute'] = $rule['stStandardDate']['minute'];
+				$tz['dstendsecond'] = $rule['stStandardDate']['second'];
+				$tz['dstendmillis'] = $rule['stStandardDate']['miliseconds'];
+				$tz['stdbias'] = $rule['stdbias'];
+				$tz['dststartyear'] = $rule['stDaylightDate']['year'];
+				$tz['dststartmonth'] = $rule['stDaylightDate']['month'];
+				$tz['dststartday'] = $rule['stDaylightDate']['day'];
+				$tz['dststartweek'] = $rule['stDaylightDate']['dayofweek'];
+				$tz['dststarthour'] = $rule['stDaylightDate']['hour'];
+				$tz['dststartminute'] = $rule['stDaylightDate']['minute'];
+				$tz['dststartsecond'] = $rule['stDaylightDate']['second'];
+				$tz['dststartmillis'] = $rule['stDaylightDate']['miliseconds'];
+				$tz['dstbias'] = $rule['dstbias'];
+			}
+		}
+
+		// Fallback if there isn't effective timezone
+		if (!isset($tz['bias'])) {
+			$tz = self::GetGMTTz();
+		}
+
+		// Make the structure compatible with class.recurrence.php
+		$tz['timezone'] = $tz['bias'];
+		$tz['timezonedst'] = $tz['dstbias'];
+
+		return $tz;
 	}
 }

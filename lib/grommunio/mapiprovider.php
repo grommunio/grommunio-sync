@@ -204,12 +204,20 @@ class MAPIProvider {
 		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
 			$tz = $this->getTZFromMAPIBlob($messageprops[$appointmentprops["timezonetag"]]);
 			$appTz = true;
+			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
+		}
+		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
+			$tzDefStart = TimezoneUtil::CreateTimezoneDefinitionObject($messageprops[$appointmentprops["tzdefstart"]]);
+			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
+			$appTz = true;
+			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
 			// Windows uses UTC in timezone description in opposite to mstzones in TimezoneUtil which uses GMT
 			$wintz = str_replace("UTC", "GMT", $messageprops[$appointmentprops["timezonedesc"]]);
 			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($wintz));
 			$appTz = true;
+			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		else {
 			// set server default timezone (correct timezone should be configured!)
@@ -349,25 +357,27 @@ class MAPIProvider {
 
 		// All-day events might appear as 24h (or multiple of it) long when they start not exactly at midnight (+/- bias of the timezone)
 		if (isset($message->alldayevent) && $message->alldayevent) {
-			$localStartTime = localtime($message->starttime, 1);
-
-			// The appointment is all-day but doesn't start at midnight.
-			// If it was created in another timezone and we have that information,
-			// set the startime to the midnight of the current timezone.
-			// Only apply if the user is not organizer of a meeting.
-			if ($appTz && ($localStartTime['tm_hour'] || $localStartTime['tm_min']) &&
-				isset($message->meetingstatus) && (
-					$message->meetingstatus == 3 ||
-					$message->meetingstatus == 7 ||
-					$message->meetingstatus == 11 ||
-					$message->meetingstatus == 15
-				)
-			) {
-				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight.");
+			// Adjust all day events if there is a timezone
+			if ($appTz) {
 				$duration = $message->endtime - $message->starttime;
-				$serverTz = TimezoneUtil::GetFullTZ();
-				$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+				// AS pre 16: time in local timezone - convert if it isn't on midnight
+				if (Request::GetProtocolVersion() < 16.0) {
+					$localStartTime = localtime($message->starttime, 1);
+					if ($localStartTime['tm_hour'] || $localStartTime['tm_min']) {
+						SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight - convert to local time");
+						$serverTz = TimezoneUtil::GetFullTZ();
+						$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+					}
+				}
+				else {
+					// AS 16: apply timezone as this MUST result in midnight (to be sent to the client)
+					$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+				}
 				$message->endtime = $message->starttime + $duration;
+			}
+			if (Request::GetProtocolVersion() >= 16.0) {
+				// no timezone information should be sent
+				unset($message->timezone);
 			}
 		}
 
@@ -393,7 +403,7 @@ class MAPIProvider {
 	 * @param SyncObject &$syncMessage     the message
 	 * @param SyncObject &$syncRecurrence  the  recurrence message
 	 * @param array      $tz               timezone information
-	 * @param array      $appointmentprops property defintions
+	 * @param array      $appointmentprops property definitions
 	 */
 	private function getRecurrence($mapimessage, $recurprops, &$syncMessage, &$syncRecurrence, $tz, $appointmentprops) {
 		if ($syncRecurrence instanceof SyncTaskRecurrence) {
@@ -714,7 +724,7 @@ class MAPIProvider {
 				(isset($props[$meetingrequestproperties["lidIsException"]]) && $props[$meetingrequestproperties["lidIsException"]] == true)) {
 				if (isset($props[$meetingrequestproperties["recReplTime"]])) {
 					$basedate = $props[$meetingrequestproperties["recReplTime"]];
-					$message->meetingrequest->recurrenceid = $this->getGMTTimeByTZ($basedate, $this->getGMTTZ());
+					$message->meetingrequest->recurrenceid = $this->getGMTTimeByTZ($basedate, TimezoneUtil::GetGMTTz());
 				}
 				else {
 					if (!isset($props[$meetingrequestproperties["goidtag"]]) || !isset($props[$meetingrequestproperties["recurStartTime"]]) || !isset($props[$meetingrequestproperties["timezonetag"]])) {
@@ -1413,6 +1423,12 @@ class MAPIProvider {
 		if (isset($appointment->timezone)) {
 			$tz = $this->getTZFromSyncBlob(base64_decode($appointment->timezone));
 		}
+		// AS 16: doesn't sent a timezone - use server TZ and convert starttime and endtime
+		elseif (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
+			$tz = TimezoneUtil::GetFullTZ();
+			$appointment->starttime = $this->getGMTTimeByTZ($appointment->starttime, $tz);
+			$appointment->endtime = $this->getGMTTimeByTZ($appointment->endtime, $tz);
+		}
 		else {
 			$tz = false;
 		}
@@ -1595,7 +1611,17 @@ class MAPIProvider {
 			$this->setASlocation($appointment->location2, $props, $appointmentprops);
 		}
 		if ($tz !== false) {
-			$props[$appointmentprops["timezonetag"]] = $this->getMAPIBlobFromTZ($tz);
+			// Use server timezone for as 16
+			if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
+				$tzdef = TimezoneUtil::GetBinaryTZ();
+				if ($tzdef) {
+					$props[$appointmentprops["tzdefstart"]] = $tzdef;
+					$props[$appointmentprops["tzdefend"]] = $tzdef;
+				}
+			}
+			else {
+				$props[$appointmentprops["timezonetag"]] = $this->getMAPIBlobFromTZ($tz);
+			}
 		}
 
 		if (isset($appointment->recurrence)) {
@@ -2355,37 +2381,6 @@ class MAPIProvider {
 		$mapiproperties = $this->getPropIdsFromStrings($mapiproperties);
 
 		return mapi_getprops($mapimessage, $mapiproperties);
-	}
-
-	/**
-	 * Returns an GMT timezone array.
-	 *
-	 * @return array
-	 */
-	private function getGMTTZ() {
-		return [
-			"bias" => 0,
-			"tzname" => "",
-			"dstendyear" => 0,
-			"dstendmonth" => 10,
-			"dstendday" => 0,
-			"dstendweek" => 5,
-			"dstendhour" => 2,
-			"dstendminute" => 0,
-			"dstendsecond" => 0,
-			"dstendmillis" => 0,
-			"stdbias" => 0,
-			"tznamedst" => "",
-			"dststartyear" => 0,
-			"dststartmonth" => 3,
-			"dststartday" => 0,
-			"dststartweek" => 5,
-			"dststarthour" => 1,
-			"dststartminute" => 0,
-			"dststartsecond" => 0,
-			"dststartmillis" => 0,
-			"dstbias" => -60,
-		];
 	}
 
 	/**
