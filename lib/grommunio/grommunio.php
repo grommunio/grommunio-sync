@@ -1433,6 +1433,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return false;
 		}
 
+		if (!isset($storeProps[PR_FINDER_ENTRYID])) {
+			SLog::Write(LOGLEVEL_WARN, "Grommunio->TerminateSearch(): Unable to open search folder - finder entryid not found");
+
+			return false;
+		}
 		$finderfolder = mapi_msgstore_openentry($this->store, $storeProps[PR_FINDER_ENTRYID]);
 		if (mapi_last_hresult() != NOERROR) {
 			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->TerminateSearch(): Unable to open search folder (0x%X)", mapi_last_hresult()));

@@ -310,6 +310,9 @@ class MAPIMapping {
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
 			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
 			"locations" => "PT_STRING8:PSETID_CustomerLocation:Locations",
+			"tzdefstart" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionStartDisplay,
+			"tzdefend" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionEndDisplay,
+			"tzdefrecur" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionRecur,
 		];
 	}
 
