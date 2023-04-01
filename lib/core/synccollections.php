@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2023 grommunio GmbH
  *
  * This is basically a list of synched folders with its respective
  * SyncParameters, while some additional parameters which are not stored
@@ -79,8 +79,6 @@ class SyncCollections implements Iterator {
 	 * requested from the DeviceManager.
 	 *
 	 * @param StateManager $statemanager
-	 *
-	 * @return
 	 */
 	public function SetStateManager($statemanager) {
 		$this->stateManager = $statemanager;
@@ -97,10 +95,10 @@ class SyncCollections implements Iterator {
 	 * @param bool $loadHierarchy    (opt) if the hierarchy sync states should be loaded, default false
 	 * @param bool $confirmedOnly    (opt) indicates if only confirmed states should be loaded, default: false
 	 *
+	 * @return bool
+	 *
 	 * @throws StatusException       with SyncCollections::ERROR_WRONG_HIERARCHY if permission check fails
 	 * @throws StateInvalidException if the sync state can not be found or relation between states is invalid ($loadState = true)
-	 *
-	 * @return bool
 	 */
 	public function LoadAllCollections($overwriteLoaded = false, $loadState = false, $checkPermissions = false, $loadHierarchy = false, $confirmedOnly = false) {
 		$this->loadStateManager();
@@ -142,10 +140,10 @@ class SyncCollections implements Iterator {
 	 *                                 If this fails a StatusException will be thrown.
 	 * @param bool   $confirmedOnly    (opt) indicates if only confirmed states should be loaded, default: false
 	 *
+	 * @return bool
+	 *
 	 * @throws StatusException       with SyncCollections::ERROR_WRONG_HIERARCHY if permission check fails
 	 * @throws StateInvalidException if the sync state can not be found or relation between states is invalid ($loadState = true)
-	 *
-	 * @return bool
 	 */
 	public function LoadCollection($folderid, $loadState = false, $checkPermissions = false, $confirmedOnly = false) {
 		$this->loadStateManager();
@@ -192,7 +190,7 @@ class SyncCollections implements Iterator {
 		if ($addStatus && $loadState === true) {
 			try {
 				// make sure the hierarchy cache is loaded when we are loading hierarchy states
-				$this->addparms[$folderid]["state"] = $this->stateManager->GetSyncState($spa->GetLatestSyncKey($confirmedOnly), ($folderid === false));
+				$this->addparms[$folderid]["state"] = $this->stateManager->GetSyncState($spa->GetLatestSyncKey($confirmedOnly), $folderid === false);
 			}
 			catch (StateNotFoundException $snfe) {
 				// if we can't find the state, first we should try a sync of that folder, so
@@ -455,10 +453,10 @@ class SyncCollections implements Iterator {
 	 * @param int  $interval     (opt) time between blocking operations of sink or polling / default 30s
 	 * @param bool $onlyPingable (opt) only check for folders which have the PingableFlag
 	 *
+	 * @return bool indicating if changes were found
+	 *
 	 * @throws StatusException with code SyncCollections::ERROR_NO_COLLECTIONS if no collections available
 	 *                         with code SyncCollections::ERROR_WRONG_HIERARCHY if there were errors getting changes
-	 *
-	 * @return bool indicating if changes were found
 	 */
 	public function CheckForChanges($lifetime = 600, $interval = 30, $onlyPingable = false) {
 		$classes = [];
@@ -569,6 +567,13 @@ class SyncCollections implements Iterator {
 				throw new StatusException("SyncCollections->CheckForChanges(): HierarchySync required.", self::HIERARCHY_CHANGED);
 			}
 
+			// Force interruption of the request if we use more than 50 MB of memory
+			if (memory_get_peak_usage(true) > 52428800) {
+				GSync::GetTopCollector()->AnnounceInformation(sprintf("Forced timeout after %ds (high memory usage)", $now - $started), true);
+
+				throw new StatusException(sprintf("SyncCollections->CheckForChanges(): Timeout forced after %ss from %ss as process used too much memory", $now - $started, $lifetime), self::OBSOLETE_CONNECTION);
+			}
+
 			// Check if there are newer requests
 			// If so, this process should be terminated if more than 60 secs to go
 			if ($pingTracking->DoForcePingTimeout()) {
@@ -577,15 +582,15 @@ class SyncCollections implements Iterator {
 
 				// more than 60 secs to go?
 				if (($now + 60) < $endat) {
-					GSync::GetTopCollector()->AnnounceInformation(sprintf("Forced timeout after %ds", ($now - $started)), true);
+					GSync::GetTopCollector()->AnnounceInformation(sprintf("Forced timeout after %ds", $now - $started), true);
 
-					throw new StatusException(sprintf("SyncCollections->CheckForChanges(): Timeout forced after %ss from %ss due to other process", ($now - $started), $lifetime), self::OBSOLETE_CONNECTION);
+					throw new StatusException(sprintf("SyncCollections->CheckForChanges(): Timeout forced after %ss from %ss due to other process", $now - $started, $lifetime), self::OBSOLETE_CONNECTION);
 				}
 			}
 
 			// Use changes sink if available
 			if ($changesSink) {
-				GSync::GetTopCollector()->AnnounceInformation(sprintf("Sink %d/%ds on %s", ($now - $started), $lifetime, $checkClasses));
+				GSync::GetTopCollector()->AnnounceInformation(sprintf("Sink %d/%ds on %s", $now - $started, $lifetime, $checkClasses));
 				$notifications = GSync::GetBackend()->ChangesSink($nextInterval);
 
 				// how long are we waiting for changes
@@ -623,7 +628,7 @@ class SyncCollections implements Iterator {
 			}
 			// use polling mechanism
 			else {
-				GSync::GetTopCollector()->AnnounceInformation(sprintf("Polling %d/%ds on %s", ($now - $started), $lifetime, $checkClasses));
+				GSync::GetTopCollector()->AnnounceInformation(sprintf("Polling %d/%ds on %s", $now - $started, $lifetime, $checkClasses));
 				if ($this->CountChanges($onlyPingable)) {
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->CheckForChanges(): Found changes polling"));
 
@@ -849,8 +854,6 @@ class SyncCollections implements Iterator {
 
 	/**
 	 * Rewind the Iterator to the first element.
-	 *
-	 * @return
 	 */
 	public function rewind() {
 		return reset($this->collections);
@@ -876,8 +879,6 @@ class SyncCollections implements Iterator {
 
 	/**
 	 * Move forward to next element.
-	 *
-	 * @return
 	 */
 	public function next() {
 		return next($this->collections);
@@ -895,8 +896,6 @@ class SyncCollections implements Iterator {
 	/**
 	 * Gets the StateManager from the DeviceManager
 	 * if it's not available.
-	 *
-	 * @return
 	 */
 	private function loadStateManager() {
 		if (!isset($this->stateManager)) {
@@ -908,8 +907,6 @@ class SyncCollections implements Iterator {
 	 * Remove folder statistics from a SyncParameter object.
 	 *
 	 * @param SyncParameters $spa
-	 *
-	 * @return
 	 */
 	private function invalidateFolderStat($spa) {
 		if ($spa->HasFolderStat()) {
