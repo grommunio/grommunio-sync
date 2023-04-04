@@ -46,16 +46,16 @@ class SyncRecurrence extends SyncObject {
 			SYNC_POOMCAL_OCCURRENCES => [
 				self::STREAMER_VAR => "occurrences",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_CMPHIGHER => 0,
-					self::STREAMER_CHECK_CMPLOWER => 1000,
+					self::STREAMER_CHECK_CMPHIGHER => 1,
+					self::STREAMER_CHECK_CMPLOWER => 999,
 				],
 				self::STREAMER_RONOTIFY => true,
 			],
 			SYNC_POOMCAL_INTERVAL => [
 				self::STREAMER_VAR => "interval",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_CMPHIGHER => 0,
-					self::STREAMER_CHECK_CMPLOWER => 1000,
+					self::STREAMER_CHECK_CMPHIGHER => 1,
+					self::STREAMER_CHECK_CMPLOWER => 999,
 				],
 				self::STREAMER_RONOTIFY => true,
 			],
