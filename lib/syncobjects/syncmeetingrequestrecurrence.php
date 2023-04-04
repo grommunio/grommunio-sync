@@ -42,15 +42,15 @@ class SyncMeetingRequestRecurrence extends SyncObject {
 			],
 			SYNC_POOMMAIL_OCCURRENCES => [
 				self::STREAMER_VAR => "occurrences",
-				self::STREAMER_CHECKS => [self::STREAMER_CHECK_CMPHIGHER => 0,
-					self::STREAMER_CHECK_CMPLOWER => 1000,
+				self::STREAMER_CHECKS => [self::STREAMER_CHECK_CMPHIGHER => 1,
+					self::STREAMER_CHECK_CMPLOWER => 999,
 				],
 			],
 			SYNC_POOMMAIL_INTERVAL => [
 				self::STREAMER_VAR => "interval",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_CMPHIGHER => 0,
-					self::STREAMER_CHECK_CMPLOWER => 1000,
+					self::STREAMER_CHECK_CMPHIGHER => 1,
+					self::STREAMER_CHECK_CMPLOWER => 999,
 				],
 			],
 			// DayOfWeek values
