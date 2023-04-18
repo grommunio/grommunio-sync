@@ -660,7 +660,7 @@ class ImportChangesICS implements IImportChanges {
 		$id = isset($folder->BackendId) ? $folder->BackendId : false;
 		$parent = $folder->parentid;
 		$parent_org = $folder->parentid;
-		$displayname = u2wi($folder->displayname);
+		$displayname = $folder->displayname;
 		$type = $folder->type;
 
 		if (Utils::IsSystemFolder($type)) {
