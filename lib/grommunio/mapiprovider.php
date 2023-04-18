@@ -192,12 +192,12 @@ class MAPIProvider {
 
 		// Always set organizer information because some devices do not work properly without it
 		if (isset($messageprops[$appointmentprops["representingentryid"]], $messageprops[$appointmentprops["representingname"]])) {
-			$message->organizeremail = w2u($this->getSMTPAddressFromEntryID($messageprops[$appointmentprops["representingentryid"]]));
+			$message->organizeremail = $this->getSMTPAddressFromEntryID($messageprops[$appointmentprops["representingentryid"]]);
 			// if the email address can't be resolved, fall back to PR_SENT_REPRESENTING_SEARCH_KEY
 			if ($message->organizeremail == "" && isset($messageprops[$appointmentprops["sentrepresentinsrchk"]])) {
 				$message->organizeremail = $this->getEmailAddressFromSearchKey($messageprops[$appointmentprops["sentrepresentinsrchk"]]);
 			}
-			$message->organizername = w2u($messageprops[$appointmentprops["representingname"]]);
+			$message->organizername = $messageprops[$appointmentprops["representingname"]];
 		}
 
 		$appTz = false; // if the appointment has some timezone information saved on the server
@@ -255,26 +255,26 @@ class MAPIProvider {
 		foreach ($rows as $row) {
 			$attendee = new SyncAttendee();
 
-			$attendee->name = w2u($row[PR_DISPLAY_NAME]);
+			$attendee->name = $row[PR_DISPLAY_NAME];
 			// smtp address is always a proper email address
 			if (isset($row[PR_SMTP_ADDRESS])) {
-				$attendee->email = w2u($row[PR_SMTP_ADDRESS]);
+				$attendee->email = $row[PR_SMTP_ADDRESS];
 			}
 			elseif (isset($row[PR_ADDRTYPE], $row[PR_EMAIL_ADDRESS])) {
 				// if address type is SMTP, it's also a proper email address
 				if ($row[PR_ADDRTYPE] == "SMTP") {
-					$attendee->email = w2u($row[PR_EMAIL_ADDRESS]);
+					$attendee->email = $row[PR_EMAIL_ADDRESS];
 				}
 				// if address type is ZARAFA, the PR_EMAIL_ADDRESS contains username
 				elseif ($row[PR_ADDRTYPE] == "ZARAFA") {
 					$userinfo = @nsp_getuserinfo($row[PR_EMAIL_ADDRESS]);
 					if (is_array($userinfo) && isset($userinfo["primary_email"])) {
-						$attendee->email = w2u($userinfo["primary_email"]);
+						$attendee->email = $userinfo["primary_email"];
 					}
 					// if the user was not found, do a fallback to PR_SEARCH_KEY
 					// @see https://jira.z-hub.io/browse/ZP-1178
 					elseif (isset($row[PR_SEARCH_KEY])) {
-						$attendee->email = w2u($this->getEmailAddressFromSearchKey($row[PR_SEARCH_KEY]));
+						$attendee->email = $this->getEmailAddressFromSearchKey($row[PR_SEARCH_KEY]);
 					}
 					else {
 						SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getAppointment: The attendee '%s' of type ZARAFA can not be resolved. Code: 0x%X", $row[PR_EMAIL_ADDRESS], mapi_last_hresult()));
@@ -313,8 +313,8 @@ class MAPIProvider {
 				$meinfo = nsp_getuserinfo(Request::GetUser());
 
 				if (is_array($meinfo)) {
-					$attendee->email = w2u($meinfo["primary_email"]);
-					$attendee->name = w2u($meinfo["fullname"]);
+					$attendee->email = $meinfo["primary_email"];
+					$attendee->name = $meinfo["fullname"];
 					$attendee->attendeetype = MAPI_TO;
 
 					array_push($message->attendees, $attendee);
@@ -330,8 +330,8 @@ class MAPIProvider {
 			$meinfo = nsp_getuserinfo(Request::GetUser());
 
 			if (is_array($meinfo)) {
-				$message->organizeremail = w2u($meinfo["primary_email"]);
-				$message->organizername = w2u($meinfo["fullname"]);
+				$message->organizeremail = $meinfo["primary_email"];
+				$message->organizername = $meinfo["fullname"];
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): setting ourself as the organizer for an appointment without attendees.");
 			}
 		}
@@ -547,13 +547,13 @@ class MAPIProvider {
 				}
 			}
 			if (isset($change["subject"])) {
-				$exception->subject = w2u($change["subject"]);
+				$exception->subject = $change["subject"];
 			}
 			if (isset($change["reminder_before"]) && $change["reminder_before"]) {
 				$exception->reminder = $change["remind_before"];
 			}
 			if (isset($change["location"])) {
-				$exception->location = w2u($change["location"]);
+				$exception->location = $change["location"];
 			}
 			if (isset($change["busystatus"])) {
 				$exception->busystatus = $change["busystatus"];
@@ -687,10 +687,10 @@ class MAPIProvider {
 		}
 
 		if ($fromname) {
-			$from = "\"" . w2u($fromname) . "\" <" . w2u($fromaddr) . ">";
+			$from = "\"" . $fromname . "\" <" . $fromaddr . ">";
 		}
 		else { // START CHANGED dw2412 HTC shows "error" if sender name is unknown
-			$from = "\"" . w2u($fromaddr) . "\" <" . w2u($fromaddr) . ">";
+			$from = "\"" . $fromaddr . "\" <" . $fromaddr . ">";
 		}
 		// END CHANGED dw2412 HTC shows "error" if sender name is unknown
 
@@ -902,14 +902,14 @@ class MAPIProvider {
 			$name = isset($row[PR_DISPLAY_NAME]) ? $row[PR_DISPLAY_NAME] : "";
 
 			if ($name == "" || $name == $address) {
-				$fulladdr = w2u($address);
+				$fulladdr = $address;
 			}
 			else {
 				if (substr($name, 0, 1) != '"' && substr($name, -1) != '"') {
-					$fulladdr = "\"" . w2u($name) . "\" <" . w2u($address) . ">";
+					$fulladdr = "\"" . $name . "\" <" . $address . ">";
 				}
 				else {
-					$fulladdr = w2u($name) . "<" . w2u($address) . ">";
+					$fulladdr = $name . "<" . $address . ">";
 				}
 			}
 
@@ -1049,7 +1049,7 @@ class MAPIProvider {
 		else {
 			$folder->parentid = GSync::GetDeviceManager()->GetFolderIdForBackendId(bin2hex($folderprops[PR_PARENT_SOURCE_KEY]));
 		}
-		$folder->displayname = w2u($folderprops[PR_DISPLAY_NAME]);
+		$folder->displayname = $folderprops[PR_DISPLAY_NAME];
 		$folder->type = $this->GetFolderType($folderprops[PR_ENTRYID], isset($folderprops[PR_CONTAINER_CLASS]) ? $folderprops[PR_CONTAINER_CLASS] : false);
 
 		return $folder;
@@ -1472,10 +1472,10 @@ class MAPIProvider {
 					$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
 				}
 				if (isset($appointment->subject)) {
-					$exceptionprops[$appointmentprops["subject"]] = u2w($appointment->subject);
+					$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
 				}
 				if (isset($appointment->location)) {
-					$exceptionprops[$appointmentprops["location"]] = u2w($appointment->location);
+					$exceptionprops[$appointmentprops["location"]] = $appointment->location;
 				}
 				if (isset($appointment->busystatus)) {
 					$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
@@ -1488,7 +1488,7 @@ class MAPIProvider {
 					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $appointment->alldayevent;
 				}
 				if (isset($appointment->body)) {
-					$exceptionprops[$appointmentprops["body"]] = u2w($appointment->body);
+					$exceptionprops[$appointmentprops["body"]] = $appointment->body;
 				}
 				if (isset($appointment->asbody)) {
 					$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
@@ -1679,10 +1679,10 @@ class MAPIProvider {
 							$exceptionprops[$appointmentprops["endtime"]] = $exception->endtime;
 						}
 						if (isset($exception->subject)) {
-							$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = u2w($exception->subject);
+							$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
 						}
 						if (isset($exception->location)) {
-							$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = u2w($exception->location);
+							$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = $exception->location;
 						}
 						if (isset($exception->busystatus)) {
 							$exceptionprops[$appointmentprops["busystatus"]] = $mapiexception["busystatus"] = $exception->busystatus;
@@ -1700,7 +1700,7 @@ class MAPIProvider {
 						}
 
 						if (isset($exception->body)) {
-							$exceptionprops[$appointmentprops["body"]] = u2w($exception->body);
+							$exceptionprops[$appointmentprops["body"]] = $exception->body;
 						}
 
 						if (isset($exception->asbody)) {
@@ -1832,8 +1832,7 @@ class MAPIProvider {
 			$addrbook = $this->getAddressbook();
 			foreach ($appointment->attendees as $attendee) {
 				$recip = [];
-				$recip[PR_EMAIL_ADDRESS] = u2w($attendee->email);
-				$recip[PR_SMTP_ADDRESS] = u2w($attendee->email);
+				$recip[PR_EMAIL_ADDRESS] = $recip[PR_SMTP_ADDRESS] = $attendee->email;
 
 				// lookup information in GAB if possible so we have up-to-date name for given address
 				$userinfo = [[PR_DISPLAY_NAME => $recip[PR_EMAIL_ADDRESS]]];
@@ -1849,7 +1848,7 @@ class MAPIProvider {
 					$recip[PR_RECIPIENT_TRACKSTATUS] = isset($attendee->attendeestatus) ? $attendee->attendeestatus : olResponseNone;
 				}
 				else {
-					$recip[PR_DISPLAY_NAME] = u2w($attendee->name);
+					$recip[PR_DISPLAY_NAME] = $attendee->name;
 					$recip[PR_SEARCH_KEY] = "SMTP:" . $recip[PR_EMAIL_ADDRESS] . "\0";
 					$recip[PR_ADDRTYPE] = "SMTP";
 					$recip[PR_RECIPIENT_TYPE] = isset($attendee->attendeetype) ? $attendee->attendeetype : MAPI_TO;
@@ -2225,18 +2224,7 @@ class MAPIProvider {
 
 		foreach ($mapiprops as $asprop => $mapiprop) {
 			if (isset($message->{$asprop})) {
-				// UTF8->windows1252.. this is ok for all numerical values
-				if (mapi_prop_type($mapiprop) != PT_BINARY && mapi_prop_type($mapiprop) != PT_MV_BINARY) {
-					if (is_array($message->{$asprop})) {
-						$value = array_map("u2wi", $message->{$asprop});
-					}
-					else {
-						$value = u2wi($message->{$asprop});
-					}
-				}
-				else {
-					$value = $message->{$asprop};
-				}
+				$value = $message->{$asprop};
 
 				// Make sure the php values are the correct type
 				switch (mapi_prop_type($mapiprop)) {
@@ -2345,16 +2333,8 @@ class MAPIProvider {
 						// do not send rtf to the mobile
 						continue;
 					}
-					elseif (is_array($messageprops[$mapiprop])) {
-						$message->{$asprop} = array_map("w2u", $messageprops[$mapiprop]);
-					}
 					else {
-						if (mapi_prop_type($mapiprop) != PT_BINARY && mapi_prop_type($mapiprop) != PT_MV_BINARY) {
-							$message->{$asprop} = w2u($messageprops[$mapiprop]);
-						}
-						else {
-							$message->{$asprop} = $messageprops[$mapiprop];
-						}
+						$message->{$asprop} = $messageprops[$mapiprop];
 					}
 				}
 			}
@@ -2653,11 +2633,11 @@ class MAPIProvider {
 	 */
 	private function composeDisplayName(&$contact) {
 		// Set display name and subject to a combined value of firstname and lastname
-		$cname = (isset($contact->prefix)) ? u2w($contact->prefix) . " " : "";
-		$cname .= u2w($contact->firstname);
-		$cname .= (isset($contact->middlename)) ? " " . u2w($contact->middlename) : "";
-		$cname .= " " . u2w($contact->lastname);
-		$cname .= (isset($contact->suffix)) ? " " . u2w($contact->suffix) : "";
+		$cname = (isset($contact->prefix)) ? $contact->prefix . " " : "";
+		$cname .= $contact->firstname;
+		$cname .= (isset($contact->middlename)) ? " " . $contact->middlename : "";
+		$cname .= " " . $contact->lastname;
+		$cname .= (isset($contact->suffix)) ? " " . $contact->suffix : "";
 
 		return trim($cname);
 	}
@@ -2701,23 +2681,23 @@ class MAPIProvider {
 	 */
 	private function setAddress($type, &$city, &$country, &$postalcode, &$state, &$street, &$props, &$properties) {
 		if (isset($city)) {
-			$props[$properties[$type . "city"]] = $city = u2w($city);
+			$props[$properties[$type . "city"]] = $city;
 		}
 
 		if (isset($country)) {
-			$props[$properties[$type . "country"]] = $country = u2w($country);
+			$props[$properties[$type . "country"]] = $country;
 		}
 
 		if (isset($postalcode)) {
-			$props[$properties[$type . "postalcode"]] = $postalcode = u2w($postalcode);
+			$props[$properties[$type . "postalcode"]] = $postalcode;
 		}
 
 		if (isset($state)) {
-			$props[$properties[$type . "state"]] = $state = u2w($state);
+			$props[$properties[$type . "state"]] = $state;
 		}
 
 		if (isset($street)) {
-			$props[$properties[$type . "street"]] = $street = u2w($street);
+			$props[$properties[$type . "street"]] = $street;
 		}
 
 		// set composed address
@@ -2959,7 +2939,7 @@ class MAPIProvider {
 		}
 		else {
 			$body = $this->mapiReadStream($stream, $streamsize);
-			$message->body = str_replace("\n", "\r\n", w2u(str_replace("\r", "", $body)));
+			$message->body = str_replace("\n", "\r\n", str_replace("\r", "", $body));
 			$message->bodysize = $streamsize;
 			$message->bodytruncated = 0;
 		}
@@ -3214,7 +3194,7 @@ class MAPIProvider {
 				}
 
 				// the displayname is handled equally for all AS versions
-				$attach->displayname = w2u((isset($attachprops[PR_ATTACH_LONG_FILENAME])) ? $attachprops[PR_ATTACH_LONG_FILENAME] : ((isset($attachprops[PR_ATTACH_FILENAME])) ? $attachprops[PR_ATTACH_FILENAME] : ((isset($attachprops[PR_DISPLAY_NAME])) ? $attachprops[PR_DISPLAY_NAME] : "attachment.bin")));
+				$attach->displayname = (isset($attachprops[PR_ATTACH_LONG_FILENAME])) ? $attachprops[PR_ATTACH_LONG_FILENAME] : ((isset($attachprops[PR_ATTACH_FILENAME])) ? $attachprops[PR_ATTACH_FILENAME] : ((isset($attachprops[PR_DISPLAY_NAME])) ? $attachprops[PR_DISPLAY_NAME] : "attachment.bin"));
 				// fix attachment name in case of inline images
 				if (($attach->displayname == "inline.txt" && isset($attachprops[PR_ATTACH_MIME_TAG])) ||
 						(substr_compare($attach->displayname, "attachment", 0, 10, true) === 0 && substr_compare($attach->displayname, ".dat", -4, 4, true) === 0)) {

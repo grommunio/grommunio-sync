@@ -564,11 +564,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 							SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): convert plain forwarded message charset (only fw set) from '%s' to '65001'", $cpid[$sendMailProps["internetcpid"]]));
 							$fwbody = Utils::ConvertCodepageStringToUtf8($cpid[$sendMailProps["internetcpid"]], $fwbody);
 						}
-						// otherwise to the general conversion
-						else {
-							SLog::Write(LOGLEVEL_DEBUG, "Grommunio->SendMail(): no charset conversion done for plain forwarded message");
-							$fwbody = w2u($fwbody);
-						}
 
 						$mapiprops[$sendMailProps["body"]] = $body . "\r\n\r\n" . $fwbody;
 					}
@@ -579,11 +574,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						if (isset($cpid[$sendMailProps["internetcpid"]]) && $cpid[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8) {
 							SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): convert html forwarded message charset (only fw set) from '%s' to '65001'", $cpid[$sendMailProps["internetcpid"]]));
 							$fwbodyHtml = Utils::ConvertCodepageStringToUtf8($cpid[$sendMailProps["internetcpid"]], $fwbodyHtml);
-						}
-						// otherwise to the general conversion
-						else {
-							SLog::Write(LOGLEVEL_DEBUG, "Grommunio->SendMail(): no charset conversion done for html forwarded message");
-							$fwbodyHtml = w2u($fwbodyHtml);
 						}
 
 						$mapiprops[$sendMailProps["html"]] = $bodyHtml . "<br><br>" . $fwbodyHtml;
@@ -1237,7 +1227,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->GetGALSearchResults(): could not open addressbook: 0x%X", mapi_last_hresult()), SYNC_SEARCHSTATUS_STORE_CONNECTIONFAILED);
 		}
 
-		$restriction = MAPIUtils::GetSearchRestriction(u2w($searchquery));
+		$restriction = MAPIUtils::GetSearchRestriction($searchquery);
 		mapi_table_restrict($table, $restriction);
 		mapi_table_sort($table, [PR_DISPLAY_NAME => TABLE_SORT_ASCEND]);
 
@@ -1267,58 +1257,58 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		for ($i = 0; $i < $querylimit; ++$i) {
 			if (!isset($abentries[$i][PR_SMTP_ADDRESS])) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->GetGALSearchResults(): The GAL entry '%s' does not have an email address and will be ignored.", w2u($abentries[$i][PR_DISPLAY_NAME])));
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->GetGALSearchResults(): The GAL entry '%s' does not have an email address and will be ignored.", $abentries[$i][PR_DISPLAY_NAME]));
 
 				continue;
 			}
 
-			$items[$i][SYNC_GAL_DISPLAYNAME] = w2u($abentries[$i][PR_DISPLAY_NAME]);
+			$items[$i][SYNC_GAL_DISPLAYNAME] = $abentries[$i][PR_DISPLAY_NAME];
 
 			if (strlen(trim($items[$i][SYNC_GAL_DISPLAYNAME])) == 0) {
-				$items[$i][SYNC_GAL_DISPLAYNAME] = w2u($abentries[$i][PR_ACCOUNT]);
+				$items[$i][SYNC_GAL_DISPLAYNAME] = $abentries[$i][PR_ACCOUNT];
 			}
 
-			$items[$i][SYNC_GAL_ALIAS] = w2u($abentries[$i][PR_ACCOUNT]);
+			$items[$i][SYNC_GAL_ALIAS] = $abentries[$i][PR_ACCOUNT];
 			// it's not possible not get first and last name of an user
 			// from the gab and user functions, so we just set lastname
 			// to displayname and leave firstname unset
 			// this was changed in Zarafa 6.40, so we try to get first and
 			// last name and fall back to the old behaviour if these values are not set
 			if (isset($abentries[$i][PR_GIVEN_NAME])) {
-				$items[$i][SYNC_GAL_FIRSTNAME] = w2u($abentries[$i][PR_GIVEN_NAME]);
+				$items[$i][SYNC_GAL_FIRSTNAME] = $abentries[$i][PR_GIVEN_NAME];
 			}
 			if (isset($abentries[$i][PR_SURNAME])) {
-				$items[$i][SYNC_GAL_LASTNAME] = w2u($abentries[$i][PR_SURNAME]);
+				$items[$i][SYNC_GAL_LASTNAME] = $abentries[$i][PR_SURNAME];
 			}
 
 			if (!isset($items[$i][SYNC_GAL_LASTNAME])) {
 				$items[$i][SYNC_GAL_LASTNAME] = $items[$i][SYNC_GAL_DISPLAYNAME];
 			}
 
-			$items[$i][SYNC_GAL_EMAILADDRESS] = w2u($abentries[$i][PR_SMTP_ADDRESS]);
+			$items[$i][SYNC_GAL_EMAILADDRESS] = $abentries[$i][PR_SMTP_ADDRESS];
 			// check if an user has an office number or it might produce warnings in the log
 			if (isset($abentries[$i][PR_BUSINESS_TELEPHONE_NUMBER])) {
-				$items[$i][SYNC_GAL_PHONE] = w2u($abentries[$i][PR_BUSINESS_TELEPHONE_NUMBER]);
+				$items[$i][SYNC_GAL_PHONE] = $abentries[$i][PR_BUSINESS_TELEPHONE_NUMBER];
 			}
 			// check if an user has a mobile number or it might produce warnings in the log
 			if (isset($abentries[$i][PR_MOBILE_TELEPHONE_NUMBER])) {
-				$items[$i][SYNC_GAL_MOBILEPHONE] = w2u($abentries[$i][PR_MOBILE_TELEPHONE_NUMBER]);
+				$items[$i][SYNC_GAL_MOBILEPHONE] = $abentries[$i][PR_MOBILE_TELEPHONE_NUMBER];
 			}
 			// check if an user has a home number or it might produce warnings in the log
 			if (isset($abentries[$i][PR_HOME_TELEPHONE_NUMBER])) {
-				$items[$i][SYNC_GAL_HOMEPHONE] = w2u($abentries[$i][PR_HOME_TELEPHONE_NUMBER]);
+				$items[$i][SYNC_GAL_HOMEPHONE] = $abentries[$i][PR_HOME_TELEPHONE_NUMBER];
 			}
 
 			if (isset($abentries[$i][PR_COMPANY_NAME])) {
-				$items[$i][SYNC_GAL_COMPANY] = w2u($abentries[$i][PR_COMPANY_NAME]);
+				$items[$i][SYNC_GAL_COMPANY] = $abentries[$i][PR_COMPANY_NAME];
 			}
 
 			if (isset($abentries[$i][PR_TITLE])) {
-				$items[$i][SYNC_GAL_TITLE] = w2u($abentries[$i][PR_TITLE]);
+				$items[$i][SYNC_GAL_TITLE] = $abentries[$i][PR_TITLE];
 			}
 
 			if (isset($abentries[$i][PR_OFFICE_LOCATION])) {
-				$items[$i][SYNC_GAL_OFFICE] = w2u($abentries[$i][PR_OFFICE_LOCATION]);
+				$items[$i][SYNC_GAL_OFFICE] = $abentries[$i][PR_OFFICE_LOCATION];
 			}
 
 			if ($searchpicture !== false && isset($abentries[$i][PR_EMS_AB_THUMBNAIL_PHOTO])) {
@@ -2303,7 +2293,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$oofmessage = new SyncOOFMessage();
 			$oofmessage->appliesToInternal = "";
 			$oofmessage->enabled = $oof->oofstate;
-			$oofmessage->replymessage = (isset($oofprops[PR_EC_OUTOFOFFICE_MSG])) ? w2u($oofprops[PR_EC_OUTOFOFFICE_MSG]) : "";
+			$oofmessage->replymessage = $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "";
 			$oofmessage->bodytype = $oof->bodytype;
 			unset($oofmessage->appliesToExternal, $oofmessage->appliesToExternalUnknown);
 			$oof->oofmessage[] = $oofmessage;
@@ -2362,7 +2352,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$props[PR_EC_OUTOFOFFICE] = true;
 			foreach ($oof->oofmessage as $oofmessage) {
 				if (isset($oofmessage->appliesToInternal)) {
-					$props[PR_EC_OUTOFOFFICE_MSG] = isset($oofmessage->replymessage) ? u2w($oofmessage->replymessage) : "";
+					$props[PR_EC_OUTOFOFFICE_MSG] = $oofmessage->replymessage ?? "";
 					$props[PR_EC_OUTOFOFFICE_SUBJECT] = "Out of office";
 				}
 			}
@@ -2617,7 +2607,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						[
 							FUZZYLEVEL => FL_SUBSTRING | FL_IGNORECASE,
 							ULPROPTAG => $property,
-							VALUE => u2w($term),
+							VALUE => $term,
 						],
 					]
 				);
@@ -2723,7 +2713,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return false;
 		}
 
-		$restriction = MAPIUtils::GetSearchRestriction(u2w($to));
+		$restriction = MAPIUtils::GetSearchRestriction($to);
 		mapi_table_restrict($table, $restriction);
 
 		$querycnt = mapi_table_getrowcount($table);
@@ -2909,7 +2899,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private function createResolveRecipient($type, $email, $recipientProperties, $recipientCount = 0) {
 		$recipient = new SyncResolveRecipient();
 		$recipient->type = $type;
-		$recipient->displayname = u2w($recipientProperties[PR_DISPLAY_NAME]);
+		$recipient->displayname = $recipientProperties[PR_DISPLAY_NAME];
 		$recipient->emailaddress = $email;
 
 		if ($type == SYNC_RESOLVERECIPIENTS_TYPE_GAL) {

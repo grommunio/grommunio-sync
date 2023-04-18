@@ -449,7 +449,6 @@ class MAPIUtils {
 		$supportmask = mapi_getprops($store, [PR_STORE_SUPPORT_MASK]);
 		if (isset($supportmask[PR_STORE_SUPPORT_MASK]) && ($supportmask[PR_STORE_SUPPORT_MASK] & STORE_UNICODE_OK)) {
 			SLog::Write(LOGLEVEL_DEBUG, "Store supports properties containing Unicode characters.");
-			define('STORE_SUPPORTS_UNICODE', true);
 			define('STORE_INTERNET_CPID', INTERNET_CPID_UTF8);
 		}
 	}
