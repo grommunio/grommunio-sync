@@ -388,9 +388,7 @@ class GSyncTop {
 			if ($linesprinted >= $toPrintUnknown) {
 				break;
 			}
-			if (is_nan($time)) {
-				$time = 0;
-			}
+			$time = intval($time);
 			$color = "0;31m";
 			if (!isset($l['start'])) {
 				$l['start'] = $time;
