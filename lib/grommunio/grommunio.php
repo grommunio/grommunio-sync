@@ -712,7 +712,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->GetAttachmentData('%s'): Error, unable to open attachment number '%s' with: 0x%X", $attname, $attachnum, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_INVALIDATT);
 		}
 
-		// attachment of a recurring appointment execption
+		// attachment of a recurring appointment exception
 		if (strlen($exceptionBasedate) > 1) {
 			$recurrence = new Recurrence($this->store, $message);
 			$exceptionatt = $recurrence->getExceptionAttachment(hex2bin($exceptionBasedate));

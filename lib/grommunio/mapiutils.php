@@ -813,7 +813,7 @@ class MAPIUtils {
 			'type' => '',  // ULONG,    4 bytes,  8 hex characters
 			'id' => '',  // ULONG,    4 bytes,  8 hex characters
 			'server' => '',  // CHAR,    variable length
-			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (upto 4 bytes)
+			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (up to 4 bytes)
 		];
 
 		$res['length'] = strlen($entryId);
@@ -864,7 +864,7 @@ class MAPIUtils {
 			'type' => '',  // ULONG,    4 bytes,  8 hex characters
 			'uniqueId' => '',  // ULONG,   16 bytes,  32 hex characters
 			'server' => '',  // CHAR,    variable length
-			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (upto 4 bytes)
+			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (up to 4 bytes)
 		];
 
 		$res['length'] = strlen($entryId);

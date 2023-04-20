@@ -237,7 +237,7 @@ abstract class SyncObject extends Streamer {
 	}
 
 	/**
-	 * Indicates the amount of paramters that were set before Checks were executed and potentially set other parameters.
+	 * Indicates the amount of parameters that were set before Checks were executed and potentially set other parameters.
 	 *
 	 * @return bool/int	- returns false if Check() was not executed
 	 */
