@@ -1440,7 +1440,7 @@ class MAPIProvider {
 		// AS 16: incoming instanceid means we need to create/update an appointment exception
 		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->instanceid) && $appointment->instanceid) {
 			// this property wasn't decoded so use Streamer->parseDate to convert it into a timestamp and get basedate from it
-			$instanceid = $appointment->parseDate($appointment->instanceid);
+			$instanceid = Utils::parseDate($appointment->instanceid);
 			$basedate = $this->getDayStartOfTimestamp($instanceid);
 
 			// get compatible TZ data
@@ -1512,7 +1512,7 @@ class MAPIProvider {
 			$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
 			$mr->sendMeetingRequest($deleteException, false, $basedate);
 
-			return true;
+			return $response;
 		}
 
 		// Save OldProps to later check which data is being changed
