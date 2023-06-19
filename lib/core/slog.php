@@ -107,9 +107,9 @@ class SLog {
 	/**
 	 * Returns the logger object. If no logger has been initialized, FileLog will be initialized and returned.
 	 *
-	 * @throws Exception thrown if the logger class cannot be instantiated
-	 *
 	 * @return Log
+	 *
+	 * @throws Exception thrown if the logger class cannot be instantiated
 	 */
 	private static function getLogger() {
 		if (!self::$logger) {

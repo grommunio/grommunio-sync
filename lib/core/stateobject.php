@@ -40,8 +40,6 @@ class StateObject implements JsonSerializable {
 	 *
 	 * @param mixed $name
 	 * @param mixed $value
-	 *
-	 * @return
 	 */
 	public function __set($name, $value) {
 		$lname = strtolower($name);
@@ -63,8 +61,6 @@ class StateObject implements JsonSerializable {
 	 * Unsetdata array is returned.
 	 *
 	 * @param mixed $name
-	 *
-	 * @return
 	 */
 	public function __get($name) {
 		$lname = strtolower($name);
@@ -84,8 +80,6 @@ class StateObject implements JsonSerializable {
 	 * PHP magic to check if an instance variable is set.
 	 *
 	 * @param mixed $name
-	 *
-	 * @return
 	 */
 	public function __isset($name) {
 		return isset($this->data[strtolower($name)]);
@@ -95,8 +89,6 @@ class StateObject implements JsonSerializable {
 	 * PHP magic to remove an instance variable.
 	 *
 	 * @param mixed $name
-	 *
-	 * @return
 	 */
 	public function __unset($name) {
 		if (isset($this->{$name})) {
@@ -200,7 +192,7 @@ class StateObject implements JsonSerializable {
 	/**
 	 * Restores the object from a value provided by json_decode.
 	 *
-	 * @param $stdObj   stdClass Object
+	 * @param $stdObj stdClass Object
 	 */
 	public function jsonDeserialize($stdObj) {
 		foreach ($stdObj->data as $prop => $val) {
@@ -229,8 +221,8 @@ class StateObject implements JsonSerializable {
 					}
 				}
 			}
-			elseif(is_array($val)) {
-				foreach($val as $index => $elem) {
+			elseif (is_array($val)) {
+				foreach ($val as $index => $elem) {
 					if (is_object($elem) && isset($elem->gsSyncStateClass) && !empty($elem->data)) {
 						$this->data[$prop][$index] = new $elem->gsSyncStateClass();
 						$this->data[$prop][$index]->jsonDeserialize($elem);

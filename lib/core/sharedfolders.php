@@ -9,7 +9,7 @@
 class SharedFolders extends InterProcessData {
 	private static $instance = false;
 	private $shared;
-	private $updateTime; 
+	private $updateTime;
 
 	public static function GetSharedFolders() {
 		if (!self::$instance) {
@@ -41,11 +41,11 @@ class SharedFolders extends InterProcessData {
 
 	/**
 	 * Returns cached shared folder data from this instance or from redis.
-	 * As this is potentially called for each folder in a sync we only need to update it 
+	 * As this is potentially called for each folder in a sync we only need to update it
 	 * from redis every ping intervals to push new folders.
 	 *
 	 * If no data is available it's retrieved from the store via MAPI.
-	 * 
+	 *
 	 * @return array
 	 */
 	public function GetSharedFoldersRaw() {
@@ -62,6 +62,7 @@ class SharedFolders extends InterProcessData {
 			$this->shared = $shared;
 			$this->updateTime = time();
 		}
+
 		return $this->shared;
 	}
 }

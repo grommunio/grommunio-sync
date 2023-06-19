@@ -38,9 +38,9 @@ interface ISearchProvider {
 	 * @param string                       $searchrange   specified searchrange
 	 * @param SyncResolveRecipientsPicture $searchpicture limitations for picture
 	 *
-	 * @throws StatusException
-	 *
 	 * @return array search results
+	 *
+	 * @throws StatusException
 	 */
 	public function GetGALSearchResults($searchquery, $searchrange, $searchpicture);
 

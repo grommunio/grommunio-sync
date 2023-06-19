@@ -46,8 +46,6 @@ class ASDevice extends StateObject {
 
 	/**
 	 * AS Device constructor.
-	 *
-	 * @return
 	 */
 	public function __construct() {
 		$this->firstsynctime = time();

@@ -230,7 +230,6 @@ class MAPIUtils {
 	 * Create a MAPI restriction for a certain email address.
 	 *
 	 * @param MAPIStore $store the MAPI store
-	 * @param string    $query email address
 	 * @param mixed     $email
 	 *
 	 * @return array
@@ -351,22 +350,22 @@ class MAPIUtils {
 		$p = mapi_getprops($mapimessage, [$props["starttime"], $props["endtime"], $props["recurrenceend"], $props["isrecurring"], $props["recurrenceend"]]);
 
 		if (
-				(
-					isset($p[$props["endtime"]], $p[$props["starttime"]]) &&
-					// item.end > window.start && item.start < window.end
-					$p[$props["endtime"]] > $start && $p[$props["starttime"]] < $end
-				) ||
-				(
-					isset($p[$props["isrecurring"]], $p[$props["recurrenceend"]]) &&
-						// (EXIST(recurrence_enddate_property) && item[isRecurring] == true && recurrence_enddate_property >= start)
-						$p[$props["isrecurring"]] == true && $p[$props["recurrenceend"]] >= $start
-				) ||
-				(
-					isset($p[$props["isrecurring"]], $p[$props["starttime"]]) &&
-						// (!EXIST(recurrence_enddate_property) && item[isRecurring] == true && item[start] <= end)
-						!isset($p[$props["recurrenceend"]]) && $p[$props["isrecurring"]] == true && $p[$props["starttime"]] <= $end
-				)
-			) {
+			(
+				isset($p[$props["endtime"]], $p[$props["starttime"]]) &&
+				// item.end > window.start && item.start < window.end
+				$p[$props["endtime"]] > $start && $p[$props["starttime"]] < $end
+			) ||
+			(
+				isset($p[$props["isrecurring"]], $p[$props["recurrenceend"]]) &&
+					// (EXIST(recurrence_enddate_property) && item[isRecurring] == true && recurrence_enddate_property >= start)
+					$p[$props["isrecurring"]] == true && $p[$props["recurrenceend"]] >= $start
+			) ||
+			(
+				isset($p[$props["isrecurring"]], $p[$props["starttime"]]) &&
+					// (!EXIST(recurrence_enddate_property) && item[isRecurring] == true && item[start] <= end)
+					!isset($p[$props["recurrenceend"]]) && $p[$props["isrecurring"]] == true && $p[$props["starttime"]] <= $end
+			)
+		) {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIUtils->IsInCalendarSyncInterval: Message is in the synchronization interval");
 
 			return true;
@@ -504,8 +503,7 @@ class MAPIUtils {
 	/**
 	 * Returns the ActiveSync (USER) Foldertype from MAPI PR_CONTAINER_CLASS.
 	 *
-	 * @param string $foldertype
-	 * @param mixed  $class
+	 * @param mixed $class
 	 *
 	 * @return int
 	 */
@@ -566,77 +564,77 @@ class MAPIUtils {
 		}
 
 		if ( // 1
-				($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 2
-				($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 3
-				($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 4
-				($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				$messageprops[PR_RTF_IN_SYNC]) {
+			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 5
-				($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				(!$messageprops[PR_RTF_IN_SYNC])) {
+			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			(!$messageprops[PR_RTF_IN_SYNC])) {
 			return SYNC_BODYPREFERENCE_HTML;
 		}
 		if ( // 6
-				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				$messageprops[PR_RTF_IN_SYNC]) {
+			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 7
-				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				(!$messageprops[PR_RTF_IN_SYNC])) {
+			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			(!$messageprops[PR_RTF_IN_SYNC])) {
 			return SYNC_BODYPREFERENCE_HTML;
 		}
 		if ( // 8
-				($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				$messageprops[PR_RTF_IN_SYNC]) {
+			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			$messageprops[PR_RTF_IN_SYNC]) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 9.1
-				($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				(!$messageprops[PR_RTF_IN_SYNC])) {
+			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			(!$messageprops[PR_RTF_IN_SYNC])) {
 			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 9.2
-				($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_RTF;
 		}
 		if ( // 9.3
-				($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 9.4
-				($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
-				($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
-				($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND)) {
+			($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
+			($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
+			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_HTML;
 		}
 		// 10
@@ -670,7 +668,6 @@ class MAPIUtils {
 	 * @param MAPISession    $session
 	 * @param MAPIStore      $store
 	 * @param MAPIAdressBook $addressBook
-	 * @param MAPIMessage    $message     smime message
 	 * @param mixed          $mapimessage
 	 */
 	public static function ParseSmime($session, $store, $addressBook, &$mapimessage) {

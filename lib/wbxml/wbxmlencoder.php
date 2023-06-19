@@ -46,8 +46,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Puts the WBXML header on the stream.
-	 *
-	 * @return
 	 */
 	public function startWBXML() {
 		if ($this->multipart) {
@@ -67,12 +65,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Puts a StartTag on the output stack.
-	 *
-	 * @param $tag
-	 * @param $attributes
-	 * @param $nocontent
-	 *
-	 * @return
 	 */
 	public function startTag($tag, $attributes = false, $nocontent = false) {
 		$stackelem = [];
@@ -84,7 +76,7 @@ class WBXMLEncoder extends WBXMLDefs {
 
 			array_push($this->_stack, $stackelem);
 
-		// If 'nocontent' is specified, then apparently the user wants to force
+			// If 'nocontent' is specified, then apparently the user wants to force
 			// output of an empty tag, and we therefore output the stack here
 		}
 		else {
@@ -95,8 +87,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Puts an EndTag on the stack.
-	 *
-	 * @return
 	 */
 	public function endTag() {
 		$stackelem = array_pop($this->_stack);
@@ -121,8 +111,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * Puts content on the output stack.
 	 *
 	 * @param string $content
-	 *
-	 * @return
 	 */
 	public function content($content) {
 		// We need to filter out any \0 chars because it's the string terminator in WBXML. We currently
@@ -141,8 +129,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * @param resource $stream
 	 * @param bool     $asBase64 if true, the data will be encoded as base64, default: false
 	 * @param bool     $opaque   if true, output the opaque data, default: false
-	 *
-	 * @return
 	 */
 	public function contentStream($stream, $asBase64 = false, $opaque = false) {
 		// Do not append filters to opaque data as it might contain null char
@@ -199,8 +185,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Output any tags on the stack that haven't been output yet.
-	 *
-	 * @return
 	 */
 	private function _outputStack() {
 		$stackCount = count($this->_stack);
@@ -217,8 +201,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 *
 	 * @param mixed $tag
 	 * @param mixed $nocontent
-	 *
-	 * @return
 	 */
 	private function _startTag($tag, $nocontent = false) {
 		if ($this->log) {
@@ -249,8 +231,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * Outputs actual data.
 	 *
 	 * @param string $content
-	 *
-	 * @return
 	 */
 	private function _content($content) {
 		if ($this->log) {
@@ -266,8 +246,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * @param resource $stream
 	 * @param bool     $asBase64
 	 * @param mixed    $opaque
-	 *
-	 * @return
 	 */
 	private function _contentStream($stream, $asBase64, $opaque) {
 		$stat = fstat($stream);
@@ -299,8 +277,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Outputs an actual end tag.
-	 *
-	 * @return
 	 */
 	private function _endTag() {
 		if ($this->log) {
@@ -311,10 +287,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Outputs a byte.
-	 *
-	 * @param $byte
-	 *
-	 * @return
 	 */
 	private function outByte($byte) {
 		fwrite($this->_out, chr($byte));
@@ -355,10 +327,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Outputs content with string terminator.
-	 *
-	 * @param $content
-	 *
-	 * @return
 	 */
 	private function outTermStr($content) {
 		fwrite($this->_out, $content);
@@ -367,10 +335,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Switches the codepage.
-	 *
-	 * @param $page
-	 *
-	 * @return
 	 */
 	private function outSwitchPage($page) {
 		$this->outByte(self::WBXML_SWITCH_PAGE);
@@ -379,8 +343,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Get the mapping for a tag.
-	 *
-	 * @param $tag
 	 *
 	 * @return array
 	 */
@@ -407,8 +369,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	/**
 	 * Split a tag from a the fulltag (namespace + tag).
 	 *
-	 * @param $fulltag
-	 *
 	 * @return array keys: 'ns' (namespace), 'tag' (tag)
 	 */
 	private function splitTag($fulltag) {
@@ -434,11 +394,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Logs a StartTag to SLog.
-	 *
-	 * @param $tag
-	 * @param $nocontent
-	 *
-	 * @return
 	 */
 	private function logStartTag($tag, $nocontent) {
 		$spaces = str_repeat(" ", count($this->logStack));
@@ -453,8 +408,6 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Logs a EndTag to SLog.
-	 *
-	 * @return
 	 */
 	private function logEndTag() {
 		$spaces = str_repeat(" ", count($this->logStack));
@@ -466,8 +419,6 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * Logs content to SLog.
 	 *
 	 * @param string $content
-	 *
-	 * @return
 	 */
 	private function logContent($content) {
 		$spaces = str_repeat(" ", count($this->logStack));
@@ -484,7 +435,7 @@ class WBXMLEncoder extends WBXMLDefs {
 		$nrBodyparts = $this->getBodypartsCount();
 		$blockstart = (($nrBodyparts + 1) * 2) * 4 + 4;
 
-		fwrite($this->_out, pack("iii", ($nrBodyparts + 1), $blockstart, $len));
+		fwrite($this->_out, pack("iii", $nrBodyparts + 1, $blockstart, $len));
 
 		foreach ($this->bodyparts as $i => $bp) {
 			$blockstart = $blockstart + $len;

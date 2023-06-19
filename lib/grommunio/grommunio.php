@@ -104,9 +104,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	/**
 	 * Authenticates the user with the configured grommunio server.
 	 *
-	 * @param string $username
 	 * @param string $domain
-	 * @param string $password
 	 * @param mixed  $user
 	 * @param mixed  $pass
 	 *

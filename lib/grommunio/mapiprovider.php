@@ -1410,9 +1410,8 @@ class MAPIProvider {
 	/**
 	 * Writes a SyncAppointment to MAPI.
 	 *
-	 * @param mixed           $mapimessage
-	 * @param SyncAppointment $message
-	 * @param mixed           $appointment
+	 * @param mixed $mapimessage
+	 * @param mixed $appointment
 	 *
 	 * @return SyncObject
 	 */
@@ -2353,7 +2352,6 @@ class MAPIProvider {
 	/**
 	 * Wraps mapi_getprops() calls.
 	 *
-	 * @param mixed &$mapiprops
 	 * @param mixed $mapimessage
 	 * @param mixed $mapiproperties
 	 */

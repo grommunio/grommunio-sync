@@ -445,10 +445,9 @@ class DeviceManager extends InterProcessData {
 	 * Amount of items to me synchronized.
 	 *
 	 * @param string $folderid
-	 * @param string $type
-	 * @param int    $queuedmessages;
 	 * @param mixed  $uuid
 	 * @param mixed  $statecounter
+	 * @param mixed  $queuedmessages
 	 *
 	 * @return int
 	 */

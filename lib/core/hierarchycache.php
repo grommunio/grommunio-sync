@@ -14,8 +14,6 @@ class HierarchyCache extends StateObject {
 
 	/**
 	 * Constructor of the HierarchyCache.
-	 *
-	 * @return
 	 */
 	public function __construct() {
 		$this->data = [];
@@ -49,7 +47,6 @@ class HierarchyCache extends StateObject {
 	 * If $oldstate is set, then the data from the previous state is returned.
 	 *
 	 * @param string $serverid
-	 * @param bool   $oldstate (optional) by default false
 	 * @param mixed  $oldState
 	 *
 	 * @return bool|SyncObject false if not found
@@ -161,7 +158,7 @@ class HierarchyCache extends StateObject {
 	 * @return string
 	 */
 	public function GetStat() {
-		return sprintf("HierarchyCache is %s - Cached objects: %d", ((isset($this->data)) ? "up" : "down"), ((isset($this->data)) ? count($this->data) : "0"));
+		return sprintf("HierarchyCache is %s - Cached objects: %d", (isset($this->data)) ? "up" : "down", (isset($this->data)) ? count($this->data) : "0");
 	}
 
 	/**

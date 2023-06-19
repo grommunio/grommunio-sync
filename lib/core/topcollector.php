@@ -86,10 +86,9 @@ class TopCollector extends InterProcessData {
 	/**
 	 * Announces a string to the TopCollector.
 	 *
-	 * @param string $info
-	 * @param bool   $preserve    info should be displayed when process terminates
-	 * @param bool   $terminating indicates if the process is terminating
-	 * @param mixed  $addinfo
+	 * @param bool  $preserve    info should be displayed when process terminates
+	 * @param bool  $terminating indicates if the process is terminating
+	 * @param mixed $addinfo
 	 *
 	 * @return bool
 	 */
@@ -179,8 +178,6 @@ class TopCollector extends InterProcessData {
 
 	/**
 	 * Marks this process as push connection.
-	 *
-	 * @param string $agent
 	 *
 	 * @return bool
 	 */

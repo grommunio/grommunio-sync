@@ -16,9 +16,9 @@ interface IExportChanges extends IChanges {
 	 *
 	 * @param object &$importer Implementation of IImportChanges
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function InitializeExporter(&$importer);
 

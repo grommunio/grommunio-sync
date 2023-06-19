@@ -31,8 +31,6 @@ class PHPWrapper {
 	 * @param resource       $store
 	 * @param IImportChanges $importer incoming changes from ICS are forwarded here
 	 * @param string         $folderid the folder this wrapper was configured for
-	 *
-	 * @return
 	 */
 	public function __construct($session, $store, $importer, $folderid) {
 		$this->importer = &$importer;
@@ -55,9 +53,9 @@ class PHPWrapper {
 	 *
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ConfigContentParameters($contentparameters) {
 		$this->contentparameters = $contentparameters;
@@ -154,8 +152,6 @@ class PHPWrapper {
 	 *
 	 * @param long  $flags
 	 * @param array $sourcekeys array with sourcekeys
-	 *
-	 * @return
 	 */
 	public function ImportMessageDeletion($flags, $sourcekeys) {
 		$amount = count($sourcekeys);
@@ -172,8 +168,6 @@ class PHPWrapper {
 	 * Imports a list of messages to be deleted.
 	 *
 	 * @param mixed $readstates sourcekeys and message flags
-	 *
-	 * @return
 	 */
 	public function ImportPerUserReadStateChange($readstates) {
 		foreach ($readstates as $readstate) {
@@ -191,8 +185,6 @@ class PHPWrapper {
 	 * @param mixed $message
 	 * @param mixed $sourcekeydestmessage
 	 * @param mixed $changenumdestmessage
-	 *
-	 * @return
 	 */
 	public function ImportMessageMove($sourcekeysrcfolder, $sourcekeysrcmessage, $message, $sourcekeydestmessage, $changenumdestmessage) {
 		// Never called
@@ -202,8 +194,6 @@ class PHPWrapper {
 	 * Imports a single folder change.
 	 *
 	 * @param array $props properties of the changed folder
-	 *
-	 * @return
 	 */
 	public function ImportFolderChange($props) {
 		$folder = $this->mapiprovider->GetFolder($props);
@@ -223,8 +213,6 @@ class PHPWrapper {
 	 *
 	 * @param long  $flags
 	 * @param mixed $sourcekeys array with sourcekeys
-	 *
-	 * @return
 	 */
 	public function ImportFolderDeletion($flags, $sourcekeys) {
 		foreach ($sourcekeys as $sourcekey) {

@@ -450,7 +450,7 @@ class Streamer implements JsonSerializable {
 	/**
 	 * Restores the object from a value provided by json_decode.
 	 *
-	 * @param $stdObj   stdClass Object
+	 * @param $stdObj stdClass Object
 	 */
 	public function jsonDeserialize($stdObj) {
 		foreach ($stdObj->data as $k => $v) {

@@ -154,7 +154,7 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_GET);
 			$oofGet->Encode(self::$encoder);
 			self::$encoder->endTag(); // SYNC_SETTINGS_GET
-				self::$encoder->endTag(); // SYNC_SETTINGS_OOF
+			self::$encoder->endTag(); // SYNC_SETTINGS_OOF
 		}
 
 		// get user information
@@ -169,7 +169,7 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_GET);
 			$userInformation->Encode(self::$encoder);
 			self::$encoder->endTag(); // SYNC_SETTINGS_GET
-				self::$encoder->endTag(); // SYNC_SETTINGS_USERINFORMATION
+			self::$encoder->endTag(); // SYNC_SETTINGS_USERINFORMATION
 		}
 
 		// get rights management templates
@@ -183,7 +183,7 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_GET);
 			$rmTemplates->Encode(self::$encoder);
 			self::$encoder->endTag(); // SYNC_SETTINGS_GET
-				self::$encoder->endTag(); // SYNC_SETTINGS_RIGHTSMANAGEMENTINFORMATION
+			self::$encoder->endTag(); // SYNC_SETTINGS_RIGHTSMANAGEMENTINFORMATION
 		}
 
 		// set out of office
@@ -193,7 +193,7 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_STATUS);
 			self::$encoder->content($oofSet->Status);
 			self::$encoder->endTag(); // SYNC_SETTINGS_STATUS
-				self::$encoder->endTag(); // SYNC_SETTINGS_OOF
+			self::$encoder->endTag(); // SYNC_SETTINGS_OOF
 		}
 
 		// set device passwort
@@ -203,8 +203,8 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_STATUS);
 			self::$encoder->content($devicepassword->Status);
 			self::$encoder->endTag(); // SYNC_SETTINGS_STATUS
-					self::$encoder->endTag(); // SYNC_SETTINGS_SET
-				self::$encoder->endTag(); // SYNC_SETTINGS_DEVICEPW
+			self::$encoder->endTag(); // SYNC_SETTINGS_SET
+			self::$encoder->endTag(); // SYNC_SETTINGS_DEVICEPW
 		}
 
 		// set device information
@@ -213,7 +213,7 @@ class Settings extends RequestProcessor {
 			self::$encoder->startTag(SYNC_SETTINGS_STATUS);
 			self::$encoder->content($deviceinformation->Status);
 			self::$encoder->endTag(); // SYNC_SETTINGS_STATUS
-				self::$encoder->endTag(); // SYNC_SETTINGS_DEVICEINFORMATION
+			self::$encoder->endTag(); // SYNC_SETTINGS_DEVICEINFORMATION
 		}
 
 		self::$encoder->endTag(); // SYNC_SETTINGS_SETTINGS

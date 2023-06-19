@@ -165,11 +165,11 @@ class StateManager {
 	 * Gets the state for a specified synckey (uuid + counter).
 	 *
 	 * @param string $synckey
-	 * @param bool   $forceHierarchyLoading, default: false
-	 *
-	 * @throws StateInvalidException, StateNotFoundException
+	 * @param mixed  $forceHierarchyLoading
 	 *
 	 * @return string
+	 *
+	 * @throws StateInvalidException, StateNotFoundException
 	 */
 	public function GetSyncState($synckey, $forceHierarchyLoading = false) {
 		// No sync state for sync key '0'
@@ -198,9 +198,9 @@ class StateManager {
 	 * @param string $syncstate
 	 * @param string $folderid  (opt) the synckey is associated with the folder - should always be set when performing CONTENT operations
 	 *
-	 * @throws StateInvalidException
-	 *
 	 * @return bool
+	 *
+	 * @throws StateInvalidException
 	 */
 	public function SetSyncState($synckey, $syncstate, $folderid = false) {
 		$internalkey = self::BuildStateKey($this->uuid, $this->newStateCounter);
@@ -257,9 +257,9 @@ class StateManager {
 	 *
 	 * @param int $type permanent or state related storage
 	 *
-	 * @throws StateNotYetAvailableException, StateNotFoundException
-	 *
 	 * @return mixed
+	 *
+	 * @throws StateNotYetAvailableException, StateNotFoundException
 	 */
 	public function GetBackendStorage($type = self::BACKENDSTORAGE_PERMANENT) {
 		if ($type == self::BACKENDSTORAGE_STATE) {
@@ -279,9 +279,9 @@ class StateManager {
 	 * @param mixed $data
 	 * @param int   $type permanent or state related storage
 	 *
-	 * @throws StateNotYetAvailableException, StateNotFoundException
-	 *
 	 * @return int amount of bytes saved
+	 *
+	 * @throws StateNotYetAvailableException, StateNotFoundException
 	 */
 	public function SetBackendStorage($data, $type = self::BACKENDSTORAGE_PERMANENT) {
 		if ($type == self::BACKENDSTORAGE_STATE) {
@@ -339,7 +339,6 @@ class StateManager {
 	 * assisting the StateMachine to get rid of old data.
 	 *
 	 * @param ASDevice $device
-	 * @param string   $uuid     the uuid to link to
 	 * @param string   $folderid (opt) if not set, hierarchy state is linked
 	 * @param mixed    $newUuid
 	 *
@@ -352,7 +351,7 @@ class StateManager {
 			// remove states but no need to notify device
 			self::UnLinkState($device, $folderid, false);
 
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("StateManager::linkState(#ASDevice, '%s','%s'): linked to uuid '%s'.", $newUuid, (($folderid === false) ? 'HierarchyCache' : $folderid), $newUuid));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("StateManager::linkState(#ASDevice, '%s','%s'): linked to uuid '%s'.", $newUuid, ($folderid === false) ? 'HierarchyCache' : $folderid, $newUuid));
 
 			return $device->SetFolderUUID($newUuid, $folderid);
 		}
@@ -409,9 +408,9 @@ class StateManager {
 	 *
 	 * @param string $synckey
 	 *
-	 * @throws StateInvalidException
-	 *
 	 * @return array uuid, counter
+	 *
+	 * @throws StateInvalidException
 	 */
 	public static function ParseStateKey($synckey) {
 		$matches = [];
@@ -428,9 +427,9 @@ class StateManager {
 	 * @param string $uuid
 	 * @param int    $counter
 	 *
-	 * @throws StateInvalidException
-	 *
 	 * @return string syncKey
+	 *
+	 * @throws StateInvalidException
 	 */
 	public static function BuildStateKey($uuid, $counter) {
 		if (!preg_match('/^([0-9A-Za-z-]+)$/', $uuid, $matches)) {
@@ -448,11 +447,11 @@ class StateManager {
 	 * Loads the HierarchyCacheState and initializes the HierarchyChache
 	 * if this is an hierarchy operation.
 	 *
-	 * @param bool $forceLoading, default: false
-	 *
-	 * @throws StateNotFoundException
+	 * @param mixed $forceLoading
 	 *
 	 * @return bool
+	 *
+	 * @throws StateNotFoundException
 	 */
 	private function loadHierarchyCache($forceLoading = false) {
 		if (!$this->hierarchyOperation && $forceLoading == false) {
@@ -478,12 +477,11 @@ class StateManager {
 	 * Saves the HierarchyCacheState of the HierarchyChache
 	 * if this is an hierarchy operation.
 	 *
-	 * @param bool  $forceLoad   indicates if the cache should be saved also if not a hierary operation
 	 * @param mixed $forceSaving
 	 *
-	 * @throws StateInvalidException
-	 *
 	 * @return bool
+	 *
+	 * @throws StateInvalidException
 	 */
 	private function saveHierarchyCache($forceSaving = false) {
 		if (!$this->hierarchyOperation && !$forceSaving) {
@@ -491,7 +489,7 @@ class StateManager {
 		}
 
 		// link the hierarchy cache again, if the UUID does not match the UUID saved in the devicedata
-		if (($this->uuid != $this->device->GetFolderUUID() || $forceSaving)) {
+		if ($this->uuid != $this->device->GetFolderUUID() || $forceSaving) {
 			self::LinkState($this->device, $this->uuid);
 		}
 

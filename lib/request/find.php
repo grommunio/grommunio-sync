@@ -179,22 +179,22 @@ class Find extends RequestProcessor {
 					$mfolderid = self::$deviceManager->GetFolderIdForBackendId(bin2hex($message->ParentSourceKey));
 
 					self::$encoder->startTag(SYNC_FIND_RESULT);
-						self::$encoder->startTag(SYNC_FOLDERTYPE);
-						self::$encoder->content($u['class']);
-						self::$encoder->endTag();
+					self::$encoder->startTag(SYNC_FOLDERTYPE);
+					self::$encoder->content($u['class']);
+					self::$encoder->endTag();
 
-						self::$encoder->startTag(SYNC_SERVERENTRYID);
-						self::$encoder->content($mfolderid .":". $u['serverid']);
-						self::$encoder->endTag();
-						self::$encoder->startTag(SYNC_FOLDERID);
-						self::$encoder->content($cpo->GetRawFindFolderId());
-						self::$encoder->endTag();
+					self::$encoder->startTag(SYNC_SERVERENTRYID);
+					self::$encoder->content($mfolderid . ":" . $u['serverid']);
+					self::$encoder->endTag();
+					self::$encoder->startTag(SYNC_FOLDERID);
+					self::$encoder->content($cpo->GetRawFindFolderId());
+					self::$encoder->endTag();
 
-						self::$encoder->startTag(SYNC_FIND_PROPERTIES);
-						$fpmessage = SyncFindProperties::GetObjectFromSyncMail($message);
-						$fpmessage->Encode(self::$encoder);
+					self::$encoder->startTag(SYNC_FIND_PROPERTIES);
+					$fpmessage = SyncFindProperties::GetObjectFromSyncMail($message);
+					$fpmessage->Encode(self::$encoder);
 
-						self::$encoder->endTag(); // properties
+					self::$encoder->endTag(); // properties
 					self::$encoder->endTag(); // result
 				}
 			}

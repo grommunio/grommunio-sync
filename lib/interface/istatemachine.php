@@ -47,9 +47,9 @@ interface IStateMachine {
 	 * @param string $key     (opt)
 	 * @param string $counter (opt)
 	 *
-	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
-	 *
 	 * @return string
+	 *
+	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
 	 */
 	public function GetStateHash($devid, $type, $key = false, $counter = false);
 
@@ -64,9 +64,9 @@ interface IStateMachine {
 	 * @param string $counter     (opt)
 	 * @param string $cleanstates (opt)
 	 *
-	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
-	 *
 	 * @return mixed
+	 *
+	 * @throws StateNotFoundException, StateInvalidException, UnavailableException
 	 */
 	public function GetState($devid, $type, $key = false, $counter = false, $cleanstates = true);
 
@@ -79,9 +79,9 @@ interface IStateMachine {
 	 * @param string $key     (opt)
 	 * @param int    $counter (opt)
 	 *
-	 * @throws StateInvalidException, UnavailableException
-	 *
 	 * @return bool
+	 *
+	 * @throws StateInvalidException, UnavailableException
 	 */
 	public function SetState($state, $devid, $type, $key = false, $counter = false);
 
@@ -98,8 +98,6 @@ interface IStateMachine {
 	 * @param string $thisCounterOnly (opt) if provided, the exact counter only will be removed
 	 *
 	 * @throws StateInvalidException
-	 *
-	 * @return
 	 */
 	public function CleanStates($devid, $type, $key, $counter = false, $thisCounterOnly = false);
 

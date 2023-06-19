@@ -100,6 +100,7 @@ abstract class InterProcessData {
 		if (!$this->getRedis()) {
 			return false;
 		}
+
 		return true;
 	}
 
