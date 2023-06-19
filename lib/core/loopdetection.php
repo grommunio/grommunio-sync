@@ -456,7 +456,6 @@ class LoopDetection extends InterProcessData {
 	 * accepted by the device from the last sync.
 	 *
 	 * @param string $folderid the parent folder of the message
-	 * @param string $id       the id of the message
 	 *
 	 * @return array
 	 */
@@ -787,7 +786,7 @@ class LoopDetection extends InterProcessData {
 				}
 			}
 			if (isset($current['loopcount'])) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): loop data: loopcount(%d), maxCount(%d), queued(%d), ignored(%s)", $current['loopcount'], $current['maxCount'], $current['queued'], (isset($current['ignored']) ? $current['ignored'] : 'false')));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): loop data: loopcount(%d), maxCount(%d), queued(%d), ignored(%s)", $current['loopcount'], $current['maxCount'], $current['queued'], isset($current['ignored']) ? $current['ignored'] : 'false'));
 			}
 
 			// update loop data
@@ -858,11 +857,11 @@ class LoopDetection extends InterProcessData {
 
 				// check if this message was broken before - here we know that it still is and remove it from the tracking
 				$brokenkey = self::BROKENMSGS . "-" . $folderid;
-			// TODO: this is currently not supported here! It's in a different structure now!
-//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
-//                    SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
-//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
-//                }
+				// TODO: this is currently not supported here! It's in a different structure now!
+				//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
+				//                    SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
+				//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
+				//                }
 			}
 			// not the broken message yet
 			else {

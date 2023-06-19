@@ -47,7 +47,6 @@ function listfolders_configure() {
 	require_once UMAPI_PATH . '/mapidefs.php';
 	require_once UMAPI_PATH . '/mapitags.php';
 	require_once UMAPI_PATH . '/mapiguid.php';
-
 }
 
 function listfolders_handle() {

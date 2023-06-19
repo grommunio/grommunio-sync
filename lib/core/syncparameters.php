@@ -112,9 +112,9 @@ class SyncParameters extends StateObject {
 	 *
 	 * @param string $synckey
 	 *
-	 * @throws FatalException if the uuids of current and next do not match
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalException if the uuids of current and next do not match
 	 */
 	public function SetNewSyncKey($synckey) {
 		list($uuid, $uuidNewCounter) = StateManager::ParseStateKey($synckey);
@@ -248,8 +248,6 @@ class SyncParameters extends StateObject {
 	 *
 	 * @param string $options (opt) If not specified, the default Options (CPO) will be used
 	 *                        Valid option SyncParameters::SMSOPTIONS (string "SMS")
-	 *
-	 * @return
 	 */
 	public function UseCPO($options = self::DEFAULTOPTIONS) {
 		$options = strtoupper($options);
@@ -328,9 +326,9 @@ class SyncParameters extends StateObject {
 	 *
 	 * @param string $options CPO type
 	 *
-	 * @throws FatalNotImplementedException
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalNotImplementedException
 	 */
 	private function isValidType($options) {
 		if ($options !== self::DEFAULTOPTIONS &&
@@ -352,9 +350,9 @@ class SyncParameters extends StateObject {
 	 *
 	 * @param string $options CPO type
 	 *
-	 * @throws FatalNotImplementedException
-	 *
 	 * @return string
+	 *
+	 * @throws FatalNotImplementedException
 	 */
 	private function normalizeType($options) {
 		// return the requested CPO as it is defined

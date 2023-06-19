@@ -45,8 +45,6 @@ class SyncAppointmentException extends SyncAppointment {
 			];
 		}
 
-		
-
 		// some parameters are not required in an exception, others are not allowed to be set in SyncAppointmentExceptions
 		$this->mapping[SYNC_POOMCAL_TIMEZONE][self::STREAMER_CHECKS] = [];
 		$this->mapping[SYNC_POOMCAL_TIMEZONE][self::STREAMER_RONOTIFY] = true;

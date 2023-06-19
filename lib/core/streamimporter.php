@@ -201,7 +201,6 @@ class ImportChangesStream implements IImportChanges {
 	 * ImportMessageMove is not implemented, as this operation can not be streamed to a WBXMLEncoder.
 	 *
 	 * @param string $id
-	 * @param int    $flags     read/unread
 	 * @param mixed  $newfolder
 	 *
 	 * @return bool

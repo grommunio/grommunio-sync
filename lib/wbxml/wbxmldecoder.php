@@ -476,7 +476,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Returns the mapping for a specified codepage and id.
 	 *
-	 * @param $cp   codepage
+	 * @param       $cp codepage
 	 * @param mixed $id
 	 *
 	 * @return string

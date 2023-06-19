@@ -179,7 +179,7 @@ class FolderSync extends RequestProcessor {
 
 					// if partial sync is allowed, stop if this takes too long
 					if (USE_PARTIAL_FOLDERSYNC && Request::IsRequestTimeoutReached()) {
-						SLog::Write(LOGLEVEL_WARN, sprintf("Request->HandleFolderSync(): Exporting folders is too slow. In %d seconds only %d from %d changes were processed.", (time() - $_SERVER["REQUEST_TIME"]), $exported, $totalChanges));
+						SLog::Write(LOGLEVEL_WARN, sprintf("Request->HandleFolderSync(): Exporting folders is too slow. In %d seconds only %d from %d changes were processed.", time() - $_SERVER["REQUEST_TIME"], $exported, $totalChanges));
 						self::$topCollector->AnnounceInformation(sprintf("Partial export of %d out of %d folders", $exported, $totalChanges), true);
 						self::$deviceManager->SetFolderSyncComplete(false);
 						$partial = true;

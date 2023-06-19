@@ -159,9 +159,9 @@ class GSync {
 	/**
 	 * Verifies configuration.
 	 *
-	 * @throws FatalMisconfigurationException
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalMisconfigurationException
 	 */
 	public static function CheckConfig() {
 		// check the php version
@@ -278,7 +278,8 @@ class GSync {
 	 * Verifies Timezone, StateMachine and Backend configuration.
 	 *
 	 * @return bool
-	 * @trows FatalMisconfigurationException
+	 *
+	 * @throws FatalMisconfigurationException
 	 */
 	public static function CheckAdvancedConfig() {
 		global $specialLogUsers, $additionalFolders;
@@ -290,7 +291,7 @@ class GSync {
 		if (!defined('SYNC_CONTACTS_MAXPICTURESIZE')) {
 			define('SYNC_CONTACTS_MAXPICTURESIZE', 49152);
 		}
-		elseif ((!is_int(SYNC_CONTACTS_MAXPICTURESIZE) || SYNC_CONTACTS_MAXPICTURESIZE < 1)) {
+		elseif (!is_int(SYNC_CONTACTS_MAXPICTURESIZE) || SYNC_CONTACTS_MAXPICTURESIZE < 1) {
 			throw new FatalMisconfigurationException("The SYNC_CONTACTS_MAXPICTURESIZE value must be a number higher than 0.");
 		}
 
@@ -369,10 +370,10 @@ class GSync {
 	 * Returns the StateMachine object
 	 * which has to be an IStateMachine implementation.
 	 *
+	 * @return object implementation of IStateMachine
+	 *
 	 * @throws FatalNotImplementedException
 	 * @throws HTTPReturnCodeException
-	 *
-	 * @return object implementation of IStateMachine
 	 */
 	public static function GetStateMachine() {
 		if (!isset(GSync::$stateMachine)) {
@@ -459,9 +460,9 @@ class GSync {
 	 *
 	 * @param string $backendname
 	 *
-	 * @throws FatalNotImplementedException
-	 *
 	 * @return bool
+	 *
+	 * @throws FatalNotImplementedException
 	 */
 	public static function IncludeBackend($backendname) {
 		if ($backendname == false) {
@@ -562,9 +563,9 @@ class GSync {
 	 *
 	 * @param string $folderclass
 	 *
-	 * @throws FatalNotImplementedException
-	 *
 	 * @return string
+	 *
+	 * @throws FatalNotImplementedException
 	 */
 	public static function getSyncObjectFromFolderClass($folderclass) {
 		if (!isset(self::$classes[$folderclass])) {
@@ -668,8 +669,6 @@ class GSync {
 	 *
 	 * @param string $message           (opt) message to be displayed
 	 * @param string $additionalMessage (opt) additional message to be displayed
-	 *
-	 * @return
 	 */
 	public static function PrintGrommunioSyncLegal($message = "", $additionalMessage = "") {
 		SLog::Write(LOGLEVEL_DEBUG, "GSync::PrintGrommunioSyncLegal()");
@@ -712,9 +711,9 @@ END;
 	/**
 	 * Indicates which is the highest AS version supported by the backend.
 	 *
-	 * @throws FatalNotImplementedException if the backend returns an invalid version
-	 *
 	 * @return string
+	 *
+	 * @throws FatalNotImplementedException if the backend returns an invalid version
 	 */
 	public static function GetSupportedASVersion() {
 		$version = self::GetBackend()->GetSupportedASVersion();
@@ -746,7 +745,7 @@ END;
 	 * @return string
 	 */
 	public static function GetSupportedProtocolVersions($valueOnly = false) {
-		$versions = implode(',', array_slice(self::$supportedASVersions, 0, (array_search(self::GetSupportedASVersion(), self::$supportedASVersions) + 1)));
+		$versions = implode(',', array_slice(self::$supportedASVersions, 0, array_search(self::GetSupportedASVersion(), self::$supportedASVersions) + 1));
 		SLog::Write(LOGLEVEL_DEBUG, "GSync::GetSupportedProtocolVersions(): " . $versions);
 
 		if ($valueOnly === true) {
@@ -866,9 +865,9 @@ END;
 	 * @param string $commandCode a commandCode
 	 * @param string $option      e.g. self::UNAUTHENTICATED
 	 *
-	 * @throws FatalNotImplementedException
-	 *
 	 * @return object StateMachine
+	 *
+	 * @throws FatalNotImplementedException
 	 */
 	private static function checkCommandOptions($commandCode, $option) {
 		if ($commandCode === false) {

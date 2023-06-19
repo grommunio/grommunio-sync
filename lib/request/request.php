@@ -70,8 +70,6 @@ class Request {
 
 	/**
 	 * Initializes request data.
-	 *
-	 * @return
 	 */
 	public static function Initialize() {
 		// try to open stdin & stdout
@@ -208,8 +206,6 @@ class Request {
 
 	/**
 	 * Reads and processes the request headers.
-	 *
-	 * @return
 	 */
 	public static function ProcessHeaders() {
 		self::$headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
@@ -799,7 +795,7 @@ class Request {
 		$polKeyLength = ord($decoded[5 + $devIdLength]); // policy key length
 		$devTypeLength = ord($decoded[6 + $devIdLength + $polKeyLength]); // device type length
 		// unpack the decoded query string values
-		self::$base64QueryDecoded = unpack("CProtVer/CCommand/vLocale/CDevIDLen/H" . ($devIdLength * 2) . "DevID/CPolKeyLen" . ($polKeyLength == 4 ? "/VPolKey" : "") . "/CDevTypeLen/A" . ($devTypeLength) . "DevType", $decoded);
+		self::$base64QueryDecoded = unpack("CProtVer/CCommand/vLocale/CDevIDLen/H" . ($devIdLength * 2) . "DevID/CPolKeyLen" . ($polKeyLength == 4 ? "/VPolKey" : "") . "/CDevTypeLen/A" . $devTypeLength . "DevType", $decoded);
 
 		// get the command parameters
 		$pos = 7 + $devIdLength + $polKeyLength + $devTypeLength;

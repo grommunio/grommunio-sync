@@ -767,8 +767,6 @@ class GSyncTop {
 
 	/**
 	 * Clears screen of the terminal.
-	 *
-	 * @param array $data
 	 */
 	public function scrClear() {
 		echo "\033[2J";

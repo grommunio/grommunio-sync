@@ -365,7 +365,7 @@ class Search extends RequestProcessor {
 		}
 		$searchprovider->Disconnect();
 
-		self::$topCollector->AnnounceInformation(sprintf("'%s' search found %d results", $searchname, (isset($rows['searchtotal']) ? $rows['searchtotal'] : 0)), true);
+		self::$topCollector->AnnounceInformation(sprintf("'%s' search found %d results", $searchname, isset($rows['searchtotal']) ? $rows['searchtotal'] : 0), true);
 
 		self::$encoder->startWBXML();
 		self::$encoder->startTag(SYNC_SEARCH_SEARCH);
@@ -459,16 +459,16 @@ class Search extends RequestProcessor {
 							self::$encoder->startTag(SYNC_GAL_PICTURE);
 							self::$encoder->startTag(SYNC_GAL_STATUS);
 							self::$encoder->content(SYNC_SEARCHSTATUS_PICTURE_SUCCESS); // FIXME: status code
-												self::$encoder->endTag(); // SYNC_SEARCH_STATUS
+							self::$encoder->endTag(); // SYNC_SEARCH_STATUS
 
-												self::$encoder->startTag(SYNC_GAL_DATA);
+							self::$encoder->startTag(SYNC_GAL_DATA);
 							self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
 							self::$encoder->endTag(); // SYNC_GAL_DATA
-											self::$encoder->endTag(); // SYNC_GAL_PICTURE
+							self::$encoder->endTag(); // SYNC_GAL_PICTURE
 						}
 
 						self::$encoder->endTag(); // result
-								self::$encoder->endTag(); // properties
+						self::$encoder->endTag(); // properties
 					}
 				}
 			}
@@ -493,7 +493,7 @@ class Search extends RequestProcessor {
 					$message->Encode(self::$encoder);
 
 					self::$encoder->endTag(); // result
-							self::$encoder->endTag(); // properties
+					self::$encoder->endTag(); // properties
 				}
 			}
 			// it seems that android 4 requires range and searchtotal
@@ -510,7 +510,7 @@ class Search extends RequestProcessor {
 			}
 
 			self::$encoder->endTag(); // store
-				self::$encoder->endTag(); // response
+			self::$encoder->endTag(); // response
 		}
 		self::$encoder->endTag(); // search
 

@@ -30,8 +30,6 @@ abstract class RequestProcessor {
 	 * This allows the user 'john' to do operations as user 'joe' if he has sufficient privileges.
 	 *
 	 * @throws AuthenticationRequiredException
-	 *
-	 * @return
 	 */
 	public static function Authenticate() {
 		self::$userIsAuthenticated = false;
@@ -69,8 +67,6 @@ abstract class RequestProcessor {
 
 	/**
 	 * Initialize the RequestProcessor.
-	 *
-	 * @return
 	 */
 	public static function Initialize() {
 		self::$backend = GSync::GetBackend();

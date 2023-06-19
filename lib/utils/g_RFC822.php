@@ -411,22 +411,22 @@ class Mail_RFC822 {
 
 		for (; $i < $iMax; ++$i) {
 			switch ($string[$i]) {
-			case '\\':
-				++$slashes;
+				case '\\':
+					++$slashes;
 
-				break;
+					break;
 
-			case '"':
-				if ($slashes % 2 == 0) {
-					$in_quote = !$in_quote;
-				}
-				// Fall through to default action below.
+				case '"':
+					if ($slashes % 2 == 0) {
+						$in_quote = !$in_quote;
+					}
+					// Fall through to default action below.
 
-				// no break
-			default:
-				$slashes = 0;
+					// no break
+				default:
+					$slashes = 0;
 
-				break;
+					break;
 			}
 		}
 
@@ -922,7 +922,7 @@ class Mail_RFC822 {
 			$local_part = $this->_splitCheck($parts, '@');
 			$domain = substr($addr_spec, strlen($local_part . '@'));
 
-		// No @ sign so assume the default domain.
+			// No @ sign so assume the default domain.
 		}
 		else {
 			$local_part = $addr_spec;

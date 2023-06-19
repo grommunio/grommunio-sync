@@ -26,9 +26,9 @@ interface IChanges {
 	 * @param string $state
 	 * @param int    $flags
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool status flag
+	 *
+	 * @throws StatusException
 	 */
 	public function Config($state, $flags = 0);
 
@@ -37,9 +37,9 @@ interface IChanges {
 	 *
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ConfigContentParameters($contentparameters);
 

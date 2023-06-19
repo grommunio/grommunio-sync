@@ -117,7 +117,7 @@ class MoveItems extends RequestProcessor {
 			self::$encoder->endTag();
 
 			self::$encoder->startTag(SYNC_MOVE_DSTMSGID);
-			self::$encoder->content((($result !== false) ? $result : $move["srcmsgid"]));
+			self::$encoder->content(($result !== false) ? $result : $move["srcmsgid"]);
 			self::$encoder->endTag();
 			self::$encoder->endTag();
 		}

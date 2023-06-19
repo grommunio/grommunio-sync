@@ -276,8 +276,7 @@ class SyncCollections implements Iterator {
 	/**
 	 * Returns a previousily added or loaded SyncParameters object for a folderid.
 	 *
-	 * @param SyncParameters $spa
-	 * @param mixed          $folderid
+	 * @param mixed $folderid
 	 *
 	 * @return bool|SyncParameters false if no SyncParameters object is found for folderid
 	 */

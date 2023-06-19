@@ -1135,7 +1135,6 @@ class TimezoneUtil {
 	/**
 	 * Sets the timezone name by matching data from the offset (bias etc).
 	 *
-	 * @param array $offset a grommunio-sync timezone array
 	 * @param mixed $tz
 	 *
 	 * @return array

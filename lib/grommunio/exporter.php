@@ -91,9 +91,9 @@ class ExportChangesICS implements IExportChanges {
 	 * @param string $state
 	 * @param int    $flags
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function Config($state, $flags = 0) {
 		$this->exporterflags = 0;
@@ -143,9 +143,9 @@ class ExportChangesICS implements IExportChanges {
 	 *
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function ConfigContentParameters($contentparameters) {
 		$filtertype = $contentparameters->GetFilterType();
@@ -153,6 +153,7 @@ class ExportChangesICS implements IExportChanges {
 		if ($filtertype == SYNC_FILTERTYPE_DISABLE) {
 			$filtertype = false;
 		}
+
 		switch ($contentparameters->GetContentClass()) {
 			case "Email":
 				$this->restriction = ($filtertype) ? MAPIUtils::GetEmailRestriction(Utils::GetCutOffDate($filtertype)) : false;
@@ -178,9 +179,9 @@ class ExportChangesICS implements IExportChanges {
 	 *
 	 * @param object &$importer Implementation of IImportChanges
 	 *
-	 * @throws StatusException
-	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function InitializeExporter(&$importer) {
 		// Because we're using ICS, we need to wrap the given importer to make it suitable to pass
@@ -243,9 +244,9 @@ class ExportChangesICS implements IExportChanges {
 	/**
 	 * Reads the current state from the Exporter.
 	 *
-	 * @throws StatusException
-	 *
 	 * @return string
+	 *
+	 * @throws StatusException
 	 */
 	public function GetState() {
 		$error = false;
@@ -254,7 +255,7 @@ class ExportChangesICS implements IExportChanges {
 		}
 
 		if ($error === true || mapi_exportchanges_updatestate($this->exporter, $this->statestream) != true) {
-			throw new StatusException(sprintf("ExportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), (($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN), null, LOGLEVEL_WARN);
+			throw new StatusException(sprintf("ExportChangesICS->GetState(): Error, state not available or unable to update: 0x%X", mapi_last_hresult()), ($this->folderid) ? SYNC_STATUS_FOLDERHIERARCHYCHANGED : SYNC_FSSTATUS_CODEUNKNOWN, null, LOGLEVEL_WARN);
 		}
 
 		mapi_stream_seek($this->statestream, 0, STREAM_SEEK_SET);

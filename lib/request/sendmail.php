@@ -98,7 +98,7 @@ class SendMail extends RequestProcessor {
 			}
 
 			if (!isset($sm->source->folderid) || !$sm->source->folderid) {
-				SLog::Write(LOGLEVEL_ERROR, sprintf("SendMail(): No parent folder id while replying or forwarding message:'%s'", (($reply) ? $reply : $forward)));
+				SLog::Write(LOGLEVEL_ERROR, sprintf("SendMail(): No parent folder id while replying or forwarding message:'%s'", ($reply) ? $reply : $forward));
 			}
 		}
 

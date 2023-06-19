@@ -50,7 +50,7 @@ class SyncFindProperties extends SyncObject {
 			],
 			SYNC_POOMMAIL_READ => [self::STREAMER_VAR => "read",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_ONEVALUEOF => [0, 1], 
+					self::STREAMER_CHECK_ONEVALUEOF => [0, 1],
 				],
 				self::STREAMER_RONOTIFY => true,
 				self::STREAMER_VALUEMAP => [
@@ -60,7 +60,7 @@ class SyncFindProperties extends SyncObject {
 			],
 			SYNC_POOMMAIL2_ISDRAFT => [self::STREAMER_VAR => "isdraft",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_ONEVALUEOF => [0, 1], 
+					self::STREAMER_CHECK_ONEVALUEOF => [0, 1],
 				],
 				self::STREAMER_RONOTIFY => true,
 				self::STREAMER_VALUEMAP => [
@@ -71,7 +71,7 @@ class SyncFindProperties extends SyncObject {
 			SYNC_FIND_PREVIEW => [self::STREAMER_VAR => "preview"],
 			SYNC_FIND_HASATTACHMENTS => [self::STREAMER_VAR => "hasattachments",
 				self::STREAMER_CHECKS => [
-					self::STREAMER_CHECK_ONEVALUEOF => [0, 1], 
+					self::STREAMER_CHECK_ONEVALUEOF => [0, 1],
 				],
 				self::STREAMER_RONOTIFY => true,
 				self::STREAMER_VALUEMAP => [
@@ -92,7 +92,7 @@ class SyncFindProperties extends SyncObject {
 		parent::__construct($mapping);
 	}
 
-	static public function GetObjectFromSyncMail($mail) {
+	public static function GetObjectFromSyncMail($mail) {
 		$fp = new SyncFindProperties();
 		$fp->subject = $mail->subject;
 		$fp->datereceived = $mail->datereceived;
@@ -104,7 +104,7 @@ class SyncFindProperties extends SyncObject {
 		// TODO: fix me
 		$fp->isdraft = 0;
 		$fp->preview = stream_get_contents($mail->asbody->data, 254);
-		$fp->hasattachments = empty($mail->attachments) ? 0:1;
+		$fp->hasattachments = empty($mail->attachments) ? 0 : 1;
 		$fp->from = $mail->from;
 
 		return $fp;

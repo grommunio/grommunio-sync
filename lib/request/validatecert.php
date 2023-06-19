@@ -49,7 +49,7 @@ class ValidateCert extends RequestProcessor {
 		self::$encoder->startTag(SYNC_VALIDATECERT_STATUS);
 		self::$encoder->content($status);
 		self::$encoder->endTag(); // SYNC_VALIDATECERT_STATUS
-			self::$encoder->endTag(); // SYNC_VALIDATECERT_CERTIFICATE
+		self::$encoder->endTag(); // SYNC_VALIDATECERT_CERTIFICATE
 
 		self::$encoder->endTag(); // SYNC_VALIDATECERT_VALIDATECERT
 
