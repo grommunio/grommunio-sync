@@ -232,3 +232,9 @@ if (!function_exists('memory_get_peak_usage')) {
 		return memory_get_usage();
 	}
 }
+
+if (!function_exists('dump')) {
+	function dump($message) {
+		SLog::Write(LOGLEVEL_DEBUG, $message);
+	}
+}
