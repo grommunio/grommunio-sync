@@ -371,6 +371,7 @@ class ImportChangesICS implements IImportChanges {
 		$flags = 0;
 		$props = [];
 		$props[PR_PARENT_SOURCE_KEY] = $this->folderid;
+		$messageClass = get_class($message);
 
 		// set the PR_SOURCE_KEY if available or mark it as new message
 		if ($id) {
@@ -379,7 +380,7 @@ class ImportChangesICS implements IImportChanges {
 
 			// check if message is in the synchronization interval and/or shared+private
 			if (!$this->isModificationAllowed($sk)) {
-				throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Message modification is not allowed. Data not saved.", $id, get_class($message)), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Message modification is not allowed. Data not saved.", $id, $messageClass), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
 			}
 
 			// check for conflicts
@@ -387,17 +388,17 @@ class ImportChangesICS implements IImportChanges {
 			if ($this->memChanges->IsChanged($id)) {
 				if ($this->flags & SYNC_CONFLICT_OVERWRITE_PIM) {
 					// in these cases the status SYNC_STATUS_CONFLICTCLIENTSERVEROBJECT should be returned, so the mobile client can inform the end user
-					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from PIM will be dropped! Server overwrites PIM. User is informed.", $id, get_class($message)), SYNC_STATUS_CONFLICTCLIENTSERVEROBJECT, null, LOGLEVEL_INFO);
-
-					return false;
+					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from PIM will be dropped! Server overwrites PIM. User is informed.", $id, $messageClass), SYNC_STATUS_CONFLICTCLIENTSERVEROBJECT, null, LOGLEVEL_INFO);
 				}
 
-				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from Server will be dropped! PIM overwrites server.", $id, get_class($message)));
+				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from Server will be dropped! PIM overwrites server.", $id, $messageClass));
 			}
 			if ($this->memChanges->IsDeleted($id)) {
-				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from PIM will be dropped! Object was deleted on server.", $id, get_class($message)));
+				SLog::Write(LOGLEVEL_INFO, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Conflict detected. Data from PIM will be dropped! Object was deleted on server.", $id, $messageClass));
+				$response = Utils::GetResponseFromMessageClass($messageClass);
+				$response->hasResponse = false;
 
-				return false;
+				return $response;
 			}
 		}
 		else {
@@ -409,7 +410,7 @@ class ImportChangesICS implements IImportChanges {
 			mapi_savechanges($mapimessage);
 
 			if (mapi_last_hresult()) {
-				throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error, mapi_savechanges() failed: 0x%X", $id, get_class($message), mapi_last_hresult()), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error, mapi_savechanges() failed: 0x%X", $id, $messageClass, mapi_last_hresult()), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
 			}
 
 			$sourcekeyprops = mapi_getprops($mapimessage, [PR_SOURCE_KEY]);
@@ -419,7 +420,7 @@ class ImportChangesICS implements IImportChanges {
 			return $response;
 		}
 
-		throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error updating object: 0x%X", $id, get_class($message), mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
+		throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error updating object: 0x%X", $id, $messageClass, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
 	}
 
 	/**
