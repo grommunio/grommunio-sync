@@ -648,6 +648,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// override truncation
 		$contentparameters->SetTruncation(SYNC_TRUNCATION_ALL);
+
 		// TODO check for body preferences
 		return $mapiprovider->GetMessage($message, $contentparameters);
 	}
@@ -742,6 +743,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (isset($attprops[PR_ATTACH_MIME_TAG])) {
 			$attachment->contenttype = $attprops[PR_ATTACH_MIME_TAG];
 		}
+
 		// TODO default contenttype
 		return $attachment;
 	}
@@ -2954,28 +2956,24 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		$mergedFreeBusy = str_pad(fbNoData, $timeslots, fbNoData);
 
-		$retval = mapi_getuseravailability($this->session, $resolveRecipient->id, $start, $end);
-		SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getAvailability(): free busy '%s'", print_r($retval, 1)));
+		$fbdata = mapi_getuserfreebusy($this->session, $resolveRecipient->id, $start, $end);
 
-		if (!empty($retval)) {
-			$freebusy = json_decode($retval, true);
-			// freebusy is available, assume that the user is free
+		if (!empty($fbdata['fbevents'])) {
 			$mergedFreeBusy = str_pad(fbFree, $timeslots, fbFree);
-			foreach ($freebusy['events'] as $event) {
+			foreach ($fbdata['fbevents'] as $event) {
 				// calculate which timeslot of mergedFreeBusy should be replaced.
-				$startSlot = intval(floor(($event['StartTime'] - $start) / self::HALFHOURSECONDS));
-				$endSlot = intval(floor(($event['EndTime'] - $start) / self::HALFHOURSECONDS));
+				$startSlot = intval(floor(($event['start'] - $start) / self::HALFHOURSECONDS));
+				$endSlot = intval(floor(($event['end'] - $start) / self::HALFHOURSECONDS));
 				// if event started at a multiple of half an hour from requested freebusy time and
 				// its duration is also a multiple of half an hour
 				// then it's necessary to reduce endSlot by one
-				if ((($event['StartTime'] - $start) % self::HALFHOURSECONDS == 0) && (($event['EndTime'] - $event['StartTime']) % self::HALFHOURSECONDS == 0)) {
+				if ((($event['start'] - $start) % self::HALFHOURSECONDS == 0) && (($event['end'] - $event['start']) % self::HALFHOURSECONDS == 0)) {
 					--$endSlot;
 				}
-				$fbType = Utils::GetFbStatusFromType($event['BusyType']);
 				for ($i = $startSlot; $i <= $endSlot && $i < $timeslots; ++$i) {
-					// only set the new slot's free busy status if it's higher than the current one
-					if ($fbType > $mergedFreeBusy[$i]) {
-						$mergedFreeBusy[$i] = $fbType;
+					// only set the new slot's free busy status if it's higher than the current one (fbFree < fbTentative < fbBusy < fbOutOfOffice)
+					if ($event['busystatus'] > $mergedFreeBusy[$i]) {
+						$mergedFreeBusy[$i] = $event['busystatus'];
 					}
 				}
 			}
