@@ -210,6 +210,7 @@ class Utils {
 		if ($icalUid !== false) {
 			// get the length of the ical id - go back 4 position from where "vCal-Uid" was found
 			$begin = unpack("V", substr($olUid, strlen($icalUid) * (-1) - 4, 4));
+
 			// remove "vCal-Uid" and packed "1" and use the ical id length
 			return substr($icalUid, 12, $begin[1] - 13);
 		}
@@ -482,6 +483,7 @@ class Utils {
 			case GSync::COMMAND_RESOLVERECIPIENTS:    return 'ResolveRecipients';
 
 			case GSync::COMMAND_VALIDATECERT:         return 'ValidateCert';
+
 				// Deprecated commands
 			case GSync::COMMAND_GETHIERARCHY:         return 'GetHierarchy';
 
@@ -545,6 +547,7 @@ class Utils {
 			case 'ResolveRecipients':    return GSync::COMMAND_RESOLVERECIPIENTS;
 
 			case 'ValidateCert':         return GSync::COMMAND_VALIDATECERT;
+
 				// Deprecated commands
 			case 'GetHierarchy':         return GSync::COMMAND_GETHIERARCHY;
 
@@ -653,6 +656,7 @@ class Utils {
 		if (isset($codepages[$codepage])) {
 			return $codepages[$codepage];
 		}
+
 		// Defaulting to iso-8859-15 since it is more likely for someone to make a mistake in the codepage
 		// when using west-european charsets then when using other charsets since utf-8 is binary compatible
 		// with the bottom 7 bits of west-european
@@ -856,32 +860,6 @@ class Utils {
 		}
 
 		return [null, $id];
-	}
-
-	/**
-	 * Converts a string freebusy type into a numeric status.
-	 *
-	 * @param string $fbType
-	 *
-	 * @return int
-	 */
-	public static function GetFbStatusFromType($fbType) {
-		switch ($fbType) {
-			case 'Free':
-				return fbFree;
-
-			case 'Tentative':
-				return fbTentative;
-
-			case 'Busy':
-				return fbBusy;
-
-			case 'OOF':
-				return fbOutOfOffice;
-		}
-		SLog::Write(LOGLEVEL_WARN, sprintf("Utils->GetFbStatusFromType(): Unknown free busy type '%s'", $fbType));
-
-		return fbNoData;
 	}
 
 	/**
