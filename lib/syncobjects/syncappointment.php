@@ -337,12 +337,12 @@ class SyncAppointment extends SyncObject {
 			// Case 1, 3a (endtime won't be changed as it's set)
 			if (!isset($this->starttime)) {
 				$this->starttime = $calcstart;
-				SLog::Write(LOGLEVEL_WBXML, sprintf("SyncAppointment->Check(): Parameter 'starttime' was not set, setting it to %d (%s).", $this->starttime, gmstrftime("%Y%m%dT%H%M%SZ", $this->starttime)));
+				SLog::Write(LOGLEVEL_WBXML, sprintf("SyncAppointment->Check(): Parameter 'starttime' was not set, setting it to %d (%s).", $this->starttime, Utils::FormatDate($this->starttime)));
 			}
 			// Case 1, 4
 			if (!isset($this->endtime)) {
 				$this->endtime = $calcstart + 1800; // 30 min after calcstart
-				SLog::Write(LOGLEVEL_WBXML, sprintf("SyncAppointment->Check(): Parameter 'endtime' was not set, setting it to %d (%s).", $this->endtime, gmstrftime("%Y%m%dT%H%M%SZ", $this->endtime)));
+				SLog::Write(LOGLEVEL_WBXML, sprintf("SyncAppointment->Check(): Parameter 'endtime' was not set, setting it to %d (%s).", $this->endtime, Utils::FormatDate($this->endtime)));
 			}
 		}
 

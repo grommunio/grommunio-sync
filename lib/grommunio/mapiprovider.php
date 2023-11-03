@@ -459,6 +459,7 @@ class MAPIProvider {
 						break;
 				}
 		}
+
 		// Termination
 		switch ($recurrence->recur["term"]) {
 			case 0x21:
@@ -1438,8 +1439,8 @@ class MAPIProvider {
 
 		// AS 16: incoming instanceid means we need to create/update an appointment exception
 		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->instanceid) && $appointment->instanceid) {
-			// this property wasn't decoded so use Streamer->parseDate to convert it into a timestamp and get basedate from it
-			$instanceid = Utils::parseDate($appointment->instanceid);
+			// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp and get basedate from it
+			$instanceid = Utils::ParseDate($appointment->instanceid);
 			$basedate = $this->getDayStartOfTimestamp($instanceid);
 
 			// get compatible TZ data
@@ -1526,11 +1527,11 @@ class MAPIProvider {
 
 			if (isset($existingstartendprops[$amapping["starttime"]]) && !isset($appointment->starttime)) {
 				$appointment->starttime = $existingstartendprops[$amapping["starttime"]];
-				SLog::Write(LOGLEVEL_WBXML, sprintf("MAPIProvider->setAppointment(): Parameter 'starttime' was not set, using value from MAPI %d (%s).", $appointment->starttime, gmstrftime("%Y%m%dT%H%M%SZ", $appointment->starttime)));
+				SLog::Write(LOGLEVEL_WBXML, sprintf("MAPIProvider->setAppointment(): Parameter 'starttime' was not set, using value from MAPI %d (%s).", $appointment->starttime, Utils::FormatDate($appointment->starttime)));
 			}
 			if (isset($existingstartendprops[$amapping["endtime"]]) && !isset($appointment->endtime)) {
 				$appointment->endtime = $existingstartendprops[$amapping["endtime"]];
-				SLog::Write(LOGLEVEL_WBXML, sprintf("MAPIProvider->setAppointment(): Parameter 'endtime' was not set, using value from MAPI %d (%s).", $appointment->endtime, gmstrftime("%Y%m%dT%H%M%SZ", $appointment->endtime)));
+				SLog::Write(LOGLEVEL_WBXML, sprintf("MAPIProvider->setAppointment(): Parameter 'endtime' was not set, using value from MAPI %d (%s).", $appointment->endtime, Utils::FormatDate($appointment->endtime)));
 			}
 		}
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
@@ -2187,7 +2188,7 @@ class MAPIProvider {
 		$Offset = date("O", $ts);
 
 		$Parity = $Offset < 0 ? -1 : 1;
-		$Offset = $Parity * $Offset;
+		$Offset *= $Parity;
 		$Offset = ($Offset - ($Offset % 100)) / 100 * 60 + $Offset % 100;
 
 		return $Parity * $Offset;
@@ -2546,7 +2547,7 @@ class MAPIProvider {
 		while (1) {
 			$monthnow = gmdate("n", $date); // gmdate returns 1-12
 			if ($monthnow > $month) {
-				$date = $date - (24 * 7 * 60 * 60);
+				$date -= (24 * 7 * 60 * 60);
 			}
 			else {
 				break;
@@ -2853,9 +2854,9 @@ class MAPIProvider {
 	 *
 	 *  @see http://developer.berlios.de/mantis/view.php?id=486
 	 *
-	 *  @param string           $email
+	 * @param string $email
 	 *
-	 *  @return string or false on error
+	 * @return string or false on error
 	 */
 	private function extractEmailAddress($email) {
 		if (!isset($this->zRFC822)) {

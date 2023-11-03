@@ -872,13 +872,13 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// AS-16.1: did the attendee propose a new time ?
 		if (!empty($request['proposedstarttime'])) {
-			$request['proposedstarttime'] = Utils::parseDate($request['proposedstarttime']);
+			$request['proposedstarttime'] = Utils::ParseDate($request['proposedstarttime']);
 		}
 		else {
 			$request['proposedstarttime'] = false;
 		}
 		if (!empty($request['proposedendtime'])) {
-			$request['proposedendtime'] = Utils::parseDate($request['proposedendtime']);
+			$request['proposedendtime'] = Utils::ParseDate($request['proposedendtime']);
 		}
 		else {
 			$request['proposedendtime'] = false;

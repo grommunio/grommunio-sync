@@ -869,7 +869,7 @@ class Utils {
 	 *
 	 * @return long
 	 */
-	public static function parseDate($ts) {
+	public static function ParseDate($ts) {
 		if (preg_match("/(\\d{4})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(T(\\d{2})[^0-9]*(\\d{2})[^0-9]*(\\d{2})(.\\d+)?Z){0,1}$/", $ts, $matches)) {
 			if ($matches[1] >= 2038) {
 				$matches[1] = 2038;
@@ -892,6 +892,41 @@ class Utils {
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Transforms an unix timestamp into an AS timestamp or a human readable format.
+	 *
+	 * Oh yeah, this is beautiful. Exchange outputs date fields differently in calendar items
+	 * and emails. We could just always send one or the other, but unfortunately nokia's 'Mail for
+	 * exchange' depends on this quirk. So we have to send a different date type depending on where
+	 * it's used. Sigh.
+	 *
+	 * @param int $ts
+	 * @param int $type int (StreamerType) (optional) if not set a human readable format is returned
+	 *
+	 * @return string
+	 */
+	public static function FormatDate($ts, $type = "") {
+		// fallback to a human readable format (used for logging)
+		$formatString = "yyyy-MM-dd HH:mm:SS' UTC'";
+		if ($type == Streamer::STREAMER_TYPE_DATE) {
+			$formatString = "yyyyMMdd'T'HHmmSS'Z'";
+		}
+		elseif ($type == Streamer::STREAMER_TYPE_DATE_DASHES) {
+			$formatString = "yyyy-MM-dd'T'HH:mm:SS'.000Z'";
+		}
+
+		$formatter = datefmt_create(
+			'en_US',
+			IntlDateFormatter::FULL,
+			IntlDateFormatter::FULL,
+			'UTC',
+			IntlDateFormatter::GREGORIAN,
+			$formatString
+		);
+
+		return datefmt_format($formatter, $ts);
 	}
 
 	/**

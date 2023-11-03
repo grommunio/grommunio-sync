@@ -248,7 +248,7 @@ class ImportChangesICS implements IImportChanges {
 
 		// check the sync interval
 		if ($this->cutoffdate !== false) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->isModificationAllowed('%s'): cut off date is: %s", $messageid, $this->cutoffdate));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->isModificationAllowed('%s'): cut off date is: %s (%s)", $messageid, Utils::FormatDate($this->cutoffdate), $this->cutoffdate));
 			if (($this->contentClass == "Email" && !MAPIUtils::IsInEmailSyncInterval($this->store, $mapimessage, $this->cutoffdate)) ||
 				  ($this->contentClass == "Calendar" && !MAPIUtils::IsInCalendarSyncInterval($this->store, $mapimessage, $this->cutoffdate))) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->isModificationAllowed('%s'): Message in %s is outside the sync interval. Data not saved.", $messageid, $this->contentClass));
