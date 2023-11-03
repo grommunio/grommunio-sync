@@ -180,7 +180,7 @@ class StateObject implements JsonSerializable {
 	 *
 	 * Serializes the object to a value that can be serialized natively by json_encode()
 	 *
-	 * @return array
+	 * @return mixed
 	 */
 	public function jsonSerialize() {
 		return [

@@ -442,7 +442,7 @@ class WBXMLDecoder extends WBXMLDefs {
 	/**
 	 * Reads one byte from the input stream.
 	 *
-	 * @return int
+	 * @return int|void
 	 */
 	private function getByte() {
 		$ch = fread($this->in, 1);
