@@ -165,7 +165,7 @@ class Streamer implements JsonSerializable {
 					if (isset($map[self::STREAMER_TYPE])) {
 						// Complex type, decode recursively
 						if ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE_DASHES) {
-							$decoded = Utils::parseDate($decoder->getElementContent());
+							$decoded = Utils::ParseDate($decoder->getElementContent());
 							if (!$decoder->getElementEndTag()) {
 								return false;
 							}
@@ -333,7 +333,7 @@ class Streamer implements JsonSerializable {
 
 					if (isset($map[self::STREAMER_TYPE]) && ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE_DASHES)) {
 						if ($this->{$map[self::STREAMER_VAR]} != 0) { // don't output 1-1-1970
-							$encoder->content($this->formatDate($this->{$map[self::STREAMER_VAR]}, $map[self::STREAMER_TYPE]));
+							$encoder->content(Utils::FormatDate($this->{$map[self::STREAMER_VAR]}, $map[self::STREAMER_TYPE]));
 						}
 					}
 					elseif (isset($map[self::STREAMER_TYPE]) && $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_HEX) {
@@ -462,32 +462,5 @@ class Streamer implements JsonSerializable {
 				$this->{$k} = $v;
 			}
 		}
-	}
-
-	/*----------------------------------------------------------------------------------------------------------
-	 * Private methods for conversion
-	 */
-
-	/**
-	 * Formats a timestamp
-	 * Oh yeah, this is beautiful. Exchange outputs date fields differently in calendar items
-	 * and emails. We could just always send one or the other, but unfortunately nokia's 'Mail for
-	 *  exchange' depends on this quirk. So we have to send a different date type depending on where
-	 * it's used. Sigh.
-	 *
-	 * @param int $ts
-	 * @param int $type
-	 *
-	 * @return string
-	 */
-	private function formatDate($ts, $type) {
-		if ($type == self::STREAMER_TYPE_DATE) {
-			return gmstrftime("%Y%m%dT%H%M%SZ", $ts);
-		}
-		if ($type == self::STREAMER_TYPE_DATE_DASHES) {
-			return gmstrftime("%Y-%m-%dT%H:%M:%S.000Z", $ts);
-		}
-		// fallback to dashes (should never be reached)
-		return gmstrftime("%Y-%m-%dT%H:%M:%S.000Z", $ts);
 	}
 }
