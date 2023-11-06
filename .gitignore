@@ -6,3 +6,4 @@ settings.json
 vendor/phpstan*
 vendor/bin/phpstan*
 mapi
+phpstan.neon.dist

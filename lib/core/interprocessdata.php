@@ -163,6 +163,7 @@ abstract class InterProcessData {
 
 	protected function setDeviceUserData($key, $data, $devid, $user, $subkey = -1, $doCas = false, $rawdata = false) {
 		$compKey = $this->getComposedKey($devid, $user, $subkey);
+		$ok = false;
 
 		// overwrite
 		if (!$doCas) {
@@ -170,7 +171,6 @@ abstract class InterProcessData {
 		}
 		// merge data and do CAS on the $compKey
 		elseif ($doCas == "merge") {
-			$ok = false;
 			$okCount = 0;
 			// TODO: make this configurable (retrycount)?
 			while (!$ok && $okCount < 5) {
@@ -204,7 +204,6 @@ abstract class InterProcessData {
 		}
 		// delete keys of data and do CAS on the $compKey
 		elseif ($doCas == "deletekeys") {
-			$ok = false;
 			$okCount = 0;
 			// TODO: make this configurable (retrycount)?
 			while (!$ok && $okCount < 5) {

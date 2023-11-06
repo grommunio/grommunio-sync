@@ -140,17 +140,18 @@ class Find extends RequestProcessor {
 
 			try {
 				if ($searchname == ISearchProvider::SEARCH_GAL) {
-					// get search results from the searchprovider
-					$rows = $searchprovider->GetGALSearchResults($searchquery, $searchrange, $searchpicture);
+					// TODO: Fix GAL search in Find command
+					// $rows = $searchprovider->GetGALSearchResults($cpo->GetFindFreeText(), "0-100", null);
+					throw new StatusException("GAL search in FIND command is not implemented. Please report this including the 'WBXML debug data' logged. Be aware that the debug data could contain confidential information.", SYNC_FINDSTATUS_INVALIDREQUEST, null, LOGLEVEL_FATAL);
 				}
-				elseif ($searchname == ISearchProvider::SEARCH_MAILBOX) {
+				if ($searchname == ISearchProvider::SEARCH_MAILBOX) {
 					$backendFolderId = self::$deviceManager->GetBackendIdForFolderId($cpo->GetFindFolderid());
 					$cpo->SetFindFolderid($backendFolderId);
 					$rows = $searchprovider->GetMailboxSearchResults($cpo);
 				}
 			}
 			catch (StatusException $stex) {
-				$storestatus = $stex->getCode();
+				$status = $stex->getCode();
 			}
 
 			self::$encoder->startTag(SYNC_FIND_RESPONSE);
@@ -160,7 +161,7 @@ class Find extends RequestProcessor {
 			self::$encoder->endTag();
 
 			self::$encoder->startTag(SYNC_FIND_STATUS);
-			self::$encoder->content(SYNC_FINDSTATUS_SUCCESS);
+			self::$encoder->content($status);
 			self::$encoder->endTag();
 
 			if (isset($rows['range'])) {

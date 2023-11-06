@@ -10,6 +10,8 @@ class SharedFolders extends InterProcessData {
 	private static $instance = false;
 	private $shared;
 	private $updateTime;
+	private $localpart;
+	private $mainDomain;
 
 	public static function GetSharedFolders() {
 		if (!self::$instance) {

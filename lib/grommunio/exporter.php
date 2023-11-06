@@ -19,12 +19,11 @@ class ExportChangesICS implements IExportChanges {
 	private $store;
 	private $session;
 	private $restriction;
-	private $contentparameters;
+	private $contentParameters;
 	private $flags;
 	private $exporterflags;
 	private $exporter;
-	private $moveSrcState;
-	private $moveDstState;
+	private $statestream;
 
 	/**
 	 * Constructor.
@@ -79,6 +78,7 @@ class ExportChangesICS implements IExportChanges {
 		}
 		catch (MAPIException $me) {
 			$this->exporter = false;
+
 			// We return the general error SYNC_FSSTATUS_CODEUNKNOWN (12) which is also SYNC_STATUS_FOLDERHIERARCHYCHANGED (12)
 			// if this happened while doing content sync, the mobile will try to resync the folderhierarchy
 			throw new StatusException(sprintf("ExportChangesICS('%s','%s','%s'): Error, unable to open folder: 0x%X", $session, $store, Utils::PrintAsString($folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
@@ -136,6 +136,8 @@ class ExportChangesICS implements IExportChanges {
 
 		mapi_stream_write($stream, $state);
 		$this->statestream = $stream;
+
+		return true;
 	}
 
 	/**
@@ -171,6 +173,8 @@ class ExportChangesICS implements IExportChanges {
 		}
 
 		$this->contentParameters = $contentparameters;
+
+		return true;
 	}
 
 	/**
