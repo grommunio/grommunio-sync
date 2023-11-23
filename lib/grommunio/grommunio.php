@@ -1063,7 +1063,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			// check if something in the monitored folders changed
 			// 'objtype' is not set when mail is received, so we don't check for it
 			if (isset($sinknotif['parentid']) && array_key_exists($sinknotif['parentid'], $this->changesSinkFolders)) {
-				$notifications[] = $this->changesSinkFolders[$sinknotif['parentid']];
+				// grommunio-sync #113: workaround blocking notifications on this item
+				if (!GSync::ReplyCatchHasChange(bin2hex($sinknotif['entryid']))) {
+					$notifications[] = $this->changesSinkFolders[$sinknotif['parentid']];
+				}
 			}
 			// deletes and moves
 			if (isset($sinknotif['oldparentid']) && array_key_exists($sinknotif['oldparentid'], $this->changesSinkFolders)) {
