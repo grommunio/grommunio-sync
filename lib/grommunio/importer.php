@@ -406,6 +406,12 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		if (mapi_importcontentschanges_importmessagechange($this->importer, $props, $flags, $mapimessage)) {
+			// grommunio-sync #113: workaround blocking notifications on this item
+			$sourcekeyprops = mapi_getprops($mapimessage, [PR_ENTRYID]);
+			if (isset($sourcekeyprops[PR_ENTRYID])) {
+				GSync::ReplyCatchMark(bin2hex($sourcekeyprops[PR_ENTRYID]));
+			}
+
 			$response = $this->mapiprovider->SetMessage($mapimessage, $message);
 			mapi_savechanges($mapimessage);
 
@@ -456,6 +462,8 @@ class ImportChangesICS implements IImportChanges {
 			// open the source message
 			$mapimessage = mapi_msgstore_openentry($this->store, $entryid);
 			$this->mapiprovider->PreDeleteMessage($mapimessage);
+			// grommunio-sync #113: workaround blocking notifications on this item
+			GSync::ReplyCatchMark(bin2hex($entryid));
 		}
 
 		// do a 'soft' delete so people can un-delete if necessary
@@ -506,6 +514,12 @@ class ImportChangesICS implements IImportChanges {
 				return true;
 			}
 			 */
+
+			// grommunio-sync #113: workaround blocking notifications on this item
+			$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($fsk), hex2bin($sk));
+			if (isset($entryid)) {
+				GSync::ReplyCatchMark(bin2hex($entryid));
+			}
 
 			$readstate = ["sourcekey" => hex2bin($sk), "flags" => $flags];
 

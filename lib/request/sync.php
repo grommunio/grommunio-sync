@@ -596,6 +596,13 @@ class Sync extends RequestProcessor {
 							catch (StatusException $stex) {
 								$status = $stex->getCode();
 							}
+
+							// Check if changes are requested - if not and there are no changes to be exported anyway, update folderstat!
+							if (!$sc->GetParameter($spa, "getchanges") && !$sc->CountChange($spa->GetFolderId())) {
+								SLog::Write(LOGLEVEL_DEBUG, "Incoming changes, no export requested: update folderstat");
+								$newFolderStatAfterImport = self::$backend->GetFolderStat(GSync::GetAdditionalSyncFolderStore($spa->GetBackendFolderId()), $spa->GetBackendFolderId());
+								$this->setFolderStat($spa, $newFolderStatAfterImport);
+							}
 						}
 
 						if (!self::$decoder->getElementEndTag()) { // end PERFORM
@@ -1319,7 +1326,7 @@ class Sync extends RequestProcessor {
 			if ($changecount === 0 || ($changecount !== false && $changecount <= $windowSize)) {
 				self::$deviceManager->SetFolderSyncStatus($spa->GetFolderId(), DeviceManager::FLD_SYNC_COMPLETED);
 
-				// we should update the folderstat, but we recheck to see if it changed. If so, it's not updated to force another sync
+				// we should update the folderstat, but we recheck to see if it changed since the exporter setup. If so, it's not updated to force another sync
 				if (self::$backend->HasFolderStats()) {
 					$newFolderStatAfterExport = self::$backend->GetFolderStat(GSync::GetAdditionalSyncFolderStore($spa->GetBackendFolderId()), $spa->GetBackendFolderId());
 					if ($newFolderStat === $newFolderStatAfterExport) {

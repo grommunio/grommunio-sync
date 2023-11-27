@@ -393,6 +393,37 @@ class GSync {
 	}
 
 	/**
+	 * Marks an arbitrary ID for a user and device for 2 seconds.
+	 *
+	 * @param $id $mixed
+	 */
+	public static function ReplyCatchMark($id) {
+		$k = sprintf("grommunio-sync:rb-%s-%s-%s", Request::GetAuthUserString(), Request::GetDeviceID(), $id);
+		$r = GSync::GetRedis();
+		if ($r) {
+			$r->setKey($k, true, 2); // 2 sec timeout!
+		}
+	}
+
+	/**
+	 * Returns if an arbitrary ID for a user and device was marked in the last 2 seconds.
+	 *
+	 * @param $id $mixed
+	 *
+	 * @return bool
+	 */
+	public static function ReplyCatchHasChange($id) {
+		$k = sprintf("grommunio-sync:rb-%s-%s-%s", Request::GetAuthUserString(), Request::GetDeviceID(), $id);
+
+		$r = GSync::GetRedis();
+		if ($r) {
+			return $r->get()->exists($k);
+		}
+
+		return false;
+	}
+
+	/**
 	 * Returns the Redis object.
 	 *
 	 * @return object Redis
