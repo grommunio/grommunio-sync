@@ -162,6 +162,9 @@ abstract class InterProcessData {
 	}
 
 	protected function setDeviceUserData($key, $data, $devid, $user, $subkey = -1, $doCas = false, $rawdata = false) {
+		if (!$this->ipcProvider) {
+			return false;
+		}
 		$compKey = $this->getComposedKey($devid, $user, $subkey);
 		$ok = false;
 
@@ -240,7 +243,10 @@ abstract class InterProcessData {
 
 	protected function getDeviceUserData($key, $devid, $user, $subkey = -1, $returnRaw = false) {
 		$compKey = $this->getComposedKey($devid, $user, $subkey);
-		$_rawdata = $this->ipcProvider->get()->hget($key, $compKey);
+		$_rawdata = false;
+		if ($this->ipcProvider) {
+			$_rawdata = $this->ipcProvider->get()->hget($key, $compKey);
+		}
 		if ($returnRaw) {
 			if ($_rawdata) {
 				return [json_decode($_rawdata, true), $_rawdata];
