@@ -70,8 +70,7 @@ class SyncCollections implements Iterator {
 	/**
 	 * Constructor.
 	 */
-	public function __construct() {
-	}
+	public function __construct() {}
 
 	/**
 	 * Sets the StateManager for this object
@@ -676,7 +675,7 @@ class SyncCollections implements Iterator {
 	 *
 	 * @return bool indicating if changes were found or not
 	 */
-	private function CountChange($folderid) {
+	public function CountChange($folderid) {
 		$spa = $this->GetCollection($folderid);
 
 		if (!$spa) {
