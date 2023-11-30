@@ -1988,13 +1988,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		catch (StateNotFoundException $e) {
 			// if message is not available, try to create a new one
 			$stateMessage = mapi_folder_createmessage($this->stateFolder, MAPI_ASSOCIATED);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): mapi_folder_createmessage 0x%08X", mapi_last_hresult()));
+			if (mapi_last_hresult()) {
+				SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->setStateMessage(): Could not create new state message, mapi_folder_createmessage: 0x%08X", mapi_last_hresult()));
+
+				return false;
+			}
 
 			$messageName = rtrim((($key !== false) ? $key . "-" : "") . (($type !== "") ? $type : ""), "-");
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): creating new state message '%s' (counter: %s)", $messageName, Utils::PrintAsString($counter)));
 			mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrommunioState']);
 		}
-		if (isset($stateMessage)) {
+		if (isset($stateMessage) && $stateMessage) {
 			$jsonEncodedState = is_object($state) || is_array($state) ? json_encode($state, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE) : $state;
 
 			$encodedState = base64_encode($jsonEncodedState);
