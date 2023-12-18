@@ -362,6 +362,9 @@ class MAPIProvider {
 					SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight - convert to local time");
 					$serverTz = TimezoneUtil::GetFullTZ();
 					$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+					if (!$message->timezone) {
+						$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
+					}
 				}
 			}
 			else {
