@@ -200,23 +200,19 @@ class MAPIProvider {
 			$message->organizername = $messageprops[$appointmentprops["representingname"]];
 		}
 
-		$appTz = false; // if the appointment has some timezone information saved on the server
 		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
 			$tz = $this->getTZFromMAPIBlob($messageprops[$appointmentprops["timezonetag"]]);
-			$appTz = true;
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
 			$tzDefStart = TimezoneUtil::CreateTimezoneDefinitionObject($messageprops[$appointmentprops["tzdefstart"]]);
 			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
-			$appTz = true;
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
 			// Windows uses UTC in timezone description in opposite to mstzones in TimezoneUtil which uses GMT
 			$wintz = str_replace("UTC", "GMT", $messageprops[$appointmentprops["timezonedesc"]]);
 			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($wintz));
-			$appTz = true;
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		else {
@@ -357,24 +353,25 @@ class MAPIProvider {
 
 		// All-day events might appear as 24h (or multiple of it) long when they start not exactly at midnight (+/- bias of the timezone)
 		if (isset($message->alldayevent) && $message->alldayevent) {
-			// Adjust all day events if there is a timezone
-			if ($appTz) {
-				$duration = $message->endtime - $message->starttime;
-				// AS pre 16: time in local timezone - convert if it isn't on midnight
-				if (Request::GetProtocolVersion() < 16.0) {
-					$localStartTime = localtime($message->starttime, 1);
-					if ($localStartTime['tm_hour'] || $localStartTime['tm_min']) {
-						SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight - convert to local time");
-						$serverTz = TimezoneUtil::GetFullTZ();
-						$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+			// Adjust all day events for the appointments timezone
+			$duration = $message->endtime - $message->starttime;
+			// AS pre 16: time in local timezone - convert if it isn't on midnight
+			if (Request::GetProtocolVersion() < 16.0) {
+				$localStartTime = localtime($message->starttime, 1);
+				if ($localStartTime['tm_hour'] || $localStartTime['tm_min']) {
+					SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight - convert to local time");
+					$serverTz = TimezoneUtil::GetFullTZ();
+					$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+					if (!$message->timezone) {
+						$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 					}
 				}
-				else {
-					// AS 16: apply timezone as this MUST result in midnight (to be sent to the client)
-					$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
-				}
-				$message->endtime = $message->starttime + $duration;
 			}
+			else {
+				// AS 16: apply timezone as this MUST result in midnight (to be sent to the client)
+				$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+			}
+			$message->endtime = $message->starttime + $duration;
 			if (Request::GetProtocolVersion() >= 16.0) {
 				// no timezone information should be sent
 				unset($message->timezone);
