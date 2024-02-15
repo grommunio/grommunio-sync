@@ -187,7 +187,7 @@ class MAPIProvider {
 			$message->uid = bin2hex($messageprops[$appointmentprops["sourcekey"]]);
 		}
 		else {
-			$message->uid = Utils::GetICalUidFromOLUid($message->uid);
+			$message->uid = getUidFromGoid($message->uid);
 		}
 
 		// Always set organizer information because some devices do not work properly without it
