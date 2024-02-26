@@ -309,12 +309,12 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		$this->scrPrintAt($lc, 0, sprintf("\033[1mgrommunio-sync-top live stats (%s, Gromox %s) %s\033[0m\n",
+		$this->scrPrintAt($lc, 0, sprintf("grommunio-sync-top live stats (%s, Gromox %s) %s\n",
 			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, sprintf("Conn: %4d open, %4d push; ".
-			"%4d users, %4d devices, %4d hosts\n",
+		$this->scrPrintAt($lc, 0, sprintf("Conn: \e[1m%4d\e[0m open, \e[1m%4d\e[0m push; ".
+			"\e[1m%4d\e[0m users, \e[1m%4d\e[0m devices, \e[1m%4d\e[0m hosts\n",
 			count($this->activeConn), $this->pushConn,
 			count($this->activeUsers), count($this->activeDevices),
 			count($this->activeHosts)));
@@ -322,7 +322,7 @@ class GSyncTop {
 		++$lc;
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, "\033[4m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m");
+		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m");
 		++$lc;
 
 		// print help text if requested
