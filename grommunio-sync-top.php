@@ -166,9 +166,6 @@ class GSyncTop {
 			$topdata = $this->topCollector->ReadLatest();
 			$this->processData($topdata);
 
-			// clear screen
-			$this->scrClear();
-
 			// check if screen size changed
 			$s = $this->scrGetSize();
 			if ($this->scrSize['width'] != $s['width']) {
@@ -468,6 +465,8 @@ class GSyncTop {
 		$this->scrPrintAt($lc, 0, "\033[K\n");
 		++$lc;
 		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
+		/* Clear rest of area */
+		print("\e[J");
 		/* Reposition cursor to Action: line */
 		printf("\e[3;%dH", 9 + strlen($this->action));
 	}
@@ -787,6 +786,6 @@ class GSyncTop {
 	 * @param string $text to be printed
 	 */
 	private function scrPrintAt($row, $col, $text = "") {
-		echo "\033[" . $row . ";" . $col . "H" . $text;
+		echo "\033[" . $row . ";" . $col . "H" . preg_replace("/\n/", "\e[K\n", $text);
 	}
 }
