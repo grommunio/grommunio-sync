@@ -309,12 +309,13 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		$this->scrPrintAt($lc, 0, "\033[1mgrommunio-sync-top live statistics\033[0m\t\t\t\t\t" . @strftime("%x %T") . "\n");
+		$this->scrPrintAt($lc, 0, sprintf("\033[1mgrommunio-sync-top live stats (%s, Gromox %s) %s\033[0m\n",
+			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\tgrommunio-sync:   %s ", count($this->activeConn), count($this->activeUsers), $this->getVersion()));
+		$this->scrPrintAt($lc, 0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\n", count($this->activeConn), count($this->activeUsers)));
 		++$lc;
-		$this->scrPrintAt($lc, 0, sprintf("Push connections: %d\t\t\t\tDevices: %d\tPHP-MAPI: %s", $this->pushConn, count($this->activeDevices), phpversion("mapi")));
+		$this->scrPrintAt($lc, 0, sprintf("Push connections: %d\t\t\t\tDevices: %d\n", $this->pushConn, count($this->activeDevices)));
 		++$lc;
 		$this->scrPrintAt($lc, 0, sprintf("                                                Hosts:\t %d", count($this->activeHosts)));
 		++$lc;
