@@ -309,6 +309,7 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
+		print("\e[1;1H");
 		$this->scrPrintAt($lc, 0, sprintf("grommunio-sync-top live stats (%s, Gromox %s) %s\n",
 			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
 		++$lc;
@@ -319,22 +320,57 @@ class GSyncTop {
 			count($this->activeUsers), count($this->activeDevices),
 			count($this->activeHosts)));
 		++$lc;
-		++$lc;
-		++$lc;
 
+		// remove old status
+		if ($this->statusexpire < $this->currenttime) {
+			$this->status = false;
+		}
+
+		// show request information and help command
+		if ($this->starttime + 6 > $this->currenttime) {
+			$this->status = sprintf("Requesting information (takes up to %dsecs)", $this->pingInterval) . str_repeat(".", $this->currenttime - $this->starttime) . "  type \033[01;31mh\033[00;31m or \033[01;31mhelp\033[00;31m for usage instructions";
+			$this->statusexpire = $this->currenttime + 1;
+		}
+
+		$str = "";
+		if (!$this->showPush) {
+			$str .= "\033[00;32mPush: \033[01;32mNo\033[0m   ";
+		}
+
+		if ($this->showOption == self::SHOW_ACTIVE_ONLY) {
+			$str .= "\033[01;32mActive only\033[0m   ";
+		}
+
+		if ($this->showOption == self::SHOW_UNKNOWN_ONLY) {
+			$str .= "\033[01;32mUnknown only\033[0m   ";
+		}
+
+		if ($this->showTermSec != self::SHOW_TERM_DEFAULT_TIME) {
+			$str .= "\033[01;32mTerminated: " . $this->showTermSec . "s\033[0m   ";
+		}
+
+		if ($this->filter !== false || ($this->status !== false && $this->statusexpire > $this->currenttime)) {
+			// print filter in green
+			if ($this->filter !== false) {
+				$str .= "\033[00;32mFilter: \033[01;32m{$this->filter}\033[0m   ";
+			}
+			// print status in red
+			if ($this->status !== false) {
+				$str .= "\033[00;31m{$this->status}\033[0m";
+			}
+		}
+		$this->scrPrintAt($lc, 0, "Action: \033[01m" . $this->action . "\033[0m\n");
+		++$lc;
+		$this->scrPrintAt($lc, 0, $str."\n");
+		++$lc;
 		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
 		++$lc;
 
 		// print help text if requested
-		$hl = 0;
+		$help = false;
 		if ($this->helpexpire > $this->currenttime) {
 			$help = $this->scrHelp();
 			$linesAvail -= count($help);
-			$hl = $this->scrSize['height'] - count($help) - 1;
-			foreach ($help as $h) {
-				$this->scrPrintAt($hl, 0, $h);
-				++$hl;
-			}
 		}
 
 		$toPrintActive = $linesAvail;
@@ -381,7 +417,7 @@ class GSyncTop {
 				break;
 			}
 
-			$this->scrPrintAt($lc, 0, $this->getLine($l));
+			$this->scrPrintAt($lc, 0, $this->getLine($l)."\n");
 			++$lc;
 			++$linesprinted;
 		}
@@ -420,52 +456,20 @@ class GSyncTop {
 		}
 
 		// add the lines used when displaying the help text
+		$hl = 0;
+		if ($help !== false) {
+			$hl = $this->scrSize['height'] - count($help) - 1;
+			foreach ($help as $h) {
+				$this->scrPrintAt($hl, 0, $h."\n");
+				++$hl;
+			}
+		}
 		$lc += $hl;
 		$this->scrPrintAt($lc, 0, "\033[K\n");
 		++$lc;
 		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
-
-		// remove old status
-		if ($this->statusexpire < $this->currenttime) {
-			$this->status = false;
-		}
-
-		// show request information and help command
-		if ($this->starttime + 6 > $this->currenttime) {
-			$this->status = sprintf("Requesting information (takes up to %dsecs)", $this->pingInterval) . str_repeat(".", $this->currenttime - $this->starttime) . "  type \033[01;31mh\033[00;31m or \033[01;31mhelp\033[00;31m for usage instructions";
-			$this->statusexpire = $this->currenttime + 1;
-		}
-
-		$str = "";
-		if (!$this->showPush) {
-			$str .= "\033[00;32mPush: \033[01;32mNo\033[0m   ";
-		}
-
-		if ($this->showOption == self::SHOW_ACTIVE_ONLY) {
-			$str .= "\033[01;32mActive only\033[0m   ";
-		}
-
-		if ($this->showOption == self::SHOW_UNKNOWN_ONLY) {
-			$str .= "\033[01;32mUnknown only\033[0m   ";
-		}
-
-		if ($this->showTermSec != self::SHOW_TERM_DEFAULT_TIME) {
-			$str .= "\033[01;32mTerminated: " . $this->showTermSec . "s\033[0m   ";
-		}
-
-		if ($this->filter !== false || ($this->status !== false && $this->statusexpire > $this->currenttime)) {
-			// print filter in green
-			if ($this->filter !== false) {
-				$str .= "\033[00;32mFilter: \033[01;32m{$this->filter}\033[0m   ";
-			}
-			// print status in red
-			if ($this->status !== false) {
-				$str .= "\033[00;31m{$this->status}\033[0m";
-			}
-		}
-		$this->scrPrintAt(4, 0, $str);
-
-		$this->scrPrintAt(3, 0, "Action: \033[01m" . $this->action . "\033[0m\n");
+		/* Reposition cursor to Action: line */
+		printf("\e[3;%dH", 9 + strlen($this->action));
 	}
 
 	/**
