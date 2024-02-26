@@ -360,7 +360,7 @@ class GSyncTop {
 		++$lc;
 		$this->scrPrintAt($lc, 0, $str."\n");
 		++$lc;
-		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
+		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'ADDRESS', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
 		++$lc;
 
 		// print help text if requested
