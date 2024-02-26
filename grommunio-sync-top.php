@@ -322,7 +322,7 @@ class GSyncTop {
 		++$lc;
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m");
+		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
 		++$lc;
 
 		// print help text if requested
@@ -370,7 +370,7 @@ class GSyncTop {
 				break;
 			}
 
-			$this->scrPrintAt($lc, 0, "\033[01m" . $this->getLine($l) . "\033[0m");
+			$this->scrPrintAt($lc, 0, "\033[01m" . $this->getLine($l) . "\033[0m\n");
 			++$lc;
 			++$linesprinted;
 		}
@@ -399,7 +399,7 @@ class GSyncTop {
 			if ((!isset($l['push']) || $l['push'] == false) && $time - $l["start"] > 30) {
 				$color = "1;31m";
 			}
-			$this->scrPrintAt($lc, 0, "\033[0" . $color . $this->getLine($l) . "\033[0m");
+			$this->scrPrintAt($lc, 0, "\033[0" . $color . $this->getLine($l) . "\033[0m\n");
 			++$lc;
 			++$linesprinted;
 		}
@@ -414,16 +414,16 @@ class GSyncTop {
 				break;
 			}
 
-			$this->scrPrintAt($lc, 0, "\033[01;30m" . $this->getLine($l) . "\033[0m");
+			$this->scrPrintAt($lc, 0, "\033[01;30m" . $this->getLine($l) . "\033[0m\n");
 			++$lc;
 			++$linesprinted;
 		}
 
 		// add the lines used when displaying the help text
 		$lc += $hl;
-		$this->scrPrintAt($lc, 0, "\033[K");
+		$this->scrPrintAt($lc, 0, "\033[K\n");
 		++$lc;
-		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m");
+		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
 
 		// remove old status
 		if ($this->statusexpire < $this->currenttime) {
@@ -465,7 +465,7 @@ class GSyncTop {
 		}
 		$this->scrPrintAt(4, 0, $str);
 
-		$this->scrPrintAt(3, 0, "Action: \033[01m" . $this->action . "\033[0m");
+		$this->scrPrintAt(3, 0, "Action: \033[01m" . $this->action . "\033[0m\n");
 	}
 
 	/**
