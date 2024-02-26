@@ -313,11 +313,12 @@ class GSyncTop {
 			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\n", count($this->activeConn), count($this->activeUsers)));
+		$this->scrPrintAt($lc, 0, sprintf("Conn: %4d open, %4d push; ".
+			"%4d users, %4d devices, %4d hosts\n",
+			count($this->activeConn), $this->pushConn,
+			count($this->activeUsers), count($this->activeDevices),
+			count($this->activeHosts)));
 		++$lc;
-		$this->scrPrintAt($lc, 0, sprintf("Push connections: %d\t\t\t\tDevices: %d\n", $this->pushConn, count($this->activeDevices)));
-		++$lc;
-		$this->scrPrintAt($lc, 0, sprintf("                                                Hosts:\t %d", count($this->activeHosts)));
 		++$lc;
 		++$lc;
 
@@ -462,9 +463,9 @@ class GSyncTop {
 				$str .= "\033[00;31m{$this->status}\033[0m";
 			}
 		}
-		$this->scrPrintAt(5, 0, $str);
+		$this->scrPrintAt(4, 0, $str);
 
-		$this->scrPrintAt(4, 0, "Action: \033[01m" . $this->action . "\033[0m");
+		$this->scrPrintAt(3, 0, "Action: \033[01m" . $this->action . "\033[0m");
 	}
 
 	/**
