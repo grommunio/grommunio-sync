@@ -15,6 +15,7 @@ if (!defined('GSYNC_CONFIG')) {
 }
 
 include_once GSYNC_CONFIG;
+setlocale(LC_ALL, "");
 
 /*
  * MAIN
@@ -308,7 +309,7 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		$this->scrPrintAt($lc, 0, "\033[1mgrommunio-sync-top live statistics\033[0m\t\t\t\t\t" . @strftime("%d/%m/%Y %T") . "\n");
+		$this->scrPrintAt($lc, 0, "\033[1mgrommunio-sync-top live statistics\033[0m\t\t\t\t\t" . @strftime("%x %T") . "\n");
 		++$lc;
 
 		$this->scrPrintAt($lc, 0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\tgrommunio-sync:   %s ", count($this->activeConn), count($this->activeUsers), $this->getVersion()));
