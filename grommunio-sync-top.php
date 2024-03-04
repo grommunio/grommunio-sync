@@ -15,6 +15,7 @@ if (!defined('GSYNC_CONFIG')) {
 }
 
 include_once GSYNC_CONFIG;
+setlocale(LC_ALL, "");
 
 /*
  * MAIN
@@ -165,9 +166,6 @@ class GSyncTop {
 			$topdata = $this->topCollector->ReadLatest();
 			$this->processData($topdata);
 
-			// clear screen
-			$this->scrClear();
-
 			// check if screen size changed
 			$s = $this->scrGetSize();
 			if ($this->scrSize['width'] != $s['width']) {
@@ -308,119 +306,17 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		$this->scrPrintAt($lc, 0, "\033[1mgrommunio-sync-top live statistics\033[0m\t\t\t\t\t" . @strftime("%d/%m/%Y %T") . "\n");
+		print("\e[1;1H");
+		$this->scrPrintAt($lc, 0, sprintf("grommunio-sync-top live stats (%s, Gromox %s) %s\n",
+			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, sprintf("Open connections: %d\t\t\t\tUsers:\t %d\tgrommunio-sync:   %s ", count($this->activeConn), count($this->activeUsers), $this->getVersion()));
+		$this->scrPrintAt($lc, 0, sprintf("Conn: \e[1m%4d\e[0m open, \e[1m%4d\e[0m push; ".
+			"\e[1m%4d\e[0m users, \e[1m%4d\e[0m devices, \e[1m%4d\e[0m hosts\n",
+			count($this->activeConn), $this->pushConn,
+			count($this->activeUsers), count($this->activeDevices),
+			count($this->activeHosts)));
 		++$lc;
-		$this->scrPrintAt($lc, 0, sprintf("Push connections: %d\t\t\t\tDevices: %d\tPHP-MAPI: %s", $this->pushConn, count($this->activeDevices), phpversion("mapi")));
-		++$lc;
-		$this->scrPrintAt($lc, 0, sprintf("                                                Hosts:\t %d", count($this->activeHosts)));
-		++$lc;
-		++$lc;
-
-		$this->scrPrintAt($lc, 0, "\033[4m" . $this->getLine(['pid' => 'PID', 'ip' => 'IP', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m");
-		++$lc;
-
-		// print help text if requested
-		$hl = 0;
-		if ($this->helpexpire > $this->currenttime) {
-			$help = $this->scrHelp();
-			$linesAvail -= count($help);
-			$hl = $this->scrSize['height'] - count($help) - 1;
-			foreach ($help as $h) {
-				$this->scrPrintAt($hl, 0, $h);
-				++$hl;
-			}
-		}
-
-		$toPrintActive = $linesAvail;
-		$toPrintOpen = $linesAvail;
-		$toPrintUnknown = $linesAvail;
-		$toPrintTerm = $linesAvail;
-
-		// default view: show all unknown, no terminated and half active+open
-		if (count($this->linesActive) + count($this->linesOpen) + count($this->linesUnknown) > $linesAvail) {
-			$toPrintUnknown = count($this->linesUnknown);
-			$toPrintActive = count($this->linesActive);
-			$toPrintOpen = $linesAvail - $toPrintUnknown - $toPrintActive;
-			$toPrintTerm = 0;
-		}
-
-		if ($this->showOption == self::SHOW_ACTIVE_ONLY) {
-			$toPrintActive = $linesAvail;
-			$toPrintOpen = 0;
-			$toPrintUnknown = 0;
-			$toPrintTerm = 0;
-		}
-
-		if ($this->showOption == self::SHOW_UNKNOWN_ONLY) {
-			$toPrintActive = 0;
-			$toPrintOpen = 0;
-			$toPrintUnknown = $linesAvail;
-			$toPrintTerm = 0;
-		}
-
-		$linesprinted = 0;
-		foreach ($this->linesActive as $time => $l) {
-			if ($linesprinted >= $toPrintActive) {
-				break;
-			}
-
-			$this->scrPrintAt($lc, 0, "\033[01m" . $this->getLine($l) . "\033[0m");
-			++$lc;
-			++$linesprinted;
-		}
-
-		$linesprinted = 0;
-		foreach ($this->linesOpen as $time => $l) {
-			if ($linesprinted >= $toPrintOpen) {
-				break;
-			}
-
-			$this->scrPrintAt($lc, 0, $this->getLine($l));
-			++$lc;
-			++$linesprinted;
-		}
-
-		$linesprinted = 0;
-		foreach ($this->linesUnknown as $time => $l) {
-			if ($linesprinted >= $toPrintUnknown) {
-				break;
-			}
-			$time = intval($time);
-			$color = "0;31m";
-			if (!isset($l['start'])) {
-				$l['start'] = $time;
-			}
-			if ((!isset($l['push']) || $l['push'] == false) && $time - $l["start"] > 30) {
-				$color = "1;31m";
-			}
-			$this->scrPrintAt($lc, 0, "\033[0" . $color . $this->getLine($l) . "\033[0m");
-			++$lc;
-			++$linesprinted;
-		}
-
-		if ($toPrintTerm > 0) {
-			$toPrintTerm = $linesAvail - $lc + 6;
-		}
-
-		$linesprinted = 0;
-		foreach ($this->linesTerm as $time => $l) {
-			if ($linesprinted >= $toPrintTerm) {
-				break;
-			}
-
-			$this->scrPrintAt($lc, 0, "\033[01;30m" . $this->getLine($l) . "\033[0m");
-			++$lc;
-			++$linesprinted;
-		}
-
-		// add the lines used when displaying the help text
-		$lc += $hl;
-		$this->scrPrintAt($lc, 0, "\033[K");
-		++$lc;
-		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m");
 
 		// remove old status
 		if ($this->statusexpire < $this->currenttime) {
@@ -460,9 +356,119 @@ class GSyncTop {
 				$str .= "\033[00;31m{$this->status}\033[0m";
 			}
 		}
-		$this->scrPrintAt(5, 0, $str);
+		$this->scrPrintAt($lc, 0, "Action: \033[01m" . $this->action . "\033[0m\n");
+		++$lc;
+		$this->scrPrintAt($lc, 0, $str."\n");
+		++$lc;
+		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'ADDRESS', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
+		++$lc;
 
-		$this->scrPrintAt(4, 0, "Action: \033[01m" . $this->action . "\033[0m");
+		// print help text if requested
+		$help = false;
+		if ($this->helpexpire > $this->currenttime) {
+			$help = $this->scrHelp();
+			$linesAvail -= count($help);
+		}
+
+		$toPrintActive = $linesAvail;
+		$toPrintOpen = $linesAvail;
+		$toPrintUnknown = $linesAvail;
+		$toPrintTerm = $linesAvail;
+
+		// default view: show all unknown, no terminated and half active+open
+		if (count($this->linesActive) + count($this->linesOpen) + count($this->linesUnknown) > $linesAvail) {
+			$toPrintUnknown = count($this->linesUnknown);
+			$toPrintActive = count($this->linesActive);
+			$toPrintOpen = $linesAvail - $toPrintUnknown - $toPrintActive;
+			$toPrintTerm = 0;
+		}
+
+		if ($this->showOption == self::SHOW_ACTIVE_ONLY) {
+			$toPrintActive = $linesAvail;
+			$toPrintOpen = 0;
+			$toPrintUnknown = 0;
+			$toPrintTerm = 0;
+		}
+
+		if ($this->showOption == self::SHOW_UNKNOWN_ONLY) {
+			$toPrintActive = 0;
+			$toPrintOpen = 0;
+			$toPrintUnknown = $linesAvail;
+			$toPrintTerm = 0;
+		}
+
+		$linesprinted = 0;
+		foreach ($this->linesActive as $time => $l) {
+			if ($linesprinted >= $toPrintActive) {
+				break;
+			}
+
+			$this->scrPrintAt($lc, 0, "\033[01m" . $this->getLine($l) . "\033[0m\n");
+			++$lc;
+			++$linesprinted;
+		}
+
+		$linesprinted = 0;
+		foreach ($this->linesOpen as $time => $l) {
+			if ($linesprinted >= $toPrintOpen) {
+				break;
+			}
+
+			$this->scrPrintAt($lc, 0, $this->getLine($l)."\n");
+			++$lc;
+			++$linesprinted;
+		}
+
+		$linesprinted = 0;
+		foreach ($this->linesUnknown as $time => $l) {
+			if ($linesprinted >= $toPrintUnknown) {
+				break;
+			}
+			$time = intval($time);
+			$color = "0;31m";
+			if (!isset($l['start'])) {
+				$l['start'] = $time;
+			}
+			if ((!isset($l['push']) || $l['push'] == false) && $time - $l["start"] > 30) {
+				$color = "1;31m";
+			}
+			$this->scrPrintAt($lc, 0, "\033[0" . $color . $this->getLine($l) . "\033[0m\n");
+			++$lc;
+			++$linesprinted;
+		}
+
+		if ($toPrintTerm > 0) {
+			$toPrintTerm = $linesAvail - $lc + 6;
+		}
+
+		$linesprinted = 0;
+		foreach ($this->linesTerm as $time => $l) {
+			if ($linesprinted >= $toPrintTerm) {
+				break;
+			}
+
+			$this->scrPrintAt($lc, 0, "\033[01;30m" . $this->getLine($l) . "\033[0m\n");
+			++$lc;
+			++$linesprinted;
+		}
+
+		// add the lines used when displaying the help text
+		$hl = 0;
+		if ($help !== false) {
+			$hl = $this->scrSize['height'] - count($help) - 1;
+			foreach ($help as $h) {
+				$this->scrPrintAt($hl, 0, $h."\n");
+				++$hl;
+			}
+		}
+		$lc += $hl;
+		$this->scrPrintAt($lc, 0, "\033[K\n");
+		++$lc;
+		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
+		/* Clear rest of area */
+		print("\e[J");
+		/* Reposition cursor to Action: line */
+		printf("\e[3;%dH", 9 + strlen($this->action));
 	}
 
 	/**
@@ -780,6 +786,6 @@ class GSyncTop {
 	 * @param string $text to be printed
 	 */
 	private function scrPrintAt($row, $col, $text = "") {
-		echo "\033[" . $row . ";" . $col . "H" . $text;
+		echo "\033[" . $row . ";" . $col . "H" . preg_replace("/\n/", "\e[K\n", $text);
 	}
 }
