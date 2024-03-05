@@ -306,7 +306,7 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		echo "\e[1;1H";
+		echo "\e[?25l\e[1;1H";
 		$this->scrPrintAt($lc, 0, sprintf(
 			"grommunio-sync-top live stats (%s, Gromox %s) %s\n",
 			$this->getVersion(),
@@ -476,7 +476,7 @@ class GSyncTop {
 		/* Clear rest of area */
 		echo "\e[J";
 		/* Reposition cursor to Action: line */
-		printf("\e[3;%dH", 9 + strlen($this->action));
+		printf("\e[3;%dH\e[?25h", 9 + strlen($this->action));
 	}
 
 	/**
