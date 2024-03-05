@@ -306,16 +306,24 @@ class GSyncTop {
 	private function scrOverview() {
 		$linesAvail = $this->scrSize['height'] - 8;
 		$lc = 1;
-		print("\e[1;1H");
-		$this->scrPrintAt($lc, 0, sprintf("grommunio-sync-top live stats (%s, Gromox %s) %s\n",
-			$this->getVersion(), phpversion("mapi"), @strftime("%x %T")));
+		echo "\e[1;1H";
+		$this->scrPrintAt($lc, 0, sprintf(
+			"grommunio-sync-top live stats (%s, Gromox %s) %s\n",
+			$this->getVersion(),
+			phpversion("mapi"),
+			@strftime("%x %T")
+		));
 		++$lc;
 
-		$this->scrPrintAt($lc, 0, sprintf("Conn: \e[1m%4d\e[0m open, \e[1m%4d\e[0m push; ".
+		$this->scrPrintAt($lc, 0, sprintf(
+			"Conn: \e[1m%4d\e[0m open, \e[1m%4d\e[0m push; " .
 			"\e[1m%4d\e[0m users, \e[1m%4d\e[0m devices, \e[1m%4d\e[0m hosts\n",
-			count($this->activeConn), $this->pushConn,
-			count($this->activeUsers), count($this->activeDevices),
-			count($this->activeHosts)));
+			count($this->activeConn),
+			$this->pushConn,
+			count($this->activeUsers),
+			count($this->activeDevices),
+			count($this->activeHosts)
+		));
 		++$lc;
 
 		// remove old status
@@ -358,9 +366,10 @@ class GSyncTop {
 		}
 		$this->scrPrintAt($lc, 0, "Action: \033[01m" . $this->action . "\033[0m\n");
 		++$lc;
-		$this->scrPrintAt($lc, 0, $str."\n");
+		$this->scrPrintAt($lc, 0, $str . "\n");
 		++$lc;
-		$this->scrPrintAt($lc, 0, "\033[7m" . $this->getLine(['pid' => 'PID', 'ip' => 'ADDRESS', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']) . str_repeat(" ", 20) . "\033[0m\n");
+		$header = $this->getLine(['pid' => 'PID', 'ip' => 'ADDRESS', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']);
+		$this->scrPrintAt($lc, 0, "\033[7m" . $header . str_repeat(" ", $this->scrSize['width'] - strlen($header)) . "\033[0m\n");
 		++$lc;
 
 		// print help text if requested
@@ -414,7 +423,7 @@ class GSyncTop {
 				break;
 			}
 
-			$this->scrPrintAt($lc, 0, $this->getLine($l)."\n");
+			$this->scrPrintAt($lc, 0, $this->getLine($l) . "\n");
 			++$lc;
 			++$linesprinted;
 		}
@@ -438,7 +447,7 @@ class GSyncTop {
 		}
 
 		if ($toPrintTerm > 0) {
-			$toPrintTerm = $linesAvail - $lc + 6;
+			$toPrintTerm = $linesAvail - $lc + 5;
 		}
 
 		$linesprinted = 0;
@@ -453,20 +462,19 @@ class GSyncTop {
 		}
 
 		// add the lines used when displaying the help text
-		$hl = 0;
 		if ($help !== false) {
-			$hl = $this->scrSize['height'] - count($help) - 1;
+			$this->scrPrintAt($lc, 0, "\033[K\n");
+			++$lc;
 			foreach ($help as $h) {
-				$this->scrPrintAt($hl, 0, $h."\n");
-				++$hl;
+				$this->scrPrintAt($lc, 0, $h . "\n");
+				++$lc;
 			}
 		}
-		$lc += $hl;
 		$this->scrPrintAt($lc, 0, "\033[K\n");
 		++$lc;
 		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
 		/* Clear rest of area */
-		print("\e[J");
+		echo "\e[J";
 		/* Reposition cursor to Action: line */
 		printf("\e[3;%dH", 9 + strlen($this->action));
 	}
