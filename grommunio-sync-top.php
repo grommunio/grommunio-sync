@@ -480,7 +480,7 @@ class GSyncTop {
 		}
 		$this->scrPrintAt($lc, 0, "\033[K\n");
 		++$lc;
-		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m\n");
+		$this->scrPrintAt($lc, 0, "Colorscheme: \033[01mActive  \033[0mOpen  \033[01;31mUnknown  \033[01;30mTerminated\033[0m");
 		/* Clear rest of area */
 		echo "\e[J";
 		/* Reposition cursor to Action: line */
