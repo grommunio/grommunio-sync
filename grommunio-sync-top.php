@@ -304,7 +304,7 @@ class GSyncTop {
 	 * Prints data to the terminal.
 	 */
 	private function scrOverview() {
-		$linesAvail = $this->scrSize['height'] - 8;
+		$linesAvail = $this->scrSize['height'] - 2;
 		$lc = 1;
 		echo "\e[?25l\e[1;1H";
 		$this->scrPrintAt($lc, 0, sprintf(
@@ -369,7 +369,7 @@ class GSyncTop {
 		$this->scrPrintAt($lc, 0, $str . "\n");
 		++$lc;
 		$header = $this->getLine(['pid' => 'PID', 'ip' => 'ADDRESS', 'user' => 'USER', 'command' => 'COMMAND', 'time' => 'TIME', 'devagent' => 'AGENT', 'devid' => 'DEVID', 'addinfo' => 'Additional Information', 'asversion' => 'EAS']);
-		$this->scrPrintAt($lc, 0, "\033[7m" . $header . str_repeat(" ", $this->scrSize['width'] - strlen($header)) . "\033[0m\n");
+		$this->scrPrintAt($lc, 0, "\033[7m" . $header . str_repeat(" ", $this->scrSize['width'] - ($this->scrSize['width'] > strlen($header) ? strlen($header) : 0)) . "\033[0m\n");
 		++$lc;
 
 		// print help text if requested
@@ -463,11 +463,19 @@ class GSyncTop {
 
 		// add the lines used when displaying the help text
 		if ($help !== false) {
-			$this->scrPrintAt($lc, 0, "\033[K\n");
-			++$lc;
-			foreach ($help as $h) {
-				$this->scrPrintAt($lc, 0, $h . "\n");
+			while ($lc < $linesAvail) {
+				$this->scrPrintAt($lc, 0, "\033[K\n");
 				++$lc;
+			}
+			if ($linesAvail < 7) {
+				$this->scrPrintAt($lc, 0, "Can't display help text, terminal has not enough lines. Use -h or --help to see help text. \n");
+				++$lc;
+			}
+			else {
+				foreach ($help as $h) {
+					$this->scrPrintAt($lc, 0, $linesAvail . "-" . $h . "\n");
+					++$lc;
+				}
 			}
 		}
 		$this->scrPrintAt($lc, 0, "\033[K\n");
@@ -639,7 +647,7 @@ class GSyncTop {
 	 * @return string
 	 */
 	public function UsageInstructions() {
-		$help = "Usage:\n\tgrommunio-sync-top.php\n\n" .
+		$help = "Usage:\n\tgrommunio-sync-top\n\n" .
 				"  grommunio-sync-top is a live top-like overview of what grommunio-sync is doing. It does not have specific command line options.\n\n" .
 				"  When grommunio-sync-top is running you can specify certain actions and options which can be executed (listed below).\n" .
 				"  This help information can also be shown inside grommunio-sync-top by hitting 'help' or 'h'.\n\n";
