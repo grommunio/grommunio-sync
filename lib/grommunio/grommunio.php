@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This is a backend for grommunio. It is an implementation of IBackend and also
  * implements ISearchProvider to search in the grommunio system. The backend
@@ -1577,19 +1577,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$userstore = $this->openMessageStore($user);
 			$rootfolder = mapi_msgstore_openentry($userstore);
 			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
-			$rows = mapi_table_queryallrows($hierarchy, [PR_SOURCE_KEY, PR_LOCAL_COMMIT_TIME_MAX, PR_CONTENT_COUNT, PR_CONTENT_UNREAD, PR_DELETED_MSG_COUNT]);
+			$rows = mapi_table_queryallrows($hierarchy, [PR_SOURCE_KEY, PR_CONTENT_COUNT, PR_CONTENT_UNREAD, PR_DELETED_MSG_COUNT]);
 
 			if (count($rows) == 0) {
 				SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->GetFolderStat(): could not access folder statistics for user '%s'. Probably missing 'read' permissions on the root folder! Folders of this store will be synchronized ONCE per hour only!", $user));
 			}
 
 			foreach ($rows as $folder) {
-				$commit_time = isset($folder[PR_LOCAL_COMMIT_TIME_MAX]) ? $folder[PR_LOCAL_COMMIT_TIME_MAX] : "0000000000";
-				$content_count = isset($folder[PR_CONTENT_COUNT]) ? $folder[PR_CONTENT_COUNT] : -1;
-				$content_unread = isset($folder[PR_CONTENT_UNREAD]) ? $folder[PR_CONTENT_UNREAD] : -1;
-				$content_deleted = isset($folder[PR_DELETED_MSG_COUNT]) ? $folder[PR_DELETED_MSG_COUNT] : -1;
+				$content_count = $folder[PR_CONTENT_COUNT] ?? -1;
+				$content_unread = $folder[PR_CONTENT_UNREAD] ?? -1;
+				$content_deleted = $folder[PR_DELETED_MSG_COUNT] ?? -1;
 
-				$this->folderStatCache[$user][bin2hex($folder[PR_SOURCE_KEY])] = $commit_time . "/" . $content_count . "/" . $content_unread . "/" . $content_deleted;
+				$this->folderStatCache[$user][bin2hex($folder[PR_SOURCE_KEY])] = $content_count . "/" . $content_unread . "/" . $content_deleted;
 			}
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetFolderStat() fetched status information of %d folders for store '%s'", count($this->folderStatCache[$user]), $user));
 		}
