@@ -187,7 +187,8 @@ class MAPIProvider {
 			$message->uid = bin2hex($messageprops[$appointmentprops["sourcekey"]]);
 		}
 		else {
-			$message->uid = getUidFromGoid($message->uid);
+			// if no embedded vCal-Uid is found use hexed GOID
+			$message->uid = getUidFromGoid($message->uid) ?? strtoupper(bin2hex($message->uid));
 		}
 
 		// Always set organizer information because some devices do not work properly without it
