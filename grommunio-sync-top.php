@@ -662,21 +662,21 @@ class GSyncTop {
 		$secs = $this->helpexpire - $this->currenttime;
 		$h[] = "Actions supported by grommunio-sync-top (help page still displayed for " . $secs . "secs)";
 		$h[] = "  " . $this->scrAsBold("Action") . "\t\t" . $this->scrAsBold("Comment");
-		$h[] = "  " . $this->scrAsBold("h") . " or " . $this->scrAsBold("help") . "\t\tDisplays this information.";
-		$h[] = "  " . $this->scrAsBold("q") . ", " . $this->scrAsBold("quit") . " or " . $this->scrAsBold(":q") . "\t\tExits grommunio-sync-top.";
-		$h[] = "  " . $this->scrAsBold("w") . " or " . $this->scrAsBold("wide") . "\t\tTries not to truncate data. Automatically done if more than 180 columns available.";
-		$h[] = "  " . $this->scrAsBold("f:VAL") . " or " . $this->scrAsBold("filter:VAL") . "\tOnly display connections which contain VAL. This value is case-insensitive.";
-		$h[] = "  " . $this->scrAsBold("f:") . " or " . $this->scrAsBold("filter:") . "\t\tWithout a search word: resets the filter.";
-		$h[] = "  " . $this->scrAsBold("l:STR") . " or " . $this->scrAsBold("log:STR") . "\tIssues 'less +G' on the logfile, after grepping on the optional STR.";
-		$h[] = "  " . $this->scrAsBold("t:STR") . " or " . $this->scrAsBold("tail:STR") . "\tIssues 'tail -f' on the logfile, grepping for optional STR.";
-		$h[] = "  " . $this->scrAsBold("e:STR") . " or " . $this->scrAsBold("error:STR") . "\tIssues 'tail -f' on the error logfile, grepping for optional STR.";
-		$h[] = "  " . $this->scrAsBold("r") . " or " . $this->scrAsBold("reset") . "\t\tResets 'wide' or 'filter'.";
-		$h[] = "  " . $this->scrAsBold("o:") . " or " . $this->scrAsBold("option:") . "\t\tSets display options. Valid options specified below";
-		$h[] = "  " . $this->scrAsBold("  p") . " or " . $this->scrAsBold("push") . "\t\tLists/not lists active and open push connections.";
-		$h[] = "  " . $this->scrAsBold("  a") . " or " . $this->scrAsBold("action") . "\t\tLists only active connections.";
-		$h[] = "  " . $this->scrAsBold("  u") . " or " . $this->scrAsBold("unknown") . "\tLists only unknown connections.";
-		$h[] = "  " . $this->scrAsBold("  10") . " or " . $this->scrAsBold("20") . "\t\tLists terminated connections for 10 or 20 seconds. Any other number can be used.";
-		$h[] = "  " . $this->scrAsBold("  d") . " or " . $this->scrAsBold("default") . "\tUses default options";
+		$h[] = "  " . $this->scrAsBold("h") . " or " . $this->scrAsBold("help") . "             Displays this information.";
+		$h[] = "  " . $this->scrAsBold("q") . ", " . $this->scrAsBold("quit") . " or " . $this->scrAsBold(":q") . "         Exits grommunio-sync-top.";
+		$h[] = "  " . $this->scrAsBold("w") . " or " . $this->scrAsBold("wide") . "             Tries not to truncate data. Automatically done if more than 180 columns available.";
+		$h[] = "  " . $this->scrAsBold("f:VAL") . " or " . $this->scrAsBold("filter:VAL") . "   Only display connections which contain VAL. This value is case-insensitive.";
+		$h[] = "  " . $this->scrAsBold("f:") . " or " . $this->scrAsBold("filter:") . "         Without a search word: resets the filter.";
+		$h[] = "  " . $this->scrAsBold("l:STR") . " or " . $this->scrAsBold("log:STR") . "      Issues 'less +G' on the logfile, after grepping on the optional STR.";
+		$h[] = "  " . $this->scrAsBold("t:STR") . " or " . $this->scrAsBold("tail:STR") . "     Issues 'tail -f' on the logfile, grepping for optional STR.";
+		$h[] = "  " . $this->scrAsBold("e:STR") . " or " . $this->scrAsBold("error:STR") . "    Issues 'tail -f' on the error logfile, grepping for optional STR.";
+		$h[] = "  " . $this->scrAsBold("r") . " or " . $this->scrAsBold("reset") . "            Resets 'wide' or 'filter'.";
+		$h[] = "  " . $this->scrAsBold("o:") . " or " . $this->scrAsBold("option:") . "         Sets display options. Valid options specified below";
+		$h[] = "  " . $this->scrAsBold("  p") . " or " . $this->scrAsBold("push") . "           Lists/not lists active and open push connections.";
+		$h[] = "  " . $this->scrAsBold("  a") . " or " . $this->scrAsBold("action") . "         Lists only active connections.";
+		$h[] = "  " . $this->scrAsBold("  u") . " or " . $this->scrAsBold("unknown") . "        Lists only unknown connections.";
+		$h[] = "  " . $this->scrAsBold("  10") . " or " . $this->scrAsBold("20") . "            Lists terminated connections for 10 or 20 seconds. Any other number can be used.";
+		$h[] = "  " . $this->scrAsBold("  d") . " or " . $this->scrAsBold("default") . "        Uses default options";
 
 		return $h;
 	}
