@@ -669,7 +669,7 @@ class GSyncTop {
 		$h = [];
 		$secs = $this->helpexpire - $this->currenttime;
 		$h[] = "Actions supported by grommunio-sync-top (help page still displayed for " . $secs . "secs)";
-		$h[] = "  " . $this->scrAsBold("Action") . "\t\t" . $this->scrAsBold("Comment");
+		$h[] = "  " . $this->scrAsBold("Action") . "                " . $this->scrAsBold("Comment");
 		$h[] = "  " . $this->scrAsBold("h") . " or " . $this->scrAsBold("help") . "             Displays this information.";
 		$h[] = "  " . $this->scrAsBold("q") . ", " . $this->scrAsBold("quit") . " or " . $this->scrAsBold(":q") . "         Exits grommunio-sync-top.";
 		$h[] = "  " . $this->scrAsBold("w") . " or " . $this->scrAsBold("wide") . "             Tries not to truncate data. Automatically done if more than 180 columns available.";
