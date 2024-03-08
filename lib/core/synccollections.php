@@ -522,7 +522,10 @@ class SyncCollections implements Iterator {
 				// check if the folder stat changed since the last sync, if so generate a change for it (only on first run)
 				$currentFolderStat = GSync::GetBackend()->GetFolderStat($store, $backendFolderId);
 				if ($this->waitingTime == 0 && GSync::GetBackend()->HasFolderStats() && $currentFolderStat !== false && $spa->IsExporterRunRequired($currentFolderStat, true)) {
-					$this->changes[$spa->GetFolderId()] = 1;
+					if (!$this->CountChange($spa->GetFolderId())) {
+						SLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->CheckForChanges(): Initial check indicates changes on folder '%s', but they are not relevant", $spa->GetFolderId()));
+						unset($this->changes[$spa->GetFolderId()]);
+					}
 				}
 			}
 		}
