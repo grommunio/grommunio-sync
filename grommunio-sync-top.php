@@ -304,7 +304,7 @@ class GSyncTop {
 	 * Prints data to the terminal.
 	 */
 	private function scrOverview() {
-		$linesAvail = $this->scrSize['height'] - 2;
+		$linesAvail = $this->scrSize['height'] - 7;
 		$lc = 1;
 		echo "\e[?25l\e[1;1H";
 		$this->scrPrintAt($lc, 0, sprintf(
@@ -372,11 +372,18 @@ class GSyncTop {
 		$this->scrPrintAt($lc, 0, "\033[7m" . $header . str_repeat(" ", $this->scrSize['width'] - ($this->scrSize['width'] > strlen($header) ? strlen($header) : 0)) . "\033[0m\n");
 		++$lc;
 
+		if ($linesAvail < 1) {
+			echo "Terminal too small, no room to display any useful information.";
+			++$lc;
+
+			return;
+		}
+
 		// print help text if requested
 		$help = false;
 		if ($this->helpexpire > $this->currenttime) {
 			$help = $this->scrHelp();
-			$linesAvail -= count($help);
+			$linesAvail -= (count($help) + 1);
 		}
 
 		$toPrintActive = $linesAvail;
@@ -463,17 +470,17 @@ class GSyncTop {
 
 		// add the lines used when displaying the help text
 		if ($help !== false) {
-			while ($lc < $linesAvail) {
+			while ($lc < $linesAvail + 7) {
 				$this->scrPrintAt($lc, 0, "\033[K\n");
 				++$lc;
 			}
-			if ($linesAvail < 7) {
-				$this->scrPrintAt($lc, 0, "Can't display help text, terminal has not enough lines. Use -h or --help to see help text. \n");
+			if ($linesAvail < 1) {
+				$this->scrPrintAt($lc, 0, "Can't display help text, terminal has not enough lines. Use -h or --help to see help information. \n");
 				++$lc;
 			}
 			else {
 				foreach ($help as $h) {
-					$this->scrPrintAt($lc, 0, $linesAvail . "-" . $h . "\n");
+					$this->scrPrintAt($lc, 0, $h . "\n");
 					++$lc;
 				}
 			}
