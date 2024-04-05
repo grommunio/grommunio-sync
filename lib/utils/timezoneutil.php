@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Class to generate AS compatible timezone information
  */
@@ -1267,32 +1267,6 @@ class TimezoneUtil {
 	}
 
 	/**
-	 * Test to check if $mstzones and $tzonesoffsets can be resolved
-	 * in both directions.
-	 */
-	public static function TZtest() {
-		foreach (self::$mstzones as $mskey => $msdefs) {
-			if (!array_key_exists($msdefs[0], self::$tzonesoffsets)) {
-				echo "key   '" . $msdefs[0] . "'   not found in tzonesoffsets\n";
-			}
-		}
-
-		foreach (self::$tzonesoffsets as $tzname => $offset) {
-			$found = false;
-			foreach (self::$mstzones as $mskey => $msdefs) {
-				if ($tzname == $msdefs[0]) {
-					$found = true;
-
-					break;
-				}
-			}
-			if (!$found) {
-				echo "key    '{$tzname}' NOT FOUND\n";
-			}
-		}
-	}
-
-	/**
 	 * Pack timezone info for Sync.
 	 *
 	 * @param array $tz
@@ -1329,82 +1303,6 @@ class TimezoneUtil {
 			$tz["dststartmillis"],
 			$tz["dstbias"]
 		);
-	}
-
-	/**
-	 * Generate date object from string and timezone.
-	 *
-	 * @param string $value
-	 * @param string $timezone
-	 *
-	 * @return int epoch
-	 */
-	public static function MakeUTCDate($value, $timezone = null) {
-		$tz = null;
-		if ($timezone) {
-			$tz = timezone_open($timezone);
-		}
-		if (!$tz) {
-			// If there is no timezone set, we use the default timezone
-			$tz = timezone_open(date_default_timezone_get());
-		}
-		// 20110930T090000Z
-		$date = date_create_from_format('Ymd\THis\Z', $value, timezone_open("UTC"));
-		if (!$date) {
-			// 20110930T090000
-			$date = date_create_from_format('Ymd\THis', $value, $tz);
-		}
-		if (!$date) {
-			// 20110930 (Append T000000Z to the date, so it starts at midnight)
-			$date = date_create_from_format('Ymd\THis\Z', $value . "T000000Z", $tz);
-		}
-
-		return date_timestamp_get($date);
-	}
-
-	/**
-	 * Generate a tzid from various formats.
-	 *
-	 * @param string $timezone
-	 *
-	 * @return timezone id
-	 */
-	public static function ParseTimezone($timezone) {
-		// (GMT+01.00) Amsterdam / Berlin / Bern / Rome / Stockholm / Vienna
-		if (preg_match('/GMT(\\+|\\-)0(\d)/', $timezone, $matches)) {
-			return "Etc/GMT" . $matches[1] . $matches[2];
-		}
-		// (GMT+10.00) XXX / XXX / XXX / XXX
-		if (preg_match('/GMT(\\+|\\-)1(\d)/', $timezone, $matches)) {
-			return "Etc/GMT" . $matches[1] . "1" . $matches[2];
-		}
-		// /inverse.ca/20101018_1/Europe/Amsterdam or /inverse.ca/20101018_1/America/Argentina/Buenos_Aires
-		if (preg_match('/\/[.[:word:]]+\/\w+\/(\w+)\/([\w\/]+)/', $timezone, $matches)) {
-			return $matches[1] . "/" . $matches[2];
-		}
-
-		return self::getMSTZnameFromTZName(trim($timezone, '"'));
-	}
-
-	/**
-	 * Returns a timezone supported by PHP for DateTimeZone constructor.
-	 *
-	 * @see http://php.net/manual/en/timezones.php
-	 *
-	 * @param string $timezone
-	 *
-	 * @return string
-	 */
-	public static function GetPhpSupportedTimezone($timezone) {
-		if (in_array($timezone, DateTimeZone::listIdentifiers())) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("TimezoneUtil::GetPhpSupportedTimezone(): '%s' is a PHP supported timezone", $timezone));
-
-			return $timezone;
-		}
-		$dtz = date_default_timezone_get();
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("TimezoneUtil::GetPhpSupportedTimezone(): '%s' is not a PHP supported timezone. Returning default timezone: '%s'", $timezone, $dtz));
-
-		return $dtz;
 	}
 
 	/**
