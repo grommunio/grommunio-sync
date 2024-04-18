@@ -678,6 +678,10 @@ class MAPIUtils {
 			PR_SENT_REPRESENTING_NAME,
 			PR_SENT_REPRESENTING_ENTRYID,
 			PR_SENT_REPRESENTING_SEARCH_KEY,
+			PR_SENT_REPRESENTING_EMAIL_ADDRESS,
+			PR_SENT_REPRESENTING_SMTP_ADDRESS,
+			PR_SENT_REPRESENTING_ADDRTYPE,
+			PR_CLIENT_SUBMIT_TIME,
 			PR_MESSAGE_FLAGS,
 		]);
 		$read = $props[PR_MESSAGE_FLAGS] & MSGFLAG_READ;
@@ -698,29 +702,7 @@ class MAPIUtils {
 				$att = mapi_message_openattach($mapimessage, $attnum);
 				$data = mapi_openproperty($att, PR_ATTACH_DATA_BIN);
 				mapi_message_deleteattach($mapimessage, $attnum);
-				// also copy recipients because they are lost after mapi_inetmapi_imtomapi
-				$recipienttable = mapi_message_getrecipienttable($mapimessage);
-				$messageRecipients = mapi_table_queryallrows($recipienttable, [
-					PR_ENTRYID,
-					PR_SEARCH_KEY,
-					PR_ROWID,
-					PR_DISPLAY_NAME,
-					PR_DISPLAY_TYPE,
-					PR_DISPLAY_TYPE_EX,
-					PR_ADDRTYPE,
-					PR_EMAIL_ADDRESS,
-					PR_SMTP_ADDRESS,
-					PR_OBJECT_TYPE,
-					PR_RECIPIENT_FLAGS,
-					PR_RECIPIENT_TYPE,
-					PR_RECIPIENT_TRACKSTATUS,
-					PR_RECIPIENT_TRACKSTATUS_TIME,
-					PR_CREATION_TIME,
-				]);
 				mapi_inetmapi_imtomapi($session, $store, $addressBook, $mapimessage, $data, ["parse_smime_signed" => 1]);
-				if (!empty($messageRecipients)) {
-					mapi_message_modifyrecipients($mapimessage, MODRECIP_ADD, $messageRecipients);
-				}
 				SLog::Write(LOGLEVEL_DEBUG, "Convert a smime signed message to a normal message.");
 			}
 			$mprops = mapi_getprops($mapimessage, [PR_MESSAGE_FLAGS]);
@@ -732,6 +714,10 @@ class MAPIUtils {
 				PR_SENT_REPRESENTING_NAME => $props[PR_SENT_REPRESENTING_NAME],
 				PR_SENT_REPRESENTING_ENTRYID => $props[PR_SENT_REPRESENTING_ENTRYID],
 				PR_SENT_REPRESENTING_SEARCH_KEY => $props[PR_SENT_REPRESENTING_SEARCH_KEY],
+				PR_SENT_REPRESENTING_EMAIL_ADDRESS => $props[PR_SENT_REPRESENTING_EMAIL_ADDRESS] ?? '',
+				PR_SENT_REPRESENTING_SMTP_ADDRESS => $props[PR_SENT_REPRESENTING_SMTP_ADDRESS] ?? '',
+				PR_SENT_REPRESENTING_ADDRTYPE => $props[PR_SENT_REPRESENTING_ADDRTYPE] ?? 'SMTP',
+				PR_CLIENT_SUBMIT_TIME => $props[PR_CLIENT_SUBMIT_TIME] ?? time(),
 				// mark the message as read if the main message has read flag
 				PR_MESSAGE_FLAGS => $read ? $mprops[PR_MESSAGE_FLAGS] | MSGFLAG_READ : $mprops[PR_MESSAGE_FLAGS],
 			]);
