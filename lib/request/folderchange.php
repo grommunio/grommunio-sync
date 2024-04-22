@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Provides the FOLDERCREATE, FOLDERDELETE, FOLDERUPDATE command
  */
@@ -119,14 +119,14 @@ class FolderChange extends RequestProcessor {
 				throw new StatusException("HandleFolderChange() can not proceed as there are unprocessed hierarchy changes", SYNC_FSSTATUS_SERVERERROR);
 			}
 
-			// any additional folders can not be modified - with exception if they are of type SYNC_FOLDER_TYPE_UNKNOWN (ZP-907)
+			// any additional folders can not be modified - with exception if they are of type SYNC_FOLDER_TYPE_UNKNOWN
 			if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && $serverid !== false && GSync::GetAdditionalSyncFolderStore($backendid)) {
 				throw new StatusException("HandleFolderChange() can not change additional folders which are configured", SYNC_FSSTATUS_SYSTEMFOLDER);
 			}
 
 			// switch user store if this this happens inside an additional folder
 			// if this is an additional folder the backend has to be setup correctly
-			// backend should also not be switched when type is SYNC_FOLDER_TYPE_UNKNOWN (ZP-1220)
+			// backend should also not be switched when type is SYNC_FOLDER_TYPE_UNKNOWN
 			if (self::$deviceManager->GetFolderTypeFromCacheById($serverid) != SYNC_FOLDER_TYPE_UNKNOWN && !self::$backend->Setup(GSync::GetAdditionalSyncFolderStore(($parentBackendId != false) ? $parentBackendId : $backendid))) {
 				throw new StatusException(sprintf("HandleFolderChange() could not Setup() the backend for folder id '%s'", ($parentBackendId != false) ? $parentBackendId : $backendid), SYNC_FSSTATUS_SERVERERROR);
 			}

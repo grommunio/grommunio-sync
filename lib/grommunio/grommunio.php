@@ -38,7 +38,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private $stateFolder;
 	private $userDeviceData;
 
-	// KC config parameter for PR_EC_ENABLED_FEATURES / PR_EC_DISABLED_FEATURES
+	// gromox config parameter for PR_EC_ENABLED_FEATURES / PR_EC_DISABLED_FEATURES
 	public const MOBILE_ENABLED = 'mobile';
 
 	public const MAXAMBIGUOUSRECIPIENTS = 9999;
@@ -116,7 +116,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): Trying to authenticate user '%s'..", $user));
 
 		$this->mainUser = strtolower($user);
-		// TODO the impersonated user should be passed directly to IBackend->Logon() - ZP-1351
+		// TODO the impersonated user should be passed directly to IBackend->Logon()
 		if (Request::GetImpersonatedUser()) {
 			$this->impersonateUser = strtolower(Request::GetImpersonatedUser());
 		}
@@ -414,7 +414,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	public function SendMail($sm) {
 		// Check if imtomapi function is available and use it to send the mime message.
 		// It is available since ZCP 7.0.6
-		// @see http://jira.zarafa.com/browse/ZCP-9508
 		if (!(function_exists('mapi_feature') && mapi_feature('INETMAPI_IMTOMAPI'))) {
 			throw new StatusException("Grommunio->SendMail(): ZCP/KC version is too old, INETMAPI_IMTOMAPI is not available. Install at least ZCP version 7.0.6 or later.", SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED, null, LOGLEVEL_FATAL);
 
@@ -459,13 +458,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		mapi_inetmapi_imtomapi($this->session, $this->defaultstore, $ab, $mapimessage, $sm->mime, []);
 
 		// Set the appSeqNr so that tracking tab can be updated for meeting request updates
-		// @see http://jira.zarafa.com/browse/ZP-68
 		$meetingRequestProps = MAPIMapping::GetMeetingRequestProperties();
 		$meetingRequestProps = getPropIdsFromStrings($this->defaultstore, $meetingRequestProps);
 		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"]]);
 
 		// Convert sent message's body to UTF-8 if it was a HTML message.
-		// @see http://jira.zarafa.com/browse/ZP-505 and http://jira.zarafa.com/browse/ZP-555
 		if (isset($props[$sendMailProps["internetcpid"]]) && $props[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8 && MAPIUtils::GetNativeBodyType($props) == SYNC_BODYPREFERENCE_HTML) {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): Sent email cpid is not unicode (%d). Set it to unicode and convert email html body.", $props[$sendMailProps["internetcpid"]]));
 			$mapiprops[$sendMailProps["internetcpid"]] = INTERNET_CPID_UTF8;
@@ -494,7 +491,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// do not send neither From nor Sender header causing empty PR_SENT_REPRESENTING_NAME and
 		// PR_SENT_REPRESENTING_EMAIL_ADDRESS properties and "broken" PR_SENT_REPRESENTING_ENTRYID
 		// which results in spooler not being able to send the message.
-		// @see http://jira.zarafa.com/browse/ZP-85
 		mapi_deleteprops(
 			$mapimessage,
 			[
@@ -554,7 +550,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						$this->copyAttachments($mapimessage, $fwmessage);
 					}
 
-					// regarding the conversion @see ZP-470
 					if (strlen($body) > 0) {
 						$fwbody = MAPIUtils::readPropStream($fwmessage, PR_BODY);
 						// if only the old message's cpid is set, convert from old charset to utf-8
@@ -2310,7 +2305,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$now = time();
 				if ($now > $oofprops[PR_EC_OUTOFOFFICE_FROM] && $now > $oofprops[PR_EC_OUTOFOFFICE_UNTIL]) {
 					// Out of office is set but the date is in the past. Set the state to disabled.
-					// @see https://jira.z-hub.io/browse/ZP-1188 for details
 					$oof->oofstate = SYNC_SETTINGSOOF_DISABLED;
 					@mapi_setprops($this->defaultstore, [PR_EC_OUTOFOFFICE => false]);
 					@mapi_deleteprops($this->defaultstore, [PR_EC_OUTOFOFFICE_FROM, PR_EC_OUTOFOFFICE_UNTIL]);

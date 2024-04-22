@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  */
 
 class MAPIProvider {
@@ -269,7 +269,6 @@ class MAPIProvider {
 						$attendee->email = $userinfo["primary_email"];
 					}
 					// if the user was not found, do a fallback to PR_SEARCH_KEY
-					// @see https://jira.z-hub.io/browse/ZP-1178
 					elseif (isset($row[PR_SEARCH_KEY])) {
 						$attendee->email = $this->getEmailAddressFromSearchKey($row[PR_SEARCH_KEY]);
 					}
@@ -322,7 +321,6 @@ class MAPIProvider {
 
 		// If it's an appointment which doesn't have any attendees, we have to make sure that
 		// the user is the owner or it will not work properly with android devices
-		// @see https://jira.z-hub.io/browse/ZP-1020
 		if (isset($messageprops[$appointmentprops["meetingstatus"]]) && $messageprops[$appointmentprops["meetingstatus"]] == olNonMeeting && empty($message->attendees)) {
 			$meinfo = nsp_getuserinfo(Request::GetUser());
 
@@ -347,7 +345,7 @@ class MAPIProvider {
 			$message->busystatus = fbFree;
 		}
 
-		// If the busystatus has the value of -1, we should be interpreted as tentative (1) / ZP-581
+		// If the busystatus has the value of -1, we should be interpreted as tentative (1)
 		if (isset($message->busystatus) && $message->busystatus == -1) {
 			$message->busystatus = fbTentative;
 		}
@@ -581,14 +579,13 @@ class MAPIProvider {
 				$exception->busystatus = fbFree;
 			}
 
-			// If the busystatus has the value of -1, we should be interpreted as tentative (1) / ZP-581
+			// If the busystatus has the value of -1, we should be interpreted as tentative (1)
 			if (isset($exception->busystatus) && $exception->busystatus == -1) {
 				$exception->busystatus = fbTentative;
 			}
 
 			// if an exception lasts 24 hours and the series are an allday events, set also the exception to allday event,
 			// otherwise it will be a 24 hour long event on some mobiles.
-			// @see https://jira.z-hub.io/browse/ZP-980
 			if (isset($exception->starttime, $exception->endtime) && ($exception->endtime - $exception->starttime == 86400) && $syncMessage->alldayevent) {
 				$exception->alldayevent = 1;
 			}
@@ -624,7 +621,6 @@ class MAPIProvider {
 	 * @return SyncEmail
 	 */
 	private function getEmail($mapimessage, $contentparameters) {
-		// This workaround fixes ZP-729 and still works with Outlook.
 		// FIXME: It should be properly fixed when refactoring.
 		$bpReturnType = Utils::GetBodyPreferenceBestMatch($contentparameters->GetBodyPreference());
 		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) ||
@@ -800,7 +796,7 @@ class MAPIProvider {
 				$message->meetingrequest->busystatus = fbFree;
 			}
 
-			// If the busystatus has the value of -1, we should be interpreted as tentative (1) / ZP-581
+			// If the busystatus has the value of -1, we should be interpreted as tentative (1)
 			if (isset($message->meetingrequest->busystatus) && $message->meetingrequest->busystatus == -1) {
 				$message->meetingrequest->busystatus = fbTentative;
 			}
@@ -808,7 +804,7 @@ class MAPIProvider {
 			// if a meeting request response hasn't been processed yet,
 			// do it so that the attendee status is updated on the mobile
 			if (!isset($messageprops[$emailproperties["processed"]])) {
-				// check if we are not sending the MR so we can process it - ZP-581
+				// check if we are not sending the MR so we can process it
 				$cuser = GSync::GetBackend()->GetUserDetails(GSync::GetBackend()->GetCurrentUsername());
 				if (isset($cuser["emailaddress"]) && $cuser["emailaddress"] != $fromaddr) {
 					if (!isset($req)) {
@@ -893,7 +889,6 @@ class MAPIProvider {
 			}
 
 			// if the user was not found, do a fallback to PR_SEARCH_KEY
-			// @see https://jira.z-hub.io/browse/ZP-1178
 			if (empty($address) && isset($row[PR_SEARCH_KEY])) {
 				$address = $this->getEmailAddressFromSearchKey($row[PR_SEARCH_KEY]);
 			}
@@ -1000,7 +995,7 @@ class MAPIProvider {
 
 		$storeprops = $this->GetStoreProps();
 
-		// For ZCP 7.0.x we need to retrieve more properties explicitly, see ZP-780
+		// For ZCP 7.0.x we need to retrieve more properties explicitly
 		if (isset($folderprops[PR_SOURCE_KEY]) && !isset($folderprops[PR_ENTRYID]) && !isset($folderprops[PR_CONTAINER_CLASS])) {
 			$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $folderprops[PR_SOURCE_KEY]);
 			$mapifolder = mapi_msgstore_openentry($this->store, $entryid);
@@ -1078,7 +1073,6 @@ class MAPIProvider {
 		}
 
 		// Public folders do not have inboxprops
-		// @see https://jira.z-hub.io/browse/ZP-995
 		if (!empty($inboxprops)) {
 			if ($entryid == $inboxprops[PR_ENTRYID]) {
 				return SYNC_FOLDER_TYPE_INBOX;
@@ -1516,7 +1510,7 @@ class MAPIProvider {
 		// Save OldProps to later check which data is being changed
 		$oldProps = $this->getProps($mapimessage, $appointmentprops);
 
-		// start and end time may not be set - try to get them from the existing appointment for further calculation - see https://jira.z-hub.io/browse/ZP-983
+		// start and end time may not be set - try to get them from the existing appointment for further calculation.
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
 			$amapping = MAPIMapping::GetAppointmentMapping();
 			$amapping = $this->getPropIdsFromStrings($amapping);
@@ -2142,7 +2136,7 @@ class MAPIProvider {
 	private function setNote($mapimessage, $note) {
 		$response = new SyncNoteResponse();
 		// Touchdown does not send categories if all are unset or there is none.
-		// Setting it to an empty array will unset the property in KC as well
+		// Setting it to an empty array will unset the property in gromox as well
 		if (!isset($note->categories)) {
 			$note->categories = [];
 		}
@@ -3056,7 +3050,6 @@ class MAPIProvider {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("bpo: truncation size:'%d', allornone:'%d', preview:'%d'", $bpo->GetTruncationSize(), $bpo->GetAllOrNone(), $bpo->GetPreview()));
 
 			// Android Blackberry expects a full mime message for signed emails
-			// @see https://jira.z-hub.io/projects/ZP/issues/ZP-1154
 			// @TODO change this when refactoring
 			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
 			if (isset($props[PR_MESSAGE_CLASS]) &&
@@ -3072,7 +3065,7 @@ class MAPIProvider {
 					$bpReturnType != SYNC_BODYPREFERENCE_MIME &&
 					$message->asbody->estimatedDataSize > $bpo->GetTruncationSize()
 			) {
-				// Truncated plaintext requests are used on iOS for the preview in the email list. All images and links should be removed - see https://jira.z-hub.io/browse/ZP-1025
+				// Truncated plaintext requests are used on iOS for the preview in the email list. All images and links should be removed.
 				if ($bpReturnType == SYNC_BODYPREFERENCE_PLAIN) {
 					SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setMessageBody(): truncated plain-text body requested, stripping all links and images");
 					// Get more data because of the filtering it's most probably going down in size. It's going to be truncated to the correct size below.
@@ -3585,8 +3578,6 @@ class MAPIProvider {
 	 * Extracts email address from PR_SEARCH_KEY property if possible.
 	 *
 	 * @param string $searchKey
-	 *
-	 * @see https://jira.z-hub.io/browse/ZP-1178
 	 *
 	 * @return string
 	 */

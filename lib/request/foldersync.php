@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Provides the FOLDERSYNC command
  */
@@ -133,7 +133,7 @@ class FolderSync extends RequestProcessor {
 		}
 		// no incoming changes
 		else {
-			// check for a potential process loop like described in Issue ZP-5
+			// check for a potential process loop
 			if ($synckey != "0" && self::$deviceManager->IsHierarchyFullResyncRequired()) {
 				$status = SYNC_FSSTATUS_SYNCKEYERROR;
 				self::$deviceManager->AnnounceProcessStatus(false, $status);

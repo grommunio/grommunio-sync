@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Provides the SYNC command
  */
@@ -61,7 +61,7 @@ class Sync extends RequestProcessor {
 			// Syncing specified folders
 			// Android still sends heartbeat sync even if all syncfolders are disabled.
 			// Check if Folders tag is empty (<Folders/>) and only sync if there are
-			// some folders in the request. See ZP-172
+			// some folders in the request.
 			$startTag = self::$decoder->getElementStartTag(SYNC_FOLDERS);
 			if (isset($startTag[EN_FLAGS]) && $startTag[EN_FLAGS]) {
 				while (self::$decoder->getElementStartTag(SYNC_FOLDER)) {
@@ -183,7 +183,7 @@ class Sync extends RequestProcessor {
 
 					// SUPPORTED properties
 					if (($se = self::$decoder->getElementStartTag(SYNC_SUPPORTED)) !== false) {
-						// ZP-481: LG phones send an empty supported tag, so only read the contents if available here
+						// LG phones send an empty supported tag, so only read the contents if available here
 						// if <Supported/> is received, it's as no supported fields would have been sent at all.
 						// unsure if this is the correct approach, or if in this case some default list should be used
 						if ($se[EN_FLAGS] & EN_FLAGS_CONTENT) {
@@ -230,7 +230,7 @@ class Sync extends RequestProcessor {
 
 					if (self::$decoder->getElementStartTag(SYNC_WINDOWSIZE)) {
 						$ws = self::$decoder->getElementContent();
-						// normalize windowsize - see ZP-477
+						// normalize windowsize
 						if ($ws == 0 || $ws > WINDOW_SIZE_MAX) {
 							$ws = WINDOW_SIZE_MAX;
 						}
@@ -743,7 +743,7 @@ class Sync extends RequestProcessor {
 			// states are lazy loaded - we have to make sure that they are there!
 			$loadstatus = SYNC_STATUS_SUCCESS;
 			foreach ($sc as $folderid => $spa) {
-				// some androids do heartbeat on the OUTBOX folder, with weird results - ZP-362
+				// some androids do heartbeat on the OUTBOX folder, with weird results
 				// we do not load the state so we will never get relevant changes on the OUTBOX folder
 				if (self::$deviceManager->GetFolderTypeFromCacheById($folderid) == SYNC_FOLDER_TYPE_OUTBOX) {
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("HandleSync(): Heartbeat on Outbox folder not allowed"));
@@ -862,7 +862,7 @@ class Sync extends RequestProcessor {
 
 			// TODO we could check against $sc->GetChangedFolderIds() on heartbeat so we do not need to configure all exporter again
 			if ($status == SYNC_STATUS_SUCCESS && ($sc->GetParameter($spa, "getchanges") || !$spa->HasSyncKey())) {
-				// no need to run the exporter if the globalwindowsize is already full - if collection already has a synckey (ZP-1215)
+				// no need to run the exporter if the globalwindowsize is already full - if collection already has a synckey
 				if ($sc->GetGlobalWindowSize() == $this->globallyExportedItems && $spa->HasSyncKey()) {
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Sync(): no exporter setup for '%s' as GlobalWindowSize is full.", $spa->GetFolderId()));
 					$setupExporter = false;
@@ -965,7 +965,7 @@ class Sync extends RequestProcessor {
 			}
 			// get a new synckey only if we did not reach the global limit yet
 			else {
-				// when reaching the global limit for changes of all collections, stop processing other collections (ZP-697)
+				// when reaching the global limit for changes of all collections, stop processing other collections
 				if ($sc->GetGlobalWindowSize() <= $this->globallyExportedItems) {
 					SLog::Write(LOGLEVEL_DEBUG, "Global WindowSize for amount of exported changes reached, omitting output for collection.");
 
@@ -1009,7 +1009,7 @@ class Sync extends RequestProcessor {
 			self::$encoder->endTag();
 		}
 
-		// Check if there was any response - in case of an empty sync request, we shouldn't send an empty answer (ZP-1241)
+		// Check if there was any response - in case of an empty sync request, we shouldn't send an empty answer
 		if (!$this->startTagsSent && $emptysync === true) {
 			$this->sendStartTags();
 			self::$encoder->startTag(SYNC_STATUS);
@@ -1278,7 +1278,7 @@ class Sync extends RequestProcessor {
 				// something really bad happened while exporting changes
 				catch (StatusException $stex) {
 					$status = $stex->getCode();
-					// during export we found out that the states should be thrown away (ZP-623)
+					// during export we found out that the states should be thrown away
 					if ($status == SYNC_STATUS_INVALIDSYNCKEY) {
 						self::$deviceManager->ForceFolderResync($spa->GetFolderId());
 
@@ -1462,7 +1462,7 @@ class Sync extends RequestProcessor {
 					$this->importer->Config($sc->GetParameter($spa, "state"), $spa->GetConflict());
 				}
 
-				// the CPO is also needed by the importer to check if imported changes are inside the sync window - see ZP-258
+				// the CPO is also needed by the importer to check if imported changes are inside the sync window
 				$this->importer->ConfigContentParameters($spa->GetCPO());
 				$this->importer->LoadConflicts($spa->GetCPO(), $sc->GetParameter($spa, "state"));
 			}

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * The ASDevice holds basic data about a device, its users and
  * the linked states
@@ -565,7 +565,7 @@ class ASDevice extends StateObject {
 			}
 		}
 		if (is_array($this->backend2folderidCache) && isset($this->backend2folderidCache[$backendid])) {
-			// Use cached version only if the folderOrigin matches - ZP-1449
+			// Use cached version only if the folderOrigin matches
 			if (Utils::GetFolderOriginFromId($this->backend2folderidCache[$backendid]) == $folderOrigin) {
 				return $this->backend2folderidCache[$backendid];
 			}

@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Manages device relevant data, loop detection and device states.
  * The DeviceManager uses a IStateMachine implementation with
@@ -668,7 +668,7 @@ class DeviceManager extends InterProcessData {
 
 			return false;
 		}
-		// check for potential process loops like described in ZP-5
+		// check for potential process loops
 		return $this->loopdetection->ProcessLoopDetectionIsHierarchyResyncRequired();
 	}
 
@@ -738,7 +738,7 @@ class DeviceManager extends InterProcessData {
 	/**
 	 * Checks the data integrity of the data in the hierarchy cache and the data of the content data (synchronized folders).
 	 * If a folder is deleted, the sync states could still be on the server (and being loaded by PING) while
-	 * the folder is not being synchronized anymore. See also https://jira.z-hub.io/browse/ZP-1077.
+	 * the folder is not being synchronized anymore.
 	 *
 	 * @return bool
 	 */
@@ -963,7 +963,7 @@ class DeviceManager extends InterProcessData {
 			$this->hierarchySyncRequired = true;
 		}
 		catch (UnavailableException $uaex) {
-			// This is temporary and can be ignored e.g. in PING - see https://jira.z-hub.io/browse/ZP-1054
+			// This is temporary and can be ignored e.g. in PING.
 			// If the hash was not available before we treat it like a StateNotFoundException.
 			if ($this->deviceHash === false) {
 				$this->hierarchySyncRequired = true;
