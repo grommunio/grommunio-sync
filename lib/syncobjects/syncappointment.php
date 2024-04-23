@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * WBXML appointment entities that can be parsed directly (as a stream) from
  * WBXML. It is automatically decoded according to $mapping and the Sync
@@ -308,7 +308,7 @@ class SyncAppointment extends SyncObject {
 	 * @return bool
 	 */
 	public function Check($logAsDebug = false) {
-		// Fix starttime and endtime if they are not set on NEW appointments - see https://jira.z-hub.io/browse/ZP-983
+		// Fix starttime and endtime if they are not set on NEW appointments.
 		if ($this->flags === SYNC_NEWMESSAGE) {
 			$time = time();
 			$calcstart = $time + 1800 - ($time % 1800); // round up to the next half hour

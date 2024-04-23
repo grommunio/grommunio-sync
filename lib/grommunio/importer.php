@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This is a generic class that is used by both the proxy importer (for
  * outgoing messages) and our local importer (for incoming messages). Basically
@@ -527,7 +527,7 @@ class ImportChangesICS implements IImportChanges {
 				throw new StatusException(sprintf("ImportChangesICS->ImportMessageReadFlag('%s','%d'): Error setting read state: 0x%X", $id, $flags, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
 			}
 		}
-		// yeah OL sucks - ZP-779
+		// yeah OL sucks
 		else {
 			if (!$fsk) {
 				throw new StatusException(sprintf("ImportChangesICS->ImportMessageReadFlag('%s','%d'): Error setting read state. The message is in another folder but id is unknown as no short folder id is available. Please remove your device states to fully resync your device. Operation ignored.", $id, $flags), SYNC_STATUS_OBJECTNOTFOUND);
@@ -581,7 +581,7 @@ class ImportChangesICS implements IImportChanges {
 		if (!$entryid || !$srcmessage) {
 			$code = SYNC_MOVEITEMSSTATUS_INVALIDSOURCEID;
 			$mapiLastHresult = mapi_last_hresult();
-			// if we move to the trash and the source message is not found, we can also just tell the mobile that we successfully moved to avoid errors (ZP-624)
+			// if we move to the trash and the source message is not found, we can also just tell the mobile that we successfully moved to avoid errors
 			if ($newfolder == GSync::GetBackend()->GetWasteBasket()) {
 				$code = SYNC_MOVEITEMSSTATUS_SUCCESS;
 			}

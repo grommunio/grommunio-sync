@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Several utility functions
  */
@@ -350,7 +350,7 @@ class Utils {
 			$length = strlen($string) - 1;
 		}
 
-		// The intent is not to cut HTML tags in half which causes displaying issues (see ZP-1240).
+		// The intent is not to cut HTML tags in half which causes displaying issues.
 		// The used method just tries to cut outside of tags, without checking tag validity and closing tags.
 		if ($htmlsafe) {
 			$offset = 0 - strlen($string) + $length;

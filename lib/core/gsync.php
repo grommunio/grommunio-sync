@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Core functionalities
  */
@@ -66,7 +66,7 @@ class GSync {
 	// Latest supported State version
 	public const STATE_VERSION = IStateMachine::STATEVERSION_02;
 
-	// Versions 1.0, 2.0, 2.1 and 2.5 are deprecated (ZP-604)
+	// Versions 1.0, 2.0, 2.1 and 2.5 are deprecated
 	private static $supportedASVersions = [
 		self::ASV_12,
 		self::ASV_121,
@@ -613,7 +613,7 @@ class GSync {
 
 	/**
 	 * Initializes the SyncObjects for additional folders on demand.
-	 * Uses DeviceManager->BuildSyncFolderObject() to do patching required for ZP-907.
+	 * Uses DeviceManager->BuildSyncFolderObject() to do patching.
 	 *
 	 * @return array
 	 */

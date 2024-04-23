@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Detects an outgoing loop by looking if subsequent requests do try to get
  * changes for the same sync key. If more than once a synckey is requested,
@@ -159,7 +159,6 @@ class LoopDetection extends InterProcessData {
 	 * When trying to sync a non existing folder, Sync will return Status 12.
 	 * This should trigger a hierarchy sync by the client, but this is not always done.
 	 * Clients continue trying to Ping, which fails as well and triggers a Sync again.
-	 * This goes on forever, like here: https://jira.z-hub.io/browse/ZP-1077
 	 *
 	 * Ping could indicate to perform a FolderSync as well after a few Sync/Ping cycles.
 	 *
@@ -232,7 +231,6 @@ class LoopDetection extends InterProcessData {
 	 *
 	 * This method checks if in the last process stack a Sync and FolderSync were triggered to
 	 * catch the loop at the 2nd interaction (Sync->FolderSync->Sync->FolderSync => ReSync)
-	 * Ticket: https://jira.zarafa.com/browse/ZP-5
 	 *
 	 * @return bool
 	 */
@@ -741,7 +739,7 @@ class LoopDetection extends InterProcessData {
 				// case 3 - same counter, changes sent before, hanging loop and ignoring
 				elseif ($current['count'] == $counter && $current['queued'] > 0) {
 					if (!isset($current['loopcount'])) {
-						// ZP-1213 we are potentially syncing a lot of data, e.g. OL with 512 WindowSize
+						// We are potentially syncing a lot of data, e.g. OL with 512 WindowSize
 						// In case there are more then 40 items in the last request, we limit to 25 items
 						// before entering 1-by-1 loop detection if counter is re-requested
 						if ($maxItems > 40 && !isset($current['windowLimit'])) {

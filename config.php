@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2023 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Main configuration file
  */
@@ -48,7 +48,6 @@ define('USE_FULLEMAIL_FOR_LOGIN', true);
  *  The LOGBACKEND specifies where the logs are sent to.
  *  Either to file ("filelog") or to a "syslog" server or a custom log class in core/log/logclass.
  *  filelog and syslog have several options that can be set below.
- *  For more information about the syslog configuration, see https://wiki.z-hub.io/x/HIAT
  *
  *  Possible LOGLEVEL and LOGUSERLEVEL values are:
  *  LOGLEVEL_OFF            - no logging
@@ -171,7 +170,6 @@ define('SYNC_MAX_ITEMS', 512);
 // to tell if a property was deleted or it was not set at all if it does not appear in Sync.
 // This parameter defines grommunio-sync behaviour during Sync if a device does not issue a list with
 // supported properties.
-// See also https://jira.z-hub.io/browse/ZP-302.
 // Possible values:
 // false - do not unset properties which are not sent during Sync (default)
 // true  - unset properties which are not sent during Sync

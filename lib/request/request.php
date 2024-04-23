@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This class checks and processes all incoming data of the request.
  */
@@ -243,7 +243,7 @@ class Request {
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Request::ProcessHeaders() ASVersion: %s", self::$asProtocolVersion));
 
 		if (defined('USE_CUSTOM_REMOTE_IP_HEADER') && USE_CUSTOM_REMOTE_IP_HEADER !== false) {
-			// make custom header compatible with Apache modphp (see ZP-1332)
+			// make custom header compatible with Apache modphp
 			$header = $apacheHeader = strtolower(USE_CUSTOM_REMOTE_IP_HEADER);
 			if (substr($apacheHeader, 0, 5) === 'http_') {
 				$apacheHeader = substr($apacheHeader, 5);
@@ -252,7 +252,7 @@ class Request {
 			if (isset(self::$headers[$header]) || isset(self::$headers[$apacheHeader])) {
 				$remoteIP = isset(self::$headers[$header]) ? self::$headers[$header] : self::$headers[$apacheHeader];
 				// X-Forwarded-For may contain multiple IPs separated by comma: client, proxy1, proxy2.
-				// In such case we will only check the client IP. See https://jira.z-hub.io/browse/ZP-1434.
+				// In such case we will only check the client IP.
 				if (strpos($remoteIP, ',') !== false) {
 					$remoteIP = trim(explode(',', $remoteIP)[0]);
 				}

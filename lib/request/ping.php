@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Provides the PING command
  */
@@ -97,7 +97,7 @@ class Ping extends RequestProcessor {
 						// check if the HierarchyCache is available, if not, trigger a HierarchySync
 						try {
 							self::$deviceManager->GetFolderClassFromCacheByID($folderid);
-							// ZP-907: ignore all folders with SYNC_FOLDER_TYPE_UNKNOWN
+							// ignore all folders with SYNC_FOLDER_TYPE_UNKNOWN
 							if (self::$deviceManager->GetFolderTypeFromCacheById($folderid) == SYNC_FOLDER_TYPE_UNKNOWN) {
 								SLog::Write(LOGLEVEL_DEBUG, sprintf("HandlePing(): ignoring folder id '%s' as it's of type UNKNOWN ", $folderid));
 

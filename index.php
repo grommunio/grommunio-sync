@@ -2,14 +2,14 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This is the entry point through which all requests are processed.
  */
 
 ob_start(null, 1048576);
 
-// ignore user abortions because this can lead to weird errors - see ZP-239
+// ignore user abortions because this can lead to weird errors
 ignore_user_abort(true);
 
 require_once 'vendor/autoload.php';

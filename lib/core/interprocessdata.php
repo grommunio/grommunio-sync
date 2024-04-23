@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Class takes care of interprocess communication for different purposes
  * using a backend implementing IIpcBackend
@@ -32,7 +32,7 @@ abstract class InterProcessData {
 		}
 
 		try {
-			// ZP-987: use an own mutex + storage key for each device on non-shared-memory IPC
+			// use an own mutex + storage key for each device on non-shared-memory IPC
 			// this method is not suitable for the TopCollector atm
 			$type = Request::GetDeviceID();
 			$this->ipcProvider = GSync::GetRedis();
