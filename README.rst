@@ -9,15 +9,16 @@ Sync due to a very small subset of features only supported. For Microsoft
 Outlook, users should rather use the native MAPI/HTTP and MAPI/RPC protocols,
 available through `grommunio Gromox <https://github.com/grommunio/gromox>`.*
 
-|shield-agpl|_ |shield-release|_ |shield-scrut|_ |shield-loc|
+|shield-agpl| |shield-release| |shield-scrut| |shield-loc|
 
-.. |shield-agpl| image:: https://img.shields.io/badge/license-AGPL--3.0-green
-.. _shield-agpl: LICENSE
+.. |shield-agpl| image:: https://img.shields.io/badge/license-AGPL--3%2E0-green
+                 :target: LICENSE
 .. |shield-release| image:: https://shields.io/github/v/tag/grommunio/grommunio-sync
-.. _shield-release: https://github.com/grommunio/grommunio-sync/tags
+                    :target: https://github.com/grommunio/grommunio-sync/tags
 .. |shield-scrut| image:: https://img.shields.io/scrutinizer/build/g/grommunio/grommunio-sync
-.. _shield-scrut: https://scrutinizer-ci.com/g/grommunio/grommunio-sync
+                  :target: https://scrutinizer-ci.com/g/grommunio/grommunio-sync
 .. |shield-loc| image:: https://img.shields.io/github/languages/code-size/grommunio/grommunio-sync
+                :target: https://github.com/grommunio/grommunio-sync/
 
 At a glance
 ===========
