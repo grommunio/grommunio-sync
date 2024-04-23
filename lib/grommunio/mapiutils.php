@@ -2,11 +2,11 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  */
 
 /**
- * MAPI to AS mapping class.
+ * MAPI utility functions.
  */
 class MAPIUtils {
 	/**
@@ -530,17 +530,6 @@ class MAPIUtils {
 		return SYNC_FOLDER_TYPE_OTHER;
 	}
 
-	public static function GetSignedAttachmentRestriction() {
-		return [
-			RES_PROPERTY,
-			[
-				RELOP => RELOP_EQ,
-				ULPROPTAG => PR_ATTACH_MIME_TAG,
-				VALUE => [PR_ATTACH_MIME_TAG => 'multipart/signed'],
-			],
-		];
-	}
-
 	/**
 	 * Calculates the native body type of a message using available properties. Refer to oxbbody.
 	 *
@@ -637,6 +626,7 @@ class MAPIUtils {
 			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_FOUND)) {
 			return SYNC_BODYPREFERENCE_HTML;
 		}
+
 		// 10
 		return SYNC_BODYPREFERENCE_PLAIN;
 	}
@@ -723,186 +713,5 @@ class MAPIUtils {
 			]);
 		}
 		// TODO check if we need to do this for encrypted (and signed?) message as well
-	}
-
-	/**
-	 * Compares two entryIds. It is possible to have two different entryIds that should match as they
-	 * represent the same object (in multiserver environments).
-	 *
-	 * @param string $entryId1
-	 * @param string $entryId2
-	 *
-	 * @return bool
-	 */
-	public static function CompareEntryIds($entryId1, $entryId2) {
-		if (!is_string($entryId1) || !is_string($entryId2)) {
-			return false;
-		}
-
-		if ($entryId1 === $entryId2) {
-			// if normal comparison succeeds then we can directly say that entryids are same
-			return true;
-		}
-
-		$eid1 = self::createEntryIdObj($entryId1);
-		$eid2 = self::createEntryIdObj($entryId2);
-
-		if ($eid1['length'] != $eid2['length'] ||
-				$eid1['abFlags'] != $eid2['abFlags'] ||
-				$eid1['version'] != $eid2['version'] ||
-				$eid1['type'] != $eid2['type']) {
-			return false;
-		}
-
-		if ($eid1['name'] == 'EID_V0') {
-			if ($eid1['length'] < $eid1['min_length'] || $eid1['id'] != $eid2['id']) {
-				return false;
-			}
-		}
-		elseif ($eid1['length'] < $eid1['min_length'] || $eid1['uniqueId'] != $eid2['uniqueId']) {
-			return false;
-		}
-
-		return true;
-	}
-
-	/**
-	 * Creates an object that has split up all the components of an entryID.
-	 *
-	 * @param string $entryid Entryid
-	 *
-	 * @return object EntryID object
-	 */
-	private static function createEntryIdObj($entryid) {
-		// check if we are dealing with old or new object entryids
-		return (substr($entryid, 40, 8) == '00000000') ? self::getEID_V0Version($entryid) : self::getEIDVersion($entryid);
-	}
-
-	/**
-	 * The entryid from the begin of zarafa till 5.20.
-	 *
-	 * @param string $entryid
-	 *
-	 * @return object EntryID object
-	 */
-	private static function getEID_V0Version($entryid) {
-		// always make entryids in uppercase so comparison will be case insensitive
-		$entryId = strtoupper($entryid);
-
-		$res = [
-			'abFlags' => '',  // BYTE[4],  4 bytes,  8 hex characters
-			'guid' => '',  // GUID,    16 bytes, 32 hex characters
-			'version' => '',  // ULONG,    4 bytes,  8 hex characters
-			'type' => '',  // ULONG,    4 bytes,  8 hex characters
-			'id' => '',  // ULONG,    4 bytes,  8 hex characters
-			'server' => '',  // CHAR,    variable length
-			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (up to 4 bytes)
-		];
-
-		$res['length'] = strlen($entryId);
-		$offset = 0;
-
-		// First determine padding, and remove if from the entryId
-		$res['padding'] = self::getPadding($entryId);
-		$entryId = substr($entryId, 0, strlen($entryId) - strlen($res['padding']));
-
-		$res['abFlags'] = substr($entryId, $offset, 8);
-		$offset = +8;
-
-		$res['guid'] = substr($entryId, $offset, 32);
-		$offset += 32;
-
-		$res['version'] = substr($entryId, $offset, 8);
-		$offset += 8;
-
-		$res['type'] = substr($entryId, $offset, 8);
-		$offset += 8;
-
-		$res['id'] = substr($entryId, $offset, 8);
-		$offset += 8;
-
-		$res['server'] = substr($entryId, $offset);
-
-		$res['min_length'] = 64;
-		$res['name'] = 'EID_V0';
-
-		return $res;
-	}
-
-	/**
-	 * Entryid from version 6.
-	 *
-	 * @param string $entryid
-	 *
-	 * @return null[]|number[]|string[]
-	 */
-	private static function getEIDVersion($entryid) {
-		// always make entryids in uppercase so comparison will be case insensitive
-		$entryId = strtoupper($entryid);
-
-		$res = [
-			'abFlags' => '',  // BYTE[4],  4 bytes,  8 hex characters
-			'guid' => '',  // GUID,    16 bytes, 32 hex characters
-			'version' => '',  // ULONG,    4 bytes,  8 hex characters
-			'type' => '',  // ULONG,    4 bytes,  8 hex characters
-			'uniqueId' => '',  // ULONG,   16 bytes,  32 hex characters
-			'server' => '',  // CHAR,    variable length
-			'padding' => '',  // TCHAR[3], 4 bytes,  8 hex characters (up to 4 bytes)
-		];
-
-		$res['length'] = strlen($entryId);
-		$offset = 0;
-
-		// First determine padding, and remove if from the entryId
-		$res['padding'] = self::getPadding($entryId);
-		$entryId = substr($entryId, 0, strlen($entryId) - strlen($res['padding']));
-
-		$res['abFlags'] = substr($entryId, $offset, 8);
-		$offset = +8;
-
-		$res['guid'] = substr($entryId, $offset, 32);
-		$offset += 32;
-
-		$res['version'] = substr($entryId, $offset, 8);
-		$offset += 8;
-
-		$res['type'] = substr($entryId, $offset, 8);
-		$offset += 8;
-
-		$res['uniqueId'] = substr($entryId, $offset, 32);
-		$offset += 32;
-
-		$res['server'] = substr($entryId, $offset);
-
-		$res['min_length'] = 88;
-		$res['name'] = 'EID';
-
-		return $res;
-	}
-
-	/**
-	 * Detect padding (max 3 bytes) from the entryId.
-	 *
-	 * @param string $entryId
-	 *
-	 * @return string
-	 */
-	private static function getPadding($entryId) {
-		$len = strlen($entryId);
-		$padding = '';
-		$offset = 0;
-
-		for ($iterations = 4; $iterations > 0; --$iterations) {
-			if (substr($entryId, $len - ($offset + 2), $len - $offset) == '00') {
-				$padding .= '00';
-				$offset += 2;
-			}
-			else {
-				// if non-null character found then break the loop
-				break;
-			}
-		}
-
-		return $padding;
 	}
 }
