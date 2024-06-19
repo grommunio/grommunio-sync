@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2023 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This is basically a list of synched folders with its respective
  * SyncParameters, while some additional parameters which are not stored
@@ -521,11 +521,15 @@ class SyncCollections implements Iterator {
 
 				// check if the folder stat changed since the last sync, if so generate a change for it (only on first run)
 				$currentFolderStat = GSync::GetBackend()->GetFolderStat($store, $backendFolderId);
-				if ($this->waitingTime == 0 && GSync::GetBackend()->HasFolderStats() && $currentFolderStat !== false && $spa->IsExporterRunRequired($currentFolderStat, true)) {
-					if (!$this->CountChange($spa->GetFolderId())) {
-						SLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->CheckForChanges(): Initial check indicates changes on folder '%s', but they are not relevant", $spa->GetFolderId()));
-						unset($this->changes[$spa->GetFolderId()]);
-					}
+				if ($this->waitingTime == 0 &&
+					GSync::GetBackend()->HasFolderStats() &&
+					$currentFolderStat !== false &&
+					$spa->IsExporterRunRequired($currentFolderStat, true) &&
+					!$this->CountChange($spa->GetFolderId()) &&
+					array_key_exists($spa->GetFolderId(), $this->changes)
+				) {
+					SLog::Write(LOGLEVEL_DEBUG, sprintf("SyncCollections->CheckForChanges(): Initial check indicates changes on folder '%s', but they are not relevant", $spa->GetFolderId()));
+					unset($this->changes[$spa->GetFolderId()]);
 				}
 			}
 		}
