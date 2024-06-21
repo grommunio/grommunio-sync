@@ -54,31 +54,24 @@ class Utils {
 	 * @return string the address string or null
 	 */
 	public static function BuildAddressString($street, $zip, $city, $state, $country) {
-		$out = "";
+		$out = $country ?? "";
 
-		if (isset($country) && $street != "") {
-			$out = $country;
-		}
-
-		$zcs = "";
-		if (isset($zip) && $zip != "") {
-			$zcs = $zip;
-		}
-		if (isset($city) && $city != "") {
+		$zcs = $zip ?? "";
+		if ($city != "") {
 			$zcs .= (($zcs) ? " " : "") . $city;
 		}
-		if (isset($state) && $state != "") {
+		if ($state != "") {
 			$zcs .= (($zcs) ? " " : "") . $state;
 		}
 		if ($zcs) {
 			$out = $zcs . "\r\n" . $out;
 		}
 
-		if (isset($street) && $street != "") {
+		if ($street != "") {
 			$out = $street . (($out) ? "\r\n\r\n" . $out : "");
 		}
 
-		return ($out) ? $out : null;
+		return $out ?? null;
 	}
 
 	/**
