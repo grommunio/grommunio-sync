@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Simple data object with some PHP magic
  */
@@ -46,7 +46,7 @@ class StateObject implements JsonSerializable {
 		if (isset($this->data[$lname]) &&
 				(
 					(is_scalar($value) && !is_array($value) && $this->data[$lname] === $value) ||
-				  (is_array($value) && is_array($this->data[$lname]) && $this->data[$lname] === $value)
+					(is_array($value) && is_array($this->data[$lname]) && $this->data[$lname] === $value)
 				)) {
 			return false;
 		}
@@ -208,7 +208,8 @@ class StateObject implements JsonSerializable {
 					if (is_object($v) && isset($v->gsSyncStateClass)) {
 						// TODO: case should be removed when removing ASDevice backwards compatibility
 						if (strcasecmp($v->gsSyncStateClass, "ASDevice") == 0) {
-							$this->data[$prop][$k] = new ASDevice(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
+							$this->data[$prop][$k] = new ASDevice();
+							$this->data[$prop][$k]->Initialize(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
 						}
 						else {
 							$this->data[$prop][$k] = new $v->gsSyncStateClass();
