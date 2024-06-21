@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This file handles streaming of WBXML SyncObjects. It must be subclassed so
  * the internals of the object can be specified via $mapping. Basically we
@@ -97,7 +97,7 @@ class Streamer implements JsonSerializable {
 				if (isset($map[self::STREAMER_ARRAY])) {
 					WBXMLDecoder::ResetInWhile("decodeArray");
 					while (WBXMLDecoder::InWhile("decodeArray")) {
-						$streamertype = false;
+						$streamertype = $map[self::STREAMER_TYPE] ?? false;
 						// do not get start tag for an array without a container
 						if (!(isset($map[self::STREAMER_PROP]) && $map[self::STREAMER_PROP] == self::STREAMER_TYPE_NO_CONTAINER)) {
 							// are there multiple possibilities for element encapsulation tags?
