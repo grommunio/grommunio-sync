@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Main grommunio-sync exception
  */
@@ -23,7 +23,7 @@ class GSyncException extends Exception {
 			$logLevel = $this->defaultLogLevel;
 		}
 
-		parent::__construct($message, (int) $code);
+		parent::__construct($message, (int) $code, $previous);
 		SLog::Write($logLevel, get_class($this) . ': ' . $message . ' - code: ' . $code . ' - file: ' . $this->getFile() . ':' . $this->getLine(), false);
 	}
 
