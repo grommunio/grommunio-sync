@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * The StateManager uses a IStateMachine implementation to save data. SyncKey's
  * are of the form {UUID}N, in which UUID is allocated during the first sync,
@@ -139,7 +139,7 @@ class StateManager {
 	 * @return string
 	 */
 	public function GetNewSyncKey($synckey) {
-		if (!isset($synckey) || $synckey == "0" || $synckey == false) {
+		if (empty($synckey)) {
 			$this->uuid = $this->getNewUuid();
 			$this->newStateCounter = 1;
 		}

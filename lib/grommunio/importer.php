@@ -517,7 +517,7 @@ class ImportChangesICS implements IImportChanges {
 
 			// grommunio-sync #113: workaround blocking notifications on this item
 			$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($fsk), hex2bin($sk));
-			if (isset($entryid)) {
+			if ($entryid !== false) {
 				GSync::ReplyCatchMark(bin2hex($entryid));
 			}
 
