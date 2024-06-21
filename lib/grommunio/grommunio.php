@@ -1993,7 +1993,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->setStateMessage(): creating new state message '%s' (counter: %s)", $messageName, Utils::PrintAsString($counter)));
 			mapi_setprops($stateMessage, [PR_DISPLAY_NAME => $messageName, PR_MESSAGE_CLASS => 'IPM.Note.GrommunioState']);
 		}
-		if (isset($stateMessage) && $stateMessage) {
+		if ($stateMessage) {
 			$jsonEncodedState = is_object($state) || is_array($state) ? json_encode($state, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE) : $state;
 
 			$encodedState = base64_encode($jsonEncodedState);

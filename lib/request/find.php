@@ -1,7 +1,7 @@
 <?php
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
- * SPDX-FileCopyrightText: Copyright 2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2022-2024 grommunio GmbH
  *
  * Provides the FIND command
  */
@@ -203,7 +203,7 @@ class Find extends RequestProcessor {
 			self::$encoder->startTag(SYNC_FIND_RANGE);
 			self::$encoder->content("0-" . $searchtotal);
 			self::$encoder->endTag();
-			if (isset($searchtotal) && $searchtotal > 0) {
+			if ($searchtotal > 0) {
 				self::$encoder->startTag(SYNC_FIND_TOTAL);
 				self::$encoder->content($searchtotal); // $searchtotal);
 				self::$encoder->endTag();

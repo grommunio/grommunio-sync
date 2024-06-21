@@ -191,7 +191,7 @@ class Ping extends RequestProcessor {
 		self::$encoder->startTag(SYNC_PING_PING);
 
 		self::$encoder->startTag(SYNC_PING_STATUS);
-		if (isset($pingstatus) && $pingstatus) {
+		if ($pingstatus) {
 			self::$encoder->content($pingstatus);
 		}
 		else {

@@ -735,10 +735,7 @@ class Sync extends RequestProcessor {
 		// HEARTBEAT
 		if ($status == SYNC_STATUS_SUCCESS && isset($hbinterval)) {
 			$interval = (defined('PING_INTERVAL') && PING_INTERVAL > 0) ? PING_INTERVAL : 30;
-
-			if (isset($hbinterval)) {
-				$sc->SetLifetime($hbinterval);
-			}
+			$sc->SetLifetime($hbinterval);
 
 			// states are lazy loaded - we have to make sure that they are there!
 			$loadstatus = SYNC_STATUS_SUCCESS;
@@ -1349,7 +1346,7 @@ class Sync extends RequestProcessor {
 			self::$topCollector->AnnounceInformation("Saving state");
 
 			try {
-				if (isset($exporter) && $exporter) {
+				if ($exporter) {
 					$state = $exporter->GetState();
 				}
 
