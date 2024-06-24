@@ -56,13 +56,13 @@ Getting started
 Prerequisites
 -------------
 
-* A working **web server** (nginx is recommended), with a working **TLS** configuration
-* **PHP**, preferably available as fpm pool
-* **Redis** for high-performance interprocess communication states
+* A working **web server** (nginx is recommended), with a working **TLS** configuration.
+* **PHP**, preferably available as fpm pool.
+* **Redis** for high-performance interprocess communication states.
 * **Zcore** MAPI transport (provided by `Gromox
-  <https://github.com/grommunio/gromox>`_.
+  <https://github.com/grommunio/gromox>`_).
 * Working **AutoDiscover** setup (recommended, provided by `Gromox
-  <https://github.com/grommunio/gromox>`_)
+  <https://github.com/grommunio/gromox>`_).
 
 Installation
 ------------
