@@ -265,9 +265,7 @@ class LoopDetection extends InterProcessData {
 					}
 					else {
 						$seenFolderSync = true;
-						if (!empty($seenFailed)) {
-							SLog::Write(LOGLEVEL_DEBUG, "LoopDetection->ProcessLoopDetectionIsHierarchyResyncRequired(): seen FolderSync after other failing command");
-						}
+						SLog::Write(LOGLEVEL_DEBUG, "LoopDetection->ProcessLoopDetectionIsHierarchyResyncRequired(): seen FolderSync after other failing command");
 					}
 				}
 			}
