@@ -693,11 +693,8 @@ class Utils {
 		if ($bpTypes === false) {
 			return SYNC_BODYPREFERENCE_PLAIN;
 		}
-		// The best choice is RTF, then HTML and then MIME in order to save bandwidth
+		// The bettter choice is HTML and then MIME in order to save bandwidth
 		// because MIME is a complete message including the headers and attachments
-		if (in_array(SYNC_BODYPREFERENCE_RTF, $bpTypes)) {
-			return SYNC_BODYPREFERENCE_RTF;
-		}
 		if (in_array(SYNC_BODYPREFERENCE_HTML, $bpTypes)) {
 			return SYNC_BODYPREFERENCE_HTML;
 		}

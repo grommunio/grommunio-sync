@@ -65,7 +65,6 @@ class MAPIMapping {
 			"yomicompanyname" => "PT_STRING8:PSETID_Address:0x802e",
 			"yomifirstname" => "PT_STRING8:PSETID_Address:0x802c",
 			"yomilastname" => "PT_STRING8:PSETID_Address:0x802d",
-			"rtf" => PR_RTF_COMPRESSED,
 			// picture
 			"customerid" => PR_CUSTOMER_ID,
 			"governmentid" => PR_GOVERNMENT_ID_NUMBER,
@@ -166,9 +165,7 @@ class MAPIMapping {
 			"entryid" => PR_ENTRYID,
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
 			"body" => PR_BODY,
-			"rtfcompressed" => PR_RTF_COMPRESSED,
 			"html" => PR_HTML,
-			"rtfinsync" => PR_RTF_IN_SYNC,
 			"processed" => PR_PROCESSED,
 			"messageflags" => PR_MESSAGE_FLAGS,
 			"clientsubmittime" => PR_CLIENT_SUBMIT_TIME,
@@ -186,7 +183,6 @@ class MAPIMapping {
 			// timezone
 			"alldayevent" => "PT_BOOLEAN:PSETID_Appointment:0x8215",
 			"busystatus" => "PT_LONG:PSETID_Appointment:0x8224",
-			"rtf" => PR_RTF_COMPRESSED,
 			"dtstamp" => PR_LAST_MODIFICATION_TIME,
 			"endtime" => "PT_SYSTIME:PSETID_Appointment:0x820e",
 			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
@@ -253,7 +249,6 @@ class MAPIMapping {
 			"body" => PR_BODY,
 			"busystatus" => "PT_LONG:PSETID_Appointment:0x8205",
 			"categories" => "PT_MV_STRING8:PS_PUBLIC_STRINGS:Keywords",
-			"rtf" => PR_RTF_COMPRESSED,
 			"dtstamp" => PR_LAST_MODIFICATION_TIME,
 			"endtime" => "PT_SYSTIME:PSETID_Appointment:0x820e",
 			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
@@ -303,9 +298,7 @@ class MAPIMapping {
 			"clipstart" => "PT_SYSTIME:PSETID_Appointment:0x8235", // ical only
 			"recurrencetype" => "PT_LONG:PSETID_Appointment:0x8231",
 			"body" => PR_BODY,
-			"rtfcompressed" => PR_RTF_COMPRESSED,
 			"html" => PR_HTML,
-			"rtfinsync" => PR_RTF_IN_SYNC,
 			"entryid" => PR_ENTRYID,
 			"parentsourcekey" => PR_PARENT_SOURCE_KEY,
 			"location" => "PT_STRING8:PSETID_Appointment:0x8208",
@@ -339,7 +332,6 @@ class MAPIMapping {
 			"sensitivity" => PR_SENSITIVITY,
 			"startdate" => "PT_SYSTIME:PSETID_Task:0x8104",
 			"subject" => PR_SUBJECT,
-			"rtf" => PR_RTF_COMPRESSED,
 			"html" => PR_HTML,
 		];
 	}
@@ -466,8 +458,6 @@ class MAPIMapping {
 			"attachnum" => PR_ATTACH_NUM,
 			"attachdatabin" => PR_ATTACH_DATA_BIN,
 			"internetcpid" => PR_INTERNET_CPID,
-			"rtf" => PR_RTF_COMPRESSED,
-			"rtfinsync" => PR_RTF_IN_SYNC,
 		];
 	}
 }

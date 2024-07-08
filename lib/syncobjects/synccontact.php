@@ -287,9 +287,6 @@ class SyncContact extends SyncObject {
 				self::STREAMER_VAR => "yomilastname",
 				self::STREAMER_RONOTIFY => true,
 			],
-			SYNC_POOMCONTACTS_RTF => [
-				self::STREAMER_VAR => "rtf",
-			],
 			SYNC_POOMCONTACTS_PICTURE => [
 				self::STREAMER_VAR => "picture",
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_LENGTHMAX => SYNC_CONTACTS_MAXPICTURESIZE],
