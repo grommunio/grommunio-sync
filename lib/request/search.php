@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Provides the SEARCH command
  */
@@ -54,7 +54,7 @@ class Search extends RequestProcessor {
 				if (self::$decoder->getElementStartTag(SYNC_FOLDERID)) {
 					$searchfolderid = self::$decoder->getElementContent();
 					$cpo->SetSearchFolderid($searchfolderid);
-					if (!self::$decoder->getElementEndTag()) { // SYNC_FOLDERTYPE
+					if (!self::$decoder->getElementEndTag()) { // SYNC_FOLDERID
 						return false;
 					}
 				}
@@ -62,14 +62,6 @@ class Search extends RequestProcessor {
 				if (self::$decoder->getElementStartTag(SYNC_FOLDERTYPE)) {
 					$searchclass = self::$decoder->getElementContent();
 					$cpo->SetSearchClass($searchclass);
-					if (!self::$decoder->getElementEndTag()) { // SYNC_FOLDERTYPE
-						return false;
-					}
-				}
-
-				if (self::$decoder->getElementStartTag(SYNC_FOLDERID)) {
-					$searchfolderid = self::$decoder->getElementContent();
-					$cpo->SetSearchFolderid($searchfolderid);
 					if (!self::$decoder->getElementEndTag()) { // SYNC_FOLDERTYPE
 						return false;
 					}
@@ -484,9 +476,11 @@ class Search extends RequestProcessor {
 					self::$encoder->startTag(SYNC_SEARCH_LONGID);
 					self::$encoder->content($u['longid']);
 					self::$encoder->endTag();
-					// self::$encoder->startTag(SYNC_FOLDERID);
-					// self::$encoder->content($folderid);
-					// self::$encoder->endTag();
+					if (isset($searchfolderid)) {
+						self::$encoder->startTag(SYNC_FOLDERID);
+						self::$encoder->content($searchfolderid);
+						self::$encoder->endTag();
+					}
 
 					self::$encoder->startTag(SYNC_SEARCH_PROPERTIES);
 					$message = self::$backend->Fetch(false, $u['longid'], $cpo);
