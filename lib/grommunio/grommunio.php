@@ -460,7 +460,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// Set the appSeqNr so that tracking tab can be updated for meeting request updates
 		$meetingRequestProps = MAPIMapping::GetMeetingRequestProperties();
 		$meetingRequestProps = getPropIdsFromStrings($this->defaultstore, $meetingRequestProps);
-		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"], $sendMailProps["rtf"], $sendMailProps["rtfinsync"]]);
+		$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS, $meetingRequestProps["goidtag"], $sendMailProps["internetcpid"], $sendMailProps["body"], $sendMailProps["html"]]);
 
 		// Convert sent message's body to UTF-8 if it was a HTML message.
 		if (isset($props[$sendMailProps["internetcpid"]]) && $props[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8 && MAPIUtils::GetNativeBodyType($props) == SYNC_BODYPREFERENCE_HTML) {

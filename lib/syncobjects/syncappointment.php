@@ -156,10 +156,6 @@ class SyncAppointment extends SyncObject {
 				// if private is stripped, value will be unset (no reminder)
 				self::STREAMER_PRIVATE => true,
 			],
-			SYNC_POOMCAL_RTF => [
-				self::STREAMER_VAR => "rtf",
-				self::STREAMER_PRIVATE => true,
-			],
 			// Meetingstatus values
 			//  0 = is not a meeting
 			//  1 = is a meeting

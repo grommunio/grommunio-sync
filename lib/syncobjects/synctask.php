@@ -119,7 +119,6 @@ class SyncTask extends SyncObject {
 				self::STREAMER_VAR => "subject",
 				self::STREAMER_RONOTIFY => true,
 			],
-			SYNC_POOMTASKS_RTF => [self::STREAMER_VAR => "rtf"],
 			SYNC_POOMTASKS_CATEGORIES => [
 				self::STREAMER_VAR => "categories",
 				self::STREAMER_ARRAY => SYNC_POOMTASKS_CATEGORY,

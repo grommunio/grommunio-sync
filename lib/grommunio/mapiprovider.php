@@ -2235,16 +2235,6 @@ class MAPIProvider {
 						break;
 				}
 
-				// decode base64 value
-				if ($mapiprop == PR_RTF_COMPRESSED) {
-					$value = base64_decode($value);
-					if (strlen($value) == 0) {
-						continue;
-					} // PDA will sometimes give us an empty RTF, which we'll ignore.
-
-					// Note that you can still remove notes because when you remove notes it gives
-					// a valid compressed RTF with nothing in it.
-				}
 				// if an "empty array" is to be saved, it the mvprop should be deleted - fixes Mantis #468
 				if (is_array($value) && empty($value)) {
 					$propsToDelete[] = $mapiprop;
@@ -2321,10 +2311,6 @@ class MAPIProvider {
 					if ($mapiprop == PR_MESSAGE_FLAGS) {
 						$message->{$asprop} = $messageprops[$mapiprop] & 1;
 					} // only look at 'read' flag
-					elseif ($mapiprop == PR_RTF_COMPRESSED) {
-						// do not send rtf to the mobile
-						continue;
-					}
 					else {
 						$message->{$asprop} = $messageprops[$mapiprop];
 					}
@@ -2882,10 +2868,6 @@ class MAPIProvider {
 				$truncateHtmlSafe = true;
 				break;
 
-			case SYNC_BODYPREFERENCE_RTF:
-				$property = PR_RTF_COMPRESSED;
-				break;
-
 			case SYNC_BODYPREFERENCE_MIME:
 				$stat = $this->imtoinet($mapimessage, $message);
 				if (isset($message->asbody)) {
@@ -2908,11 +2890,7 @@ class MAPIProvider {
 		if (Request::GetProtocolVersion() >= 12.0) {
 			$message->asbody = new SyncBaseBody();
 			$message->asbody->type = $bpReturnType;
-			if ($bpReturnType == SYNC_BODYPREFERENCE_RTF) {
-				$body = $this->mapiReadStream($stream, $streamsize);
-				$message->asbody->data = StringStreamWrapper::Open(base64_encode($body));
-			}
-			elseif (isset($message->internetcpid) && $bpReturnType == SYNC_BODYPREFERENCE_HTML) {
+			if (isset($message->internetcpid) && $bpReturnType == SYNC_BODYPREFERENCE_HTML) {
 				// if PR_HTML is UTF-8 we can stream it directly, else we have to convert to UTF-8 & wrap it
 				if ($message->internetcpid == INTERNET_CPID_UTF8) {
 					$message->asbody->data = MAPIStreamWrapper::Open($stream, $truncateHtmlSafe);
@@ -3139,9 +3117,6 @@ class MAPIProvider {
 
 				case SYNC_BODYPREFERENCE_HTML:
 					$props[$appointmentprops["html"]] = stream_get_contents($asbody->data);
-					break;
-
-				case SYNC_BODYPREFERENCE_RTF:
 					break;
 
 				case SYNC_BODYPREFERENCE_MIME:

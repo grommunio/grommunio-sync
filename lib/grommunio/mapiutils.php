@@ -568,14 +568,14 @@ class MAPIUtils {
 			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
-			return SYNC_BODYPREFERENCE_RTF;
+			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 4
 			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			$messageprops[PR_RTF_IN_SYNC]) {
-			return SYNC_BODYPREFERENCE_RTF;
+			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 5
 			($messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
@@ -588,7 +588,7 @@ class MAPIUtils {
 			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_HTML] != MAPI_E_NOT_FOUND || $messageprops[PR_HTML] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			$messageprops[PR_RTF_IN_SYNC]) {
-			return SYNC_BODYPREFERENCE_RTF;
+			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 7
 			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
@@ -600,7 +600,7 @@ class MAPIUtils {
 			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			$messageprops[PR_RTF_IN_SYNC]) {
-			return SYNC_BODYPREFERENCE_RTF;
+			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 9.1
 			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
@@ -612,7 +612,7 @@ class MAPIUtils {
 			($messageprops[PR_RTF_COMPRESSED] != MAPI_E_NOT_FOUND || $messageprops[PR_RTF_COMPRESSED] == MAPI_E_NOT_ENOUGH_MEMORY) &&
 			($messageprops[PR_BODY] == MAPI_E_NOT_FOUND) &&
 			($messageprops[PR_HTML] == MAPI_E_NOT_FOUND)) {
-			return SYNC_BODYPREFERENCE_RTF;
+			return SYNC_BODYPREFERENCE_PLAIN;
 		}
 		if ( // 9.3
 			($messageprops[PR_BODY] != MAPI_E_NOT_FOUND || $messageprops[PR_BODY] == MAPI_E_NOT_ENOUGH_MEMORY) &&
