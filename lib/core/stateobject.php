@@ -180,9 +180,8 @@ class StateObject implements JsonSerializable {
 	 *
 	 * Serializes the object to a value that can be serialized natively by json_encode()
 	 *
-	 * @return mixed
 	 */
-	public function jsonSerialize() {
+	public function jsonSerialize(): mixed {
 		return [
 			'gsSyncStateClass' => get_class($this),
 			'data' => $this->data,
