@@ -431,9 +431,8 @@ class Streamer implements JsonSerializable {
 	 *
 	 * Serializes the object to a value that can be serialized natively by json_encode()
 	 *
-	 * @return mixed
 	 */
-	public function jsonSerialize() {
+	public function jsonSerialize(): mixed {
 		$data = [];
 		foreach ($this->mapping as $k => $v) {
 			if (isset($this->{$v[self::STREAMER_VAR]})) {

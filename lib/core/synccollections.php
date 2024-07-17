@@ -860,42 +860,36 @@ class SyncCollections implements Iterator {
 	/**
 	 * Rewind the Iterator to the first element.
 	 */
-	public function rewind() {
-		return reset($this->collections);
+	public function rewind(): void {
+		reset($this->collections);
 	}
 
 	/**
 	 * Returns the current element.
-	 *
-	 * @return mixed
 	 */
-	public function current() {
+	public function current(): mixed {
 		return current($this->collections);
 	}
 
 	/**
 	 * Return the key of the current element.
-	 *
-	 * @return scalar on success, or NULL on failure
 	 */
-	public function key() {
+	public function key(): mixed {
 		return key($this->collections);
 	}
 
 	/**
 	 * Move forward to next element.
 	 */
-	public function next() {
-		return next($this->collections);
+	public function next(): void {
+		next($this->collections);
 	}
 
 	/**
 	 * Checks if current position is valid.
-	 *
-	 * @return bool
 	 */
-	public function valid() {
-		return key($this->collections) != null && key($this->collections) != false;
+	public function valid(): bool {
+		return key($this->collections) !== null && key($this->collections) !== false;
 	}
 
 	/**
