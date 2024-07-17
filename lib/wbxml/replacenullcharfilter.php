@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2015-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * Filters null characters out of a stream.
  */
@@ -18,9 +18,8 @@ class ReplaceNullcharFilter extends php_user_filter {
 	 * @param int      $consumed
 	 * @param bool     $closing
 	 *
-	 * @return int
 	 */
-	public function filter($in, $out, &$consumed, $closing) {
+	public function filter($in, $out, &$consumed, $closing): int {
 		while ($bucket = stream_bucket_make_writeable($in)) {
 			$bucket->data = str_replace("\0", "", $bucket->data);
 			$consumed += $bucket->datalen;
