@@ -902,7 +902,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				break;
 
 			case 3:        // decline
-				$meetingrequest->doDecline(false);
+				$meetingrequest->doDecline($sendresponse);
 				break;
 		}
 
