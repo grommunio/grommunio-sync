@@ -1078,6 +1078,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$this->changesSinkHierarchyHash = $hash;
 			}
 		}
+		// Wait one second before returning notifications, because in some cases
+		// the ICS exporter is not yet aware of the change.
+		if (count($notifications) > 0) {
+			sleep(1);
+		}
 
 		return $notifications;
 	}
