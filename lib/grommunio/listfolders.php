@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2015-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
  *
  * This is a small command line tool to list folders of a user store or public
  * folder available for synchronization.
@@ -196,7 +196,14 @@ function listfolders_getlist($adminStore, $session, $user) {
 			echo "Folder name:\t" . $folder[PR_DISPLAY_NAME] . "\n";
 			echo "Folder ID:\t" . bin2hex($folder[PR_SOURCE_KEY]) . "\n";
 			echo "Type:\t\t" . $supported_classes[$folder[PR_CONTAINER_CLASS]] . "\n";
+			echo "ShortId:\t" . generateFolderHash(bin2hex($folder[PR_SOURCE_KEY]), 'U') . "\n";
 			echo "\n";
 		}
 	}
+}
+
+function generateFolderHash(string $backendid, string $folderOrigin): string {
+	// Hash backendid with crc32 and get the hex representation of it.
+	// 5 chars of hash + $folderOrigin should still be enough to avoid collisions.
+	return substr($folderOrigin . dechex(crc32($backendid)), 0, 6);
 }
