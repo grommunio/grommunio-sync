@@ -1023,9 +1023,11 @@ class MAPIProvider {
 			return false;
 		}
 
-		// ignore certain undesired folders, like "RSS Feeds" and "Suggested contacts"
-		if ((isset($folderprops[PR_CONTAINER_CLASS]) && $folderprops[PR_CONTAINER_CLASS] == "IPF.Note.OutlookHomepage") ||
-				in_array($folderprops[PR_ENTRYID], $this->getSpecialFoldersData())) {
+		// ignore certain undesired folders, like "RSS Feeds", "Suggested contacts" and Journal
+		if ((isset($folderprops[PR_CONTAINER_CLASS]) && (
+			$folderprops[PR_CONTAINER_CLASS] == "IPF.Note.OutlookHomepage" || $folderprops[PR_CONTAINER_CLASS] == "IPF.Journal")) ||
+			in_array($folderprops[PR_ENTRYID], $this->getSpecialFoldersData())
+		) {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->GetFolder(): folder '%s' should not be synchronized", $folderprops[PR_DISPLAY_NAME]));
 
 			return false;
