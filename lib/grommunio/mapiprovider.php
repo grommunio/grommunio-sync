@@ -1420,8 +1420,6 @@ class MAPIProvider {
 		// AS 16: doesn't sent a timezone - use server TZ and convert starttime and endtime
 		elseif (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
 			$tz = TimezoneUtil::GetFullTZ();
-			$appointment->starttime = $this->getGMTTimeByTZ($appointment->starttime, $tz);
-			$appointment->endtime = $this->getGMTTimeByTZ($appointment->endtime, $tz);
 		}
 		else {
 			$tz = false;
@@ -2189,7 +2187,7 @@ class MAPIProvider {
 	}
 
 	/**
-	 * Localtime of the timestamp.
+	 * UTC time of the timestamp.
 	 *
 	 * @param long $time
 	 *
@@ -2465,8 +2463,8 @@ class MAPIProvider {
 		}
 
 		$year = gmdate("Y", $localtime);
-		$start = $this->getTimestampOfWeek($year, $tz["dststartmonth"], $tz["dststartweek"], $tz["dststartday"], $tz["dststarthour"], $tz["dststartminute"], $tz["dststartsecond"]);
-		$end = $this->getTimestampOfWeek($year, $tz["dstendmonth"], $tz["dstendweek"], $tz["dstendday"], $tz["dstendhour"], $tz["dstendminute"], $tz["dstendsecond"]);
+		$start = $this->getTimestampOfWeek($year, $tz["dststartmonth"], $tz["dststartday"], $tz["dststartweek"], $tz["dststarthour"], $tz["dststartminute"], $tz["dststartsecond"]);
+		$end = $this->getTimestampOfWeek($year, $tz["dstendmonth"], $tz["dstendday"], $tz["dstendweek"], $tz["dstendhour"], $tz["dstendminute"], $tz["dstendsecond"]);
 
 		if ($start < $end) {
 			// northern hemisphere (july = dst)
