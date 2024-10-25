@@ -1417,7 +1417,7 @@ class MAPIProvider {
 		if (isset($appointment->timezone)) {
 			$tz = $this->getTZFromSyncBlob(base64_decode($appointment->timezone));
 		}
-		// AS 16: doesn't sent a timezone - use server TZ and convert starttime and endtime
+		// AS 16: doesn't sent a timezone - use server TZ
 		elseif (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
 			$tz = TimezoneUtil::GetFullTZ();
 		}
@@ -1603,15 +1603,7 @@ class MAPIProvider {
 			$this->setASlocation($appointment->location2, $props, $appointmentprops);
 		}
 		if ($tz !== false) {
-			// Use server timezone for as 16
-			if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
-				$tzdef = TimezoneUtil::GetBinaryTZ();
-				if ($tzdef) {
-					$props[$appointmentprops["tzdefstart"]] = $tzdef;
-					$props[$appointmentprops["tzdefend"]] = $tzdef;
-				}
-			}
-			else {
+			if (!(Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent)) {
 				$props[$appointmentprops["timezonetag"]] = $this->getMAPIBlobFromTZ($tz);
 			}
 		}
