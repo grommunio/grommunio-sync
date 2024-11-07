@@ -1413,12 +1413,15 @@ class MAPIProvider {
 	private function setAppointment($mapimessage, $appointment) {
 		$response = new SyncAppointmentResponse();
 
+		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
+		$isAs16 = Request::GetProtocolVersion() >= 16.0;
+
 		// Get timezone info
 		if (isset($appointment->timezone)) {
 			$tz = $this->getTZFromSyncBlob(base64_decode($appointment->timezone));
 		}
 		// AS 16: doesn't sent a timezone - use server TZ
-		elseif (Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent) {
+		elseif ($isAs16 && $isAllday) {
 			$tz = TimezoneUtil::GetFullTZ();
 		}
 		else {
@@ -1430,7 +1433,7 @@ class MAPIProvider {
 		$appointmentprops = array_merge($this->getPropIdsFromStrings($appointmentmapping), $this->getPropIdsFromStrings($appointmentprops));
 
 		// AS 16: incoming instanceid means we need to create/update an appointment exception
-		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->instanceid) && $appointment->instanceid) {
+		if ($isAs16 && isset($appointment->instanceid) && $appointment->instanceid) {
 			// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp and get basedate from it
 			$instanceid = Utils::ParseDate($appointment->instanceid);
 			$basedate = $this->getDayStartOfTimestamp($instanceid);
@@ -1537,7 +1540,7 @@ class MAPIProvider {
 
 		// nokia sends an yearly event with 0 mins duration but as all day event,
 		// so make it end next day
-		if ($appointment->starttime == $appointment->endtime && isset($appointment->alldayevent) && $appointment->alldayevent) {
+		if ($appointment->starttime == $appointment->endtime && $isAllday) {
 			$duration = 1440;
 			$appointment->endtime = $appointment->starttime + 24 * 60 * 60;
 			$localend = $localstart + 24 * 60 * 60;
@@ -1603,7 +1606,7 @@ class MAPIProvider {
 			$this->setASlocation($appointment->location2, $props, $appointmentprops);
 		}
 		if ($tz !== false) {
-			if (!(Request::GetProtocolVersion() >= 16.0 && isset($appointment->alldayevent) && $appointment->alldayevent)) {
+			if (!($isAs16 && $isAllday)) {
 				$props[$appointmentprops["timezonetag"]] = $this->getMAPIBlobFromTZ($tz);
 			}
 		}
@@ -1760,7 +1763,7 @@ class MAPIProvider {
 
 		// Do attendees
 		// For AS-16 get a list of the current attendees (pre update)
-		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if ($isAs16 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
 			$old_receipstable = mapi_table_queryallrows(
 				$old_recipienttable,
@@ -1855,7 +1858,7 @@ class MAPIProvider {
 		mapi_setprops($mapimessage, $props);
 
 		// Since AS 16 we have to take care of MeetingRequest updates
-		if (Request::GetProtocolVersion() >= 16.0 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if ($isAs16 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// Only send updates if this is a new MR or we are the organizer
 			if ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
@@ -1872,6 +1875,22 @@ class MAPIProvider {
 		// update attachments send by the mobile
 		if (!empty($appointment->asattachments)) {
 			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
+		}
+
+		// Existing allday events may have tzdef* properties set,
+		// so it's necessary to set them to UTC in order for other clients
+		// to display such events properly.
+		if ($isAllday && (
+			isset($oldProps[$appointmentprops['tzdefstart']]) ||
+			isset($oldProps[$appointmentprops['tzdefend']])
+		)) {
+			$utc = TimezoneUtil::GetBinaryTZ('Etc/Utc');
+			if ($utc !== false) {
+				mapi_setprops($mapimessage, [
+					$appointmentprops['tzdefstart'] => $utc,
+					$appointmentprops['tzdefend'] => $utc,
+				]);
+			}
 		}
 
 		return $response;
