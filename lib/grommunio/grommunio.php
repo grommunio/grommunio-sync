@@ -453,7 +453,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// only save the outgoing in sent items folder if the mobile requests it
 		$mapiprops[$sendMailProps["sentmailentryid"]] = $storeprops[$sendMailProps["ipmsentmailentryid"]];
 
-		$ab = mapi_openaddressbook($this->session);
+		$ab = $this->getAddressbook();
+		if (!$ab) {
+			throw new StatusException(sprintf("Grommunio->SendMail(): unable to open addressbook: 0x%X", mapi_last_hresult()), SYNC_COMMONSTATUS_SERVERERROR);
+		}
 		mapi_inetmapi_imtomapi($this->session, $this->defaultstore, $ab, $mapimessage, $sm->mime, []);
 
 		// Set the appSeqNr so that tracking tab can be updated for meeting request updates
@@ -1208,20 +1211,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	public function GetGALSearchResults($searchquery, $searchrange, $searchpicture) {
 		// only return users whose displayName or the username starts with $name
 		// TODO: use PR_ANR for this restriction instead of PR_DISPLAY_NAME and PR_ACCOUNT
-		$addrbook = $this->getAddressbook();
-		// FIXME: create a function to get the adressbook contentstable
-		if ($addrbook) {
-			$ab_entryid = mapi_ab_getdefaultdir($addrbook);
-		}
-		if ($ab_entryid) {
-			$ab_dir = mapi_ab_openentry($addrbook, $ab_entryid);
-		}
+		$table = null;
+		$ab_dir = $this->getAddressbookDir();
 		if ($ab_dir) {
 			$table = mapi_folder_getcontentstable($ab_dir);
 		}
 
 		if (!$table) {
-			throw new StatusException(sprintf("Grommunio->GetGALSearchResults(): could not open addressbook: 0x%X", mapi_last_hresult()), SYNC_SEARCHSTATUS_STORE_CONNECTIONFAILED);
+			throw new StatusException(sprintf("Grommunio->GetGALSearchResults(): could not open addressbook: 0x%08X", mapi_last_hresult()), SYNC_SEARCHSTATUS_STORE_CONNECTIONFAILED);
 		}
 
 		$restriction = MAPIUtils::GetSearchRestriction($searchquery);
@@ -1229,7 +1226,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		mapi_table_sort($table, [PR_DISPLAY_NAME => TABLE_SORT_ASCEND]);
 
 		if (mapi_last_hresult()) {
-			throw new StatusException(sprintf("Grommunio->GetGALSearchResults(): could not apply restriction: 0x%X", mapi_last_hresult()), SYNC_SEARCHSTATUS_STORE_TOOCOMPLEX);
+			throw new StatusException(sprintf("Grommunio->GetGALSearchResults(): could not apply restriction: 0x%08X", mapi_last_hresult()), SYNC_SEARCHSTATUS_STORE_TOOCOMPLEX);
 		}
 
 		// range for the search results, default symbian range end is 50, wm 99,
@@ -2697,16 +2694,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 	private function resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientGAL(): Resolving recipient '%s' in GAL", $to));
+		$table = null;
 		$addrbook = $this->getAddressbook();
-		// FIXME: create a function to get the adressbook contentstable
-		$ab_entryid = mapi_ab_getdefaultdir($addrbook);
-		if ($ab_entryid) {
-			$ab_dir = mapi_ab_openentry($addrbook, $ab_entryid);
-		}
+		$ab_dir = $this->getAddressbookDir();
 		if ($ab_dir) {
 			$table = mapi_folder_getcontentstable($ab_dir);
 		}
-
 		if (!$table) {
 			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientGAL(): Unable to open addressbook:0x%X", mapi_last_hresult()));
 
@@ -3022,6 +3015,28 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return $this->addressbook;
+	}
+
+	/**
+	 * Returns the adressbook dir entry
+	 *
+	 * @access private
+	 *
+	 * @return mixed addressbook dir entry or false on error
+	 */
+	private function getAddressbookDir() {
+		try {
+			$addrbook = $this->getAddressbook();
+			$ab_entryid = mapi_ab_getdefaultdir($addrbook);
+			$ab_dir = mapi_ab_openentry($addrbook, $ab_entryid);
+
+			return $ab_dir;
+		}
+		catch (MAPIException $e) {
+			SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getAddressbookDir(): Unable to open addressbook: %s", $e));
+		}
+
+		return false;
 	}
 
 	/**
