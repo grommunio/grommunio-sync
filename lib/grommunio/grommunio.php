@@ -453,7 +453,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// only save the outgoing in sent items folder if the mobile requests it
 		$mapiprops[$sendMailProps["sentmailentryid"]] = $storeprops[$sendMailProps["ipmsentmailentryid"]];
 
-		SLog::Write(LOGLEVEL_DEBUG, "Grommunio->SendMail(): Use the mapi_inetmapi_imtomapi function");
 		$ab = mapi_openaddressbook($this->session);
 		mapi_inetmapi_imtomapi($this->session, $this->defaultstore, $ab, $mapimessage, $sm->mime, []);
 
