@@ -2506,7 +2506,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 	private function getSearchFolder() {
 		// create new or open existing search folder
-		$searchFolderRoot = $this->getSearchFoldersRoot($this->store);
+		$searchFolderRoot = $this->getSearchFoldersRoot();
 		if ($searchFolderRoot === false) {
 			// error in finding search root folder
 			// or store doesn't support search folders
