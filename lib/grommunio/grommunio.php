@@ -2668,7 +2668,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param int    $maxAmbiguousRecipients
 	 * @param bool   $expandDistlist
 	 *
-	 * @return bool|SyncResolveRecipient
+	 * @return array|bool
 	 */
 	private function resolveRecipient($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		$recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist);
