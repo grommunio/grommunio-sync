@@ -538,9 +538,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				// only attach the original message if the mobile does not send it itself
 				if (!isset($sm->replacemime)) {
 					// get message's body in order to append forward or reply text
-					if (!isset($body)) {
-						$body = MAPIUtils::readPropStream($mapimessage, PR_BODY);
-					}
+					$body = MAPIUtils::readPropStream($mapimessage, PR_BODY);
 					if (!isset($bodyHtml)) {
 						$bodyHtml = MAPIUtils::readPropStream($mapimessage, PR_HTML);
 					}
