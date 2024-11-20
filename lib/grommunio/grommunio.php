@@ -453,7 +453,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// only save the outgoing in sent items folder if the mobile requests it
 		$mapiprops[$sendMailProps["sentmailentryid"]] = $storeprops[$sendMailProps["ipmsentmailentryid"]];
 
-		SLog::Write(LOGLEVEL_DEBUG, "Grommunio->SendMail(): Use the mapi_inetmapi_imtomapi function");
 		$ab = mapi_openaddressbook($this->session);
 		mapi_inetmapi_imtomapi($this->session, $this->defaultstore, $ab, $mapimessage, $sm->mime, []);
 
@@ -538,9 +537,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				// only attach the original message if the mobile does not send it itself
 				if (!isset($sm->replacemime)) {
 					// get message's body in order to append forward or reply text
-					if (!isset($body)) {
-						$body = MAPIUtils::readPropStream($mapimessage, PR_BODY);
-					}
+					$body = MAPIUtils::readPropStream($mapimessage, PR_BODY);
 					if (!isset($bodyHtml)) {
 						$bodyHtml = MAPIUtils::readPropStream($mapimessage, PR_HTML);
 					}
@@ -690,9 +687,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		list($id, $attachnum, $parentSourceKey, $exceptionBasedate) = explode(":", $attname);
-		if (isset($parentEntryid)) {
-			$this->Setup(GSync::GetAdditionalSyncFolderStore($parentSourceKey));
-		}
+		$this->Setup(GSync::GetAdditionalSyncFolderStore($parentSourceKey));
 
 		$entryid = hex2bin($id);
 		$message = mapi_msgstore_openentry($this->store, $entryid);
@@ -929,11 +924,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				if (empty($props)) {
 					$props = MAPIMapping::GetMeetingRequestProperties();
 					$props = getPropIdsFromStrings($this->store, $props);
-
-					$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
-					$goid = $messageprops[$props["goidtag"]];
 				}
 
+				$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
+				$goid = $messageprops[$props["goidtag"]];
 				$items = $meetingrequest->findCalendarItems($goid);
 
 				if (is_array($items)) {
@@ -953,8 +947,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			if (isset($folderClass) && $folderClass == 'Email') {
 				$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
 				$folder = mapi_msgstore_openentry($this->store, $folderentryid);
+				mapi_folder_deletemessages($folder, [$reqentryid], 0);
 			}
-			mapi_folder_deletemessages($folder, [$reqentryid], 0);
 
 			$prefix = '';
 			// prepend the short folderid of the target calendar: if available and short ids are used
@@ -2512,7 +2506,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 	private function getSearchFolder() {
 		// create new or open existing search folder
-		$searchFolderRoot = $this->getSearchFoldersRoot($this->store);
+		$searchFolderRoot = $this->getSearchFoldersRoot();
 		if ($searchFolderRoot === false) {
 			// error in finding search root folder
 			// or store doesn't support search folders
@@ -2674,7 +2668,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param int    $maxAmbiguousRecipients
 	 * @param bool   $expandDistlist
 	 *
-	 * @return bool|SyncResolveRecipient
+	 * @return array|bool
 	 */
 	private function resolveRecipient($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		$recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist);
