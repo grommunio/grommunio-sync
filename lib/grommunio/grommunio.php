@@ -924,11 +924,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				if (empty($props)) {
 					$props = MAPIMapping::GetMeetingRequestProperties();
 					$props = getPropIdsFromStrings($this->store, $props);
-
-					$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
-					$goid = $messageprops[$props["goidtag"]];
 				}
 
+				$messageprops = mapi_getprops($mapimessage, [$props["goidtag"]]);
+				$goid = $messageprops[$props["goidtag"]];
 				$items = $meetingrequest->findCalendarItems($goid);
 
 				if (is_array($items)) {
@@ -948,8 +947,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			if (isset($folderClass) && $folderClass == 'Email') {
 				$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
 				$folder = mapi_msgstore_openentry($this->store, $folderentryid);
+				mapi_folder_deletemessages($folder, [$reqentryid], 0);
 			}
-			mapi_folder_deletemessages($folder, [$reqentryid], 0);
 
 			$prefix = '';
 			// prepend the short folderid of the target calendar: if available and short ids are used
