@@ -687,9 +687,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		list($id, $attachnum, $parentSourceKey, $exceptionBasedate) = explode(":", $attname);
-		if (isset($parentEntryid)) {
-			$this->Setup(GSync::GetAdditionalSyncFolderStore($parentSourceKey));
-		}
+		$this->Setup(GSync::GetAdditionalSyncFolderStore($parentSourceKey));
 
 		$entryid = hex2bin($id);
 		$message = mapi_msgstore_openentry($this->store, $entryid);
