@@ -1275,7 +1275,7 @@ class TimezoneUtil {
 	 */
 	public static function GetSyncBlobFromTZ($tz) {
 		// set the correct TZ name (done using the Bias)
-		if (!isset($tz["tzname"]) || !$tz["tzname"] || !isset($tz["tznamedst"]) || !$tz["tznamedst"]) {
+		if (!isset($tz["tzname"]) || !isset($tz["tznamedst"])) {
 			$tz = TimezoneUtil::FillTZNames($tz);
 		}
 
@@ -1452,11 +1452,10 @@ class TimezoneUtil {
 	 * @return array
 	 */
 	public static function GetTzFromTimezoneDef($tzdef) {
-		$tz = [];
-		// convert timezone name because in zcore the chars are nul-padded
-		if (!empty($tzdef['keyname'])) {
-			$tz['tzname'] = $tz['tznamedst'] = self::getMSTZnameFromTZName(iconv('UTF-16', 'UTF-8', $tzdef['keyname']));
-		}
+		$tz = [
+			'tzname' => '',
+			'tznamedst' => '',
+		];
 
 		foreach ($tzdef['rules'] as $rule) {
 			if ($rule['tzruleflags'] & TZRULE_FLAG_EFFECTIVE_TZREG) {
