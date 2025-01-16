@@ -1800,16 +1800,19 @@ class MAPIProvider {
 			$recips = [];
 
 			// Outlook XP requires organizer in the attendee list as well
-			$org = [];
-			$org[PR_ENTRYID] = isset($representingprops[$appointmentprops["representingentryid"]]) ? $representingprops[$appointmentprops["representingentryid"]] : $props[$appointmentprops["representingentryid"]];
-			$org[PR_DISPLAY_NAME] = isset($representingprops[$appointmentprops["representingname"]]) ? $representingprops[$appointmentprops["representingname"]] : $props[$appointmentprops["representingname"]];
-			$org[PR_ADDRTYPE] = isset($representingprops[$appointmentprops["sentrepresentingaddt"]]) ? $representingprops[$appointmentprops["sentrepresentingaddt"]] : $props[$appointmentprops["sentrepresentingaddt"]];
-			$org[PR_SMTP_ADDRESS] = $org[PR_EMAIL_ADDRESS] = isset($representingprops[$appointmentprops["sentrepresentingemail"]]) ? $representingprops[$appointmentprops["sentrepresentingemail"]] : $props[$appointmentprops["sentrepresentingemail"]];
-			$org[PR_SEARCH_KEY] = isset($representingprops[$appointmentprops["sentrepresentinsrchk"]]) ? $representingprops[$appointmentprops["sentrepresentinsrchk"]] : $props[$appointmentprops["sentrepresentinsrchk"]];
-			$org[PR_RECIPIENT_FLAGS] = recipOrganizer | recipSendable;
-			$org[PR_RECIPIENT_TYPE] = MAPI_ORIG;
-
-			array_push($recips, $org);
+			// Only add organizer if it's a meeting
+			if ($isMeeting) {
+				$org = [];
+				$org[PR_ENTRYID] = isset($representingprops[$appointmentprops["representingentryid"]]) ? $representingprops[$appointmentprops["representingentryid"]] : $props[$appointmentprops["representingentryid"]];
+				$org[PR_DISPLAY_NAME] = isset($representingprops[$appointmentprops["representingname"]]) ? $representingprops[$appointmentprops["representingname"]] : $props[$appointmentprops["representingname"]];
+				$org[PR_ADDRTYPE] = isset($representingprops[$appointmentprops["sentrepresentingaddt"]]) ? $representingprops[$appointmentprops["sentrepresentingaddt"]] : $props[$appointmentprops["sentrepresentingaddt"]];
+				$org[PR_SMTP_ADDRESS] = $org[PR_EMAIL_ADDRESS] = isset($representingprops[$appointmentprops["sentrepresentingemail"]]) ? $representingprops[$appointmentprops["sentrepresentingemail"]] : $props[$appointmentprops["sentrepresentingemail"]];
+				$org[PR_SEARCH_KEY] = isset($representingprops[$appointmentprops["sentrepresentinsrchk"]]) ? $representingprops[$appointmentprops["sentrepresentinsrchk"]] : $props[$appointmentprops["sentrepresentinsrchk"]];
+				$org[PR_RECIPIENT_FLAGS] = recipOrganizer | recipSendable;
+				$org[PR_RECIPIENT_TYPE] = MAPI_ORIG;
+				
+				array_push($recips, $org);
+			}
 
 			// remove organizer from old_receips
 			if (isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
