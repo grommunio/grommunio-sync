@@ -1414,6 +1414,7 @@ class MAPIProvider {
 		$response = new SyncAppointmentResponse();
 
 		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
+		$isMeeting = isset($appointment->meetingstatus) && $appointment->meetingstatus > 0;
 		$isAs16 = Request::GetProtocolVersion() >= 16.0;
 
 		// Get timezone info
@@ -1763,7 +1764,7 @@ class MAPIProvider {
 
 		// Do attendees
 		// For AS-16 get a list of the current attendees (pre update)
-		if ($isAs16 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if ($isAs16 && $isMeeting) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
 			$old_receipstable = mapi_table_queryallrows(
 				$old_recipienttable,
@@ -1858,7 +1859,7 @@ class MAPIProvider {
 		mapi_setprops($mapimessage, $props);
 
 		// Since AS 16 we have to take care of MeetingRequest updates
-		if ($isAs16 && isset($appointment->meetingstatus) && $appointment->meetingstatus > 0) {
+		if ($isAs16 && $isMeeting) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// Only send updates if this is a new MR or we are the organizer
 			if ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
