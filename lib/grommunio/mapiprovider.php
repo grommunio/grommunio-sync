@@ -1729,15 +1729,21 @@ class MAPIProvider {
 			$appointmentprops["sentrepresentingemail"], $appointmentprops["sentrepresentinsrchk"], $appointmentprops["responsestatus"], ];
 		$representingprops = $this->getProps($mapimessage, $p);
 
+		$storeProps = $this->GetStoreProps();
+		$abEntryProps = $this->getAbPropsFromEntryID($storeProps[PR_MAILBOX_OWNER_ENTRYID]);
 		if (!isset($representingprops[$appointmentprops["representingentryid"]])) {
-			// TODO use GetStoreProps
-			$storeProps = mapi_getprops($this->store, [PR_MAILBOX_OWNER_ENTRYID]);
-			$props[$appointmentprops["representingentryid"]] = $storeProps[PR_MAILBOX_OWNER_ENTRYID];
-			$displayname = $this->getFullnameFromEntryID($storeProps[PR_MAILBOX_OWNER_ENTRYID]);
+			$displayname = $sentrepresentingemail = Request::GetUser();
+			$sentrepresentingaddt = 'SMPT';
+			if ($abEntryProps !== false) {
+				$displayname = $abEntryProps[PR_DISPLAY_NAME] ?? $displayname;
+				$sentrepresentingemail = $abEntryProps[PR_EMAIL_ADDRESS] ?? $abEntryProps[PR_SMTP_ADDRESS] ?? $sentrepresentingemail;
+				$sentrepresentingaddt = $abEntryProps[PR_ADDRTYPE] ?? $sentrepresentingaddt;
+			}
 
-			$props[$appointmentprops["representingname"]] = ($displayname !== false) ? $displayname : Request::GetUser();
-			$props[$appointmentprops["sentrepresentingemail"]] = Request::GetUser();
-			$props[$appointmentprops["sentrepresentingaddt"]] = "ZARAFA";
+			$props[$appointmentprops["representingentryid"]] = $storeProps[PR_MAILBOX_OWNER_ENTRYID];
+			$props[$appointmentprops["representingname"]] = $displayname;
+			$props[$appointmentprops["sentrepresentingemail"]] = $sentrepresentingemail;
+			$props[$appointmentprops["sentrepresentingaddt"]] = $sentrepresentingaddt;
 			$props[$appointmentprops["sentrepresentinsrchk"]] = $props[$appointmentprops["sentrepresentingaddt"]] . ":" . $props[$appointmentprops["sentrepresentingemail"]];
 
 			if (isset($appointment->attendees) && is_array($appointment->attendees) && !empty($appointment->attendees)) {
@@ -2592,26 +2598,20 @@ class MAPIProvider {
 	}
 
 	/**
-	 * Returns fullname from an entryid.
+	 * Returns AB data from an entryid.
 	 *
-	 * @param binary $entryid
+	 * @param string $entryid
 	 *
-	 * @return string fullname or false on error
+	 * @return mixed
 	 */
-	private function getFullnameFromEntryID($entryid) {
+	private function getAbPropsFromEntryID($entryid) {
 		$addrbook = $this->getAddressbook();
 		$mailuser = mapi_ab_openentry($addrbook, $entryid);
-		if (!$mailuser) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("Unable to get mailuser for getFullnameFromEntryID (0x%X)", mapi_last_hresult()));
-
-			return false;
+		if ($mailuser) {
+			return mapi_getprops($mailuser, [PR_DISPLAY_NAME, PR_ADDRTYPE, PR_SMTP_ADDRESS, PR_EMAIL_ADDRESS]);
 		}
 
-		$props = mapi_getprops($mailuser, [PR_DISPLAY_NAME]);
-		if (isset($props[PR_DISPLAY_NAME])) {
-			return $props[PR_DISPLAY_NAME];
-		}
-		SLog::Write(LOGLEVEL_ERROR, sprintf("Unable to get fullname for getFullnameFromEntryID (0x%X)", mapi_last_hresult()));
+		SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIProvider->getAbPropsFromEntryID(): Unable to get mailuser (0x%X)", mapi_last_hresult()));
 
 		return false;
 	}
