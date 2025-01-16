@@ -1739,7 +1739,6 @@ class MAPIProvider {
 				$sentrepresentingemail = $abEntryProps[PR_EMAIL_ADDRESS] ?? $abEntryProps[PR_SMTP_ADDRESS] ?? $sentrepresentingemail;
 				$sentrepresentingaddt = $abEntryProps[PR_ADDRTYPE] ?? $sentrepresentingaddt;
 			}
-
 			$props[$appointmentprops["representingentryid"]] = $storeProps[PR_MAILBOX_OWNER_ENTRYID];
 			$props[$appointmentprops["representingname"]] = $displayname;
 			$props[$appointmentprops["sentrepresentingemail"]] = $sentrepresentingemail;
@@ -1816,13 +1815,16 @@ class MAPIProvider {
 				$org[PR_SEARCH_KEY] = isset($representingprops[$appointmentprops["sentrepresentinsrchk"]]) ? $representingprops[$appointmentprops["sentrepresentinsrchk"]] : $props[$appointmentprops["sentrepresentinsrchk"]];
 				$org[PR_RECIPIENT_FLAGS] = recipOrganizer | recipSendable;
 				$org[PR_RECIPIENT_TYPE] = MAPI_ORIG;
-				
-				array_push($recips, $org);
-			}
+				$org[PR_RECIPIENT_TRACKSTATUS] = olResponseOrganized;
+				if ($abEntryProps !== false && isset($abEntryProps[PR_SMTP_ADDRESS])) {
+					$org[PR_SMTP_ADDRESS] = $abEntryProps[PR_SMTP_ADDRESS];
+				}
 
-			// remove organizer from old_receips
-			if (isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
-				unset($old_receips[$org[PR_EMAIL_ADDRESS]]);
+				array_push($recips, $org);
+				// remove organizer from old_receips
+				if (isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
+					unset($old_receips[$org[PR_EMAIL_ADDRESS]]);
+				}
 			}
 
 			// Open address book for user resolve
@@ -1859,6 +1861,10 @@ class MAPIProvider {
 				// if there is a new attendee a MR update must be send -> Appointment to MR update
 				else {
 					$forceMRUpdateSend = true;
+				}
+				// the organizer is already in the recipient list, no need to add him again
+				if (isset($org[PR_EMAIL_ADDRESS]) && strcasecmp($org[PR_EMAIL_ADDRESS], $recip[PR_EMAIL_ADDRESS]) == 0) {
+					continue;
 				}
 				array_push($recips, $recip);
 			}
