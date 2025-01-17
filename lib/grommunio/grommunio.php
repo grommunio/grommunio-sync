@@ -3049,21 +3049,23 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private function isGSyncEnabled() {
 		$addressbook = $this->getAddressbook();
 		// this check needs to be performed on the store of the main (authenticated) user
-		$store = $this->storeCache[$this->mainUser];
-		$userEntryid = mapi_getprops($store, [PR_MAILBOX_OWNER_ENTRYID]);
-		$mailuser = mapi_ab_openentry($addressbook, $userEntryid[PR_MAILBOX_OWNER_ENTRYID]);
-		$enabledFeatures = mapi_getprops($mailuser, [PR_EC_DISABLED_FEATURES]);
-		if (isset($enabledFeatures[PR_EC_DISABLED_FEATURES]) && is_array($enabledFeatures[PR_EC_DISABLED_FEATURES])) {
-			$mobileDisabled = in_array(self::MOBILE_ENABLED, $enabledFeatures[PR_EC_DISABLED_FEATURES]);
-			$deviceId = Request::GetDeviceID();
-			// Checks for deviceId present in zarafaDisabledFeatures LDAP array attribute. Check is performed case insensitive.
-			$deviceIdDisabled = (($deviceId !== null) && in_array($deviceId, array_map('strtolower', $enabledFeatures[PR_EC_DISABLED_FEATURES]))) ? true : false;
-			if ($mobileDisabled) {
-				throw new FatalException("User is disabled for grommunio-sync.");
+		$storeProps = mapi_getprops($this->storeCache[$this->mainUser], [PR_MAILBOX_OWNER_ENTRYID, PR_EC_ENABLED_FEATURES_L]);
+		$mobileDisabled = !($storeProps[PR_EC_ENABLED_FEATURES_L] & UP_EAS);
+		if (!$mobileDisabled) {
+			$mailuser = mapi_ab_openentry($addressbook, $userEntryid[PR_MAILBOX_OWNER_ENTRYID]);
+			$enabledFeatures = mapi_getprops($mailuser, [PR_EC_DISABLED_FEATURES]);
+			if (isset($enabledFeatures[PR_EC_DISABLED_FEATURES]) && is_array($enabledFeatures[PR_EC_DISABLED_FEATURES])) {
+				$mobileDisabled = in_array(self::MOBILE_ENABLED, $enabledFeatures[PR_EC_DISABLED_FEATURES]);
+				$deviceId = Request::GetDeviceID();
+				// Checks for deviceId present in zarafaDisabledFeatures LDAP array attribute. Check is performed case insensitive.
+				$deviceIdDisabled = (($deviceId !== null) && in_array($deviceId, array_map('strtolower', $enabledFeatures[PR_EC_DISABLED_FEATURES]))) ? true : false;
+				if ($deviceIdDisabled) {
+					throw new FatalException(sprintf("User has deviceId %s disabled for usage with grommunio-sync.", $deviceId));
+				}
 			}
-			if ($deviceIdDisabled) {
-				throw new FatalException(sprintf("User has deviceId %s disabled for usage with grommunio-sync.", $deviceId));
-			}
+		}
+		if ($mobileDisabled) {
+			throw new FatalException("User is disabled for grommunio-sync.");
 		}
 
 		return true;
