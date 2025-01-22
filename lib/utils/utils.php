@@ -335,6 +335,11 @@ class Utils {
 	 * @return string truncated string
 	 */
 	public static function Utf8_truncate($string, $length, $htmlsafe = false) {
+		// skip empty strings
+		if (empty($string)) {
+			return "";
+		}
+
 		// make sure length is always an integer
 		$length = (int) $length;
 
