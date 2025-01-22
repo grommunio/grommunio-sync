@@ -3052,7 +3052,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$storeProps = mapi_getprops($this->storeCache[$this->mainUser], [PR_MAILBOX_OWNER_ENTRYID, PR_EC_ENABLED_FEATURES_L]);
 		$mobileDisabled = !($storeProps[PR_EC_ENABLED_FEATURES_L] & UP_EAS);
 		if (!$mobileDisabled) {
-			$mailuser = mapi_ab_openentry($addressbook, $userEntryid[PR_MAILBOX_OWNER_ENTRYID]);
+			$mailuser = mapi_ab_openentry($addressbook, $storeProps[PR_MAILBOX_OWNER_ENTRYID]);
 			$enabledFeatures = mapi_getprops($mailuser, [PR_EC_DISABLED_FEATURES]);
 			if (isset($enabledFeatures[PR_EC_DISABLED_FEATURES]) && is_array($enabledFeatures[PR_EC_DISABLED_FEATURES])) {
 				$mobileDisabled = in_array(self::MOBILE_ENABLED, $enabledFeatures[PR_EC_DISABLED_FEATURES]);
