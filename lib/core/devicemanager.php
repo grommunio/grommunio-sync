@@ -1011,7 +1011,7 @@ class DeviceManager extends InterProcessData {
 			$info .= sprintf(" - From: '%s'", $message->from);
 		}
 		if (isset($message->starttime)) {
-			$info .= sprintf(" - On: '%s'", strftime("%Y-%m-%d %H:%M", $message->starttime));
+			$info .= sprintf(" - On: '%s'", date("Y-m-d H:i", $message->starttime));
 		}
 		$brokenMessage->info = $info;
 		$brokenMessage->reasonString = SLog::GetLastMessage(LOGLEVEL_WARN);

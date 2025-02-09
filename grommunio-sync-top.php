@@ -311,7 +311,7 @@ class GSyncTop {
 			"grommunio-sync-top live stats (%s, Gromox %s) %s\n",
 			$this->getVersion(),
 			phpversion("mapi"),
-			@strftime("%x %T")
+			date("Y-m-d H:i:s")
 		));
 		++$lc;
 

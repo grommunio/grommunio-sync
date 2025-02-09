@@ -563,10 +563,10 @@ class Utils {
 	 */
 	public static function GetFormattedTime($timestamp = false) {
 		if (!$timestamp) {
-			return @strftime("%d/%m/%Y %H:%M:%S");
+			$timestamp = time();
 		}
 
-		return @strftime("%d/%m/%Y %H:%M:%S", $timestamp);
+		return date("d/m/Y H:i:s", $timestamp);
 	}
 
 	/**
