@@ -1,7 +1,8 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
- * SPDX-FileCopyrightText: Copyright 2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2022-2025 grommunio GmbH
  *
  * Cache shared public folder hierarchy information.
  */
@@ -29,7 +30,7 @@ class SharedFolders extends InterProcessData {
 		$this->allocate = 0;
 		$this->localpart = "undefined";
 		$this->mainDomain = "undefined";
-		if (preg_match('/^([*+!.&#$|\'\\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i', nsp_getuserinfo(Request::GetUser())['primary_email'], $matches)) {
+		if (preg_match('/^([*+!.&#$|\'\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i', nsp_getuserinfo(Request::GetUserIdentifier())['primary_email'], $matches)) {
 			$this->localpart = $matches[1];
 			$this->mainDomain = $matches[2];
 		}
