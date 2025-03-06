@@ -2490,8 +2490,8 @@ class MAPIProvider {
 		}
 
 		$year = gmdate("Y", $localtime);
-		$start = $this->getTimestampOfWeek($year, $tz["dststartmonth"], $tz["dststartday"], $tz["dststartweek"], $tz["dststarthour"], $tz["dststartminute"], $tz["dststartsecond"]);
-		$end = $this->getTimestampOfWeek($year, $tz["dstendmonth"], $tz["dstendday"], $tz["dstendweek"], $tz["dstendhour"], $tz["dstendminute"], $tz["dstendsecond"]);
+		$start = $this->getTimestampOfWeek($year, $tz["dststartmonth"], $tz["dststartweek"], $tz["dststartday"], $tz["dststarthour"], $tz["dststartminute"], $tz["dststartsecond"]);
+		$end = $this->getTimestampOfWeek($year, $tz["dstendmonth"], $tz["dstendweek"], $tz["dstendday"], $tz["dstendhour"], $tz["dstendminute"], $tz["dstendsecond"]);
 
 		if ($start < $end) {
 			// northern hemisphere (july = dst)
