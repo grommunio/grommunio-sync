@@ -2208,6 +2208,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$this->storeCache[$user] = $store;
 			}
 
+			// g-sync135: always use SMTP address (issue with altnames)
+			if (!$return_public) {
+				$addressbook = $this->getAddressbook();
+				$storeProps = mapi_getprops($store, [PR_MAILBOX_OWNER_ENTRYID]);
+				$mailuser = mapi_ab_openentry($addressbook, $storeProps[PR_MAILBOX_OWNER_ENTRYID]);
+				$smtpProps = mapi_getprops($mailuser, [PR_SMTP_ADDRESS]);
+				if (isset($smtpProps[PR_SMTP_ADDRESS])) {
+					Request::SetUserIdentifier($smtpProps[PR_SMTP_ADDRESS]);
+				}
+			}
+
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->openMessageStore('%s'): Found '%s' store: '%s'", $user, ($return_public) ? 'PUBLIC' : 'DEFAULT', $store));
 
 			return $store;
