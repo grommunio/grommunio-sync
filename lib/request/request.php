@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * This class checks and processes all incoming data of the request.
  */
@@ -54,6 +55,7 @@ class Request {
 	private static $authDomain;
 	private static $authPassword;
 	private static $impersonatedUser;
+	private static $userIdentifier;
 	private static $asProtocolVersion;
 	private static $policykey;
 	private static $useragent;
@@ -690,6 +692,24 @@ class Request {
 		}
 
 		return memory_get_peak_usage(true) >= self::$memoryLimit;
+	}
+
+	/**
+	 * Returns a user identifier coming from the logged user store, mostly an email address.
+	 *
+	 * @return string
+	 */
+	public static function GetUserIdentifier() {
+		return self::$userIdentifier;
+	}
+
+	/**
+	 * Sets a user identifier coming from the logged user store.
+	 *
+	 * @param string $userIdentifier
+	 */
+	public static function SetUserIdentifier($userIdentifier) {
+		self::$userIdentifier = $userIdentifier;
 	}
 
 	/*----------------------------------------------------------------------------------------------------------

@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * This is a backend for grommunio. It is an implementation of IBackend and also
  * implements ISearchProvider to search in the grommunio system. The backend
@@ -2207,6 +2208,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$this->storeCache[$user] = $store;
 			}
 
+			// g-sync135: always use SMTP address (issue with altnames)
+			if (!$return_public) {
+				$addressbook = $this->getAddressbook();
+				$storeProps = mapi_getprops($store, [PR_MAILBOX_OWNER_ENTRYID]);
+				$mailuser = mapi_ab_openentry($addressbook, $storeProps[PR_MAILBOX_OWNER_ENTRYID]);
+				$smtpProps = mapi_getprops($mailuser, [PR_SMTP_ADDRESS]);
+				if (isset($smtpProps[PR_SMTP_ADDRESS])) {
+					Request::SetUserIdentifier($smtpProps[PR_SMTP_ADDRESS]);
+				}
+			}
+
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->openMessageStore('%s'): Found '%s' store: '%s'", $user, ($return_public) ? 'PUBLIC' : 'DEFAULT', $store));
 
 			return $store;
@@ -2396,7 +2408,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 			return false;
 		}
-		$user = nsp_getuserinfo($this->mainUser);
+		$user = nsp_getuserinfo(Request::GetUserIdentifier());
 		if ($user != false) {
 			$userinformation->Status = SYNC_SETTINGSSTATUS_USERINFO_SUCCESS;
 			if (Request::GetProtocolVersion() >= 14.1) {
@@ -3015,9 +3027,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
-	 * Returns the adressbook dir entry
-	 *
-	 * @access private
+	 * Returns the adressbook dir entry.
 	 *
 	 * @return mixed addressbook dir entry or false on error
 	 */
@@ -3025,9 +3035,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		try {
 			$addrbook = $this->getAddressbook();
 			$ab_entryid = mapi_ab_getdefaultdir($addrbook);
-			$ab_dir = mapi_ab_openentry($addrbook, $ab_entryid);
 
-			return $ab_dir;
+			return mapi_ab_openentry($addrbook, $ab_entryid);
 		}
 		catch (MAPIException $e) {
 			SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getAddressbookDir(): Unable to open addressbook: %s", $e));

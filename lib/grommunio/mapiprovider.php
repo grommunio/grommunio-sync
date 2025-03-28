@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  */
 
 class MAPIProvider {
@@ -306,7 +307,7 @@ class MAPIProvider {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getAppointment: adding ourself as an attendee for iOS6 workaround"));
 				$attendee = new SyncAttendee();
 
-				$meinfo = nsp_getuserinfo(Request::GetUser());
+				$meinfo = nsp_getuserinfo(Request::GetUserIdentifier());
 
 				if (is_array($meinfo)) {
 					$attendee->email = $meinfo["primary_email"];
@@ -322,7 +323,7 @@ class MAPIProvider {
 		// If it's an appointment which doesn't have any attendees, we have to make sure that
 		// the user is the owner or it will not work properly with android devices
 		if (isset($messageprops[$appointmentprops["meetingstatus"]]) && $messageprops[$appointmentprops["meetingstatus"]] == olNonMeeting && empty($message->attendees)) {
-			$meinfo = nsp_getuserinfo(Request::GetUser());
+			$meinfo = nsp_getuserinfo(Request::GetUserIdentifier());
 
 			if (is_array($meinfo)) {
 				$message->organizeremail = $meinfo["primary_email"];
@@ -805,7 +806,7 @@ class MAPIProvider {
 			// do it so that the attendee status is updated on the mobile
 			if (!isset($messageprops[$emailproperties["processed"]])) {
 				// check if we are not sending the MR so we can process it
-				$cuser = GSync::GetBackend()->GetUserDetails(GSync::GetBackend()->GetCurrentUsername());
+				$cuser = GSync::GetBackend()->GetUserDetails(Request::GetUserIdentifier());
 				if (isset($cuser["emailaddress"]) && $cuser["emailaddress"] != $fromaddr) {
 					if (!isset($req)) {
 						$req = new Meetingrequest($this->store, $mapimessage, $this->session);
@@ -1025,7 +1026,8 @@ class MAPIProvider {
 
 		// ignore certain undesired folders, like "RSS Feeds", "Suggested contacts" and Journal
 		if ((isset($folderprops[PR_CONTAINER_CLASS]) && (
-			$folderprops[PR_CONTAINER_CLASS] == "IPF.Note.OutlookHomepage" || $folderprops[PR_CONTAINER_CLASS] == "IPF.Journal")) ||
+			$folderprops[PR_CONTAINER_CLASS] == "IPF.Note.OutlookHomepage" || $folderprops[PR_CONTAINER_CLASS] == "IPF.Journal"
+		)) ||
 			in_array($folderprops[PR_ENTRYID], $this->getSpecialFoldersData())
 		) {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->GetFolder(): folder '%s' should not be synchronized", $folderprops[PR_DISPLAY_NAME]));
@@ -2142,7 +2144,7 @@ class MAPIProvider {
 		$p = [$taskprops["owner"]];
 		$owner = $this->getProps($mapimessage, $p);
 		if (!isset($owner[$taskprops["owner"]])) {
-			$userinfo = nsp_getuserinfo(Request::GetUser());
+			$userinfo = nsp_getuserinfo(Request::GetUserIdentifier());
 			if (mapi_last_hresult() == NOERROR && isset($userinfo["fullname"])) {
 				$props[$taskprops["owner"]] = $userinfo["fullname"];
 			}
