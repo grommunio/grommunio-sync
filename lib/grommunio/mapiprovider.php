@@ -2,7 +2,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  */
 
 class MAPIProvider {
@@ -368,7 +368,10 @@ class MAPIProvider {
 			}
 			else {
 				// AS 16: apply timezone as this MUST result in midnight (to be sent to the client)
-				$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+				// Adjust for TZ only if a timezone was saved with the message. Don't apply server TZ here.
+				if ($message->timezone) {
+					$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+				}
 			}
 			$message->endtime = $message->starttime + $duration;
 			if (Request::GetProtocolVersion() >= 16.0) {
