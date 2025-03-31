@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * Class to generate AS compatible timezone information
  */
@@ -1462,8 +1463,8 @@ class TimezoneUtil {
 				$tz['bias'] = $rule['bias'];
 				$tz['dstendyear'] = $rule['stStandardDate']['year'];
 				$tz['dstendmonth'] = $rule['stStandardDate']['month'];
-				$tz['dstendday'] = $rule['stStandardDate']['day'];
-				$tz['dstendweek'] = $rule['stStandardDate']['dayofweek'];
+				$tz['dstendday'] = $rule['stStandardDate']['dayofweek'];
+				$tz['dstendweek'] = $rule['stStandardDate']['day'];
 				$tz['dstendhour'] = $rule['stStandardDate']['hour'];
 				$tz['dstendminute'] = $rule['stStandardDate']['minute'];
 				$tz['dstendsecond'] = $rule['stStandardDate']['second'];
@@ -1471,8 +1472,8 @@ class TimezoneUtil {
 				$tz['stdbias'] = $rule['stdbias'];
 				$tz['dststartyear'] = $rule['stDaylightDate']['year'];
 				$tz['dststartmonth'] = $rule['stDaylightDate']['month'];
-				$tz['dststartday'] = $rule['stDaylightDate']['day'];
-				$tz['dststartweek'] = $rule['stDaylightDate']['dayofweek'];
+				$tz['dststartday'] = $rule['stDaylightDate']['dayofweek'];
+				$tz['dststartweek'] = $rule['stDaylightDate']['day'];
 				$tz['dststarthour'] = $rule['stDaylightDate']['hour'];
 				$tz['dststartminute'] = $rule['stDaylightDate']['minute'];
 				$tz['dststartsecond'] = $rule['stDaylightDate']['second'];

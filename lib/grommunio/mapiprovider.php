@@ -369,7 +369,10 @@ class MAPIProvider {
 			}
 			else {
 				// AS 16: apply timezone as this MUST result in midnight (to be sent to the client)
-				$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+				// Adjust for TZ only if a timezone was saved with the message. Don't apply server TZ here.
+				if ($message->timezone) {
+					$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+				}
 			}
 			$message->endtime = $message->starttime + $duration;
 			if (Request::GetProtocolVersion() >= 16.0) {
