@@ -1,3 +1,16 @@
+grommunio-sync 2.2 (2025-04-15)
+===============================
+
+* Allow for successful synchronization when logged in via altname (turning it
+  into email address internally)
+* TimeZoneStruct wDayOfWeek and wDay were erroneously switched whan calculating
+  DST start and end, which has been fixed.
+* Adjust all day events to midnight only if a TZ definition was saved with the
+  message. The server timezone should not be applied in this case, because if
+  no TZ is there, starttime/endtime of an event should be midnight already.
+* Apply server TZ to allday appointments with non GMT start times.
+
+
 grommunio-sync 2.1 (2025-01-28)
 ===============================
 
