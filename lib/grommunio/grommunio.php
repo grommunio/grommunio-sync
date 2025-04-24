@@ -1427,22 +1427,57 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return false;
 		}
 
+		// do first folder deletion with the requested PID
+		return $this->terminateSearchDeleteFolders($finderfolder, $pid, 0);
+	}
+
+	/**
+	 * Deletes obsolete Search-Folder with given parameters.
+	 *
+	 * @param resource $finderfolder
+	 * @param int      $pid
+	 * @param int      $since
+	 */
+	private function terminateSearchDeleteFolders($finderfolder, $pid, $since) {
 		$hierarchytable = mapi_folder_gethierarchytable($finderfolder);
-		mapi_table_restrict(
-			$hierarchytable,
-			[RES_CONTENT,
-				[
-					FUZZYLEVEL => FL_PREFIX,
-					ULPROPTAG => PR_DISPLAY_NAME,
-					VALUE => [PR_DISPLAY_NAME => "grommunio-sync Search Folder " . $pid],
-				],
+
+		$restriction = [
+			RES_CONTENT,
+			[
+				FUZZYLEVEL => FL_PREFIX,
+				ULPROPTAG => PR_DISPLAY_NAME,
+				VALUE => [PR_DISPLAY_NAME => "grommunio-sync Search Folder " . $pid],
 			],
-			TBL_BATCH
-		);
+		];
+
+		if ($since > 0) {
+			$restriction = [
+				RES_AND,
+				$restriction,
+				[RES_PROPERTY,
+					[
+						RELOP => RELOP_LE,
+						ULPROPTAG => PR_LAST_MODIFICATION_TIME,
+						VALUE => [PR_LAST_MODIFICATION_TIME => $since],
+					],
+				],
+			];
+		}
+		mapi_table_restrict($hierarchytable, $restriction, TBL_BATCH);
 
 		$folders = mapi_table_queryallrows($hierarchytable, [PR_ENTRYID, PR_DISPLAY_NAME, PR_LAST_MODIFICATION_TIME]);
+
+		$last = 0;
 		foreach ($folders as $folder) {
+			if ($folder[PR_LAST_MODIFICATION_TIME] && $last < $folder[PR_LAST_MODIFICATION_TIME]) {
+				$last = $folder[PR_LAST_MODIFICATION_TIME];
+			}
 			mapi_folder_deletefolder($finderfolder, $folder[PR_ENTRYID]);
+		}
+
+		// call recursivly once to delete older search folders than the one we had an PID to search for
+		if ($pid !== "" && $last > 0) {
+			$this->terminateSearchDeleteFolders($finderfolder, "", $last);
 		}
 
 		return true;
