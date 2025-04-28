@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * Detects an outgoing loop by looking if subsequent requests do try to get
  * changes for the same sync key. If more than once a synckey is requested,
@@ -321,7 +322,7 @@ class LoopDetection extends InterProcessData {
 		$stack = $this->getProcessStack();
 		if (count($stack) > 1) {
 			$se = $stack[0];
-			if ($se['cc'] == GSync::COMMAND_SEARCH) {
+			if ($se['cc'] == GSync::COMMAND_SEARCH || $se['cc'] == GSync::COMMAND_FIND) {
 				return $se['pid'];
 			}
 		}
@@ -853,11 +854,11 @@ class LoopDetection extends InterProcessData {
 
 				// check if this message was broken before - here we know that it still is and remove it from the tracking
 				$brokenkey = self::BROKENMSGS . "-" . $folderid;
-				// TODO: this is currently not supported here! It's in a different structure now!
-				//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
-				//                    SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
-				//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
-				//                }
+			// TODO: this is currently not supported here! It's in a different structure now!
+			//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
+			//                    SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
+			//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
+			//                }
 			}
 			// not the broken message yet
 			else {
