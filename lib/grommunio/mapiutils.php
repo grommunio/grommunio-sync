@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2013,2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  */
 
 /**
@@ -677,6 +678,10 @@ class MAPIUtils {
 		$read = $props[PR_MESSAGE_FLAGS] & MSGFLAG_READ;
 
 		if (isset($props[PR_MESSAGE_CLASS]) && stripos($props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
+			// also copy recipients because they are lost after mapi_inetmapi_imtomapi
+			$origRcptTable = mapi_message_getrecipienttable($mapimessage);
+			$origRecipients = mapi_table_queryallrows($origRcptTable, [PR_ENTRYID, PR_SEARCH_KEY, PR_ROWID, PR_DISPLAY_NAME, PR_DISPLAY_TYPE, PR_DISPLAY_TYPE_EX, PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_OBJECT_TYPE, PR_RECIPIENT_FLAGS, PR_RECIPIENT_TYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TRACKSTATUS_TIME, PR_RECIPIENT_PROPOSED, PR_RECIPIENT_PROPOSEDSTARTTIME, PR_RECIPIENT_PROPOSEDENDTIME, PR_CREATION_TIME]);
+
 			// this is a signed message. decode it.
 			$attachTable = mapi_message_getattachmenttable($mapimessage);
 			$rows = mapi_table_queryallrows($attachTable, [PR_ATTACH_MIME_TAG, PR_ATTACH_NUM]);
@@ -711,6 +716,12 @@ class MAPIUtils {
 				// mark the message as read if the main message has read flag
 				PR_MESSAGE_FLAGS => $read ? $mprops[PR_MESSAGE_FLAGS] | MSGFLAG_READ : $mprops[PR_MESSAGE_FLAGS],
 			]);
+			// readd recipients from original message
+			$decapRcptTable = mapi_message_getrecipienttable($mapimessage);
+			$decapRecipients = mapi_table_queryallrows($decapRcptTable, [PR_ENTRYID, PR_SEARCH_KEY, PR_ROWID, PR_DISPLAY_NAME]);
+			if (empty($decapRecipients) && !empty($origRecipients)) {
+				mapi_message_modifyrecipients($mapimessage, MODRECIP_ADD, $origRecipients);
+			}
 		}
 		// TODO check if we need to do this for encrypted (and signed?) message as well
 	}
