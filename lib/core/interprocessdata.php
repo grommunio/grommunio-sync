@@ -274,19 +274,27 @@ abstract class InterProcessData {
 		$raw = $this->ipcProvider->get()->hGetAll($key);
 		foreach ($raw as $compKey => $status) {
 			$_linedata = json_decode((string) $status, true);
-			[$devid, $user, $subkey] = explode("|-|", (string) $compKey);
+			if (!is_array($_linedata)) {
+				$_linedata = [];
+			}
+			[$devid, $user, $subkey] = array_pad(explode("|-|", (string) $compKey, 3), 3, null);
+			if ($devid === null || $devid === '') {
+				continue;
+			}
 			if (!isset($_data[$devid])) {
 				$_data[$devid] = [];
 			}
-			if (!$subkey) {
-				$_data[$devid][$user] = $_data;
+			if ($user === null) {
+				$user = '';
 			}
-			else {
-				if (!isset($_data[$devid][$user])) {
-					$_data[$devid][$user] = [];
-				}
-				$_data[$devid][$user][$subkey] = $_linedata;
+			if ($subkey === null || $subkey === '') {
+				$_data[$devid][$user] = $_linedata;
+				continue;
 			}
+			if (!isset($_data[$devid][$user]) || !is_array($_data[$devid][$user])) {
+				$_data[$devid][$user] = [];
+			}
+			$_data[$devid][$user][$subkey] = $_linedata;
 		}
 
 		return $_data;

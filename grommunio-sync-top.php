@@ -106,6 +106,22 @@ class GSyncTop {
 	private $activeUsers = [];
 	private $activeDevices = [];
 
+	private const LINE_DEFAULTS = [
+		'pid' => 0,
+		'ip' => '',
+		'user' => '',
+		'command' => '',
+		'time' => 0,
+		'devagent' => '',
+		'devid' => '',
+		'addinfo' => '',
+		'asversion' => '',
+		'start' => 0,
+		'update' => 0,
+		'ended' => 0,
+		'push' => false,
+	];
+
 	/**
 	 * Constructor.
 	 */
@@ -228,12 +244,26 @@ class GSyncTop {
 						continue;
 					}
 
-					$line['command'] = Utils::GetCommandFromCode($line['command']);
+					$line = $this->normalizeLine($line);
+					if ($line['pid'] === 0) {
+						continue;
+					}
 
-					if ($line["ended"] == 0) {
+					if (is_numeric($line['command'])) {
+						$command = Utils::GetCommandFromCode((int) $line['command']);
+						$line['command'] = ($command !== false) ? $command : 'Unknown';
+					}
+					elseif ($line['command'] === '') {
+						$line['command'] = 'Unknown';
+					}
+					else {
+						$line['command'] = (string) $line['command'];
+					}
+
+					if ($line["ended"] === 0) {
 						$this->activeDevices[$devid] = 1;
 						$this->activeUsers[$user] = 1;
-						$this->activeConn[$pid] = 1;
+						$this->activeConn[$line['pid']] = 1;
 						$this->activeHosts[$line['ip']] = 1;
 
 						$line["time"] = $this->currenttime - $line['start'];
@@ -248,7 +278,7 @@ class GSyncTop {
 
 						if ($this->filter !== false) {
 							$f = $this->filter;
-							if (!($line["pid"] == $f || $line["ip"] == $f || strtolower($line['command']) == strtolower($f) || preg_match("/.*?{$f}.*?/i", (string) $line['user']) ||
+							if (!($line["pid"] == $f || $line["ip"] == $f || strtolower((string) $line['command']) == strtolower($f) || preg_match("/.*?{$f}.*?/i", (string) $line['user']) ||
 								preg_match("/.*?{$f}.*?/i", (string) $line['devagent']) || preg_match("/.*?{$f}.*?/i", (string) $line['devid']) || preg_match("/.*?{$f}.*?/i", (string) $line['addinfo']))) {
 								continue;
 							}
@@ -277,7 +307,7 @@ class GSyncTop {
 								!(
 									$line['pid'] == $f ||
 									$line['ip'] == $f ||
-									strtolower($line['command']) == strtolower($f) ||
+									strtolower((string) $line['command']) == strtolower($f) ||
 									preg_match("/.*?{$f}.*?/i", (string) $line['user']) ||
 									preg_match("/.*?{$f}.*?/i", (string) $line['devagent']) ||
 									preg_match("/.*?{$f}.*?/i", (string) $line['devid']) ||
@@ -299,6 +329,38 @@ class GSyncTop {
 		krsort($this->linesOpen);
 		krsort($this->linesUnknown);
 		krsort($this->linesTerm);
+	}
+
+	private function normalizeLine(array $line): array {
+		$normalized = array_replace(self::LINE_DEFAULTS, $line);
+
+		$normalized['pid'] = (int) $normalized['pid'];
+		$normalized['update'] = (int) $normalized['update'];
+		$normalized['start'] = (int) $normalized['start'];
+		$normalized['ended'] = (int) $normalized['ended'];
+		$normalized['time'] = (int) ($normalized['time'] ?? 0);
+
+		if (!is_bool($normalized['push'])) {
+			if (is_scalar($normalized['push'])) {
+				$normalized['push'] = filter_var($normalized['push'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE) ?? false;
+			}
+			else {
+				$normalized['push'] = false;
+			}
+		}
+
+		foreach (['ip', 'user', 'devagent', 'devid', 'addinfo', 'asversion'] as $key) {
+			$normalized[$key] = (string) $normalized[$key];
+		}
+
+		if (is_string($normalized['command']) || is_numeric($normalized['command'])) {
+			$normalized['command'] = (string) $normalized['command'];
+		}
+		else {
+			$normalized['command'] = '';
+		}
+
+		return $normalized;
 	}
 
 	/**
