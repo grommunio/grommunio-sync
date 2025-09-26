@@ -1,5 +1,16 @@
+grommunio-sync 2.3 (2025-09-26)
+===============================
+
+Fixes:
+
+* S/MIME signed emails sent from iOS had shown no recipient
+* Cleanup search folders from store created by Find operation
+
+
 grommunio-sync 2.2 (2025-04-15)
 ===============================
+
+Fixes:
 
 * Allow for successful synchronization when logged in via altname (turning it
   into email address internally)
