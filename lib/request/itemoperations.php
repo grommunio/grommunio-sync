@@ -333,7 +333,7 @@ class ItemOperations extends RequestProcessor {
 							$data = self::$backend->Fetch(self::$deviceManager->GetBackendIdForFolderId($tmp[0]), $tmp[1], $operation["cpo"]);
 						}
 					}
-					catch (StatusException $stex) {
+					catch (StatusException) {
 						// the only option to return is that we could not retrieve it
 						$status = SYNC_ITEMOPERATIONSSTATUS_CONVERSIONFAILED;
 					}

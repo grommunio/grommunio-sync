@@ -10,7 +10,7 @@
  * according to $mapping by the Streamer and the Sync WBXML mappings.
  */
 
-abstract class SyncObject extends Streamer {
+abstract class SyncObject extends Streamer implements Stringable {
 	public const STREAMER_CHECKS = 6;
 	public const STREAMER_CHECK_REQUIRED = 7;
 	public const STREAMER_CHECK_ZEROORONE = 8;
@@ -54,7 +54,7 @@ abstract class SyncObject extends Streamer {
 						$this instanceof SyncAppointment ||
 						$this instanceof SyncTask
 					)) {
-				SLog::Write(LOGLEVEL_INFO, sprintf("%s->emptySupported(): no supported list available, emptying all not set parameters", get_class($this)));
+				SLog::Write(LOGLEVEL_INFO, sprintf("%s->emptySupported(): no supported list available, emptying all not set parameters", static::class));
 				$supportedFields = array_keys($this->mapping);
 			}
 			else {
@@ -64,7 +64,7 @@ abstract class SyncObject extends Streamer {
 
 		foreach ($supportedFields as $field) {
 			if (!isset($this->mapping[$field])) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Field '%s' is supposed to be emptied but is not defined for '%s'", $field, get_class($this)));
+				SLog::Write(LOGLEVEL_WARN, sprintf("Field '%s' is supposed to be emptied but is not defined for '%s'", $field, static::class));
 
 				continue;
 			}
@@ -161,15 +161,13 @@ abstract class SyncObject extends Streamer {
 
 	/**
 	 * String representation of the object.
-	 *
-	 * @return string
 	 */
-	public function __toString() {
-		$str = get_class($this) . " (\n";
+	public function __toString(): string {
+		$str = static::class . " (\n";
 
 		$streamerVars = [];
 		foreach ($this->mapping as $k => $v) {
-			$streamerVars[$v[self::STREAMER_VAR]] = (isset($v[self::STREAMER_TYPE])) ? $v[self::STREAMER_TYPE] : false;
+			$streamerVars[$v[self::STREAMER_VAR]] = $v[self::STREAMER_TYPE] ?? false;
 		}
 
 		foreach (get_object_vars($this) as $k => $v) {
@@ -219,6 +217,7 @@ abstract class SyncObject extends Streamer {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function StripData($flags = 0) {
 		if ($flags === 0 && isset($this->unsetVars)) {
 			unset($this->unsetVars);
@@ -280,7 +279,7 @@ abstract class SyncObject extends Streamer {
 			$defaultLogLevel = LOGLEVEL_DEBUG;
 		}
 
-		$objClass = get_class($this);
+		$objClass = static::class;
 		foreach ($this->mapping as $k => $v) {
 			// check sub-objects recursively
 			if (isset($v[self::STREAMER_TYPE], $this->{$v[self::STREAMER_VAR]})) {
@@ -396,7 +395,7 @@ abstract class SyncObject extends Streamer {
 									$objClass,
 									$v[self::STREAMER_VAR],
 									($rule === self::STREAMER_CHECK_CMPHIGHER) ? 'LOWER' : 'HIGHER',
-									isset($cmpPar) ? $cmpPar : $condition
+									$cmpPar ?? $condition
 								));
 
 								return false;
@@ -414,7 +413,7 @@ abstract class SyncObject extends Streamer {
 							$chkstr = $this->{$v[self::STREAMER_VAR]};
 						}
 
-						if (strlen($chkstr) > $condition) {
+						if (strlen((string) $chkstr) > $condition) {
 							SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): object from type %s: parameter '%s' is longer than %d. Check failed", $objClass, $v[self::STREAMER_VAR], $condition));
 
 							return false;
@@ -483,11 +482,7 @@ abstract class SyncObject extends Streamer {
 	 * @return mixed
 	 */
 	public function GetNameFromPropertyValue($v, $val) {
-		if (isset($v[self::STREAMER_VALUEMAP][$val])) {
-			return $v[self::STREAMER_VALUEMAP][$val];
-		}
-
-		return $val;
+		return $v[self::STREAMER_VALUEMAP][$val] ?? $val;
 	}
 
 	/**

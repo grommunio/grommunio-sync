@@ -133,7 +133,7 @@ class FolderChange extends RequestProcessor {
 				throw new StatusException(sprintf("HandleFolderChange() could not Setup() the backend for folder id '%s'", ($parentBackendId != false) ? $parentBackendId : $backendid), SYNC_FSSTATUS_SERVERERROR);
 			}
 		}
-		catch (StateNotFoundException $snfex) {
+		catch (StateNotFoundException) {
 			$status = SYNC_FSSTATUS_SYNCKEYERROR;
 		}
 		catch (StatusException $stex) {

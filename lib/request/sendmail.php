@@ -78,7 +78,7 @@ class SendMail extends RequestProcessor {
 
 			// split long-id if it's set - it overwrites folderid and itemid
 			if (isset($sm->source->longid) && $sm->source->longid) {
-				list($sm->source->folderid, $sm->source->itemid) = Utils::SplitMessageId($sm->source->longid);
+				[$sm->source->folderid, $sm->source->itemid] = Utils::SplitMessageId($sm->source->longid);
 			}
 
 			// Rewrite the AS folderid into a backend folderid
@@ -86,7 +86,7 @@ class SendMail extends RequestProcessor {
 				$sm->source->folderid = self::$deviceManager->GetBackendIdForFolderId($sm->source->folderid);
 			}
 			if (isset($sm->source->itemid)) {
-				list(, $sk) = Utils::SplitMessageId($sm->source->itemid);
+				[, $sk] = Utils::SplitMessageId($sm->source->itemid);
 				$sm->source->itemid = $sk;
 			}
 			// replyflag and forward flags are actually only for the correct icon.
@@ -99,11 +99,11 @@ class SendMail extends RequestProcessor {
 			}
 
 			if (!isset($sm->source->folderid) || !$sm->source->folderid) {
-				SLog::Write(LOGLEVEL_ERROR, sprintf("SendMail(): No parent folder id while replying or forwarding message:'%s'", ($reply) ? $reply : $forward));
+				SLog::Write(LOGLEVEL_ERROR, sprintf("SendMail(): No parent folder id while replying or forwarding message:'%s'", $reply ?: $forward));
 			}
 		}
 
-		self::$topCollector->AnnounceInformation(sprintf("SendMail(): Sending email with %d bytes", strlen($sm->mime)), true);
+		self::$topCollector->AnnounceInformation(sprintf("SendMail(): Sending email with %d bytes", strlen((string) $sm->mime)), true);
 
 		$statusMessage = '';
 

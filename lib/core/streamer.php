@@ -32,8 +32,6 @@ class Streamer implements JsonSerializable {
 	public const STREAMER_PRIVATE = 13;
 	public const STRIP_PRIVATE_DATA = 1;
 	public const STRIP_PRIVATE_SUBSTITUTE = 'Private';
-
-	protected $mapping;
 	public $flags;
 	public $content;
 
@@ -42,8 +40,7 @@ class Streamer implements JsonSerializable {
 	 *
 	 * @param array $mapping internal mapping of variables
 	 */
-	public function __construct($mapping) {
-		$this->mapping = $mapping;
+	public function __construct(protected $mapping) {
 		$this->flags = false;
 	}
 
@@ -87,7 +84,7 @@ class Streamer implements JsonSerializable {
 				// Found a start tag
 				if (!isset($this->mapping[$entity[EN_TAG]])) {
 					// This tag shouldn't be here, abort
-					SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("Tag '%s' unexpected in type XML type '%s'", $entity[EN_TAG], get_class($this)));
+					SLog::Write(LOGLEVEL_WBXMLSTACK, sprintf("Tag '%s' unexpected in type XML type '%s'", $entity[EN_TAG], static::class));
 
 					return false;
 				}
@@ -107,7 +104,7 @@ class Streamer implements JsonSerializable {
 							}
 							else {
 								// set $streamertype to null if the element is a single string (e.g. category)
-								$encapTagsTypes = [$map[self::STREAMER_ARRAY] => isset($map[self::STREAMER_TYPE]) ? $map[self::STREAMER_TYPE] : null];
+								$encapTagsTypes = [$map[self::STREAMER_ARRAY] => $map[self::STREAMER_TYPE] ?? null];
 							}
 
 							// Identify the used tag
@@ -262,7 +259,7 @@ class Streamer implements JsonSerializable {
 						}
 					}
 					else {
-						SLog::Write(LOGLEVEL_ERROR, sprintf("Streamer->Encode(): parameter '%s' of object %s is not of type Streamer", $map[self::STREAMER_VAR], get_class($this)));
+						SLog::Write(LOGLEVEL_ERROR, sprintf("Streamer->Encode(): parameter '%s' of object %s is not of type Streamer", $map[self::STREAMER_VAR], static::class));
 					}
 				}
 				// Array of objects
@@ -284,7 +281,7 @@ class Streamer implements JsonSerializable {
 									$eltag = $map[self::STREAMER_ARRAY];
 								}
 								else {
-									$eltag = array_search(get_class($element), $map[self::STREAMER_ARRAY]);
+									$eltag = array_search($element::class, $map[self::STREAMER_ARRAY]);
 								}
 								$encoder->startTag($eltag); // Outputs object container (eg Attachment)
 								$element->Encode($encoder);
@@ -292,7 +289,7 @@ class Streamer implements JsonSerializable {
 							}
 							else {
 								// Do not output empty items. Not sure if we should output an empty tag with $encoder->startTag($map[self::STREAMER_ARRAY], false, true);
-								if (strlen($element) > 0) {
+								if (strlen((string) $element) > 0) {
 									$encoder->startTag($map[self::STREAMER_ARRAY]);
 									$encoder->content($element);
 									$encoder->endTag();
@@ -321,7 +318,7 @@ class Streamer implements JsonSerializable {
 					}
 
 					// Simple type
-					if (!isset($map[self::STREAMER_TYPE]) && strlen($this->{$map[self::STREAMER_VAR]}) == 0) {
+					if (!isset($map[self::STREAMER_TYPE]) && strlen((string) $this->{$map[self::STREAMER_VAR]}) == 0) {
 						// send empty tags
 						if (isset($map[self::STREAMER_PROP]) && $map[self::STREAMER_PROP] == self::STREAMER_TYPE_SEND_EMPTY) {
 							$encoder->startTag($tag, false, true);
@@ -338,7 +335,7 @@ class Streamer implements JsonSerializable {
 						}
 					}
 					elseif (isset($map[self::STREAMER_TYPE]) && $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_HEX) {
-						$encoder->content(strtoupper(bin2hex($this->{$map[self::STREAMER_VAR]})));
+						$encoder->content(strtoupper(bin2hex((string) $this->{$map[self::STREAMER_VAR]})));
 					}
 					elseif (isset($map[self::STREAMER_TYPE]) && $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_STREAM_ASPLAIN) {
 						$encoder->contentStream($this->{$map[self::STREAMER_VAR]}, false);
@@ -441,7 +438,7 @@ class Streamer implements JsonSerializable {
 		}
 
 		return [
-			'gsSyncStateClass' => get_class($this),
+			'gsSyncStateClass' => static::class,
 			'data' => $data,
 		];
 	}

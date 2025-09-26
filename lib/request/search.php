@@ -33,7 +33,7 @@ class Search extends RequestProcessor {
 		if (!self::$decoder->getElementStartTag(SYNC_SEARCH_NAME)) {
 			return false;
 		}
-		$searchname = strtoupper(self::$decoder->getElementContent());
+		$searchname = strtoupper((string) self::$decoder->getElementContent());
 		if (!self::$decoder->getElementEndTag()) {
 			return false;
 		}
@@ -358,7 +358,7 @@ class Search extends RequestProcessor {
 		}
 		$searchprovider->Disconnect();
 
-		self::$topCollector->AnnounceInformation(sprintf("'%s' search found %d results", $searchname, isset($rows['searchtotal']) ? $rows['searchtotal'] : 0), true);
+		self::$topCollector->AnnounceInformation(sprintf("'%s' search found %d results", $searchname, $rows['searchtotal'] ?? 0), true);
 
 		self::$encoder->startWBXML();
 		self::$encoder->startTag(SYNC_SEARCH_SEARCH);
@@ -390,7 +390,7 @@ class Search extends RequestProcessor {
 						self::$encoder->startTag(SYNC_SEARCH_PROPERTIES);
 
 						self::$encoder->startTag(SYNC_GAL_DISPLAYNAME);
-						self::$encoder->content((isset($u[SYNC_GAL_DISPLAYNAME])) ? $u[SYNC_GAL_DISPLAYNAME] : "No name");
+						self::$encoder->content($u[SYNC_GAL_DISPLAYNAME] ?? "No name");
 						self::$encoder->endTag();
 
 						if (isset($u[SYNC_GAL_PHONE])) {
@@ -425,11 +425,11 @@ class Search extends RequestProcessor {
 
 						// Always send the firstname, even empty. Nokia needs this to display the entry
 						self::$encoder->startTag(SYNC_GAL_FIRSTNAME);
-						self::$encoder->content((isset($u[SYNC_GAL_FIRSTNAME])) ? $u[SYNC_GAL_FIRSTNAME] : "");
+						self::$encoder->content($u[SYNC_GAL_FIRSTNAME] ?? "");
 						self::$encoder->endTag();
 
 						self::$encoder->startTag(SYNC_GAL_LASTNAME);
-						self::$encoder->content((isset($u[SYNC_GAL_LASTNAME])) ? $u[SYNC_GAL_LASTNAME] : "No name");
+						self::$encoder->content($u[SYNC_GAL_LASTNAME] ?? "No name");
 						self::$encoder->endTag();
 
 						if (isset($u[SYNC_GAL_HOMEPHONE])) {
@@ -445,7 +445,7 @@ class Search extends RequestProcessor {
 						}
 
 						self::$encoder->startTag(SYNC_GAL_EMAILADDRESS);
-						self::$encoder->content((isset($u[SYNC_GAL_EMAILADDRESS])) ? $u[SYNC_GAL_EMAILADDRESS] : "");
+						self::$encoder->content($u[SYNC_GAL_EMAILADDRESS] ?? "");
 						self::$encoder->endTag();
 
 						if (isset($u[SYNC_GAL_PICTURE])) {

@@ -16,7 +16,6 @@
  * that the ImportProxies are used.
  */
 class ExportChangesICS implements IExportChanges {
-	private $folderid;
 	private $store;
 	private $session;
 	private $restriction;
@@ -35,16 +34,15 @@ class ExportChangesICS implements IExportChanges {
 	 *
 	 * @throws StatusException
 	 */
-	public function __construct($session, $store, $folderid = false) {
+	public function __construct($session, $store, private $folderid = false) {
 		// Open a hierarchy or a contents exporter depending on whether a folderid was specified
 		$this->session = $session;
-		$this->folderid = $folderid;
 		$this->store = $store;
 		$this->restriction = false;
 
 		try {
-			if ($folderid) {
-				$entryid = mapi_msgstore_entryidfromsourcekey($store, $folderid);
+			if ($this->folderid) {
+				$entryid = mapi_msgstore_entryidfromsourcekey($store, $this->folderid);
 			}
 			else {
 				$storeprops = mapi_getprops($this->store, [PR_IPM_SUBTREE_ENTRYID, PR_IPM_PUBLIC_FOLDERS_ENTRYID]);
@@ -66,7 +64,7 @@ class ExportChangesICS implements IExportChanges {
 
 			// Get the actual ICS exporter
 			if ($folder) {
-				if ($folderid) {
+				if ($this->folderid) {
 					$this->exporter = mapi_openproperty($folder, PR_CONTENTS_SYNCHRONIZER, IID_IExchangeExportChanges, 0, 0);
 				}
 				else {
@@ -77,12 +75,12 @@ class ExportChangesICS implements IExportChanges {
 				$this->exporter = false;
 			}
 		}
-		catch (MAPIException $me) {
+		catch (MAPIException) {
 			$this->exporter = false;
 
 			// We return the general error SYNC_FSSTATUS_CODEUNKNOWN (12) which is also SYNC_STATUS_FOLDERHIERARCHYCHANGED (12)
 			// if this happened while doing content sync, the mobile will try to resync the folderhierarchy
-			throw new StatusException(sprintf("ExportChangesICS('%s','%s','%s'): Error, unable to open folder: 0x%X", $session, $store, Utils::PrintAsString($folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
+			throw new StatusException(sprintf("ExportChangesICS('%s','%s','%s'): Error, unable to open folder: 0x%X", $session, $store, Utils::PrintAsString($this->folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
 		}
 	}
 
@@ -227,7 +225,7 @@ class ExportChangesICS implements IExportChanges {
 
 		$changes = mapi_exportchanges_getchangecount($this->exporter);
 		if ($changes || !($this->flags & BACKEND_DISCARD_DATA)) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->InitializeExporter() successfully. %d changes ready to sync for '%s'.", $changes, ($this->folderid) ? bin2hex($this->folderid) : 'hierarchy'));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("ExportChangesICS->InitializeExporter() successfully. %d changes ready to sync for '%s'.", $changes, ($this->folderid) ? bin2hex((string) $this->folderid) : 'hierarchy'));
 		}
 
 		return $ret;

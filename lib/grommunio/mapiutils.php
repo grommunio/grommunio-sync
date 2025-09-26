@@ -461,44 +461,14 @@ class MAPIUtils {
 	 * @return string
 	 */
 	public static function GetContainerClassFromFolderType($foldertype) {
-		switch ($foldertype) {
-			case SYNC_FOLDER_TYPE_TASK:
-			case SYNC_FOLDER_TYPE_USER_TASK:
-				return "IPF.Task";
-				break;
-
-			case SYNC_FOLDER_TYPE_APPOINTMENT:
-			case SYNC_FOLDER_TYPE_USER_APPOINTMENT:
-				return "IPF.Appointment";
-				break;
-
-			case SYNC_FOLDER_TYPE_CONTACT:
-			case SYNC_FOLDER_TYPE_USER_CONTACT:
-				return "IPF.Contact";
-				break;
-
-			case SYNC_FOLDER_TYPE_NOTE:
-			case SYNC_FOLDER_TYPE_USER_NOTE:
-				return "IPF.StickyNote";
-				break;
-
-			case SYNC_FOLDER_TYPE_JOURNAL:
-			case SYNC_FOLDER_TYPE_USER_JOURNAL:
-				return "IPF.Journal";
-				break;
-
-			case SYNC_FOLDER_TYPE_INBOX:
-			case SYNC_FOLDER_TYPE_DRAFTS:
-			case SYNC_FOLDER_TYPE_WASTEBASKET:
-			case SYNC_FOLDER_TYPE_SENTMAIL:
-			case SYNC_FOLDER_TYPE_OUTBOX:
-			case SYNC_FOLDER_TYPE_USER_MAIL:
-			case SYNC_FOLDER_TYPE_OTHER:
-			case SYNC_FOLDER_TYPE_UNKNOWN:
-			default:
-				return "IPF.Note";
-				break;
-		}
+		return match ($foldertype) {
+			SYNC_FOLDER_TYPE_TASK, SYNC_FOLDER_TYPE_USER_TASK => "IPF.Task",
+			SYNC_FOLDER_TYPE_APPOINTMENT, SYNC_FOLDER_TYPE_USER_APPOINTMENT => "IPF.Appointment",
+			SYNC_FOLDER_TYPE_CONTACT, SYNC_FOLDER_TYPE_USER_CONTACT => "IPF.Contact",
+			SYNC_FOLDER_TYPE_NOTE, SYNC_FOLDER_TYPE_USER_NOTE => "IPF.StickyNote",
+			SYNC_FOLDER_TYPE_JOURNAL, SYNC_FOLDER_TYPE_USER_JOURNAL => "IPF.Journal",
+			default => "IPF.Note",
+		};
 	}
 
 	/**
@@ -677,7 +647,7 @@ class MAPIUtils {
 		]);
 		$read = $props[PR_MESSAGE_FLAGS] & MSGFLAG_READ;
 
-		if (isset($props[PR_MESSAGE_CLASS]) && stripos($props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
+		if (isset($props[PR_MESSAGE_CLASS]) && stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
 			// also copy recipients because they are lost after mapi_inetmapi_imtomapi
 			$origRcptTable = mapi_message_getrecipienttable($mapimessage);
 			$origRecipients = mapi_table_queryallrows($origRcptTable, [PR_ENTRYID, PR_SEARCH_KEY, PR_ROWID, PR_DISPLAY_NAME, PR_DISPLAY_TYPE, PR_DISPLAY_TYPE_EX, PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_OBJECT_TYPE, PR_RECIPIENT_FLAGS, PR_RECIPIENT_TYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TRACKSTATUS_TIME, PR_RECIPIENT_PROPOSED, PR_RECIPIENT_PROPOSEDSTARTTIME, PR_RECIPIENT_PROPOSEDENDTIME, PR_CREATION_TIME]);

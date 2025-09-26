@@ -18,7 +18,7 @@ if (!function_exists('apache_request_headers')) {
 	function apache_request_headers() {
 		$headers = [];
 		foreach ($_SERVER as $key => $value) {
-			if (substr($key, 0, 5) == 'HTTP_') {
+			if (str_starts_with($key, 'HTTP_')) {
 				$headers[strtr(substr($key, 5), '_', '-')] = $value;
 			}
 		}
@@ -204,13 +204,13 @@ if (!function_exists('http_response_code')) {
 					break;
 			}
 
-			$protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
+			$protocol = ($_SERVER['SERVER_PROTOCOL'] ?? 'HTTP/1.0');
 			header($protocol . ' ' . $code . ' ' . $text);
 
 			$GLOBALS['http_response_code'] = $code;
 		}
 		else {
-			$code = (isset($GLOBALS['http_response_code']) ? $GLOBALS['http_response_code'] : 200);
+			$code = ($GLOBALS['http_response_code'] ?? 200);
 		}
 
 		return $code;

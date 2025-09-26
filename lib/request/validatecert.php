@@ -24,7 +24,7 @@ class ValidateCert extends RequestProcessor {
 
 		$validateCert = new SyncValidateCert();
 		$validateCert->Decode(self::$decoder);
-		$cert_der = base64_decode($validateCert->certificates[0]);
+		$cert_der = base64_decode((string) $validateCert->certificates[0]);
 		$cert_pem = "-----BEGIN CERTIFICATE-----\n" . chunk_split(base64_encode($cert_der), 64, "\n") . "-----END CERTIFICATE-----\n";
 
 		$checkpurpose = (defined('CAINFO') && CAINFO) ? openssl_x509_checkpurpose($cert_pem, X509_PURPOSE_SMIME_SIGN, [CAINFO]) : openssl_x509_checkpurpose($cert_pem, X509_PURPOSE_SMIME_SIGN);

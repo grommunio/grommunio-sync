@@ -171,7 +171,7 @@ catch (NoPostRequestException $nopostex) {
 }
 catch (Exception $ex) {
 	// Extract any previous exception message for logging purpose.
-	$exclass = get_class($ex);
+	$exclass = $ex::class;
 	$exception_message = $ex->getMessage();
 	if ($ex->getPrevious()) {
 		do {
@@ -210,7 +210,7 @@ catch (Exception $ex) {
 
 		// log the failed login attempt e.g. for fail2ban
 		if (defined('LOGAUTHFAIL') && LOGAUTHFAIL !== false) {
-			SLog::Write(LOGLEVEL_WARN, sprintf("IP: %s failed to authenticate user '%s'", Request::GetRemoteAddr(), Request::GetAuthUser() ? Request::GetAuthUser() : Request::GetGETUser()));
+			SLog::Write(LOGLEVEL_WARN, sprintf("IP: %s failed to authenticate user '%s'", Request::GetRemoteAddr(), Request::GetAuthUser() ?: Request::GetGETUser()));
 		}
 	}
 
@@ -235,7 +235,7 @@ catch (Exception $ex) {
 	}
 
 	// Announce exception if the TopCollector if available
-	GSync::GetTopCollector()->AnnounceInformation(get_class($ex), true);
+	GSync::GetTopCollector()->AnnounceInformation($ex::class, true);
 }
 
 // save device data if the DeviceManager is available

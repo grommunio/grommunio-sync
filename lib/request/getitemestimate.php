@@ -40,7 +40,7 @@ class GetItemEstimate extends RequestProcessor {
 					try {
 						$spa->SetSyncKey(self::$decoder->getElementContent());
 					}
-					catch (StateInvalidException $siex) {
+					catch (StateInvalidException) {
 						$spastatus = SYNC_GETITEMESTSTATUS_SYNCSTATENOTPRIMED;
 					}
 
@@ -151,7 +151,7 @@ class GetItemEstimate extends RequestProcessor {
 				try {
 					$spa->SetContentClass(self::$deviceManager->GetFolderClassFromCacheByID($spa->GetFolderId()));
 				}
-				catch (NoHierarchyCacheAvailableException $nhca) {
+				catch (NoHierarchyCacheAvailableException) {
 					$spastatus = SYNC_GETITEMESTSTATUS_COLLECTIONINVALID;
 				}
 			}
@@ -176,7 +176,7 @@ class GetItemEstimate extends RequestProcessor {
 						throw new StatusException(sprintf("HandleGetItemEstimate() could not Setup() the backend for folder id %s/%s", $spa->GetFolderId(), $spa->GetBackendFolderId()), SYNC_GETITEMESTSTATUS_COLLECTIONINVALID);
 					}
 				}
-				catch (StateNotFoundException $snfex) {
+				catch (StateNotFoundException) {
 					// ok, the key is invalid. Question is, if the hierarchycache is still ok
 					// if not, we have to issue SYNC_GETITEMESTSTATUS_COLLECTIONINVALID which triggers a FolderSync
 					try {
@@ -184,7 +184,7 @@ class GetItemEstimate extends RequestProcessor {
 						// we got here, so the HierarchyCache is ok
 						$sc->AddParameter($spa, "status", SYNC_GETITEMESTSTATUS_SYNCKKEYINVALID);
 					}
-					catch (NoHierarchyCacheAvailableException $nhca) {
+					catch (NoHierarchyCacheAvailableException) {
 						$sc->AddParameter($spa, "status", SYNC_GETITEMESTSTATUS_COLLECTIONINVALID);
 					}
 
@@ -218,7 +218,7 @@ class GetItemEstimate extends RequestProcessor {
 		try {
 			$sc->CountChanges();
 		}
-		catch (StatusException $ste) {
+		catch (StatusException) {
 			$status = SYNC_GETITEMESTSTATUS_COLLECTIONINVALID;
 		}
 		$changes = $sc->GetChangedFolderIds();

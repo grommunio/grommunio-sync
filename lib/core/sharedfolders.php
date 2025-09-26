@@ -30,7 +30,7 @@ class SharedFolders extends InterProcessData {
 		$this->allocate = 0;
 		$this->localpart = "undefined";
 		$this->mainDomain = "undefined";
-		if (preg_match('/^([*+!.&#$|\'\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i', nsp_getuserinfo(Request::GetUserIdentifier())['primary_email'], $matches)) {
+		if (preg_match('/^([*+!.&#$|\'\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i', (string) nsp_getuserinfo(Request::GetUserIdentifier())['primary_email'], $matches)) {
 			$this->localpart = $matches[1];
 			$this->mainDomain = $matches[2];
 		}
@@ -55,7 +55,7 @@ class SharedFolders extends InterProcessData {
 		// update instance data from redis once every 29s (to catch changes between the ping intervals)
 		if ($this->updateTime + 29 < time()) {
 			// get cached data from redis
-			list($shared, $sharedRaw) = $this->getDeviceUserData($this->type, $this->localpart, -1, -1, true);
+			[$shared, $sharedRaw] = $this->getDeviceUserData($this->type, $this->localpart, -1, -1, true);
 
 			// no shared folder data in redis for this user, get them from the public folder and put it in redis
 			if (!$sharedRaw) {

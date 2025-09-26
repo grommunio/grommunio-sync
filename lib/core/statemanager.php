@@ -103,7 +103,7 @@ class StateManager {
 					$this->synchedFolders[$folderid] = $data;
 				}
 			}
-			catch (StateNotFoundException $ex) {
+			catch (StateNotFoundException) {
 			}
 		}
 
@@ -145,7 +145,7 @@ class StateManager {
 			$this->newStateCounter = 1;
 		}
 		else {
-			list($uuid, $counter) = self::ParseStateKey($synckey);
+			[$uuid, $counter] = self::ParseStateKey($synckey);
 			$this->uuid = $uuid;
 			$this->newStateCounter = $counter + 1;
 		}
@@ -181,7 +181,7 @@ class StateManager {
 		}
 
 		// Check if synckey is allowed and set uuid and counter
-		list($this->uuid, $this->oldStateCounter) = self::ParseStateKey($synckey);
+		[$this->uuid, $this->oldStateCounter] = self::ParseStateKey($synckey);
 
 		// make sure the hierarchy cache is in place
 		if ($this->hierarchyOperation || $forceHierarchyLoading) {
@@ -233,7 +233,7 @@ class StateManager {
 		try {
 			return $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::FAILSAFE, $this->uuid, $this->oldStateCounter, $this->deleteOldStates);
 		}
-		catch (StateNotFoundException $snfex) {
+		catch (StateNotFoundException) {
 			return false;
 		}
 	}

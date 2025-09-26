@@ -412,6 +412,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function StripData() {
 		unset($this->changes, $this->step, $this->destinationImporter, $this->exportImporter);
 

@@ -106,7 +106,7 @@ class LoopDetection extends InterProcessData {
 			self::$processentry['stat'] = [];
 		}
 
-		self::$processentry['stat'][get_class($exception)] = $exception->getCode();
+		self::$processentry['stat'][$exception::class] = $exception->getCode();
 
 		$this->updateProcessStack();
 
@@ -122,7 +122,7 @@ class LoopDetection extends InterProcessData {
 	 * @return bool
 	 */
 	public function ProcessLoopDetectionAddStatus($folderid, $status) {
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->ProcessLoopDetectionAddStatus: '%s' with status %d", $folderid ? $folderid : 'hierarchy', $status));
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->ProcessLoopDetectionAddStatus: '%s' with status %d", $folderid ?: 'hierarchy', $status));
 		// generate entry if not already there
 		self::GetProcessEntry();
 
@@ -342,7 +342,7 @@ class LoopDetection extends InterProcessData {
 		$ok = false;
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($stack, $stackRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, self::INTERPROCESSLD, true);
+			[$stack, $stackRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, self::INTERPROCESSLD, true);
 
 			// insert/update current process entry
 			$nstack = [];
@@ -431,7 +431,7 @@ class LoopDetection extends InterProcessData {
 		$this->initializeParams();
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($brokenmsgs, $brokenmsgsRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
+			[$brokenmsgs, $brokenmsgsRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
 
 			$brokenmsgs[$id] = ['uuid' => $this->broken_message_uuid, 'counter' => $this->broken_message_counter];
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->SetBrokenMessage('%s', '%s'): tracking broken message", $folderid, $id));
@@ -475,7 +475,7 @@ class LoopDetection extends InterProcessData {
 		$ok = false;
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($brokenmsgs, $brokenmsgsRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
+			[$brokenmsgs, $brokenmsgsRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $brokenkey, true);
 
 			if (empty($brokenmsgs)) {
 				break;
@@ -539,7 +539,7 @@ class LoopDetection extends InterProcessData {
 		$ok = false;
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
+			[$current, $currentRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
 			if (!isset($current["uuid"])) {
 				$current["uuid"] = $uuid;
@@ -668,7 +668,7 @@ class LoopDetection extends InterProcessData {
 		$ok = false;
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
+			[$current, $currentRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
 			// completely new/unknown UUID
 			if (empty($current)) {
@@ -783,7 +783,7 @@ class LoopDetection extends InterProcessData {
 				}
 			}
 			if (isset($current['loopcount'])) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): loop data: loopcount(%d), maxCount(%d), queued(%d), ignored(%s)", $current['loopcount'], $current['maxCount'], $current['queued'], isset($current['ignored']) ? $current['ignored'] : 'false'));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->Detect(): loop data: loopcount(%d), maxCount(%d), queued(%d), ignored(%s)", $current['loopcount'], $current['maxCount'], $current['queued'], $current['ignored'] ?? 'false'));
 			}
 
 			// update loop data
@@ -844,7 +844,7 @@ class LoopDetection extends InterProcessData {
 		$ok = false;
 		$tryCount = 1;
 		while (!$ok && $tryCount < 5) {
-			list($current, $currentRaw) = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
+			[$current, $currentRaw] = $this->getDeviceUserData($this->type, parent::$devid, parent::$user, $folderid, true);
 
 			// we found our broken message!
 			if ($realBroken) {

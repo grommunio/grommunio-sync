@@ -39,7 +39,7 @@ class MAPIStreamWrapper {
 
 		$this->position = 0;
 		$this->toTruncate = false;
-		$this->truncateHtmlSafe = (isset($contextOptions[self::PROTOCOL]['truncatehtmlsafe'])) ? $contextOptions[self::PROTOCOL]['truncatehtmlsafe'] : false;
+		$this->truncateHtmlSafe = $contextOptions[self::PROTOCOL]['truncatehtmlsafe'] ?? false;
 
 		// this is our stream!
 		$this->mapistream = $contextOptions[self::PROTOCOL]['stream'];
@@ -97,18 +97,11 @@ class MAPIStreamWrapper {
 	 * @return bool
 	 */
 	public function stream_seek($offset, $whence = SEEK_SET) {
-		switch ($whence) {
-			case SEEK_SET:
-				$mapiWhence = STREAM_SEEK_SET;
-				break;
-
-			case SEEK_END:
-				$mapiWhence = STREAM_SEEK_END;
-				break;
-
-			default:
-				$mapiWhence = STREAM_SEEK_CUR;
-		}
+		$mapiWhence = match ($whence) {
+			SEEK_SET => STREAM_SEEK_SET,
+			SEEK_END => STREAM_SEEK_END,
+			default => STREAM_SEEK_CUR,
+		};
 
 		return mapi_stream_seek($this->mapistream, $offset, $mapiWhence);
 	}

@@ -175,7 +175,7 @@ class GSync {
 			throw new FatalMisconfigurationException("The BASE_PATH is not configured. Check if the config.php file is in place.");
 		}
 
-		if (substr(BASE_PATH, -1, 1) != "/") {
+		if (!str_ends_with(BASE_PATH, "/")) {
 			throw new FatalMisconfigurationException("The BASE_PATH should terminate with a '/'");
 		}
 
@@ -194,7 +194,7 @@ class GSync {
 			define('LOGBACKEND', 'filelog');
 		}
 
-		if (strtolower(LOGBACKEND) == 'syslog') {
+		if (strtolower((string) LOGBACKEND) == 'syslog') {
 			define('LOGBACKEND_CLASS', 'Syslog');
 			if (!defined('LOG_SYSLOG_FACILITY')) {
 				define('LOG_SYSLOG_FACILITY', LOG_LOCAL0);
@@ -220,13 +220,13 @@ class GSync {
 				throw new FatalMisconfigurationException("LOG_SYSLOG_HOST is defined but the LOG_SYSLOG_PORT does not seem to be valid.");
 			}
 		}
-		elseif (strtolower(LOGBACKEND) == 'filelog') {
+		elseif (strtolower((string) LOGBACKEND) == 'filelog') {
 			define('LOGBACKEND_CLASS', 'FileLog');
 			if (!defined('LOGFILEDIR')) {
 				throw new FatalMisconfigurationException("The LOGFILEDIR is not configured. Check if the config.php file is in place.");
 			}
 
-			if (substr(LOGFILEDIR, -1, 1) != "/") {
+			if (!str_ends_with(LOGFILEDIR, "/")) {
 				throw new FatalMisconfigurationException("The LOGFILEDIR should terminate with a '/'");
 			}
 
@@ -386,7 +386,7 @@ class GSync {
 					self::GetTopCollector()->AnnounceInformation("Run migration script!", true);
 				}
 
-				throw new ServiceUnavailableException(sprintf("The state version available to the %s is not the latest version - please run the state upgrade script. See release notes for more information.", get_class(GSync::$stateMachine)));
+				throw new ServiceUnavailableException(sprintf("The state version available to the %s is not the latest version - please run the state upgrade script. See release notes for more information.", GSync::$stateMachine::class));
 			}
 		}
 
@@ -502,7 +502,7 @@ class GSync {
 		}
 
 		$backendname = strtolower($backendname);
-		if (substr($backendname, 0, 7) !== 'backend') {
+		if (!str_starts_with($backendname, 'backend')) {
 			throw new FatalNotImplementedException(sprintf("Backend '%s' is not allowed", $backendname));
 		}
 
@@ -822,7 +822,7 @@ END;
 		}
 
 		$class = self::$supportedCommands[$commandCode][self::REQUESTHANDLER];
-		$handlerclass = REAL_BASE_PATH . "lib/request/" . strtolower($class) . ".php";
+		$handlerclass = REAL_BASE_PATH . "lib/request/" . strtolower((string) $class) . ".php";
 
 		if (is_file($handlerclass)) {
 			include $handlerclass;

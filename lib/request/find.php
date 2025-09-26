@@ -178,7 +178,7 @@ class Find extends RequestProcessor {
 				foreach ($rows as $u) {
 					// fetch the SyncObject for this result
 					$message = self::$backend->Fetch(false, $u['longid'], $cpo);
-					$mfolderid = self::$deviceManager->GetFolderIdForBackendId(bin2hex($message->ParentSourceKey));
+					$mfolderid = self::$deviceManager->GetFolderIdForBackendId(bin2hex((string) $message->ParentSourceKey));
 
 					self::$encoder->startTag(SYNC_FIND_RESULT);
 					self::$encoder->startTag(SYNC_FOLDERTYPE);

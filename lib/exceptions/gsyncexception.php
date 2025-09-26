@@ -25,7 +25,7 @@ class GSyncException extends Exception {
 		}
 
 		parent::__construct($message, (int) $code, $previous);
-		SLog::Write($logLevel, get_class($this) . ': ' . $message . ' - code: ' . $code . ' - file: ' . $this->getFile() . ':' . $this->getLine(), false);
+		SLog::Write($logLevel, static::class . ': ' . $message . ' - code: ' . $code . ' - file: ' . $this->getFile() . ':' . $this->getLine(), false);
 	}
 
 	public function getHTTPCodeString() {

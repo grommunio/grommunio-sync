@@ -46,6 +46,7 @@ class ContentParameters extends StateObject {
 	 *
 	 * @return mixed
 	 */
+	#[Override]
 	public function __call($name, $arguments) {
 		if ($name === "BodyPreference") {
 			return $this->BodyPreference($arguments[0]);

@@ -85,7 +85,7 @@ class Request {
 
 		// getUser is unfiltered, as everything is allowed.. even "/", "\" or ".."
 		if (isset($_GET["User"])) {
-			self::$getUser = strtolower($_GET["User"]);
+			self::$getUser = strtolower((string) $_GET["User"]);
 			if (defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
 				self::$getUser = Utils::GetLocalPartFromEmail(self::$getUser);
 			}
@@ -170,7 +170,7 @@ class Request {
 
 		// in base64 encoded query string user is not necessarily set
 		if (!isset(self::$getUser) && isset($_SERVER['PHP_AUTH_USER'])) {
-			list(self::$getUser) = Utils::SplitDomainUser(strtolower($_SERVER['PHP_AUTH_USER']));
+			[self::$getUser] = Utils::SplitDomainUser(strtolower((string) $_SERVER['PHP_AUTH_USER']));
 			if (defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
 				self::$getUser = Utils::GetLocalPartFromEmail(self::$getUser);
 			}
@@ -179,8 +179,8 @@ class Request {
 		// authUser & authPassword are unfiltered!
 		// split username & domain if received as one
 		if (isset($_SERVER['PHP_AUTH_USER'])) {
-			list(self::$authUserString, self::$authDomain) = Utils::SplitDomainUser($_SERVER['PHP_AUTH_USER']);
-			self::$authPassword = (isset($_SERVER['PHP_AUTH_PW'])) ? $_SERVER['PHP_AUTH_PW'] : "";
+			[self::$authUserString, self::$authDomain] = Utils::SplitDomainUser($_SERVER['PHP_AUTH_USER']);
+			self::$authPassword = $_SERVER['PHP_AUTH_PW'] ?? "";
 		}
 
 		// process impersonation
@@ -199,7 +199,7 @@ class Request {
 			preg_replace_callback(
 				'/(\-?\d+)(.?)/',
 				function ($m) {
-					self::$memoryLimit = $m[1] * pow(1024, strpos('BKMG', $m[2])) * self::MAXMEMORYUSAGE;
+					self::$memoryLimit = $m[1] * 1024 ** strpos('BKMG', $m[2]) * self::MAXMEMORYUSAGE;
 				},
 				strtoupper($memoryLimit)
 			);
@@ -211,7 +211,7 @@ class Request {
 	 */
 	public static function ProcessHeaders() {
 		self::$headers = array_change_key_case(apache_request_headers(), CASE_LOWER);
-		self::$useragent = (isset(self::$headers["user-agent"])) ? self::$headers["user-agent"] : self::UNKNOWN;
+		self::$useragent = self::$headers["user-agent"] ?? self::UNKNOWN;
 		if (!isset(self::$asProtocolVersion)) {
 			self::$asProtocolVersion = (isset(self::$headers["ms-asprotocolversion"])) ? self::filterEvilInput(self::$headers["ms-asprotocolversion"], self::NUMBERSDOT_ONLY) : GSync::GetLatestSupportedASVersion();
 		}
@@ -247,16 +247,16 @@ class Request {
 		if (defined('USE_CUSTOM_REMOTE_IP_HEADER') && USE_CUSTOM_REMOTE_IP_HEADER !== false) {
 			// make custom header compatible with Apache modphp
 			$header = $apacheHeader = strtolower(USE_CUSTOM_REMOTE_IP_HEADER);
-			if (substr($apacheHeader, 0, 5) === 'http_') {
+			if (str_starts_with($apacheHeader, 'http_')) {
 				$apacheHeader = substr($apacheHeader, 5);
 			}
 			$apacheHeader = str_replace("_", "-", $apacheHeader);
 			if (isset(self::$headers[$header]) || isset(self::$headers[$apacheHeader])) {
-				$remoteIP = isset(self::$headers[$header]) ? self::$headers[$header] : self::$headers[$apacheHeader];
+				$remoteIP = self::$headers[$header] ?? self::$headers[$apacheHeader];
 				// X-Forwarded-For may contain multiple IPs separated by comma: client, proxy1, proxy2.
 				// In such case we will only check the client IP.
-				if (strpos($remoteIP, ',') !== false) {
-					$remoteIP = trim(explode(',', $remoteIP)[0]);
+				if (str_contains((string) $remoteIP, ',')) {
+					$remoteIP = trim(explode(',', (string) $remoteIP)[0]);
 				}
 				$remoteIP = self::filterIP($remoteIP);
 				if ($remoteIP) {
@@ -284,11 +284,7 @@ class Request {
 	 * @return bool|handle false if not available
 	 */
 	public static function GetInputStream() {
-		if (isset(self::$input)) {
-			return self::$input;
-		}
-
-		return false;
+		return self::$input ?? false;
 	}
 
 	/**
@@ -297,11 +293,7 @@ class Request {
 	 * @return bool|handle false if not available
 	 */
 	public static function GetOutputStream() {
-		if (isset(self::$output)) {
-			return self::$output;
-		}
-
-		return false;
+		return self::$output ?? false;
 	}
 
 	/**
@@ -310,11 +302,7 @@ class Request {
 	 * @return string
 	 */
 	public static function GetMethod() {
-		if (isset(self::$method)) {
-			return self::$method;
-		}
-
-		return self::UNKNOWN;
+		return self::$method ?? self::UNKNOWN;
 	}
 
 	/**
@@ -323,11 +311,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetGETUser() {
-		if (isset(self::$getUser)) {
-			return self::$getUser;
-		}
-
-		return self::UNKNOWN;
+		return self::$getUser ?? self::UNKNOWN;
 	}
 
 	/**
@@ -336,11 +320,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetGETItemId() {
-		if (isset(self::$itemId)) {
-			return self::$itemId;
-		}
-
-		return false;
+		return self::$itemId ?? false;
 	}
 
 	/**
@@ -349,11 +329,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetGETCollectionId() {
-		if (isset(self::$collectionId)) {
-			return self::$collectionId;
-		}
-
-		return false;
+		return self::$collectionId ?? false;
 	}
 
 	/**
@@ -362,11 +338,7 @@ class Request {
 	 * @return bool
 	 */
 	public static function GetGETSaveInSent() {
-		if (isset(self::$saveInSent)) {
-			return self::$saveInSent;
-		}
-
-		return true;
+		return self::$saveInSent ?? true;
 	}
 
 	/**
@@ -375,11 +347,7 @@ class Request {
 	 * @return bool
 	 */
 	public static function GetGETAcceptMultipart() {
-		if (isset(self::$acceptMultipart)) {
-			return self::$acceptMultipart;
-		}
-
-		return false;
+		return self::$acceptMultipart ?? false;
 	}
 
 	/**
@@ -388,11 +356,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetGETAttachmentName() {
-		if (isset(self::$attachmentName)) {
-			return self::$attachmentName;
-		}
-
-		return false;
+		return self::$attachmentName ?? false;
 	}
 
 	/**
@@ -416,11 +380,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetAuthUserString() {
-		if (isset(self::$authUserString)) {
-			return self::$authUserString;
-		}
-
-		return false;
+		return self::$authUserString ?? false;
 	}
 
 	/**
@@ -429,11 +389,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetImpersonatedUser() {
-		if (isset(self::$impersonatedUser)) {
-			return self::$impersonatedUser;
-		}
-
-		return false;
+		return self::$impersonatedUser ?? false;
 	}
 
 	/**
@@ -442,11 +398,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetAuthUser() {
-		if (isset(self::$authUser)) {
-			return self::$authUser;
-		}
-
-		return false;
+		return self::$authUser ?? false;
 	}
 
 	/**
@@ -455,11 +407,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetAuthDomain() {
-		if (isset(self::$authDomain)) {
-			return self::$authDomain;
-		}
-
-		return false;
+		return self::$authDomain ?? false;
 	}
 
 	/**
@@ -468,11 +416,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetAuthPassword() {
-		if (isset(self::$authPassword)) {
-			return self::$authPassword;
-		}
-
-		return false;
+		return self::$authPassword ?? false;
 	}
 
 	/**
@@ -481,11 +425,7 @@ class Request {
 	 * @return string
 	 */
 	public static function GetRemoteAddr() {
-		if (isset(self::$remoteAddr)) {
-			return self::$remoteAddr;
-		}
-
-		return "UNKNOWN";
+		return self::$remoteAddr ?? "UNKNOWN";
 	}
 
 	/**
@@ -494,11 +434,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetCommand() {
-		if (isset(self::$command)) {
-			return self::$command;
-		}
-
-		return false;
+		return self::$command ?? false;
 	}
 
 	/**
@@ -520,11 +456,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetDeviceID() {
-		if (isset(self::$devid)) {
-			return self::$devid;
-		}
-
-		return false;
+		return self::$devid ?? false;
 	}
 
 	/**
@@ -533,11 +465,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetDeviceType() {
-		if (isset(self::$devtype)) {
-			return self::$devtype;
-		}
-
-		return false;
+		return self::$devtype ?? false;
 	}
 
 	/**
@@ -546,11 +474,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetProtocolVersion() {
-		if (isset(self::$asProtocolVersion)) {
-			return self::$asProtocolVersion;
-		}
-
-		return false;
+		return self::$asProtocolVersion ?? false;
 	}
 
 	/**
@@ -559,11 +483,7 @@ class Request {
 	 * @return bool|string false if not available
 	 */
 	public static function GetUserAgent() {
-		if (isset(self::$useragent)) {
-			return self::$useragent;
-		}
-
-		return self::UNKNOWN;
+		return self::$useragent ?? self::UNKNOWN;
 	}
 
 	/**
@@ -572,11 +492,7 @@ class Request {
 	 * @return bool|int false if not available
 	 */
 	public static function GetPolicyKey() {
-		if (isset(self::$policykey)) {
-			return self::$policykey;
-		}
-
-		return false;
+		return self::$policykey ?? false;
 	}
 
 	/**
@@ -653,11 +569,11 @@ class Request {
 
 		if (!isset(self::$expectedConnectionTimeout)) {
 			// Apple and Windows Phone have higher timeouts (4min = 240sec)
-			if (stripos(SYNC_TIMEOUT_LONG_DEVICETYPES, self::GetDeviceType()) !== false) {
+			if (stripos(SYNC_TIMEOUT_LONG_DEVICETYPES, (string) self::GetDeviceType()) !== false) {
 				self::$expectedConnectionTimeout = 210;
 			}
 			// Samsung devices have a intermediate timeout (90sec)
-			elseif (stripos(SYNC_TIMEOUT_MEDIUM_DEVICETYPES, self::GetDeviceType()) !== false) {
+			elseif (stripos(SYNC_TIMEOUT_MEDIUM_DEVICETYPES, (string) self::GetDeviceType()) !== false) {
 				self::$expectedConnectionTimeout = 85;
 			}
 			else {
@@ -810,7 +726,7 @@ class Request {
 		 *                      variable    - value of the parameter
 		 *
 		 */
-		$decoded = base64_decode($_SERVER['QUERY_STRING']);
+		$decoded = base64_decode((string) $_SERVER['QUERY_STRING']);
 		$devIdLength = ord($decoded[4]); // device ID length
 		$polKeyLength = ord($decoded[5 + $devIdLength]); // policy key length
 		$devTypeLength = ord($decoded[6 + $devIdLength + $polKeyLength]); // device type length

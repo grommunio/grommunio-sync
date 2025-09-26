@@ -941,7 +941,7 @@ class DeviceManager extends InterProcessData {
 				// fallback for old grosync like devicedata
 				if (($device instanceof StateObject) && isset($device->devices) && is_array($device->devices)) {
 					SLog::Write(LOGLEVEL_INFO, "Found old style device, converting...");
-					list($_deviceuser, $_domain) = Utils::SplitDomainUser(Request::GetGETUser());
+					[$_deviceuser, $_domain] = Utils::SplitDomainUser(Request::GetGETUser());
 					if (!isset($device->data->devices[$_deviceuser])) {
 						SLog::Write(LOGLEVEL_INFO, "Using old style device for this request and updating when concluding");
 						$device = $device->devices[$_deviceuser];
@@ -961,10 +961,10 @@ class DeviceManager extends InterProcessData {
 				}
 			}
 		}
-		catch (StateNotFoundException $snfex) {
+		catch (StateNotFoundException) {
 			$this->hierarchySyncRequired = true;
 		}
-		catch (UnavailableException $uaex) {
+		catch (UnavailableException) {
 			// This is temporary and can be ignored e.g. in PING.
 			// If the hash was not available before we treat it like a StateNotFoundException.
 			if ($this->deviceHash === false) {
@@ -992,7 +992,7 @@ class DeviceManager extends InterProcessData {
 			$folderid = $this->getLatestFolder();
 		}
 
-		$class = get_class($message);
+		$class = $message::class;
 
 		$brokenMessage = new StateObject();
 		$brokenMessage->id = $id;

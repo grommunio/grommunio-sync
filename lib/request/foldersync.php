@@ -51,10 +51,7 @@ class FolderSync extends RequestProcessor {
 			// there are no SyncParameters for the hierarchy, but we use it to save the latest synckeys
 			$spa = self::$deviceManager->GetStateManager()->GetSynchedFolderState(false);
 		}
-		catch (StateNotFoundException $snfex) {
-			$status = SYNC_FSSTATUS_SYNCKEYERROR;
-		}
-		catch (StateInvalidException $sive) {
+		catch (StateInvalidException|StateNotFoundException) {
 			$status = SYNC_FSSTATUS_SYNCKEYERROR;
 		}
 

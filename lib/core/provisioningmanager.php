@@ -227,7 +227,7 @@ class ProvisioningManager extends InterProcessData {
 		$ret = file_get_contents(ADMIN_API_WIPE_ENDPOINT . self::$user . "?devices=" . self::$devid, false, stream_context_create($opts));
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetProvisioningWipeStatus() admin API response: %s", trim(Utils::PrintAsString($ret))));
 
-		return strpos($http_response_header[0], "201") !== false;
+		return str_contains($http_response_header[0], "201");
 	}
 
 	/**

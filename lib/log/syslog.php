@@ -98,7 +98,7 @@ class Syslog extends Log {
 			if (!isset($trace['file'])) {
 				continue;
 			}
-			if (strpos($trace['file'], REAL_BASE_PATH . 'backend/') !== false) {
+			if (str_contains($trace['file'], REAL_BASE_PATH . 'backend/')) {
 				preg_match('/\/backend\/([a-zA-Z]*)/', $trace['file'], $match);
 				if (isset($match[1])) {
 					return $this->GetProgramName() . '/' . $match[1];
@@ -120,33 +120,17 @@ class Syslog extends Log {
 	 * @return int one of many LOG_* syslog level
 	 */
 	protected function GetGsyncLogLevelToSyslogLogLevel($loglevel) {
-		switch ($loglevel) {
-			case LOGLEVEL_FATAL:
-				return LOG_ALERT;
-
-			case LOGLEVEL_ERROR:
-				return LOG_ERR;
-
-			case LOGLEVEL_WARN:
-				return LOG_WARNING;
-
-			case LOGLEVEL_INFO:
-				return LOG_INFO;
-
-			case LOGLEVEL_DEBUG:
-				return LOG_DEBUG;
-
-			case LOGLEVEL_WBXML:
-				return LOG_DEBUG;
-
-			case LOGLEVEL_DEVICEID:
-				return LOG_DEBUG;
-
-			case LOGLEVEL_WBXMLSTACK:
-				return LOG_DEBUG;
-		}
-
-		return null;
+		return match ($loglevel) {
+			LOGLEVEL_FATAL => LOG_ALERT,
+			LOGLEVEL_ERROR => LOG_ERR,
+			LOGLEVEL_WARN => LOG_WARNING,
+			LOGLEVEL_INFO => LOG_INFO,
+			LOGLEVEL_DEBUG => LOG_DEBUG,
+			LOGLEVEL_WBXML => LOG_DEBUG,
+			LOGLEVEL_DEVICEID => LOG_DEBUG,
+			LOGLEVEL_WBXMLSTACK => LOG_DEBUG,
+			default => null,
+		};
 	}
 
 	/**

@@ -43,7 +43,7 @@ class StateObject implements JsonSerializable {
 	 * @param mixed $value
 	 */
 	public function __set($name, $value) {
-		$lname = strtolower($name);
+		$lname = strtolower((string) $name);
 		if (isset($this->data[$lname]) &&
 				(
 					(is_scalar($value) && !is_array($value) && $this->data[$lname] === $value) ||
@@ -64,7 +64,7 @@ class StateObject implements JsonSerializable {
 	 * @param mixed $name
 	 */
 	public function __get($name) {
-		$lname = strtolower($name);
+		$lname = strtolower((string) $name);
 
 		if (array_key_exists($lname, $this->data)) {
 			return $this->data[$lname];
@@ -83,7 +83,7 @@ class StateObject implements JsonSerializable {
 	 * @param mixed $name
 	 */
 	public function __isset($name) {
-		return isset($this->data[strtolower($name)]);
+		return isset($this->data[strtolower((string) $name)]);
 	}
 
 	/**
@@ -93,7 +93,7 @@ class StateObject implements JsonSerializable {
 	 */
 	public function __unset($name) {
 		if (isset($this->{$name})) {
-			unset($this->data[strtolower($name)]);
+			unset($this->data[strtolower((string) $name)]);
 			$this->changed = true;
 		}
 	}
@@ -109,7 +109,7 @@ class StateObject implements JsonSerializable {
 	 * @return mixed
 	 */
 	public function __call($name, $arguments) {
-		$name = strtolower($name);
+		$name = strtolower((string) $name);
 		$operator = substr($name, 0, 3);
 		$var = substr($name, 3);
 
@@ -136,11 +136,7 @@ class StateObject implements JsonSerializable {
 
 		// getter with one argument = return variable if set, else the argument
 		if ($operator == "get" && count($arguments) == 1) {
-			if (isset($this->{$var})) {
-				return $this->{$var};
-			}
-
-			return $arguments[0];
+			return $this->{$var} ?? $arguments[0];
 		}
 
 		if ($operator == "has" && count($arguments) == 0) {
@@ -172,7 +168,7 @@ class StateObject implements JsonSerializable {
 	 *
 	 * @throws StateInvalidException
 	 */
-	public static function ThrowStateInvalidException() {
+	public static function ThrowStateInvalidException(): never {
 		throw new StateInvalidException("Unserialization failed as class was not found or not compatible");
 	}
 
@@ -183,7 +179,7 @@ class StateObject implements JsonSerializable {
 	 */
 	public function jsonSerialize(): mixed {
 		return [
-			'gsSyncStateClass' => get_class($this),
+			'gsSyncStateClass' => static::class,
 			'data' => $this->data,
 		];
 	}

@@ -22,7 +22,7 @@ setlocale(LC_ALL, "");
  * MAIN
  */
 declare(ticks=1);
-define('BASE_PATH_CLI', dirname(__FILE__) . "/");
+define('BASE_PATH_CLI', __DIR__ . "/");
 set_include_path(get_include_path() . PATH_SEPARATOR . BASE_PATH_CLI);
 
 if (!defined('GSYNC_CONFIG')) {
@@ -51,7 +51,7 @@ try {
 	}
 
 	if ($zpt->IsAvailable()) {
-		pcntl_signal(SIGINT, [$zpt, "SignalHandler"]);
+		pcntl_signal(SIGINT, $zpt->SignalHandler(...));
 		$zpt->run();
 		$zpt->scrClear();
 		system("stty sane");
@@ -61,7 +61,7 @@ try {
 	}
 }
 catch (GSyncException $zpe) {
-	fwrite(STDERR, get_class($zpe) . ": " . $zpe->getMessage() . "\n");
+	fwrite(STDERR, $zpe::class . ": " . $zpe->getMessage() . "\n");
 
 	exit(1);
 }
@@ -248,8 +248,8 @@ class GSyncTop {
 
 						if ($this->filter !== false) {
 							$f = $this->filter;
-							if (!($line["pid"] == $f || $line["ip"] == $f || strtolower($line['command']) == strtolower($f) || preg_match("/.*?{$f}.*?/i", $line['user']) ||
-								preg_match("/.*?{$f}.*?/i", $line['devagent']) || preg_match("/.*?{$f}.*?/i", $line['devid']) || preg_match("/.*?{$f}.*?/i", $line['addinfo']))) {
+							if (!($line["pid"] == $f || $line["ip"] == $f || strtolower($line['command']) == strtolower($f) || preg_match("/.*?{$f}.*?/i", (string) $line['user']) ||
+								preg_match("/.*?{$f}.*?/i", (string) $line['devagent']) || preg_match("/.*?{$f}.*?/i", (string) $line['devid']) || preg_match("/.*?{$f}.*?/i", (string) $line['addinfo']))) {
 								continue;
 							}
 						}
@@ -278,10 +278,10 @@ class GSyncTop {
 									$line['pid'] == $f ||
 									$line['ip'] == $f ||
 									strtolower($line['command']) == strtolower($f) ||
-									preg_match("/.*?{$f}.*?/i", $line['user']) ||
-									preg_match("/.*?{$f}.*?/i", $line['devagent']) ||
-									preg_match("/.*?{$f}.*?/i", $line['devid']) ||
-									preg_match("/.*?{$f}.*?/i", $line['addinfo'])
+									preg_match("/.*?{$f}.*?/i", (string) $line['user']) ||
+									preg_match("/.*?{$f}.*?/i", (string) $line['devagent']) ||
+									preg_match("/.*?{$f}.*?/i", (string) $line['devid']) ||
+									preg_match("/.*?{$f}.*?/i", (string) $line['addinfo'])
 								)) {
 								continue;
 							}
@@ -499,7 +499,7 @@ class GSyncTop {
 	 * Waits for a keystroke and processes the requested command.
 	 */
 	private function readLineProcess() {
-		$ans = explode("^^", `bash -c "read -n 1 -t 1 ANS ; echo \\\$?^^\\\$ANS;"`);
+		$ans = explode("^^", (string) `bash -c "read -n 1 -t 1 ANS ; echo \\\$?^^\\\$ANS;"`);
 
 		if ($ans[0] < 128) {
 			if (isset($ans[1]) && bin2hex(trim($ans[1])) == "7f") {
@@ -507,7 +507,7 @@ class GSyncTop {
 			}
 
 			if (isset($ans[1]) && $ans[1] != "") {
-				$this->action .= trim(preg_replace("/[^A-Za-z0-9:]/", "", $ans[1]));
+				$this->action .= trim((string) preg_replace("/[^A-Za-z0-9:]/", "", $ans[1]));
 			}
 
 			if (bin2hex($ans[0]) == "30" && bin2hex($ans[1]) == "0a") {

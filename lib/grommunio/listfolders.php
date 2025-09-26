@@ -126,7 +126,7 @@ function listfolders_zarafa_admin_setup($mapi, $user, $pass, $sslcert_file, $ssl
 function listfolders_getlist($adminStore, $session, $user) {
 	global $supported_classes;
 
-	if (strtoupper($user) == 'SYSTEM') {
+	if (strtoupper((string) $user) == 'SYSTEM') {
 		// Find the public store store
 		$storestables = @mapi_getmsgstorestable($session);
 		$result = @mapi_last_hresult();
@@ -162,7 +162,7 @@ function listfolders_getlist($adminStore, $session, $user) {
 		exit(1);
 	}
 
-	if (strtoupper($user) != 'SYSTEM') {
+	if (strtoupper((string) $user) != 'SYSTEM') {
 		$inbox = mapi_msgstore_getreceivefolder($userStore);
 		if (mapi_last_hresult() != NOERROR) {
 			printf("Could not open inbox for %s (0x%08X). The script will exit.\n", $user, mapi_last_hresult());
@@ -186,7 +186,7 @@ function listfolders_getlist($adminStore, $session, $user) {
 		}
 
 		// handle some special folders
-		if ((strtoupper($user) != 'SYSTEM') &&
+		if ((strtoupper((string) $user) != 'SYSTEM') &&
 			((isset($inboxProps[PR_SOURCE_KEY]) && $folder[PR_SOURCE_KEY] == $inboxProps[PR_SOURCE_KEY]) ||
 			$folder[PR_ENTRYID] == $storeProps[PR_IPM_SENTMAIL_ENTRYID] ||
 			$folder[PR_ENTRYID] == $storeProps[PR_IPM_WASTEBASKET_ENTRYID])) {
@@ -195,9 +195,9 @@ function listfolders_getlist($adminStore, $session, $user) {
 
 		if (isset($folder[PR_CONTAINER_CLASS]) && array_key_exists($folder[PR_CONTAINER_CLASS], $supported_classes)) {
 			echo "Folder name:\t" . $folder[PR_DISPLAY_NAME] . "\n";
-			echo "Folder ID:\t" . bin2hex($folder[PR_SOURCE_KEY]) . "\n";
+			echo "Folder ID:\t" . bin2hex((string) $folder[PR_SOURCE_KEY]) . "\n";
 			echo "Type:\t\t" . $supported_classes[$folder[PR_CONTAINER_CLASS]] . "\n";
-			echo "ShortId:\t" . generateFolderHash(bin2hex($folder[PR_SOURCE_KEY]), 'U') . "\n";
+			echo "ShortId:\t" . generateFolderHash(bin2hex((string) $folder[PR_SOURCE_KEY]), 'U') . "\n";
 			echo "\n";
 		}
 	}

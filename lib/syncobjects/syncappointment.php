@@ -304,6 +304,7 @@ class SyncAppointment extends SyncObject {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function Check($logAsDebug = false) {
 		// Fix starttime and endtime if they are not set on NEW appointments.
 		if ($this->flags === SYNC_NEWMESSAGE) {

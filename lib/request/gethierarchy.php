@@ -26,7 +26,7 @@ class GetHierarchy extends RequestProcessor {
 
 			// TODO execute $data->Check() to see if SyncObject is valid
 		}
-		catch (StatusException $ex) {
+		catch (StatusException) {
 			return false;
 		}
 

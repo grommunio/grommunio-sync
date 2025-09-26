@@ -10,7 +10,6 @@
 
 class ImportChangesStream implements IImportChanges {
 	private $encoder;
-	private $objclass;
 	private $seenObjects;
 	private $importedMsgs;
 	private $checkForIgnoredMessages;
@@ -19,13 +18,12 @@ class ImportChangesStream implements IImportChanges {
 	/**
 	 * Constructor of the StreamImporter.
 	 *
-	 * @param WBXMLEncoder $encoder Objects are streamed to this encoder
-	 * @param SyncObject   $class   SyncObject class (only these are accepted when streaming content messages)
+	 * @param WBXMLEncoder $encoder  Objects are streamed to this encoder
+	 * @param SyncObject   $objclass SyncObject class (only these are accepted when streaming content messages)
 	 */
-	public function __construct(&$encoder, $class) {
+	public function __construct(&$encoder, private $objclass) {
 		$this->encoder = &$encoder;
-		$this->objclass = $class;
-		$this->classAsString = (is_object($class)) ? get_class($class) : '';
+		$this->classAsString = (is_object($this->objclass)) ? $this->objclass::class : '';
 		$this->seenObjects = [];
 		$this->importedMsgs = 0;
 		$this->checkForIgnoredMessages = true;

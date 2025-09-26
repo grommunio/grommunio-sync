@@ -19,7 +19,6 @@
  * the PDA are always e-mail folders.
  */
 class ImportChangesICS implements IImportChanges {
-	private $folderid;
 	private $folderidHex;
 	private $store;
 	private $session;
@@ -44,18 +43,17 @@ class ImportChangesICS implements IImportChanges {
 	 *
 	 * @throws StatusException
 	 */
-	public function __construct($session, $store, $folderid = false) {
+	public function __construct($session, $store, private $folderid = false) {
 		$this->session = $session;
 		$this->store = $store;
-		$this->folderid = $folderid;
-		$this->folderidHex = bin2hex($folderid);
+		$this->folderidHex = bin2hex($this->folderid);
 		$this->conflictsLoaded = false;
 		$this->cutoffdate = false;
 		$this->contentClass = false;
 		$this->prefix = '';
 
-		if ($folderid) {
-			$entryid = mapi_msgstore_entryidfromsourcekey($store, $folderid);
+		if ($this->folderid) {
+			$entryid = mapi_msgstore_entryidfromsourcekey($store, $this->folderid);
 			$folderidForBackendId = GSync::GetDeviceManager()->GetFolderIdForBackendId($this->folderidHex);
 			// Only append backend id if the mapping backendid<->folderid is available.
 			if ($folderidForBackendId != $this->folderidHex) {
@@ -82,12 +80,12 @@ class ImportChangesICS implements IImportChanges {
 
 			// We throw an general error SYNC_FSSTATUS_CODEUNKNOWN (12) which is also SYNC_STATUS_FOLDERHIERARCHYCHANGED (12)
 			// if this happened while doing content sync, the mobile will try to resync the folderhierarchy
-			throw new StatusException(sprintf("ImportChangesICS('%s','%s'): Error, unable to open folder: 0x%X", $session, bin2hex($folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
+			throw new StatusException(sprintf("ImportChangesICS('%s','%s'): Error, unable to open folder: 0x%X", $session, bin2hex($this->folderid), mapi_last_hresult()), SYNC_FSSTATUS_CODEUNKNOWN);
 		}
 
 		$this->mapiprovider = new MAPIProvider($this->session, $this->store);
 
-		if ($folderid) {
+		if ($this->folderid) {
 			$this->importer = mapi_openproperty($folder, PR_COLLECTOR, IID_IExchangeImportContentsChanges, 0, 0);
 		}
 		else {
@@ -372,12 +370,12 @@ class ImportChangesICS implements IImportChanges {
 		$flags = 0;
 		$props = [];
 		$props[PR_PARENT_SOURCE_KEY] = $this->folderid;
-		$messageClass = get_class($message);
+		$messageClass = $message::class;
 
 		// set the PR_SOURCE_KEY if available or mark it as new message
 		if ($id) {
-			list(, $sk) = Utils::SplitMessageId($id);
-			$props[PR_SOURCE_KEY] = hex2bin($sk);
+			[, $sk] = Utils::SplitMessageId($id);
+			$props[PR_SOURCE_KEY] = hex2bin((string) $sk);
 
 			// check if message is in the synchronization interval and/or shared+private
 			if (!$this->isModificationAllowed($sk)) {
@@ -410,7 +408,7 @@ class ImportChangesICS implements IImportChanges {
 			// grommunio-sync #113: workaround blocking notifications on this item
 			$sourcekeyprops = mapi_getprops($mapimessage, [PR_ENTRYID]);
 			if (isset($sourcekeyprops[PR_ENTRYID])) {
-				GSync::ReplyCatchMark(bin2hex($sourcekeyprops[PR_ENTRYID]));
+				GSync::ReplyCatchMark(bin2hex((string) $sourcekeyprops[PR_ENTRYID]));
 			}
 
 			$response = $this->mapiprovider->SetMessage($mapimessage, $message);
@@ -422,7 +420,7 @@ class ImportChangesICS implements IImportChanges {
 
 			$sourcekeyprops = mapi_getprops($mapimessage, [PR_SOURCE_KEY]);
 
-			$response->serverid = $this->prefix . bin2hex($sourcekeyprops[PR_SOURCE_KEY]);
+			$response->serverid = $this->prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
 
 			return $response;
 		}
@@ -439,7 +437,7 @@ class ImportChangesICS implements IImportChanges {
 	 * @return bool
 	 */
 	public function ImportMessageDeletion($id, $asSoftDelete = false) {
-		list(, $sk) = Utils::SplitMessageId($id);
+		[, $sk] = Utils::SplitMessageId($id);
 
 		// check if message is in the synchronization interval and/or shared+private
 		if (!$this->isModificationAllowed($sk)) {
@@ -458,7 +456,7 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		// check if we need to do actions before deleting this message (e.g. send meeting cancellations to attendees)
-		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $this->folderid, hex2bin($sk));
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $this->folderid, hex2bin((string) $sk));
 		if ($entryid) {
 			// open the source message
 			$mapimessage = mapi_msgstore_openentry($this->store, $entryid);
@@ -468,7 +466,7 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		// do a 'soft' delete so people can un-delete if necessary
-		mapi_importcontentschanges_importmessagedeletion($this->importer, 1, [hex2bin($sk)]);
+		mapi_importcontentschanges_importmessagedeletion($this->importer, 1, [hex2bin((string) $sk)]);
 		if (mapi_last_hresult()) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportMessageDeletion('%s'): Error updating object: 0x%X", $sk, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
 		}
@@ -490,7 +488,7 @@ class ImportChangesICS implements IImportChanges {
 	 */
 	public function ImportMessageReadFlag($id, $flags, $categories = []) {
 		$response = new SyncMailResponse();
-		list($fsk, $sk) = Utils::SplitMessageId($id);
+		[$fsk, $sk] = Utils::SplitMessageId($id);
 
 		// if $fsk is set, we convert it into a backend id.
 		if ($fsk) {
@@ -517,12 +515,12 @@ class ImportChangesICS implements IImportChanges {
 			 */
 
 			// grommunio-sync #113: workaround blocking notifications on this item
-			$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($fsk), hex2bin($sk));
+			$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($fsk), hex2bin((string) $sk));
 			if ($entryid !== false) {
 				GSync::ReplyCatchMark(bin2hex($entryid));
 			}
 
-			$readstate = ["sourcekey" => hex2bin($sk), "flags" => $flags];
+			$readstate = ["sourcekey" => hex2bin((string) $sk), "flags" => $flags];
 
 			if (!mapi_importcontentschanges_importperuserreadstatechange($this->importer, [$readstate])) {
 				throw new StatusException(sprintf("ImportChangesICS->ImportMessageReadFlag('%s','%d'): Error setting read state: 0x%X", $id, $flags, mapi_last_hresult()), SYNC_STATUS_OBJECTNOTFOUND);
@@ -534,7 +532,7 @@ class ImportChangesICS implements IImportChanges {
 				throw new StatusException(sprintf("ImportChangesICS->ImportMessageReadFlag('%s','%d'): Error setting read state. The message is in another folder but id is unknown as no short folder id is available. Please remove your device states to fully resync your device. Operation ignored.", $id, $flags), SYNC_STATUS_OBJECTNOTFOUND);
 			}
 			$store = GSync::GetBackend()->GetMAPIStoreForFolderId(GSync::GetAdditionalSyncFolderStore($fsk), $fsk);
-			$entryid = mapi_msgstore_entryidfromsourcekey($store, hex2bin($fsk), hex2bin($sk));
+			$entryid = mapi_msgstore_entryidfromsourcekey($store, hex2bin((string) $fsk), hex2bin((string) $sk));
 			$realMessage = mapi_msgstore_openentry($store, $entryid);
 			$flag = 0;
 			if ($flags == 0) {
@@ -565,13 +563,13 @@ class ImportChangesICS implements IImportChanges {
 	 * @throws StatusException
 	 */
 	public function ImportMessageMove($id, $newfolder) {
-		list(, $sk) = Utils::SplitMessageId($id);
+		[, $sk] = Utils::SplitMessageId($id);
 		if (strtolower($newfolder) == strtolower(bin2hex($this->folderid))) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportMessageMove('%s','%s'): Error, source and destination are equal", $id, $newfolder), SYNC_MOVEITEMSSTATUS_SAMESOURCEANDDEST);
 		}
 
 		// Get the entryid of the message we're moving
-		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $this->folderid, hex2bin($sk));
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, $this->folderid, hex2bin((string) $sk));
 		$srcmessage = false;
 
 		if ($entryid) {
@@ -653,7 +651,7 @@ class ImportChangesICS implements IImportChanges {
 				$prefix = $destShortId . ":";
 			}
 
-			return $prefix . bin2hex($sourcekeyprops[PR_SOURCE_KEY]);
+			return $prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
 		}
 
 		return false;
@@ -673,7 +671,7 @@ class ImportChangesICS implements IImportChanges {
 	 * @throws StatusException
 	 */
 	public function ImportFolderChange($folder) {
-		$id = isset($folder->BackendId) ? $folder->BackendId : false;
+		$id = $folder->BackendId ?? false;
 		$parent = $folder->parentid;
 		$parent_org = $folder->parentid;
 		$displayname = $folder->displayname;
@@ -696,7 +694,7 @@ class ImportChangesICS implements IImportChanges {
 				}
 			}
 			else {
-				$parentfentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($parent));
+				$parentfentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $parent));
 			}
 
 			if (!$parentfentryid) {
@@ -718,7 +716,7 @@ class ImportChangesICS implements IImportChanges {
 
 			$props = mapi_getprops($newfolder, [PR_SOURCE_KEY]);
 			if (isset($props[PR_SOURCE_KEY])) {
-				$folder->BackendId = bin2hex($props[PR_SOURCE_KEY]);
+				$folder->BackendId = bin2hex((string) $props[PR_SOURCE_KEY]);
 				$folderOrigin = DeviceManager::FLD_ORIGIN_USER;
 				if (GSync::GetBackend()->GetImpersonatedUser()) {
 					$folderOrigin = DeviceManager::FLD_ORIGIN_IMPERSONATED;
@@ -733,7 +731,7 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		// open folder for update
-		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($id));
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $id));
 		if (!$entryid) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportFolderChange('%s','%s','%s'): Error, unable to open folder (no entry id): 0x%X", Utils::PrintAsString($folder->serverid), $folder->parentid, $displayname, mapi_last_hresult()), SYNC_FSSTATUS_PARENTNOTFOUND);
 		}
@@ -765,12 +763,12 @@ class ImportChangesICS implements IImportChanges {
 			$mapifolder = mapi_msgstore_openentry($this->store, $parentfentryid);
 
 			$rootfolderprops = mapi_getprops($mapifolder, [PR_SOURCE_KEY]);
-			$parent = bin2hex($rootfolderprops[PR_SOURCE_KEY]);
+			$parent = bin2hex((string) $rootfolderprops[PR_SOURCE_KEY]);
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportFolderChange(): resolved AS parent '0' to sourcekey '%s'", $parent));
 		}
 
 		// a changed parent id means that the folder should be moved
-		if (bin2hex($props[PR_PARENT_SOURCE_KEY]) !== $parent) {
+		if (bin2hex((string) $props[PR_PARENT_SOURCE_KEY]) !== $parent) {
 			$sourceparentfentryid = mapi_msgstore_entryidfromsourcekey($this->store, $props[PR_PARENT_SOURCE_KEY]);
 			if (!$sourceparentfentryid) {
 				throw new StatusException(sprintf("ImportChangesICS->ImportFolderChange('%s','%s','%s'): Error, unable to open parent source folder (no entry id): 0x%X", Utils::PrintAsString($folder->serverid), $folder->parentid, $displayname, mapi_last_hresult()), SYNC_FSSTATUS_PARENTNOTFOUND);
@@ -781,7 +779,7 @@ class ImportChangesICS implements IImportChanges {
 				throw new StatusException(sprintf("ImportChangesICS->ImportFolderChange('%s','%s','%s'): Error, unable to open parent source folder (open entry): 0x%X", Utils::PrintAsString($folder->serverid), $folder->parentid, $displayname, mapi_last_hresult()), SYNC_FSSTATUS_PARENTNOTFOUND);
 			}
 
-			$destparentfentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($parent));
+			$destparentfentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $parent));
 			if (!$sourceparentfentryid) {
 				throw new StatusException(sprintf("ImportChangesICS->ImportFolderChange('%s','%s','%s'): Error, unable to open destination folder (no entry id): 0x%X", Utils::PrintAsString($folder->serverid), $folder->parentid, $displayname, mapi_last_hresult()), SYNC_FSSTATUS_SERVERERROR);
 			}
@@ -800,7 +798,7 @@ class ImportChangesICS implements IImportChanges {
 			if ($folder->parentid != 0) {
 				$folder->parentid = GSync::GetDeviceManager()->GetFolderIdForBackendId($parent);
 			}
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportFolderChange(): Moved folder '%s' with id: %s/%s from: %s to: %s/%s", $displayname, $folder->serverid, $folder->BackendId, bin2hex($props[PR_PARENT_SOURCE_KEY]), $folder->parentid, $parent_org));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportFolderChange(): Moved folder '%s' with id: %s/%s from: %s to: %s/%s", $displayname, $folder->serverid, $folder->BackendId, bin2hex((string) $props[PR_PARENT_SOURCE_KEY]), $folder->parentid, $parent_org));
 
 			return $folder;
 		}
@@ -829,10 +827,10 @@ class ImportChangesICS implements IImportChanges {
 	 */
 	public function ImportFolderDeletion($folder) {
 		$id = $folder->BackendId;
-		$parent = isset($folder->parentid) ? $folder->parentid : false;
+		$parent = $folder->parentid ?? false;
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportFolderDeletion('%s','%s'): importing folder deletetion", $id, $parent));
 
-		$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($id));
+		$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $id));
 		if (!$folderentryid) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportFolderDeletion('%s','%s'): Error, unable to resolve folder: 0x%X", $id, $parent, mapi_last_hresult()), SYNC_FSSTATUS_FOLDERDOESNOTEXIST);
 		}
@@ -844,7 +842,7 @@ class ImportChangesICS implements IImportChanges {
 			throw new StatusException(sprintf("ImportChangesICS->ImportFolderDeletion('%s','%s'): Error deleting system/default folder", $id, $parent), SYNC_FSSTATUS_SYSTEMFOLDER);
 		}
 
-		$ret = mapi_importhierarchychanges_importfolderdeletion($this->importer, 0, [PR_SOURCE_KEY => hex2bin($id)]);
+		$ret = mapi_importhierarchychanges_importfolderdeletion($this->importer, 0, [PR_SOURCE_KEY => hex2bin((string) $id)]);
 		if (!$ret) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportFolderDeletion('%s','%s'): Error deleting folder: 0x%X", $id, $parent, mapi_last_hresult()), SYNC_FSSTATUS_SERVERERROR);
 		}

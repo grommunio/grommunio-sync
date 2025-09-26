@@ -40,7 +40,7 @@ class StringStreamWrapper {
 
 		// this is our stream!
 		$this->stringstream = $contextOptions[self::PROTOCOL]['string'];
-		$this->truncateHtmlSafe = (isset($contextOptions[self::PROTOCOL]['truncatehtmlsafe'])) ? $contextOptions[self::PROTOCOL]['truncatehtmlsafe'] : false;
+		$this->truncateHtmlSafe = $contextOptions[self::PROTOCOL]['truncatehtmlsafe'] ?? false;
 
 		$this->stringlength = strlen($this->stringstream);
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("StringStreamWrapper::stream_open(): initialized stream length: %d - HTML-safe-truncate: %s", $this->stringlength, Utils::PrintAsString($this->truncateHtmlSafe)));
@@ -56,7 +56,7 @@ class StringStreamWrapper {
 	 * @return string
 	 */
 	public function stream_read($len) {
-		$data = substr($this->stringstream, $this->position, $len);
+		$data = substr((string) $this->stringstream, $this->position, $len);
 		$this->position += strlen($data);
 
 		return $data;
@@ -71,7 +71,7 @@ class StringStreamWrapper {
 	 */
 	public function stream_write($data) {
 		$l = strlen($data);
-		$this->stringstream = substr($this->stringstream, 0, $this->position) . $data . substr($this->stringstream, $this->position += $l);
+		$this->stringstream = substr((string) $this->stringstream, 0, $this->position) . $data . substr((string) $this->stringstream, $this->position += $l);
 		$this->stringlength = strlen($this->stringstream);
 
 		return $l;

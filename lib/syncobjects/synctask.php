@@ -151,6 +151,7 @@ class SyncTask extends SyncObject {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function Check($logAsDebug = false) {
 		$ret = parent::Check($logAsDebug);
 
@@ -164,13 +165,13 @@ class SyncTask extends SyncObject {
 		}
 
 		if (isset($this->startdate, $this->duedate) && $this->duedate < $this->startdate) {
-			SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): Unmet condition in object from type %s: parameter 'startdate' is HIGHER than 'duedate'. Check failed!", get_class($this)));
+			SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): Unmet condition in object from type %s: parameter 'startdate' is HIGHER than 'duedate'. Check failed!", static::class));
 
 			return false;
 		}
 
 		if (isset($this->utcstartdate, $this->utcduedate) && $this->utcduedate < $this->utcstartdate) {
-			SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): Unmet condition in object from type %s: parameter 'utcstartdate' is HIGHER than 'utcduedate'. Check failed!", get_class($this)));
+			SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): Unmet condition in object from type %s: parameter 'utcstartdate' is HIGHER than 'utcduedate'. Check failed!", static::class));
 
 			return false;
 		}

@@ -162,6 +162,7 @@ class SyncMeetingRequest extends SyncObject {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function Check($logAsDebug = false) {
 		if (isset($this->busystatus) && $this->busystatus == 0xFFFFFFFF) {
 			SLog::Write(LOGLEVEL_INFO, "SyncMeetingRequest->Check(): rewriting busystatus -1 (0xFFFFFFFF) to fbBusy (2).");

@@ -20,9 +20,7 @@
 class PHPWrapper {
 	private $importer;
 	private $mapiprovider;
-	private $store;
 	private $contentparameters;
-	private $folderid;
 	private $prefix;
 
 	/**
@@ -33,18 +31,16 @@ class PHPWrapper {
 	 * @param IImportChanges $importer incoming changes from ICS are forwarded here
 	 * @param string         $folderid the folder this wrapper was configured for
 	 */
-	public function __construct($session, $store, $importer, $folderid) {
+	public function __construct($session, private $store, $importer, private $folderid) {
 		$this->importer = &$importer;
-		$this->store = $store;
 		$this->mapiprovider = new MAPIProvider($session, $this->store);
-		$this->folderid = $folderid;
 		$this->prefix = '';
 
-		if ($folderid) {
-			$folderidHex = bin2hex($folderid);
-			$folderid = GSync::GetDeviceManager()->GetFolderIdForBackendId($folderidHex);
-			if ($folderid != $folderidHex) {
-				$this->prefix = $folderid . ':';
+		if ($this->folderid) {
+			$folderidHex = bin2hex($this->folderid);
+			$this->folderid = GSync::GetDeviceManager()->GetFolderIdForBackendId($folderidHex);
+			if ($this->folderid != $folderidHex) {
+				$this->prefix = $this->folderid . ':';
 			}
 		}
 	}
@@ -97,7 +93,7 @@ class PHPWrapper {
 		$mapimessage = mapi_msgstore_openentry($this->store, $entryid);
 
 		try {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageChange(): Getting message from MAPIProvider, sourcekey: '%s', parentsourcekey: '%s', entryid: '%s'", bin2hex($sourcekey), bin2hex($parentsourcekey), bin2hex($entryid)));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageChange(): Getting message from MAPIProvider, sourcekey: '%s', parentsourcekey: '%s', entryid: '%s'", bin2hex((string) $sourcekey), bin2hex((string) $parentsourcekey), bin2hex($entryid)));
 
 			$message = $this->mapiprovider->GetMessage($mapimessage, $this->contentparameters);
 
@@ -139,8 +135,8 @@ class PHPWrapper {
 			$message->flags = $flags;
 		}
 
-		$this->importer->ImportMessageChange($this->prefix . bin2hex($sourcekey), $message);
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageChange(): change for: '%s'", $this->prefix . bin2hex($sourcekey)));
+		$this->importer->ImportMessageChange($this->prefix . bin2hex((string) $sourcekey), $message);
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageChange(): change for: '%s'", $this->prefix . bin2hex((string) $sourcekey)));
 
 		// Tell MAPI it doesn't need to do anything itself, as we've done all the work already.
 		return SYNC_E_IGNORE;
@@ -158,8 +154,8 @@ class PHPWrapper {
 
 		foreach ($sourcekeys as $sourcekey) {
 			// TODO if we would know that ICS is removing the message because it's outside the sync interval, we could send a $asSoftDelete = true to the importer. Could they pass that via $flags?
-			$this->importer->ImportMessageDeletion($this->prefix . bin2hex($sourcekey));
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): delete for :'%s'", $this->prefix . bin2hex($sourcekey)));
+			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): delete for :'%s'", $this->prefix . bin2hex((string) $sourcekey)));
 		}
 	}
 
@@ -170,8 +166,8 @@ class PHPWrapper {
 	 */
 	public function ImportPerUserReadStateChange($readstates) {
 		foreach ($readstates as $readstate) {
-			$this->importer->ImportMessageReadFlag($this->prefix . bin2hex($readstate["sourcekey"]), $readstate["flags"] & MSGFLAG_READ);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportPerUserReadStateChange(): read for :'%s'", $this->prefix . bin2hex($readstate["sourcekey"])));
+			$this->importer->ImportMessageReadFlag($this->prefix . bin2hex((string) $readstate["sourcekey"]), $readstate["flags"] & MSGFLAG_READ);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportPerUserReadStateChange(): read for :'%s'", $this->prefix . bin2hex((string) $readstate["sourcekey"])));
 		}
 	}
 
@@ -215,7 +211,7 @@ class PHPWrapper {
 	 */
 	public function ImportFolderDeletion($flags, $sourcekeys) {
 		foreach ($sourcekeys as $sourcekey) {
-			$this->importer->ImportFolderDeletion(SyncFolder::GetObject(GSync::GetDeviceManager()->GetFolderIdForBackendId(bin2hex($sourcekey))));
+			$this->importer->ImportFolderDeletion(SyncFolder::GetObject(GSync::GetDeviceManager()->GetFolderIdForBackendId(bin2hex((string) $sourcekey))));
 		}
 
 		return 0;

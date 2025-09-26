@@ -143,7 +143,7 @@ class Sync extends RequestProcessor {
 							$spa->SetSyncKey($synckey);
 						}
 					}
-					catch (StateInvalidException $stie) {
+					catch (StateInvalidException) {
 						$spa = new SyncParameters();
 						$status = SYNC_STATUS_INVALIDSYNCKEY;
 						self::$topCollector->AnnounceInformation("State invalid - Resync folder", $this->singleFolder);
@@ -165,7 +165,7 @@ class Sync extends RequestProcessor {
 							$spa->SetContentClass(self::$deviceManager->GetFolderClassFromCacheByID($spa->GetFolderId()));
 							SLog::Write(LOGLEVEL_DEBUG, sprintf("GetFolderClassFromCacheByID from Device Manager: '%s' for id:'%s'", $spa->GetContentClass(), $spa->GetFolderId()));
 						}
-						catch (NoHierarchyCacheAvailableException $nhca) {
+						catch (NoHierarchyCacheAvailableException) {
 							$status = SYNC_STATUS_FOLDERHIERARCHYCHANGED;
 							self::$deviceManager->ForceFullResync();
 						}
@@ -695,12 +695,12 @@ class Sync extends RequestProcessor {
 			try {
 				$sc->LoadAllCollections(false, true, true, true, true);
 			}
-			catch (StateInvalidException $siex) {
+			catch (StateInvalidException) {
 				$status = SYNC_STATUS_INVALIDSYNCKEY;
 				self::$topCollector->AnnounceInformation("StateNotFoundException", $this->singleFolder);
 				$this->saveMultiFolderInfo("exception", "StateNotFoundException");
 			}
-			catch (StatusException $stex) {
+			catch (StatusException) {
 				$status = SYNC_STATUS_FOLDERHIERARCHYCHANGED;
 				self::$topCollector->AnnounceInformation(sprintf("StatusException code: %d", $status), $this->singleFolder);
 				$this->saveMultiFolderInfo("exception", "StatusException");
@@ -1128,7 +1128,7 @@ class Sync extends RequestProcessor {
 					self::$encoder->endTag();
 				}
 				self::$encoder->startTag(SYNC_STATUS);
-				self::$encoder->content(isset($actiondata["statusids"][$clientid]) ? $actiondata["statusids"][$clientid] : SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+				self::$encoder->content($actiondata["statusids"][$clientid] ?? SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
 				self::$encoder->endTag();
 				if (!empty($response->hasResponse)) {
 					self::$encoder->startTag(SYNC_DATA);
@@ -1410,7 +1410,7 @@ class Sync extends RequestProcessor {
 					throw new StatusException(sprintf("HandleSync() could not Setup() the backend for folder id %s/%s", $spa->GetFolderId(), $spa->GetBackendFolderId()), SYNC_STATUS_FOLDERHIERARCHYCHANGED);
 				}
 			}
-			catch (StateNotFoundException $snfex) {
+			catch (StateNotFoundException) {
 				$status = SYNC_STATUS_INVALIDSYNCKEY;
 				self::$topCollector->AnnounceInformation("StateNotFoundException", $this->singleFolder);
 				$this->saveMultiFolderInfo("exception", "StateNotFoundException");
@@ -1707,7 +1707,7 @@ class Sync extends RequestProcessor {
 		$interval = Utils::GetFiltertypeInterval($spa->GetFilterType());
 		$timeout = time() + (($interval && $interval < $maxTimeout) ? $interval : $maxTimeout);
 		// randomize timeout in 12h
-		$timeout -= rand(0, 43200);
+		$timeout -= random_int(0, 43200);
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Sync()->setFolderStat() on %s: %s expiring %s", $spa->getFolderId(), $newFolderStat, date('Y-m-d H:i:s', $timeout)));
 		$spa->SetFolderStatTimeout($timeout);
 	}

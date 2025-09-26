@@ -51,7 +51,7 @@ EOF;
 			return $this->redisObj->get($key);
 		}
 		catch (Exception $e) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->getKey(): %s", get_class($this), $e->getMessage()));
+			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->getKey(): %s", static::class, $e->getMessage()));
 		}
 	}
 
@@ -64,7 +64,7 @@ EOF;
 			return $this->redisObj->set($key, $value);
 		}
 		catch (Exception $e) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->setKey(): %s", get_class($this), $e->getMessage()));
+			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->setKey(): %s", static::class, $e->getMessage()));
 		}
 	}
 
@@ -73,7 +73,7 @@ EOF;
 			return $this->redisObj->del($key);
 		}
 		catch (Exception $e) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->delKey(): %s", get_class($this), $e->getMessage()));
+			SLog::Write(LOGLEVEL_ERROR, sprintf("%s->delKey(): %s", static::class, $e->getMessage()));
 		}
 	}
 

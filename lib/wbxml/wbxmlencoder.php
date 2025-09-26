@@ -10,7 +10,6 @@
 
 class WBXMLEncoder extends WBXMLDefs {
 	private $_dtd;
-	private $_out;
 	private $_tagcp = 0;
 	private $log = false;
 	private $logStack = [];
@@ -21,13 +20,11 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	// Only when content() is called do we output the current stack of tags
 
-	private $_stack;
-	private $multipart; // the content is multipart
+	private $_stack; // the content is multipart
 	private $bodyparts;
 
-	public function __construct($output, $multipart = false) {
+	public function __construct(private $_out, private $multipart = false) {
 		$this->log = SLog::IsWbxmlDebugEnabled();
-		$this->_out = $output;
 
 		// reverse-map the DTD
 		foreach ($this->dtd["namespaces"] as $nsid => $nsname) {
@@ -41,7 +38,6 @@ class WBXMLEncoder extends WBXMLDefs {
 			}
 		}
 		$this->_stack = [];
-		$this->multipart = $multipart;
 		$this->bodyparts = [];
 	}
 
@@ -338,7 +334,7 @@ class WBXMLEncoder extends WBXMLDefs {
 	 * @param mixed $content
 	 */
 	private function outTermStr($content) {
-		fwrite($this->_out, $content);
+		fwrite($this->_out, (string) $content);
 		fwrite($this->_out, chr(0));
 	}
 
@@ -388,11 +384,11 @@ class WBXMLEncoder extends WBXMLDefs {
 	 */
 	private function splitTag($fulltag) {
 		$ns = false;
-		$pos = strpos($fulltag, chr(58)); // chr(58) == ':'
+		$pos = strpos((string) $fulltag, chr(58)); // chr(58) == ':'
 
 		if ($pos) {
-			$ns = substr($fulltag, 0, $pos);
-			$tag = substr($fulltag, $pos + 1);
+			$ns = substr((string) $fulltag, 0, $pos);
+			$tag = substr((string) $fulltag, $pos + 1);
 		}
 		else {
 			$tag = $fulltag;
@@ -458,7 +454,7 @@ class WBXMLEncoder extends WBXMLDefs {
 		foreach ($this->bodyparts as $i => $bp) {
 			$blockstart = $blockstart + $len;
 			$len = fstat($bp);
-			$len = (isset($len['size'])) ? $len['size'] : 0;
+			$len = $len['size'] ?? 0;
 			if ($len == 0) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("WBXMLEncoder->processMultipart(): the length of the body part at position %d is 0", $i));
 			}

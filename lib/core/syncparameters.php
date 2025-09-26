@@ -83,7 +83,7 @@ class SyncParameters extends StateObject {
 	 * @return bool
 	 */
 	public function SetSyncKey($synckey) {
-		list($this->uuid, $this->uuidCounter) = StateManager::ParseStateKey($synckey);
+		[$this->uuid, $this->uuidCounter] = StateManager::ParseStateKey($synckey);
 
 		// remove newSyncKey
 		unset($this->uuidNewCounter);
@@ -118,7 +118,7 @@ class SyncParameters extends StateObject {
 	 * @throws FatalException if the uuids of current and next do not match
 	 */
 	public function SetNewSyncKey($synckey) {
-		list($uuid, $uuidNewCounter) = StateManager::ParseStateKey($synckey);
+		[$uuid, $uuidNewCounter] = StateManager::ParseStateKey($synckey);
 		if (!$this->HasSyncKey()) {
 			$this->uuid = $uuid;
 			$this->uuidCounter = $uuidNewCounter;
@@ -403,8 +403,9 @@ class SyncParameters extends StateObject {
 	 *
 	 * @return mixed
 	 */
+	#[Override]
 	public function __call($name, $arguments) {
-		$lowname = strtolower($name);
+		$lowname = strtolower((string) $name);
 		$operator = substr($lowname, 0, 3);
 		$var = substr($lowname, 3);
 
@@ -426,6 +427,7 @@ class SyncParameters extends StateObject {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	protected function postUnserialize() {
 		// init with the available CPO or default
 		$availableCPO = $this->normalizeType(self::DEFAULTOPTIONS);

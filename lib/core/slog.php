@@ -65,7 +65,7 @@ class SLog {
 		try {
 			self::getLogger()->Log($loglevel, $message);
 		}
-		catch (Exception $e) {
+		catch (Exception) {
 			// @TODO How should we handle logging error ?
 			// Ignore any error.
 		}
@@ -81,7 +81,7 @@ class SLog {
 	 * @return string
 	 */
 	public static function GetWBXMLDebugInfo() {
-		return trim(self::$wbxmlDebug);
+		return trim((string) self::$wbxmlDebug);
 	}
 
 	/**
@@ -92,7 +92,7 @@ class SLog {
 	 * @return false|string returns false if there was no message logged in that level
 	 */
 	public static function GetLastMessage($loglevel) {
-		return (isset(self::$lastLogs[$loglevel])) ? self::$lastLogs[$loglevel] : false;
+		return self::$lastLogs[$loglevel] ?? false;
 	}
 
 	/**
@@ -129,7 +129,7 @@ class SLog {
 				$user = Request::GetImpersonatedUser();
 			}
 			else {
-				list($user) = Utils::SplitDomainUser(strtolower(Request::GetGETUser()));
+				[$user] = Utils::SplitDomainUser(strtolower(Request::GetGETUser()));
 			}
 
 			self::$logger = new $logger();
@@ -171,7 +171,7 @@ function gsync_error_handler($errno, $errstr, $errfile, $errline) {
 		case E_NOTICE:
 		case E_WARNING:
 			// TODO check if there is a better way to avoid these messages
-			if (stripos($errfile, 'interprocessdata') !== false && stripos($errstr, 'shm_get_var()') !== false) {
+			if (stripos((string) $errfile, 'interprocessdata') !== false && stripos((string) $errstr, 'shm_get_var()') !== false) {
 				break;
 			}
 			SLog::Write(LOGLEVEL_WARN, "{$errfile}:{$errline} {$errstr} ({$errno})");

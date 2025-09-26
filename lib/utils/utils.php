@@ -18,7 +18,7 @@ class Utils {
 	 * @return string
 	 */
 	public static function PrintAsString($var) {
-		return ($var) ? (($var === true) ? 'true' : $var) : (($var === false) ? 'false' : (($var === '') ? 'empty' : (($var === null) ? 'null' : $var)));
+		return ($var) ? (($var === true) ? 'true' : $var) : (($var === false) ? 'false' : (($var === '') ? 'empty' : ($var ?? 'null')));
 	}
 
 	/**
@@ -243,40 +243,16 @@ class Utils {
 	public static function GetFiltertypeInterval($filtertype) {
 		$back = false;
 
-		switch ($filtertype) {
-			case SYNC_FILTERTYPE_1DAY:
-				$back = 60 * 60 * 24;
-				break;
-
-			case SYNC_FILTERTYPE_3DAYS:
-				$back = 60 * 60 * 24 * 3;
-				break;
-
-			case SYNC_FILTERTYPE_1WEEK:
-				$back = 60 * 60 * 24 * 7;
-				break;
-
-			case SYNC_FILTERTYPE_2WEEKS:
-				$back = 60 * 60 * 24 * 14;
-				break;
-
-			case SYNC_FILTERTYPE_1MONTH:
-				$back = 60 * 60 * 24 * 31;
-				break;
-
-			case SYNC_FILTERTYPE_3MONTHS:
-				$back = 60 * 60 * 24 * 31 * 3;
-				break;
-
-			case SYNC_FILTERTYPE_6MONTHS:
-				$back = 60 * 60 * 24 * 31 * 6;
-				break;
-
-			default:
-				$back = false;
-		}
-
-		return $back;
+		return match ($filtertype) {
+			SYNC_FILTERTYPE_1DAY => 60 * 60 * 24,
+			SYNC_FILTERTYPE_3DAYS => 60 * 60 * 24 * 3,
+			SYNC_FILTERTYPE_1WEEK => 60 * 60 * 24 * 7,
+			SYNC_FILTERTYPE_2WEEKS => 60 * 60 * 24 * 14,
+			SYNC_FILTERTYPE_1MONTH => 60 * 60 * 24 * 31,
+			SYNC_FILTERTYPE_3MONTHS => 60 * 60 * 24 * 31 * 3,
+			SYNC_FILTERTYPE_6MONTHS => 60 * 60 * 24 * 31 * 6,
+			default => false,
+		};
 	}
 
 	/**
@@ -288,40 +264,19 @@ class Utils {
 	 * @return long
 	 */
 	public static function GetTruncSize($truncation) {
-		switch ($truncation) {
-			case SYNC_TRUNCATION_HEADERS:
-				return 0;
-
-			case SYNC_TRUNCATION_512B:
-				return 512;
-
-			case SYNC_TRUNCATION_1K:
-				return 1024;
-
-			case SYNC_TRUNCATION_2K:
-				return 2 * 1024;
-
-			case SYNC_TRUNCATION_5K:
-				return 5 * 1024;
-
-			case SYNC_TRUNCATION_10K:
-				return 10 * 1024;
-
-			case SYNC_TRUNCATION_20K:
-				return 20 * 1024;
-
-			case SYNC_TRUNCATION_50K:
-				return 50 * 1024;
-
-			case SYNC_TRUNCATION_100K:
-				return 100 * 1024;
-
-			case SYNC_TRUNCATION_ALL:
-				return 1024 * 1024; // We'll limit to 1MB anyway
-
-			default:
-				return 1024; // Default to 1Kb
-		}
+		return match ($truncation) {
+			SYNC_TRUNCATION_HEADERS => 0,
+			SYNC_TRUNCATION_512B => 512,
+			SYNC_TRUNCATION_1K => 1024,
+			SYNC_TRUNCATION_2K => 2 * 1024,
+			SYNC_TRUNCATION_5K => 5 * 1024,
+			SYNC_TRUNCATION_10K => 10 * 1024,
+			SYNC_TRUNCATION_20K => 20 * 1024,
+			SYNC_TRUNCATION_50K => 50 * 1024,
+			SYNC_TRUNCATION_100K => 100 * 1024,
+			SYNC_TRUNCATION_ALL => 1024 * 1024,
+			default => 1024,
+		};
 	}
 
 	/**
@@ -401,7 +356,7 @@ class Utils {
 	 * @return bool
 	 */
 	public static function CheckEmail($email) {
-		return strpos($email, '@') !== false ? true : false;
+		return str_contains($email, '@') ? true : false;
 	}
 
 	/**
@@ -423,60 +378,34 @@ class Utils {
 	 * @return string or false if code is unknown
 	 */
 	public static function GetCommandFromCode($code) {
-		switch ($code) {
-			case GSync::COMMAND_SYNC:                 return 'Sync';
-
-			case GSync::COMMAND_SENDMAIL:             return 'SendMail';
-
-			case GSync::COMMAND_SMARTFORWARD:         return 'SmartForward';
-
-			case GSync::COMMAND_SMARTREPLY:           return 'SmartReply';
-
-			case GSync::COMMAND_GETATTACHMENT:        return 'GetAttachment';
-
-			case GSync::COMMAND_FOLDERSYNC:           return 'FolderSync';
-
-			case GSync::COMMAND_FOLDERCREATE:         return 'FolderCreate';
-
-			case GSync::COMMAND_FOLDERDELETE:         return 'FolderDelete';
-
-			case GSync::COMMAND_FOLDERUPDATE:         return 'FolderUpdate';
-
-			case GSync::COMMAND_MOVEITEMS:            return 'MoveItems';
-
-			case GSync::COMMAND_GETITEMESTIMATE:      return 'GetItemEstimate';
-
-			case GSync::COMMAND_MEETINGRESPONSE:      return 'MeetingResponse';
-
-			case GSync::COMMAND_SEARCH:               return 'Search';
-
-			case GSync::COMMAND_SETTINGS:             return 'Settings';
-
-			case GSync::COMMAND_PING:                 return 'Ping';
-
-			case GSync::COMMAND_ITEMOPERATIONS:       return 'ItemOperations';
-
-			case GSync::COMMAND_PROVISION:            return 'Provision';
-
-			case GSync::COMMAND_RESOLVERECIPIENTS:    return 'ResolveRecipients';
-
-			case GSync::COMMAND_VALIDATECERT:         return 'ValidateCert';
-
-				// Deprecated commands
-			case GSync::COMMAND_GETHIERARCHY:         return 'GetHierarchy';
-
-			case GSync::COMMAND_CREATECOLLECTION:     return 'CreateCollection';
-
-			case GSync::COMMAND_DELETECOLLECTION:     return 'DeleteCollection';
-
-			case GSync::COMMAND_MOVECOLLECTION:       return 'MoveCollection';
-
-			case GSync::COMMAND_NOTIFY:               return 'Notify';
-
-			case GSync::COMMAND_FIND:                 return 'Find';
-		}
-
-		return false;
+		return match ($code) {
+			GSync::COMMAND_SYNC => 'Sync',
+			GSync::COMMAND_SENDMAIL => 'SendMail',
+			GSync::COMMAND_SMARTFORWARD => 'SmartForward',
+			GSync::COMMAND_SMARTREPLY => 'SmartReply',
+			GSync::COMMAND_GETATTACHMENT => 'GetAttachment',
+			GSync::COMMAND_FOLDERSYNC => 'FolderSync',
+			GSync::COMMAND_FOLDERCREATE => 'FolderCreate',
+			GSync::COMMAND_FOLDERDELETE => 'FolderDelete',
+			GSync::COMMAND_FOLDERUPDATE => 'FolderUpdate',
+			GSync::COMMAND_MOVEITEMS => 'MoveItems',
+			GSync::COMMAND_GETITEMESTIMATE => 'GetItemEstimate',
+			GSync::COMMAND_MEETINGRESPONSE => 'MeetingResponse',
+			GSync::COMMAND_SEARCH => 'Search',
+			GSync::COMMAND_SETTINGS => 'Settings',
+			GSync::COMMAND_PING => 'Ping',
+			GSync::COMMAND_ITEMOPERATIONS => 'ItemOperations',
+			GSync::COMMAND_PROVISION => 'Provision',
+			GSync::COMMAND_RESOLVERECIPIENTS => 'ResolveRecipients',
+			GSync::COMMAND_VALIDATECERT => 'ValidateCert',
+			GSync::COMMAND_GETHIERARCHY => 'GetHierarchy',
+			GSync::COMMAND_CREATECOLLECTION => 'CreateCollection',
+			GSync::COMMAND_DELETECOLLECTION => 'DeleteCollection',
+			GSync::COMMAND_MOVECOLLECTION => 'MoveCollection',
+			GSync::COMMAND_NOTIFY => 'Notify',
+			GSync::COMMAND_FIND => 'Find',
+			default => false,
+		};
 	}
 
 	/**
@@ -631,14 +560,10 @@ class Utils {
 			20127 => "us-ascii",
 		];
 
-		if (isset($codepages[$codepage])) {
-			return $codepages[$codepage];
-		}
-
 		// Defaulting to iso-8859-15 since it is more likely for someone to make a mistake in the codepage
 		// when using west-european charsets then when using other charsets since utf-8 is binary compatible
 		// with the bottom 7 bits of west-european
-		return "iso-8859-15";
+		return $codepages[$codepage] ?? "iso-8859-15";
 	}
 
 	/**
@@ -719,15 +644,12 @@ class Utils {
 	 * @return int
 	 */
 	public static function GetLastVerbExecuted($verb) {
-		switch ($verb) {
-			case NOTEIVERB_REPLYTOSENDER:   return AS_REPLYTOSENDER;
-
-			case NOTEIVERB_REPLYTOALL:      return AS_REPLYTOALL;
-
-			case NOTEIVERB_FORWARD:         return AS_FORWARD;
-		}
-
-		return 0;
+		return match ($verb) {
+			NOTEIVERB_REPLYTOSENDER => AS_REPLYTOSENDER,
+			NOTEIVERB_REPLYTOALL => AS_REPLYTOALL,
+			NOTEIVERB_FORWARD => AS_FORWARD,
+			default => 0,
+		};
 	}
 
 	/**
@@ -762,7 +684,7 @@ class Utils {
 		$units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB'];
 		$base = log($bytes, 1024);
 		$fBase = floor($base);
-		$pow = pow(1024, $base - $fBase);
+		$pow = 1024 ** ($base - $fBase);
 
 		return sprintf("%.{$precision}f %s", $pow, $units[$fBase]);
 	}
@@ -830,7 +752,7 @@ class Utils {
 	 * @return array
 	 */
 	public static function SplitMessageId($id) {
-		if (strpos($id, ':') !== false) {
+		if (str_contains($id, ':')) {
 			return explode(':', $id);
 		}
 
@@ -914,22 +836,13 @@ class Utils {
 	public static function GetResponseFromMessageClass($messageClass) {
 		$messageClass = strtolower($messageClass);
 
-		switch ($messageClass) {
-			case 'syncappointment':
-				return new SyncAppointmentResponse();
-
-			case 'synccontact':
-				return new SyncContactResponse();
-
-			case 'syncnote':
-				return new SyncNoteResponse();
-
-			case 'synctask':
-				return new SyncTaskResponse();
-
-			default:
-				return new SyncMailResponse();
-		}
+		return match ($messageClass) {
+			'syncappointment' => new SyncAppointmentResponse(),
+			'synccontact' => new SyncContactResponse(),
+			'syncnote' => new SyncNoteResponse(),
+			'synctask' => new SyncTaskResponse(),
+			default => new SyncMailResponse(),
+		};
 
 		return new SyncMailResponse();
 	}

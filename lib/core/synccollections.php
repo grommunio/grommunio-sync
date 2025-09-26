@@ -62,7 +62,7 @@ class SyncCollections implements Iterator {
 
 			return true;
 		}
-		catch (GSyncException $e) {
+		catch (GSyncException) {
 		}
 
 		return false;
@@ -164,7 +164,7 @@ class SyncCollections implements Iterator {
 				return true;
 			}
 		}
-		catch (StateInvalidException $sive) {
+		catch (StateInvalidException) {
 			// in case there is something wrong with the state, just stop here
 			// later when trying to retrieve the SyncParameters nothing will be found
 
@@ -192,7 +192,7 @@ class SyncCollections implements Iterator {
 				// make sure the hierarchy cache is loaded when we are loading hierarchy states
 				$this->addparms[$folderid]["state"] = $this->stateManager->GetSyncState($spa->GetLatestSyncKey($confirmedOnly), $folderid === false);
 			}
-			catch (StateNotFoundException $snfe) {
+			catch (StateNotFoundException) {
 				// if we can't find the state, first we should try a sync of that folder, so
 				// we generate a fake change, so a sync on this folder is triggered
 				$this->changes[$folderid] = 1;
@@ -281,11 +281,7 @@ class SyncCollections implements Iterator {
 	 * @return bool|SyncParameters false if no SyncParameters object is found for folderid
 	 */
 	public function GetCollection($folderid) {
-		if (isset($this->collections[$folderid])) {
-			return $this->collections[$folderid];
-		}
-
-		return false;
+		return $this->collections[$folderid] ?? false;
 	}
 
 	/**
@@ -779,7 +775,7 @@ class SyncCollections implements Iterator {
 					$this->hierarchyExporterChecked = true;
 				}
 			}
-			catch (StatusException $ste) {
+			catch (StatusException) {
 				throw new StatusException("SyncCollections->countHierarchyChange(): exporter can not be re-configured.", self::ERROR_WRONG_HIERARCHY, null, LOGLEVEL_WARN);
 			}
 
@@ -847,7 +843,7 @@ class SyncCollections implements Iterator {
 	 */
 	private function getPingClass($spa) {
 		$class = $spa->GetContentClass();
-		if ($class == "Calendar" && strpos($spa->GetFolderId(), DeviceManager::FLD_ORIGIN_GAB) === 0) {
+		if ($class == "Calendar" && str_starts_with((string) $spa->GetFolderId(), DeviceManager::FLD_ORIGIN_GAB)) {
 			$class = "GAB";
 		}
 

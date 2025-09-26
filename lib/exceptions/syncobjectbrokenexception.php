@@ -19,7 +19,7 @@ class SyncObjectBrokenException extends GSyncException {
 	 * @return SyncObject
 	 */
 	public function GetSyncObject() {
-		return isset($this->syncObject) ? $this->syncObject : false;
+		return $this->syncObject ?? false;
 	}
 
 	/**

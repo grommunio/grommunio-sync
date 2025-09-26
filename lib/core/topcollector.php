@@ -152,7 +152,7 @@ class TopCollector extends InterProcessData {
 		}
 		else {
 			foreach ($this->getRawDeviceUserData(self::TOPDATA) as $compKey => $rawline) {
-				$line = json_decode($rawline, true);
+				$line = json_decode((string) $rawline, true);
 				// remove everything which terminated for 20 secs or is not updated for more than 120 secs
 				if (($line["ended"] != 0 && time() - $line["ended"] > 20) ||
 					time() - $line["update"] > 120) {
@@ -193,6 +193,7 @@ class TopCollector extends InterProcessData {
 	 *
 	 * @return bool
 	 */
+	#[Override]
 	public function ReInitIPC() {
 		return parent::ReInitIPC();
 		if (!status) {

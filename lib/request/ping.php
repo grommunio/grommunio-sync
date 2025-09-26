@@ -32,7 +32,7 @@ class Ping extends RequestProcessor {
 		try {
 			$sc->LoadAllCollections(true, true, true, true, false);
 		}
-		catch (StateInvalidException $siex) {
+		catch (StateInvalidException) {
 			// if no params are present, indicate to send params, else do hierarchy sync
 			if (!$params_present) {
 				$pingstatus = SYNC_PINGSTATUS_FAILINGPARAMS;
@@ -51,7 +51,7 @@ class Ping extends RequestProcessor {
 				self::$topCollector->AnnounceInformation("StateInvalidException: force sync", true);
 			}
 		}
-		catch (StatusException $stex) {
+		catch (StatusException) {
 			$pingstatus = SYNC_PINGSTATUS_FOLDERHIERSYNCREQUIRED;
 			self::$topCollector->AnnounceInformation("StatusException: require HierarchySync", true);
 		}
@@ -105,7 +105,7 @@ class Ping extends RequestProcessor {
 								continue;
 							}
 						}
-						catch (NoHierarchyCacheAvailableException $nhca) {
+						catch (NoHierarchyCacheAvailableException) {
 							SLog::Write(LOGLEVEL_INFO, sprintf("HandlePing(): unknown collection '%s', triggering HierarchySync", $folderid));
 							$pingstatus = SYNC_PINGSTATUS_FOLDERHIERSYNCREQUIRED;
 						}

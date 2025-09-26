@@ -273,36 +273,18 @@ abstract class Log {
 			$s = "";
 		}
 
-		switch ($loglevel) {
-			case LOGLEVEL_OFF:
-				return "";
-
-			case LOGLEVEL_FATAL:
-				return "[FATAL]";
-
-			case LOGLEVEL_ERROR:
-				return "[ERROR]";
-
-			case LOGLEVEL_WARN:
-				return "[" . $s . "WARN]";
-
-			case LOGLEVEL_INFO:
-				return "[" . $s . "INFO]";
-
-			case LOGLEVEL_DEBUG:
-				return "[DEBUG]";
-
-			case LOGLEVEL_WBXML:
-				return "[WBXML]";
-
-			case LOGLEVEL_DEVICEID:
-				return "[DEVICEID]";
-
-			case LOGLEVEL_WBXMLSTACK:
-				return "[WBXMLSTACK]";
-		}
-
-		return "";
+		return match ($loglevel) {
+			LOGLEVEL_OFF => "",
+			LOGLEVEL_FATAL => "[FATAL]",
+			LOGLEVEL_ERROR => "[ERROR]",
+			LOGLEVEL_WARN => "[" . $s . "WARN]",
+			LOGLEVEL_INFO => "[" . $s . "INFO]",
+			LOGLEVEL_DEBUG => "[DEBUG]",
+			LOGLEVEL_WBXML => "[WBXML]",
+			LOGLEVEL_DEVICEID => "[DEVICEID]",
+			LOGLEVEL_WBXMLSTACK => "[WBXMLSTACK]",
+			default => "",
+		};
 	}
 
 	/**

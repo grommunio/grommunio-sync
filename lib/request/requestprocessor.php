@@ -36,7 +36,7 @@ abstract class RequestProcessor {
 		self::$userIsAuthenticated = false;
 
 		// when a certificate is sent, allow authentication only as the certificate owner
-		if (defined("CERTIFICATE_OWNER_PARAMETER") && isset($_SERVER[CERTIFICATE_OWNER_PARAMETER]) && strtolower($_SERVER[CERTIFICATE_OWNER_PARAMETER]) != strtolower(Request::GetAuthUser())) {
+		if (defined("CERTIFICATE_OWNER_PARAMETER") && isset($_SERVER[CERTIFICATE_OWNER_PARAMETER]) && strtolower((string) $_SERVER[CERTIFICATE_OWNER_PARAMETER]) != strtolower(Request::GetAuthUser())) {
 			throw new AuthenticationRequiredException(sprintf("Access denied. Access is allowed only for the certificate owner '%s'", $_SERVER[CERTIFICATE_OWNER_PARAMETER]));
 		}
 
@@ -93,7 +93,7 @@ abstract class RequestProcessor {
 		// if there is an error decoding wbxml, consume remaining data and include it in the WBXMLException
 		try {
 			if (!$handler->Handle(Request::GetCommandCode())) {
-				throw new WBXMLException(sprintf("Unknown error in %s->Handle()", get_class($handler)));
+				throw new WBXMLException(sprintf("Unknown error in %s->Handle()", $handler::class));
 			}
 		}
 		catch (Exception $ex) {

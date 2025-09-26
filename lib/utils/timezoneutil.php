@@ -1066,7 +1066,7 @@ class TimezoneUtil {
 		try {
 			return mapi_ianatz_to_tzdef($phptimezone);
 		}
-		catch (Exception $e) {
+		catch (Exception) {
 			SLog::Write(LOGLEVEL_WARN, sprintf("TimezoneUtil::GetBinaryTZ() mapi_ianatz_to_tzdef() for '%s' failed!", $phptimezone));
 		}
 
@@ -1248,7 +1248,7 @@ class TimezoneUtil {
 				}
 			}
 		}
-		if (strpos($name, '.') !== false) {
+		if (str_contains($name, '.')) {
 			return self::getMSTZnameFromTZName(str_replace('.', '', $name));
 		}
 		SLog::Write(LOGLEVEL_WARN, sprintf("TimezoneUtil::getMSTZnameFromTZName() no MS name found for '%s'. Returning '(GMT) Greenwich Mean Time: Dublin, Edinburgh, Lisbon, London'", $name));

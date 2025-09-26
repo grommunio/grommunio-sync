@@ -29,7 +29,7 @@ abstract class InterProcessData {
 	 */
 	public function __construct() {
 		if (!isset($this->type) || !isset($this->allocate)) {
-			throw new FatalNotImplementedException(sprintf("Class InterProcessData can not be initialized. Subclass %s did not initialize type and allocable memory.", get_class($this)));
+			throw new FatalNotImplementedException(sprintf("Class InterProcessData can not be initialized. Subclass %s did not initialize type and allocable memory.", static::class));
 		}
 
 		try {
@@ -40,7 +40,7 @@ abstract class InterProcessData {
 		}
 		catch (Exception $e) {
 			// ipcProvider could not initialise
-			SLog::Write(LOGLEVEL_ERROR, sprintf("%s could not initialise IPC Redis provider: %s", get_class($this), $e->getMessage()));
+			SLog::Write(LOGLEVEL_ERROR, sprintf("%s could not initialise IPC Redis provider: %s", static::class, $e->getMessage()));
 		}
 	}
 
@@ -145,7 +145,7 @@ abstract class InterProcessData {
 	 * @return mixed
 	 */
 	protected function getData($id = 2) {
-		return $this->ipcProvider ? json_decode($this->ipcProvider->getKey($id), true) : null;
+		return $this->ipcProvider ? json_decode((string) $this->ipcProvider->getKey($id), true) : null;
 	}
 
 	/**
@@ -184,7 +184,7 @@ abstract class InterProcessData {
 				// step 2:  if data exists, merge it with the new data. Keys within
 				//          within the new data overwrite possible existing old data (update).
 				if ($_rawdata && $_rawdata !== null) {
-					$_old = json_decode($_rawdata, true);
+					$_old = json_decode((string) $_rawdata, true);
 					$newData = array_merge($_old, $data);
 				}
 				// step 3:  replace old with new data
@@ -213,7 +213,7 @@ abstract class InterProcessData {
 			while (!$ok && $okCount < 5) {
 				// step 1:  get current data
 				$_rawdata = $this->ipcProvider->get()->hget($key, $compKey);
-				$newData = json_decode($_rawdata, true);
+				$newData = json_decode((string) $_rawdata, true);
 				# no data to delete from, done
 				if (!is_array($newData) || count($newData) == 0) {
 					break;
@@ -250,14 +250,14 @@ abstract class InterProcessData {
 		}
 		if ($returnRaw) {
 			if ($_rawdata) {
-				return [json_decode($_rawdata, true), $_rawdata];
+				return [json_decode((string) $_rawdata, true), $_rawdata];
 			}
 
 			return [[], false];
 		}
 
 		if ($_rawdata) {
-			return json_decode($_rawdata, true);
+			return json_decode((string) $_rawdata, true);
 		}
 
 		return [];
@@ -273,8 +273,8 @@ abstract class InterProcessData {
 		$_data = [];
 		$raw = $this->ipcProvider->get()->hGetAll($key);
 		foreach ($raw as $compKey => $status) {
-			$_linedata = json_decode($status, true);
-			list($devid, $user, $subkey) = explode("|-|", $compKey);
+			$_linedata = json_decode((string) $status, true);
+			[$devid, $user, $subkey] = explode("|-|", (string) $compKey);
 			if (!isset($_data[$devid])) {
 				$_data[$devid] = [];
 			}

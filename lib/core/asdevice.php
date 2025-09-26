@@ -58,7 +58,7 @@ class ASDevice extends StateObject {
 	public function Initialize($devid, $devicetype, $getuser, $useragent) {
 		$this->deviceid = $devid;
 		$this->devicetype = $devicetype;
-		list($this->deviceuser, $this->domain) = Utils::SplitDomainUser($getuser);
+		[$this->deviceuser, $this->domain] = Utils::SplitDomainUser($getuser);
 		$this->useragent = $useragent;
 	}
 
@@ -391,11 +391,8 @@ class ASDevice extends StateObject {
 		if ($folderid === false) {
 			return (isset($this->hierarchyUuid) && $this->hierarchyUuid !== self::UNDEFINED) ? $this->hierarchyUuid : false;
 		}
-		if (isset($this->contentData[$folderid]->{self::FOLDERUUID})) {
-			return $this->contentData[$folderid]->{self::FOLDERUUID};
-		}
 
-		return false;
+		return $this->contentData[$folderid]->{self::FOLDERUUID} ?? false;
 	}
 
 	/**
@@ -453,11 +450,7 @@ class ASDevice extends StateObject {
 	 * @return bool|int returns false if the type is not set
 	 */
 	public function GetFolderType($folderid) {
-		if (isset($this->contentData[$folderid]->{self::FOLDERTYPE})) {
-			return $this->contentData[$folderid]->{self::FOLDERTYPE};
-		}
-
-		return false;
+		return $this->contentData[$folderid]->{self::FOLDERTYPE} ?? false;
 	}
 
 	/**
@@ -493,11 +486,7 @@ class ASDevice extends StateObject {
 	 * @return bool|int returns false if the type is not set
 	 */
 	public function GetFolderBackendId($folderid) {
-		if (isset($this->contentData[$folderid]->{self::FOLDERBACKENDID})) {
-			return $this->contentData[$folderid]->{self::FOLDERBACKENDID};
-		}
-
-		return false;
+		return $this->contentData[$folderid]->{self::FOLDERBACKENDID} ?? false;
 	}
 
 	/**
