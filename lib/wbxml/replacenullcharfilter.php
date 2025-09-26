@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2015-2016 Zarafa Deutschland GmbH
@@ -17,7 +18,6 @@ class ReplaceNullcharFilter extends php_user_filter {
 	 * @param resource $out
 	 * @param int      $consumed
 	 * @param bool     $closing
-	 *
 	 */
 	public function filter($in, $out, &$consumed, $closing): int {
 		while ($bucket = stream_bucket_make_writeable($in)) {

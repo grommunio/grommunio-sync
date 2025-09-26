@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -668,6 +669,7 @@ class DeviceManager extends InterProcessData {
 
 			return false;
 		}
+
 		// check for potential process loops
 		return $this->loopdetection->ProcessLoopDetectionIsHierarchyResyncRequired();
 	}

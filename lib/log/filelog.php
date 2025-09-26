@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -16,8 +17,7 @@ class FileLog extends Log {
 	/**
 	 * Constructor.
 	 */
-	public function __construct() {
-	}
+	public function __construct() {}
 
 	/**
 	 * Get the log user file.

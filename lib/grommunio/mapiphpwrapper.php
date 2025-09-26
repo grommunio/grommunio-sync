@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -69,14 +70,11 @@ class PHPWrapper {
 	 * @param mixed $stream
 	 * @param mixed $flags
 	 */
-	public function Config($stream, $flags = 0) {
-	}
+	public function Config($stream, $flags = 0) {}
 
-	public function GetLastError($hresult, $ulflags, &$lpmapierror) {
-	}
+	public function GetLastError($hresult, $ulflags, &$lpmapierror) {}
 
-	public function UpdateState($stream) {
-	}
+	public function UpdateState($stream) {}
 
 	/**
 	 * Imports a single message.
@@ -128,6 +126,7 @@ class PHPWrapper {
 				}
 				GSync::GetDeviceManager()->AnnounceIgnoredMessage(false, $brokenSO->id, $brokenSO);
 			}
+
 			// tell MAPI to ignore the message
 			return SYNC_E_IGNORE;
 		}

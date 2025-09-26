@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -65,6 +66,10 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Puts a StartTag on the output stack.
+	 *
+	 * @param mixed $tag
+	 * @param mixed $attributes
+	 * @param mixed $nocontent
 	 */
 	public function startTag($tag, $attributes = false, $nocontent = false) {
 		$stackelem = [];
@@ -76,8 +81,8 @@ class WBXMLEncoder extends WBXMLDefs {
 
 			array_push($this->_stack, $stackelem);
 
-			// If 'nocontent' is specified, then apparently the user wants to force
-			// output of an empty tag, and we therefore output the stack here
+		// If 'nocontent' is specified, then apparently the user wants to force
+		// output of an empty tag, and we therefore output the stack here
 		}
 		else {
 			$this->_outputStack();
@@ -287,6 +292,8 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Outputs a byte.
+	 *
+	 * @param mixed $byte
 	 */
 	private function outByte($byte) {
 		fwrite($this->_out, chr($byte));
@@ -327,6 +334,8 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Outputs content with string terminator.
+	 *
+	 * @param mixed $content
 	 */
 	private function outTermStr($content) {
 		fwrite($this->_out, $content);
@@ -335,6 +344,8 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Switches the codepage.
+	 *
+	 * @param mixed $page
 	 */
 	private function outSwitchPage($page) {
 		$this->outByte(self::WBXML_SWITCH_PAGE);
@@ -343,6 +354,8 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Get the mapping for a tag.
+	 *
+	 * @param mixed $tag
 	 *
 	 * @return array
 	 */
@@ -369,6 +382,8 @@ class WBXMLEncoder extends WBXMLDefs {
 	/**
 	 * Split a tag from a the fulltag (namespace + tag).
 	 *
+	 * @param mixed $fulltag
+	 *
 	 * @return array keys: 'ns' (namespace), 'tag' (tag)
 	 */
 	private function splitTag($fulltag) {
@@ -394,6 +409,9 @@ class WBXMLEncoder extends WBXMLDefs {
 
 	/**
 	 * Logs a StartTag to SLog.
+	 *
+	 * @param mixed $tag
+	 * @param mixed $nocontent
 	 */
 	private function logStartTag($tag, $nocontent) {
 		$spaces = str_repeat(" ", count($this->logStack));

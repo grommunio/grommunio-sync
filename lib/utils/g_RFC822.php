@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPDX-License-Identifier: BSD-3-Clause.
  *
@@ -330,6 +331,7 @@ class Mail_RFC822 {
 		}
 
 		return '';
+
 		// If you got here then something's off
 		return false;
 	}
@@ -560,7 +562,7 @@ class Mail_RFC822 {
 				$structure = $addresses[0];
 			}
 
-			// Flat format
+		// Flat format
 		}
 		else {
 			if ($is_group) {
@@ -583,7 +585,7 @@ class Mail_RFC822 {
 	 */
 	protected function _validatePhrase($phrase) {
 		// Splits on one or more Tab or space.
-		$parts = preg_split('/[ \\x09]+/', $phrase, -1, PREG_SPLIT_NO_EMPTY);
+		$parts = preg_split('/[ \x09]+/', $phrase, -1, PREG_SPLIT_NO_EMPTY);
 
 		$phrase_parts = [];
 		while (count($parts) > 0) {
@@ -632,17 +634,17 @@ class Mail_RFC822 {
 		}
 
 		// Check for any char from ASCII 0 - ASCII 127
-		if (!preg_match('/^[\\x00-\\x7E]+$/i', $atom, $matches)) {
+		if (!preg_match('/^[\x00-\x7E]+$/i', $atom, $matches)) {
 			return false;
 		}
 
 		// Check for specials:
-		if (preg_match('/[][()<>@,;\\:". ]/', $atom)) {
+		if (preg_match('/[][()<>@,;\:". ]/', $atom)) {
 			return false;
 		}
 
 		// Check for control characters (ASCII 0-31):
-		if (preg_match('/[\\x00-\\x1F]+/', $atom)) {
+		if (preg_match('/[\x00-\x1F]+/', $atom)) {
 			return false;
 		}
 
@@ -662,7 +664,7 @@ class Mail_RFC822 {
 		$qstring = substr($qstring, 1, -1);
 
 		// Perform check, removing quoted characters first.
-		return !preg_match('/[\x0D\\\\"]/', preg_replace('/\\\\./', '', $qstring));
+		return !preg_match('/[\x0D\\\"]/', preg_replace('/\\\./', '', $qstring));
 	}
 
 	/**
@@ -723,7 +725,7 @@ class Mail_RFC822 {
 				return false;
 			}
 
-			// Only got addr-spec
+		// Only got addr-spec
 		}
 		else {
 			// First snip angle brackets if present.
@@ -901,7 +903,7 @@ class Mail_RFC822 {
 	 * @return bool success or failure
 	 */
 	protected function _validateDliteral($dliteral) {
-		return !preg_match('/(.)[][\x0D\\\\]/', $dliteral, $matches) && ((!isset($matches[1])) || $matches[1] != '\\');
+		return !preg_match('/(.)[][\x0D\\\]/', $dliteral, $matches) && ((!isset($matches[1])) || $matches[1] != '\\');
 	}
 
 	/**
@@ -922,7 +924,7 @@ class Mail_RFC822 {
 			$local_part = $this->_splitCheck($parts, '@');
 			$domain = substr($addr_spec, strlen($local_part . '@'));
 
-			// No @ sign so assume the default domain.
+		// No @ sign so assume the default domain.
 		}
 		else {
 			$local_part = $addr_spec;
@@ -992,7 +994,7 @@ class Mail_RFC822 {
 	 * @return int Approximate count
 	 */
 	public function approximateCount($data) {
-		return count(preg_split('/(?<!\\\\),/', $data));
+		return count(preg_split('/(?<!\\\),/', $data));
 	}
 
 	/**
@@ -1010,7 +1012,7 @@ class Mail_RFC822 {
 	 *               username/domain if it matches
 	 */
 	public function isValidInetAddress($data, $strict = false) {
-		$regex = $strict ? '/^([.0-9a-z_+-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i' : '/^([*+!.&#$|\'\\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i';
+		$regex = $strict ? '/^([.0-9a-z_+-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i' : '/^([*+!.&#$|\'\%\/0-9a-z^_`{}=?~:-]+)@(([0-9a-z-]+\.)+[0-9a-z]{2,})$/i';
 		if (preg_match($regex, trim($data), $matches)) {
 			return [$matches[1], $matches[2]];
 		}

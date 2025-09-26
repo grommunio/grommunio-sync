@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -64,7 +65,7 @@ class SLog {
 		try {
 			self::getLogger()->Log($loglevel, $message);
 		}
-		catch (\Exception $e) {
+		catch (Exception $e) {
 			// @TODO How should we handle logging error ?
 			// Ignore any error.
 		}
@@ -120,7 +121,7 @@ class SLog {
 				$errmsg = 'The configured logging class `' . $logger . '` does not exist. Check your configuration.';
 				error_log($errmsg);
 
-				throw new \Exception($errmsg);
+				throw new Exception($errmsg);
 			}
 
 			// if there is an impersonated user it's used instead of the GET user

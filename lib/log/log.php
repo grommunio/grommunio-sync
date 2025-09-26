@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -55,8 +56,7 @@ abstract class Log {
 	/**
 	 * Constructor.
 	 */
-	public function __construct() {
-	}
+	public function __construct() {}
 
 	/**
 	 * Returns the current user.
@@ -245,8 +245,7 @@ abstract class Log {
 	 * This function is used as an event for log implementer.
 	 * It happens when the SLog static class is finished with the initialization of this instance.
 	 */
-	public function AfterInitialize() {
-	}
+	public function AfterInitialize() {}
 
 	/**
 	 * This function is used as an event for log implementer.
@@ -255,8 +254,7 @@ abstract class Log {
 	 * @param mixed $loglevel
 	 * @param mixed $message
 	 */
-	protected function afterLog($loglevel, $message) {
-	}
+	protected function afterLog($loglevel, $message) {}
 
 	/**
 	 * Returns the string representation of the given $loglevel.

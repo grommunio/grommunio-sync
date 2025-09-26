@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -108,7 +109,7 @@ class ContentParameters extends StateObject {
 	/**
 	 * Returns available body preference objects.
 	 *
-	 *  @return array|bool       returns false if the client's body preference is not available
+	 * @return array|bool returns false if the client's body preference is not available
 	 */
 	public function GetBodyPreference() {
 		if (!isset($this->bodypref) || !(is_array($this->bodypref) || empty($this->bodypref))) {
@@ -123,7 +124,7 @@ class ContentParameters extends StateObject {
 	/**
 	 * Returns available body part preference objects.
 	 *
-	 *  @return array|bool       returns false if the client's body preference is not available
+	 * @return array|bool returns false if the client's body preference is not available
 	 */
 	public function GetBodyPartPreference() {
 		if (!isset($this->bodypartpref) || !(is_array($this->bodypartpref) || empty($this->bodypartpref))) {

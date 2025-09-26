@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -430,7 +431,6 @@ class Streamer implements JsonSerializable {
 	 * JsonSerializable interface method.
 	 *
 	 * Serializes the object to a value that can be serialized natively by json_encode()
-	 *
 	 */
 	public function jsonSerialize(): mixed {
 		$data = [];

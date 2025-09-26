@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -6,5 +7,4 @@
  *
  * Fatal exception related to functionality which is not available
  */
-class FatalNotImplementedException extends FatalException {
-}
+class FatalNotImplementedException extends FatalException {}

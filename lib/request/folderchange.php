@@ -1,4 +1,5 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
@@ -97,6 +98,7 @@ class FolderChange extends RequestProcessor {
 		}
 
 		$status = SYNC_FSSTATUS_SUCCESS;
+
 		// Get state of hierarchy
 		try {
 			$syncstate = self::$deviceManager->GetStateManager()->GetSyncState($synckey);
