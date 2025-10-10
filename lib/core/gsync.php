@@ -1,8 +1,9 @@
 <?php
+
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * Core functionalities
  */
@@ -150,6 +151,7 @@ class GSync {
 	private static $stateMachine;
 	private static $deviceManager;
 	private static $provisioningManager;
+	private static $connectiontracking;
 	private static $topCollector;
 	private static $backend;
 	private static $addSyncFolders;
@@ -363,6 +365,8 @@ class GSync {
 		// get the statemachine, which will also try to load the backend.. This could throw errors
 		self::GetStateMachine();
 
+		self::$connectiontracking = new ConnectionTracking();
+
 		return true;
 	}
 
@@ -456,6 +460,15 @@ class GSync {
 		}
 
 		return self::$provisioningManager;
+	}
+
+	/**
+	 * Tracks the current connection for the device/user.
+	 */
+	public static function TrackConnection() {
+		if (isset(self::$connectiontracking)) {
+			self::$connectiontracking->TrackConnection();
+		}
 	}
 
 	/**
