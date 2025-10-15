@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
  *
  * This is the entry point through which all requests are processed.
  */
@@ -102,6 +102,7 @@ try {
 
 	if (RequestProcessor::isUserAuthenticated()) {
 		header("X-Grommunio-Sync-Version: " . @constant('GROMMUNIOSYNC_VERSION'));
+		GSync::TrackConnection();
 
 		// announce the supported AS versions (if not already sent to device)
 		if (GSync::GetDeviceManager()->AnnounceASVersion()) {

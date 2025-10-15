@@ -21,6 +21,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'BodyPreference' => __DIR__ . '/../..' . '/lib/core/bodypreference.php',
         'ChangesMemoryWrapper' => __DIR__ . '/../..' . '/lib/core/changesmemorywrapper.php',
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'ConnectionTracking' => __DIR__ . '/../..' . '/lib/core/connectiontracking.php',
         'ContentParameters' => __DIR__ . '/../..' . '/lib/core/contentparameters.php',
         'DeviceManager' => __DIR__ . '/../..' . '/lib/core/devicemanager.php',
         'ExportChangesICS' => __DIR__ . '/../..' . '/lib/grommunio/exporter.php',
