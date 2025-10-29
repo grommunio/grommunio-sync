@@ -461,7 +461,7 @@ class MAPIUtils {
 	 * @return string
 	 */
 	public static function GetContainerClassFromFolderType($foldertype) {
-		return match ($foldertype) {
+		return match ((int) $foldertype) {
 			SYNC_FOLDER_TYPE_TASK, SYNC_FOLDER_TYPE_USER_TASK => "IPF.Task",
 			SYNC_FOLDER_TYPE_APPOINTMENT, SYNC_FOLDER_TYPE_USER_APPOINTMENT => "IPF.Appointment",
 			SYNC_FOLDER_TYPE_CONTACT, SYNC_FOLDER_TYPE_USER_CONTACT => "IPF.Contact",
