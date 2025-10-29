@@ -238,12 +238,10 @@ class Utils {
 	 *
 	 * @param int $filtertype
 	 *
-	 * @return bool|long returns false on invalid filtertype
+	 * @return bool|int returns false on invalid filtertype
 	 */
 	public static function GetFiltertypeInterval($filtertype) {
-		$back = false;
-
-		return match ($filtertype) {
+		return match ((int) $filtertype) {
 			SYNC_FILTERTYPE_1DAY => 60 * 60 * 24,
 			SYNC_FILTERTYPE_3DAYS => 60 * 60 * 24 * 3,
 			SYNC_FILTERTYPE_1WEEK => 60 * 60 * 24 * 7,
@@ -261,10 +259,10 @@ class Utils {
 	 * @param int       SYNC_TRUNCATION
 	 * @param mixed $truncation
 	 *
-	 * @return long
+	 * @return int
 	 */
 	public static function GetTruncSize($truncation) {
-		return match ($truncation) {
+		return match ((int) $truncation) {
 			SYNC_TRUNCATION_HEADERS => 0,
 			SYNC_TRUNCATION_512B => 512,
 			SYNC_TRUNCATION_1K => 1024,
@@ -644,7 +642,7 @@ class Utils {
 	 * @return int
 	 */
 	public static function GetLastVerbExecuted($verb) {
-		return match ($verb) {
+		return match ((int) $verb) {
 			NOTEIVERB_REPLYTOSENDER => AS_REPLYTOSENDER,
 			NOTEIVERB_REPLYTOALL => AS_REPLYTOALL,
 			NOTEIVERB_FORWARD => AS_FORWARD,
