@@ -1,3 +1,15 @@
+grommunio-sync 2.4 (2025-12-16)
+===============================
+
+Fixes:
+
+* Casting to correct compare type
+
+Enhancements:
+
+* Connection tracking in redis
+
+
 grommunio-sync 2.3 (2025-09-26)
 ===============================
 
