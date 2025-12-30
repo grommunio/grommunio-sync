@@ -1126,9 +1126,7 @@ class MAPIProvider {
 			$inboxProps = mapi_getprops($inbox, [PR_ENTRYID]);
 		}
 
-		$root = mapi_msgstore_openentry($this->store, null); // TODO use getRootProps()
-		$rootProps = mapi_getprops($root, [PR_IPM_APPOINTMENT_ENTRYID, PR_IPM_CONTACT_ENTRYID, PR_IPM_DRAFTS_ENTRYID, PR_IPM_JOURNAL_ENTRYID, PR_IPM_NOTE_ENTRYID, PR_IPM_TASK_ENTRYID, PR_ADDITIONAL_REN_ENTRYIDS]);
-
+		$rootProps = $this->getRootProps();
 		$additional_ren_entryids = [];
 		if (isset($rootProps[PR_ADDITIONAL_REN_ENTRYIDS])) {
 			$additional_ren_entryids = $rootProps[PR_ADDITIONAL_REN_ENTRYIDS];
@@ -3500,7 +3498,7 @@ class MAPIProvider {
 	private function getRootProps() {
 		if (!isset($this->rootProps)) {
 			$root = mapi_msgstore_openentry($this->store, null);
-			$this->rootProps = mapi_getprops($root, [PR_ADDITIONAL_REN_ENTRYIDS_EX]);
+			$this->rootProps = mapi_getprops($root, [PR_IPM_APPOINTMENT_ENTRYID, PR_IPM_CONTACT_ENTRYID, PR_IPM_DRAFTS_ENTRYID, PR_IPM_JOURNAL_ENTRYID, PR_IPM_NOTE_ENTRYID, PR_IPM_TASK_ENTRYID, PR_ADDITIONAL_REN_ENTRYIDS, PR_ADDITIONAL_REN_ENTRYIDS_EX]);
 		}
 
 		return $this->rootProps;
