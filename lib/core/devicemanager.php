@@ -145,6 +145,7 @@ class DeviceManager extends InterProcessData {
 		// update the user agent and AS version on the device
 		$this->device->SetUserAgent(Request::GetUserAgent());
 		$this->device->SetASVersion(Request::GetProtocolVersion());
+		$this->updateImpersonatingUser();
 
 		// data to be saved
 		if ($this->device->IsDataChanged() && Request::IsValidDeviceID() && $this->saveDevice) {
@@ -184,6 +185,29 @@ class DeviceManager extends InterProcessData {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Persist information about the impersonating user (if any) in the device data.
+	 *
+	 * @return void
+	 */
+	private function updateImpersonatingUser() {
+		$impersonatedAccount = Request::GetImpersonatedUser();
+		$currentValue = isset($this->device->impersonatinguser) ? $this->device->impersonatinguser : false;
+
+		if ($impersonatedAccount !== false) {
+			$authUser = Request::GetAuthUser();
+			if ($authUser !== false && $authUser !== $currentValue) {
+				$this->device->impersonatinguser = $authUser;
+			}
+
+			return;
+		}
+
+		if ($currentValue !== false) {
+			$this->device->impersonatinguser = false;
+		}
 	}
 
 	/**
