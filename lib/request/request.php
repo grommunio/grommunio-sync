@@ -11,7 +11,7 @@
 class Request {
 	public const MAXMEMORYUSAGE = 0.9;     // use max. 90% of allowed memory when syncing
 	public const UNKNOWN = "unknown";
-	public const IMPERSONATE_DELIM = '#';
+	public const IMPERSONATE_DELIM = '!';
 
 	/**
 	 * self::filterEvilInput() options.
@@ -185,6 +185,10 @@ class Request {
 
 		// process impersonation
 		self::$authUser = self::$authUserString;
+
+		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos(self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
+            list(self::$authUser, self::$impersonatedUser) = explode(self::IMPERSONATE_DELIM, self::$authUserString);
+        }
 
 		if (defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
 			self::$authUser = Utils::GetLocalPartFromEmail(self::$authUser);
