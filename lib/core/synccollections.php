@@ -169,7 +169,9 @@ class SyncCollections implements Iterator {
 			// later when trying to retrieve the SyncParameters nothing will be found
 
 			if ($folderid === false) {
-				throw new StatusException(sprintf("SyncCollections->LoadCollection(): could not get FOLDERDATA state of the hierarchy uuid: %s", $spa->GetUuid()), self::ERROR_WRONG_HIERARCHY);
+				throw new StatusException(sprintf("SyncCollections->LoadCollection(): could not get FOLDERDATA state of the hierarchy uuid: %s",
+					$spa instanceof SyncParameters ? $spa->GetUuid() : 'not available'),
+					self::ERROR_WRONG_HIERARCHY);
 			}
 
 			// we also generate a fake change, so a sync on this folder is triggered
