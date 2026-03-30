@@ -1868,45 +1868,48 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// fallback code
 		if (!$this->stateFolder && $this->defaultstore) {
-			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getStateFolder(): state folder not set. Use fallback"));
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): state folder for device not set in cache - search/create it"));
 			$rootfolder = mapi_msgstore_openentry($this->defaultstore);
-			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
-			$restriction = $this->getStateFolderRestriction($devid);
-			// restrict the hierarchy to the grommunio-sync search folder only
-			mapi_table_restrict($hierarchy, $restriction);
-			$rowCnt = mapi_table_getrowcount($hierarchy);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d device state folders", $rowCnt));
-			if ($rowCnt == 1) {
-				$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
-				$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex((string) $hierarchyRows[0][PR_ENTRYID])));
-				// put found id in redis
-				if ($devid) {
-					$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->mainUser, "statefolder");
+			$stateRootFolder = false;
+			if ($rootfolder) {
+				$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
+				if ($hierarchy) {
+					$restriction = $this->getStateFolderRestriction(STORE_STATE_FOLDER);
+					mapi_table_restrict($hierarchy, $restriction);
+					$rowCnt = mapi_table_getrowcount($hierarchy);
+					if ($rowCnt > 1) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->getStateFolder(): expected 1 store state folder, found %d", $rowCnt));
+					}
+					if ($rowCnt > 0) {
+						$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
+						if ($hierarchyRows) {
+							$stateRootFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
+						}
+					}
 				}
 			}
-			elseif ($rowCnt == 0) {
-				// legacy code: create the hidden state folder and the device subfolder
-				// this should happen when the user configures the device (autodiscover or first sync if no autodiscover)
+			if (!$stateRootFolder) {
+				$stateRootFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
+				mapi_setprops($stateRootFolder, [PR_ATTR_HIDDEN => true]);
+			}
 
-				$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
-				$restriction = $this->getStateFolderRestriction(STORE_STATE_FOLDER);
+			if ($stateRootFolder) {
+				$hierarchy = mapi_folder_gethierarchytable($stateRootFolder, CONVENIENT_DEPTH);
+				$restriction = $this->getStateFolderRestriction($devid);
 				mapi_table_restrict($hierarchy, $restriction);
 				$rowCnt = mapi_table_getrowcount($hierarchy);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d store state folders", $rowCnt));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d device state folders", $rowCnt));
 				if ($rowCnt == 1) {
 					$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
-					$stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
+					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
+					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex((string) $hierarchyRows[0][PR_ENTRYID])));
+					// put found id in redis
+					if ($devid) {
+						$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->mainUser, "statefolder");
+					}
 				}
 				elseif ($rowCnt == 0) {
-					$stateFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
-					mapi_setprops($stateFolder, [PR_ATTR_HIDDEN => true]);
-				}
-
-				// TODO: handle this
-
-				if (isset($stateFolder) && $stateFolder) {
-					$devStateFolder = mapi_folder_createfolder($stateFolder, $devid, "");
+					$devStateFolder = mapi_folder_createfolder($stateRootFolder, $devid, "");
 					$devStateFolderProps = mapi_getprops($devStateFolder);
 					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
 					mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
@@ -2214,6 +2217,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 		}
 		else {
+			if (!$this->defaultstore) {
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->openMessageStore('%s'): default store is not available", $user));
+
+				return false;
+			}
 			$entryid = @mapi_msgstore_createentryid($this->defaultstore, $user);
 		}
 
