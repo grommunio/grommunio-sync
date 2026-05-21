@@ -667,6 +667,17 @@ class Utils {
 	}
 
 	/**
+	 * Returns true if an impersonated account is active and differs from auth user.
+	 *
+	 * @return bool
+	 */
+	public static function IsImpersonatedConnection() {
+		$authUser = Request::GetAuthUser();
+		$impersonatedUser = Request::GetImpersonatedUser();
+		return $impersonatedUser && strcasecmp((string) $impersonatedUser, (string) $authUser) !== 0;
+	}
+
+	/**
 	 * Format bytes to a more human readable value.
 	 *
 	 * @param int $bytes

@@ -185,12 +185,33 @@ class Request {
 
 		// process impersonation
 		self::$authUser = self::$authUserString;
+		self::$impersonatedUser = false;
 
 		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos(self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
-            list(self::$authUser, self::$impersonatedUser) = explode(self::IMPERSONATE_DELIM, self::$authUserString);
-        }
+			$parts = explode(self::IMPERSONATE_DELIM, self::$authUserString);
+			if (count($parts) === 2) {
+				list($impersonatedUser, $authUser) = $parts;
+				if ($impersonatedUser !== '' && strpos($authUser, '@') !== false) {
+					$domainPos = strrpos($authUser, '@');
+					self::$authUser = $authUser;
+					self::$impersonatedUser = $impersonatedUser . substr($authUser, $domainPos);
+				}
+			}
+			elseif (count($parts) === 3) {
+				list($impersonatedUser, $impersonatedDomain, $authUser) = $parts;
+				if ($impersonatedUser !== '' && $impersonatedDomain !== '' && strpos($authUser, '@') !== false) {
+					self::$authUser = $authUser;
+					self::$impersonatedUser = $impersonatedUser . '@' . $impersonatedDomain;
+				}
+			}
+		}
 
-		if (defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
+		if (strpos((string) self::$authUser, '@') !== false) {
+			self::$authDomain = substr((string) self::$authUser, strrpos((string) self::$authUser, '@') + 1);
+		}
+
+		if ((defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && self::$impersonatedUser) === false &&
+		    defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
 			self::$authUser = Utils::GetLocalPartFromEmail(self::$authUser);
 		}
 
