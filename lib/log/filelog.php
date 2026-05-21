@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2022 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * Logging functionalities
  */
@@ -65,13 +65,13 @@ class FileLog extends Log {
 
 		if ($includeUserDevice) {
 			// when the users differ, we need to log both
-			if (strcasecmp($this->GetAuthUser(), $this->GetUser()) == 0) {
-				$log .= ' [' . $this->GetUser() . ']';
+				if (strcasecmp($this->GetAuthUser(), $this->GetUser()) == 0) {
+					$log .= ' [' . $this->GetUser() . ']';
+				}
+				else {
+					$log .= ' [' . $this->GetUser() . Request::IMPERSONATE_DELIM . $this->GetAuthUser() . ']';
+				}
 			}
-			else {
-				$log .= ' [' . $this->GetAuthUser() . Request::IMPERSONATE_DELIM . $this->GetUser() . ']';
-			}
-		}
 		if ($includeUserDevice && (LOGLEVEL >= LOGLEVEL_DEVICEID || (LOGUSERLEVEL >= LOGLEVEL_DEVICEID && $this->IsAuthUserInSpecialLogUsers()))) {
 			$log .= ' [' . $this->GetDevid() . ']';
 		}
