@@ -231,7 +231,7 @@ class ChangesMemoryWrapper extends HierarchyCache implements IImportChanges, IEx
 			// e.g. system folders can normally not be changed - set the type from cache and let the destinationImporter decide
 			if (!isset($folder->type) || !$folder->type) {
 				$cacheFolder = $this->GetFolder($folder->serverid);
-				$folder->type = $cacheFolder->type;
+				$folder->type = (int) $cacheFolder->type;
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("ChangesMemoryWrapper->ImportFolderChange(): Set foldertype for folder '%s' from cache as it was not sent: '%s'", $folder->displayname, $folder->type));
 				if (isset($cacheFolder->TypeReal)) {
 					$folder->TypeReal = $cacheFolder->TypeReal;

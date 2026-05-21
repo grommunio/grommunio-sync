@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * This class checks and processes all incoming data of the request.
  */
@@ -190,7 +190,7 @@ class Request {
 		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos(self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
 			$parts = explode(self::IMPERSONATE_DELIM, self::$authUserString);
 			if (count($parts) === 2) {
-				list($impersonatedUser, $authUser) = $parts;
+				[$impersonatedUser, $authUser] = $parts;
 				if ($impersonatedUser !== '' && strpos($authUser, '@') !== false) {
 					$domainPos = strrpos($authUser, '@');
 					self::$authUser = $authUser;
@@ -198,7 +198,7 @@ class Request {
 				}
 			}
 			elseif (count($parts) === 3) {
-				list($impersonatedUser, $impersonatedDomain, $authUser) = $parts;
+				[$impersonatedUser, $impersonatedDomain, $authUser] = $parts;
 				if ($impersonatedUser !== '' && $impersonatedDomain !== '' && strpos($authUser, '@') !== false) {
 					self::$authUser = $authUser;
 					self::$impersonatedUser = $impersonatedUser . '@' . $impersonatedDomain;
