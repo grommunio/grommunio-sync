@@ -947,6 +947,11 @@ class MAPIProvider {
 			$message->isdraft = true;
 		}
 
+		// Empty datereceived causes iOS devices to show the sync time as the delivery time
+		if (!isset($message->datereceived) && isset($messageprops[$emailproperties["clientsubmittime"]])) {
+			$message->datereceived = $messageprops[$emailproperties["clientsubmittime"]];
+		}
+
 		return $message;
 	}
 
