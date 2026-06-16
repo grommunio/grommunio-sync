@@ -502,18 +502,40 @@ class MAPIProvider {
 
 		// All changed exceptions are appointments within the 'exceptions' array. They contain the same items as a normal appointment
 		foreach ($recurrence->recur["changed_occurrences"] as $change) {
+			if (isset($change["alldayevent"])) {
+				$exceptIsAllday = $change["alldayevent"];
+			}
+			else {
+				$exceptIsAllday = $syncMessage->alldayevent;
+			}
+
 			$exception = new SyncAppointmentException();
 
 			// start, end, basedate, subject, remind_before, reminderset, location, busystatus, alldayevent, label
 			if (isset($change["start"])) {
-				$exception->starttime = $this->getGMTTimeByTZ($change["start"], $tz);
+				if ($exceptIsAllday) {
+					$exception->starttime = ($change["start"]);
+				}
+				else {
+					$exception->starttime = $this->getGMTTimeByTZ($change["start"], $tz);
+				}
 			}
 			if (isset($change["end"])) {
-				$exception->endtime = $this->getGMTTimeByTZ($change["end"], $tz);
+				if ($exceptIsAllday) {
+					$exception->endtime = ($change["end"]);
+				}
+				else {
+					$exception->endtime = $this->getGMTTimeByTZ($change["end"], $tz);
+				}
 			}
 			if (isset($change["basedate"])) {
 				// depending on the AS version the streamer is going to send the correct value
-				$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				if ($exceptIsAllday) {
+					$exception->exceptionstarttime = $exception->instanceid = $this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60;
+				}
+				else {
+					$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				}
 
 				// open body because getting only property might not work because of memory limit
 				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
@@ -583,8 +605,19 @@ class MAPIProvider {
 		foreach ($recurrence->recur["deleted_occurrences"] as $deleted) {
 			$exception = new SyncAppointmentException();
 
+			if (isset($deleted["alldayevent"])) {
+				$exceptIsAllday = $deleted["alldayevent"];
+			}
+			else {
+				$exceptIsAllday = $syncMessage->alldayevent;
+			}
+
 			// depending on the AS version the streamer is going to send the correct value
-			$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+			if ($exceptIsAllday) {
+				$exception->exceptionstarttime = $exception->instanceid = $this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60;
+			} else {
+				$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+			}
 			$exception->deleted = "1";
 
 			if (!isset($syncMessage->exceptions)) {
@@ -1444,10 +1477,21 @@ class MAPIProvider {
 				$exceptionprops = [];
 
 				if (isset($appointment->starttime)) {
-					$exceptionprops[$appointmentprops["starttime"]] = $appointment->starttime;
+					if ($appointment->alldayevent) {
+						$exceptionprops[$appointmentprops["starttime"]] = $this->getGMTTimeByTZ($appointment->starttime, $tz);
+					}
+					else {
+						$exceptionprops[$appointmentprops["starttime"]] = $appointment->starttime;
+					}
 				}
 				if (isset($appointment->endtime)) {
-					$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
+					if ($appointment->alldayevent) {
+
+						$exceptionprops[$appointmentprops["endtime"]] = $this->getGMTTimeByTZ($appointment->endtime, $tz);
+					}
+					else {
+						$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
+					}
 				}
 				if (isset($appointment->subject)) {
 					$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
@@ -1487,8 +1531,9 @@ class MAPIProvider {
 			// instantiate the MR so we can send a updates to the attendees
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			$mr->updateMeetingRequest($basedate);
-			$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
-			$mr->sendMeetingRequest($deleteException, false, $basedate);
+			// $deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;//changed event into meeting request
+			// $mr->sendMeetingRequest($deleteException, false, $basedate);
+			$mr->sendMeetingRequest(false, false, $basedate);
 
 			return $response;
 		}
@@ -1614,7 +1659,12 @@ class MAPIProvider {
 			// set recurrence start here because it's calculated differently for tasks and appointments
 			$recur["start"] = $this->getDayStartOfTimestamp($this->getGMTTimeByTZ($localstart, $tz));
 
-			$recur["startocc"] = $starttime["tm_hour"] * 60 + $starttime["tm_min"];
+			if ((($localstart % 86400) == 3600 )&& (($duration % 1440) == 0)  ) { //(24 * 3600); 
+				$recur["startocc"] = 0;
+			}
+			else {
+				$recur["startocc"] = $starttime["tm_hour"] * 60 + $starttime["tm_min"];
+			}
 			$recur["endocc"] = $recur["startocc"] + $duration; // Note that this may be > 24*60 if multi-day
 
 			// only tasks can regenerate
