@@ -117,6 +117,16 @@ class WBXMLEncoder extends WBXMLDefs {
 		// We need to filter out any \0 chars because it's the string terminator in WBXML. We currently
 		// cannot send \0 characters within the XML content anywhere.
 		$content = str_replace("\0", "", $content);
+
+		// The WBXML document is declared as UTF-8 in the header (see startWBXML()). Any invalid byte
+		// sequence in the content makes the whole response unparseable for strict clients: iOS rejects
+		// it and re-requests the same item forever, which is then reported as "Mobile loop detected"
+		// and eventually ignored as a broken message. This happens with otherwise-fine mails whose
+		// headers carry raw 8-bit bytes (e.g. a Thread-Topic with a Latin-1 "\xE7" instead of UTF-8).
+		// Coerce to valid UTF-8 so a single bad header can no longer wedge a folder's sync.
+		if ($content !== "" && !mb_check_encoding($content, "UTF-8")) {
+			$content = mb_convert_encoding($content, "UTF-8", "UTF-8");
+		}
 		if ("x" . $content == "x") {
 			return;
 		}
