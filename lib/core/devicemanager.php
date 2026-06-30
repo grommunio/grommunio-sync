@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * Manages device relevant data, loop detection and device states.
  * The DeviceManager uses a IStateMachine implementation with
@@ -145,6 +145,7 @@ class DeviceManager extends InterProcessData {
 		// update the user agent and AS version on the device
 		$this->device->SetUserAgent(Request::GetUserAgent());
 		$this->device->SetASVersion(Request::GetProtocolVersion());
+		$this->updateImpersonatingUser();
 
 		// data to be saved
 		if ($this->device->IsDataChanged() && Request::IsValidDeviceID() && $this->saveDevice) {
@@ -184,6 +185,29 @@ class DeviceManager extends InterProcessData {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Persist information about the impersonating user (if any) in the device data.
+	 *
+	 * @return void
+	 */
+	private function updateImpersonatingUser() {
+		$impersonatedAccount = Request::GetImpersonatedUser();
+		$currentValue = $this->device->impersonatinguser ?? false;
+
+		if ($impersonatedAccount !== false) {
+			$authUser = Request::GetAuthUser();
+			if ($authUser !== false && $authUser !== $currentValue) {
+				$this->device->impersonatinguser = $authUser;
+			}
+
+			return;
+		}
+
+		if ($currentValue !== false) {
+			$this->device->impersonatinguser = false;
+		}
 	}
 
 	/**

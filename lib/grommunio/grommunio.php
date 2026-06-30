@@ -1863,7 +1863,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 		// Try to get the state folder id from redis
 		if (!$this->stateFolder) {
-			$folderentryid = $this->getDeviceUserData($this->userDeviceData, $devid, $this->mainUser, "statefolder");
+			$folderentryid = $this->getDeviceUserData($this->userDeviceData, $devid, $this->storeName, "statefolder");
 			if ($folderentryid) {
 				$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, hex2bin((string) $folderentryid));
 			}
@@ -1908,7 +1908,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex((string) $hierarchyRows[0][PR_ENTRYID])));
 					// put found id in redis
 					if ($devid) {
-						$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->mainUser, "statefolder");
+						$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->storeName, "statefolder");
 					}
 				}
 				elseif ($rowCnt == 0) {

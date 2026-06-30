@@ -38,6 +38,7 @@ class ASDevice extends StateObject {
 		'foldersynccomplete' => true,
 		'additionalfolders' => [],
 		'syncfiltertype' => false,
+		'impersonatinguser' => false,
 	];
 
 	protected $newdevice;

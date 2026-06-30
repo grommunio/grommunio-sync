@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * This class checks and processes all incoming data of the request.
  */
@@ -11,7 +11,7 @@
 class Request {
 	public const MAXMEMORYUSAGE = 0.9;     // use max. 90% of allowed memory when syncing
 	public const UNKNOWN = "unknown";
-	public const IMPERSONATE_DELIM = '#';
+	public const IMPERSONATE_DELIM = '!';
 
 	/**
 	 * self::filterEvilInput() options.
@@ -185,8 +185,33 @@ class Request {
 
 		// process impersonation
 		self::$authUser = self::$authUserString;
+		self::$impersonatedUser = false;
 
-		if (defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
+		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos(self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
+			$parts = explode(self::IMPERSONATE_DELIM, self::$authUserString);
+			if (count($parts) === 2) {
+				[$impersonatedUser, $authUser] = $parts;
+				if ($impersonatedUser !== '' && strpos($authUser, '@') !== false) {
+					$domainPos = strrpos($authUser, '@');
+					self::$authUser = $authUser;
+					self::$impersonatedUser = $impersonatedUser . substr($authUser, $domainPos);
+				}
+			}
+			elseif (count($parts) === 3) {
+				[$impersonatedUser, $impersonatedDomain, $authUser] = $parts;
+				if ($impersonatedUser !== '' && $impersonatedDomain !== '' && strpos($authUser, '@') !== false) {
+					self::$authUser = $authUser;
+					self::$impersonatedUser = $impersonatedUser . '@' . $impersonatedDomain;
+				}
+			}
+		}
+
+		if (strpos((string) self::$authUser, '@') !== false) {
+			self::$authDomain = substr((string) self::$authUser, strrpos((string) self::$authUser, '@') + 1);
+		}
+
+		if ((defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && self::$impersonatedUser) === false &&
+		    defined('USE_FULLEMAIL_FOR_LOGIN') && !USE_FULLEMAIL_FOR_LOGIN) {
 			self::$authUser = Utils::GetLocalPartFromEmail(self::$authUser);
 		}
 

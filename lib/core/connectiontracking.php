@@ -26,10 +26,10 @@ class ConnectionTracking extends InterProcessData {
 	 */
 	public function TrackConnection() {
 		// use the email address here
-		self::$user = Request::GetUserIdentifier();
+		$email = Request::GetUserIdentifier();
 
 		$connectiontracking = ["starttime" => self::$start, "pid" => self::$pid, "command" => Request::GetCommand()];
 
-		return $this->setDeviceUserData($this->type, $connectiontracking, self::$devid, self::$user, $subkey = -1, $doCas = "replace");
+		return $this->setDeviceUserData($this->type, $connectiontracking, self::$devid, $email, $subkey = -1, $doCas = "replace");
 	}
 }

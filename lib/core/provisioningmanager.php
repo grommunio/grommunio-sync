@@ -19,6 +19,7 @@ class ProvisioningManager extends InterProcessData {
 	private $updatetime = 0;
 	private $loadtime = 0;
 	private $typePolicyCacheId = false;
+	private $provUser;
 
 	/**
 	 * Constructor.
@@ -31,7 +32,10 @@ class ProvisioningManager extends InterProcessData {
 		// initialize params
 		$this->initializeParams();
 
-		$this->typePolicyCacheId = sprintf("grommunio-sync:policycache-%s", self::$user);
+		// For provisioning we want the synchronizing user (default or impersonated)
+		$this->provUser = Request::GetUser();
+
+		$this->typePolicyCacheId = sprintf("grommunio-sync:policycache-%s", $this->provUser);
 
 		// Remote wipe requested ?
 		// If there is an entry in the provisioningcache for this user+device we assume that there is **NO** remote wipe requested.
@@ -46,7 +50,7 @@ class ProvisioningManager extends InterProcessData {
 		// no policies cached in redis, get policies from admin API
 		else {
 			$policies = false;
-			$api_response = file_get_contents(ADMIN_API_POLICY_ENDPOINT . self::$user);
+			$api_response = file_get_contents(ADMIN_API_POLICY_ENDPOINT . $this->provUser);
 			if ($api_response) {
 				$data = json_decode($api_response);
 				if (isset($data->data)) {
@@ -73,7 +77,7 @@ class ProvisioningManager extends InterProcessData {
 			return;
 		}
 		// get provisioning data from redis
-		$d = $this->getDeviceUserData($this->type, self::$devid, self::$user);
+		$d = $this->getDeviceUserData($this->type, self::$devid, $this->provUser);
 		if (!empty($d)) {
 			$this->policyKey = $d[self::KEY_POLICYKEY];
 			$this->policyHash = $d[self::KEY_POLICYHASH];
@@ -94,7 +98,7 @@ class ProvisioningManager extends InterProcessData {
 		$p[self::KEY_POLICYHASH] = $this->policyHash;
 		$p[self::KEY_UPDATETIME] = time();
 
-		return $this->setDeviceUserData($this->type, $p, self::$devid, self::$user);
+		return $this->setDeviceUserData($this->type, $p, self::$devid, $this->provUser);
 	}
 
 	/**
@@ -177,20 +181,24 @@ class ProvisioningManager extends InterProcessData {
 		$status = SYNC_PROVISION_RWSTATUS_NA;
 
 		// retrieve the WIPE STATUS from the Admin API
-		$api_response = file_get_contents(ADMIN_API_WIPE_ENDPOINT . self::$user . "?devices=" . self::$devid);
+		$api_response = file_get_contents(ADMIN_API_WIPE_ENDPOINT . $this->provUser . "?devices=" . self::$devid);
 		if ($api_response) {
 			$data = json_decode($api_response, true);
-			if (isset($data['data'][self::$devid]["status"])) {
-				$status = $data['data'][self::$devid]["status"];
-				// reset status to pending if it was already executed
-				if ($status >= SYNC_PROVISION_RWSTATUS_PENDING) {
-					if ($status < SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY) {
-						$status = SYNC_PROVISION_RWSTATUS_PENDING;
-						SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", self::$user, self::$devid, $status));
-					}
+				if (isset($data['data'][self::$devid]["status"])) {
+					$status = $data['data'][self::$devid]["status"];
+					// reset status to pending if it was already executed
+					if ($status >= SYNC_PROVISION_RWSTATUS_PENDING) {
+						if (Utils::IsImpersonatedConnection() && $status < SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY) {
+							$status = SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY;
+							SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): impersonated request, rewriting FULL REMOTE WIPE to ACCOUNT ONLY for user '%s' on device '%s' - status: '%s'", $this->provUser, self::$devid, $status));
+						}
+						elseif ($status < SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY) {
+							$status = SYNC_PROVISION_RWSTATUS_PENDING;
+							SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", $this->provUser, self::$devid, $status));
+						}
 					else {
 						$status = SYNC_PROVISION_RWSTATUS_PENDING_ACCOUNT_ONLY;
-						SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): ACCOUNT ONLY REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", self::$user, self::$devid, $status));
+						SLog::Write(LOGLEVEL_INFO, sprintf("ProvisioningManager->GetProvisioningWipeStatus(): ACCOUNT ONLY REMOTE WIPE due for user '%s' on device '%s' - status: '%s'", $this->provUser, self::$devid, $status));
 					}
 				}
 				else {
@@ -224,7 +232,7 @@ class ProvisioningManager extends InterProcessData {
 			),
 		],
 		];
-		$ret = file_get_contents(ADMIN_API_WIPE_ENDPOINT . self::$user . "?devices=" . self::$devid, false, stream_context_create($opts));
+		$ret = file_get_contents(ADMIN_API_WIPE_ENDPOINT . $this->provUser . "?devices=" . self::$devid, false, stream_context_create($opts));
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("ProvisioningManager->SetProvisioningWipeStatus() admin API response: %s", trim(Utils::PrintAsString($ret))));
 
 		return str_contains($http_response_header[0], "201");
