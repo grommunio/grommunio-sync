@@ -73,12 +73,12 @@ abstract class InterProcessData {
 	}
 
 	/**
-	 * Reinitializes the IPC data by removing, detaching and re-allocating it.
+	 * Reinitializes the IPC data. Used by grommunio-sync-top "clear",
+	 * subclasses remove their data. There is nothing to re-allocate in redis.
 	 *
 	 * @return bool
 	 */
 	public function ReInitIPC() {
-		// TODO: do we need this?
 		return false;
 	}
 

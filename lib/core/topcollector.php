@@ -189,18 +189,17 @@ class TopCollector extends InterProcessData {
 	}
 
 	/**
-	 * Reinitializes the IPC data.
+	 * Reinitializes the IPC data by removing the collected top data.
 	 *
 	 * @return bool
 	 */
 	#[Override]
 	public function ReInitIPC() {
-		return parent::ReInitIPC();
-		if (!status) {
-			$this->getRedis()->delKey(self::TOPDATA);
+		if (!$this->IsActive()) {
+			return false;
 		}
 
-		return $status;
+		return is_int($this->getRedis()->delKey(self::TOPDATA));
 	}
 
 	/**
