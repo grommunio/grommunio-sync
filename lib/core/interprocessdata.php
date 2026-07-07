@@ -83,16 +83,6 @@ abstract class InterProcessData {
 	}
 
 	/**
-	 * Cleans up the IPC data block.
-	 *
-	 * @return bool
-	 */
-	public function Clean() {
-		// TODO: do we need this?
-		return false;
-	}
-
-	/**
 	 * Indicates if the IPC is active.
 	 *
 	 * @return bool
