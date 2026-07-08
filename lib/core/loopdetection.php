@@ -851,14 +851,6 @@ class LoopDetection extends InterProcessData {
 				$this->ignore_messageid = false;
 				$current['ignored'] = $messageid;
 				$changedData = true;
-
-				// check if this message was broken before - here we know that it still is and remove it from the tracking
-				$brokenkey = self::BROKENMSGS . "-" . $folderid;
-			// TODO: this is currently not supported here! It's in a different structure now!
-			//                if (isset($loopdata[self::$devid][self::$user][$brokenkey]) && isset($loopdata[self::$devid][self::$user][$brokenkey][$messageid])) {
-			//                    SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
-			//                    unset($loopdata[self::$devid][self::$user][$brokenkey][$messageid]);
-			//                }
 			}
 			// not the broken message yet
 			else {
@@ -892,6 +884,12 @@ class LoopDetection extends InterProcessData {
 		}
 
 		if ($realBroken) {
+			// check if this message was broken before - here we know that it still is and remove it from the tracking
+			$brokenkey = self::BROKENMSGS . "-" . $folderid;
+			if ($this->setDeviceUserData($this->type, [$messageid], parent::$devid, parent::$user, $brokenkey, "deletekeys")) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("LoopDetection->IgnoreNextMessage(): previously broken message '%s' is still broken and will not be tracked anymore", $messageid));
+			}
+
 			GSync::GetTopCollector()->AnnounceInformation("Broken message ignored", true);
 		}
 
