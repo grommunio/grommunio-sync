@@ -46,11 +46,12 @@ define('USE_FULLEMAIL_FOR_LOGIN', true);
 /*
  * Allow users with full permissions to open a full shared store on a mobile device.
  * The login name is composed of the user that is authenticating separated with the user to be 
- * impersonated with a single '!', like
- *   impersonated-user@test.com!auth-user@domain.com
- * 
- * When the imersonated and auth user are in the same domain, you can use
+ * impersonated without the domain name with a single '!', like
  *   impersonated-user!auth-user@domain.com
+ * 
+ * When the imersonated and auth user have different domains you need to supply the 
+ * domain too and replace the '@' from the impersonated mailbox with a '!' aswell, like
+ *   impersonated-user!test.com!auth-user@domain.com
  * 
  * The password is of course of the authenticating user.
  * Full store permissions are required for the mobile to sync correctly.
