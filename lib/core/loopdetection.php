@@ -905,36 +905,34 @@ class LoopDetection extends InterProcessData {
 	 * @return bool
 	 */
 	public function ClearData($user = false, $devid = false) {
-		$stat = true;
-		$ok = false;
-		// TODO: implement this
-		// exclusive block
-		if ($this->blockMutex()) {
-			$loopdata = ($this->hasData()) ? $this->getData() : [];
-
-			if ($user == false && $devid == false) {
-				$loopdata = [];
-			}
-			elseif ($user == false && $devid != false) {
-				$loopdata[$devid] = [];
-			}
-			elseif ($user != false && $devid != false) {
-				$loopdata[$devid][$user] = [];
-			}
-			elseif ($user != false && $devid == false) {
-				SLog::Write(LOGLEVEL_WARN, sprintf("Not possible to reset loop detection data for user '%s' without a specifying a device id", $user));
-				$stat = false;
-			}
-
-			if ($stat) {
-				$ok = $this->setData($loopdata);
-			}
-
-			$this->releaseMutex();
+		if (!$this->IsActive()) {
+			return false;
 		}
-		// end exclusive block
 
-		return $stat && $ok;
+		if ($user == false && $devid == false) {
+			return is_int($this->getRedis()->delKey($this->type));
+		}
+
+		if ($user != false && $devid == false) {
+			SLog::Write(LOGLEVEL_WARN, sprintf("Not possible to reset loop detection data for user '%s' without a specifying a device id", $user));
+
+			return false;
+		}
+
+		// the fields of the hash are composed as "devid|-|user|-|subkey"
+		$prefix = (($user == false) ? $devid : $this->getComposedKey($devid, $user)) . "|-|";
+		$fields = [];
+		foreach ($this->getRedis()->get()->hKeys($this->type) ?: [] as $compKey) {
+			if (str_starts_with($compKey . "|-|", $prefix)) {
+				$fields[] = $compKey;
+			}
+		}
+
+		if (empty($fields)) {
+			return true;
+		}
+
+		return $this->getRedis()->get()->hDel($this->type, ...$fields) !== false;
 	}
 
 	/**
