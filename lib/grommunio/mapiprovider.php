@@ -590,11 +590,8 @@ class MAPIProvider {
 		foreach ($recurrence->recur["deleted_occurrences"] as $deleted) {
 			$exception = new SyncAppointmentException();
 
-			$exceptIsAllday = isset($deleted["alldayevent"]) ?
-				$deleted["alldayevent"] : $syncMessage->alldayevent;
-
 			// depending on the AS version the streamer is going to send the correct value
-			$exception->exceptionstarttime = $exception->instanceid = $exceptIsAllday ?
+			$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
 				$this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60 :
 				$this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
 			$exception->deleted = "1";
