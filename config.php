@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * Main configuration file
  */
@@ -45,11 +45,11 @@ define('USE_FULLEMAIL_FOR_LOGIN', true);
 
 /*
  * Allow users with full permissions to open a full shared store on a mobile device.
- * The login name is composed of the user that is authenticating separated with the user to be 
+ * The login name is composed of the user that is authenticating separated with the user to be
  * impersonated without the domain name with a single '!', like
  *   impersonated-user!auth-user@domain.com
  * 
- * When the imersonated and auth user have different domains you need to supply the 
+ * When the impersonated and auth user have different domains you need to supply the
  * domain too and replace the '@' from the impersonated mailbox with a '!' aswell, like
  *   impersonated-user!test.com!auth-user@domain.com
  * 
