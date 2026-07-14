@@ -502,18 +502,25 @@ class MAPIProvider {
 
 		// All changed exceptions are appointments within the 'exceptions' array. They contain the same items as a normal appointment
 		foreach ($recurrence->recur["changed_occurrences"] as $change) {
+			$exceptIsAllday = (isset($change["alldayevent"])) ?
+				$change["alldayevent"] : $syncMessage->alldayevent;
+
 			$exception = new SyncAppointmentException();
 
 			// start, end, basedate, subject, remind_before, reminderset, location, busystatus, alldayevent, label
 			if (isset($change["start"])) {
-				$exception->starttime = $this->getGMTTimeByTZ($change["start"], $tz);
+				$exception->starttime = $exceptIsAllday ?
+					$change["start"] : $this->getGMTTimeByTZ($change["start"], $tz);
 			}
 			if (isset($change["end"])) {
-				$exception->endtime = $this->getGMTTimeByTZ($change["end"], $tz);
+				$exception->endtime = $exceptIsAllday ?
+					$change["end"] : $this->getGMTTimeByTZ($change["end"], $tz);
 			}
 			if (isset($change["basedate"])) {
 				// depending on the AS version the streamer is going to send the correct value
-				$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+				$exception->exceptionstarttime = $exception->instanceid = $exceptIsAllday ?
+					$this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60 :
+					$this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
 
 				// open body because getting only property might not work because of memory limit
 				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
@@ -584,7 +591,9 @@ class MAPIProvider {
 			$exception = new SyncAppointmentException();
 
 			// depending on the AS version the streamer is going to send the correct value
-			$exception->exceptionstarttime = $exception->instanceid = $this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+			$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
+				$this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60 :
+				$this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
 			$exception->deleted = "1";
 
 			if (!isset($syncMessage->exceptions)) {
@@ -1398,6 +1407,7 @@ class MAPIProvider {
 		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
 		$isMeeting = isset($appointment->meetingstatus) && $appointment->meetingstatus > 0;
 		$isAs16 = Request::GetProtocolVersion() >= 16.0;
+		$hasAttendees = isset($appointment->attendees) && is_array($appointment->attendees);
 
 		// Get timezone info
 		if (isset($appointment->timezone)) {
@@ -1444,10 +1454,14 @@ class MAPIProvider {
 				$exceptionprops = [];
 
 				if (isset($appointment->starttime)) {
-					$exceptionprops[$appointmentprops["starttime"]] = $appointment->starttime;
+					$exceptionprops[$appointmentprops["starttime"]] = $appointment->alldayevent ?
+						$this->getGMTTimeByTZ($appointment->starttime, $tz) :
+						$appointment->starttime;
 				}
 				if (isset($appointment->endtime)) {
-					$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
+					$exceptionprops[$appointmentprops["endtime"]] = $appointment->alldayevent ?
+						$this->getGMTTimeByTZ($appointment->endtime, $tz) :
+						$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
 				}
 				if (isset($appointment->subject)) {
 					$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
@@ -1484,11 +1498,13 @@ class MAPIProvider {
 				}
 			}
 
-			// instantiate the MR so we can send a updates to the attendees
-			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
-			$mr->updateMeetingRequest($basedate);
-			$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
-			$mr->sendMeetingRequest($deleteException, false, $basedate);
+			if ($hasAttendees && !empty($appointment->attendees) && $isMeeting) {
+				// instantiate the MR so we can send a updates to the attendees
+				$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
+				$mr->updateMeetingRequest($basedate);
+				$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
+				$mr->sendMeetingRequest($deleteException, false, $basedate);
+			}
 
 			return $response;
 		}
@@ -1609,12 +1625,12 @@ class MAPIProvider {
 			$props[$appointmentprops["recurrencetype"]] = $recur["recurrencetype"];
 
 			$starttime = $this->gmtime($localstart);
-			$endtime = $this->gmtime($localend);
 
 			// set recurrence start here because it's calculated differently for tasks and appointments
 			$recur["start"] = $this->getDayStartOfTimestamp($this->getGMTTimeByTZ($localstart, $tz));
 
-			$recur["startocc"] = $starttime["tm_hour"] * 60 + $starttime["tm_min"];
+			$recur["startocc"] = (($localstart % 86400) == 3600) && ($duration % 1440) == 0 ?
+				0 : $starttime["tm_hour"] * 60 + $starttime["tm_min"];
 			$recur["endocc"] = $recur["startocc"] + $duration; // Note that this may be > 24*60 if multi-day
 
 			// only tasks can regenerate
@@ -1725,7 +1741,7 @@ class MAPIProvider {
 			$props[$appointmentprops["sentrepresentingaddt"]] = $sentrepresentingaddt;
 			$props[$appointmentprops["sentrepresentinsrchk"]] = $props[$appointmentprops["sentrepresentingaddt"]] . ":" . $props[$appointmentprops["sentrepresentingemail"]];
 
-			if (isset($appointment->attendees) && is_array($appointment->attendees) && !empty($appointment->attendees)) {
+			if ($hasAttendees && !empty($appointment->attendees)) {
 				$props[$appointmentprops["icon"]] = 1026;
 				// the user is the organizer
 				// set these properties to show tracking tab in webapp
@@ -1781,7 +1797,7 @@ class MAPIProvider {
 			}
 		}
 
-		if (isset($appointment->attendees) && is_array($appointment->attendees)) {
+		if ($hasAttendees) {
 			$recips = [];
 
 			// Outlook XP requires organizer in the attendee list as well
