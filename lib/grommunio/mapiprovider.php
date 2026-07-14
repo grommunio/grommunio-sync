@@ -1407,6 +1407,7 @@ class MAPIProvider {
 		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
 		$isMeeting = isset($appointment->meetingstatus) && $appointment->meetingstatus > 0;
 		$isAs16 = Request::GetProtocolVersion() >= 16.0;
+		$hasAttendees = isset($appointment->attendees) && is_array($appointment->attendees);
 
 		// Get timezone info
 		if (isset($appointment->timezone)) {
@@ -1497,12 +1498,13 @@ class MAPIProvider {
 				}
 			}
 
-			// instantiate the MR so we can send a updates to the attendees
-			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
-			$mr->updateMeetingRequest($basedate);
-			// $deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;//changed event into meeting request
-			// $mr->sendMeetingRequest($deleteException, false, $basedate);
-			$mr->sendMeetingRequest(false, false, $basedate);
+			if ($hasAttendees && !empty($appointment->attendees) && $isMeeting) {
+				// instantiate the MR so we can send a updates to the attendees
+				$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
+				$mr->updateMeetingRequest($basedate);
+				$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
+				$mr->sendMeetingRequest($deleteException, false, $basedate);
+			}
 
 			return $response;
 		}
@@ -1739,7 +1741,7 @@ class MAPIProvider {
 			$props[$appointmentprops["sentrepresentingaddt"]] = $sentrepresentingaddt;
 			$props[$appointmentprops["sentrepresentinsrchk"]] = $props[$appointmentprops["sentrepresentingaddt"]] . ":" . $props[$appointmentprops["sentrepresentingemail"]];
 
-			if (isset($appointment->attendees) && is_array($appointment->attendees) && !empty($appointment->attendees)) {
+			if ($hasAttendees && !empty($appointment->attendees)) {
 				$props[$appointmentprops["icon"]] = 1026;
 				// the user is the organizer
 				// set these properties to show tracking tab in webapp
@@ -1795,7 +1797,7 @@ class MAPIProvider {
 			}
 		}
 
-		if (isset($appointment->attendees) && is_array($appointment->attendees)) {
+		if ($hasAttendees) {
 			$recips = [];
 
 			// Outlook XP requires organizer in the attendee list as well
