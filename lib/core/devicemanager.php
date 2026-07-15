@@ -40,8 +40,6 @@ class DeviceManager extends InterProcessData {
 	private $saveDevice;
 	private $statemachine;
 	private $stateManager;
-	private $incomingData = 0;
-	private $outgoingData = 0;
 
 	private $windowSize;
 	private $latestFolder;
@@ -99,21 +97,6 @@ class DeviceManager extends InterProcessData {
 	/*----------------------------------------------------------------------------------------------------------
 	 * Device operations
 	 */
-
-	/**
-	 * Announces amount of transmitted data to the DeviceManager.
-	 *
-	 * @param int $datacounter
-	 *
-	 * @return bool
-	 */
-	public function SentData($datacounter) {
-		// TODO save this somewhere
-		$this->incomingData = Request::GetContentLength();
-		$this->outgoingData = $datacounter;
-
-		return true;
-	}
 
 	/**
 	 * Called at the end of the request

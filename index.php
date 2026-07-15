@@ -129,12 +129,6 @@ try {
 	$data = ob_get_contents();
 	ob_end_clean();
 
-	// log amount of data transferred
-	// TODO check $len when streaming more data (e.g. Attachments), as the data will be send chunked
-	if (GSync::GetDeviceManager(false)) {
-		GSync::GetDeviceManager()->SentData($len);
-	}
-
 	// Unfortunately, even though grommunio-sync can stream the data to the client
 	// with a chunked encoding, using chunked encoding breaks the progress bar
 	// on the PDA. So the data is de-chunk here, written a content-length header and
