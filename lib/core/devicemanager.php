@@ -100,13 +100,11 @@ class DeviceManager extends InterProcessData {
 
 	/**
 	 * Called at the end of the request
-	 * Statistics about received/sent data is saved here.
+	 * The device data is saved here.
 	 *
 	 * @return bool
 	 */
 	public function Save() {
-		// TODO save other stuff
-
 		// check if previousily ignored messages were synchronized for the current folder
 		// on multifolder operations of AS14 this is done by setLatestFolder()
 		if ($this->latestFolder !== false) {
@@ -160,8 +158,6 @@ class DeviceManager extends InterProcessData {
 
 	/**
 	 * Persist information about the impersonating user (if any) in the device data.
-	 *
-	 * @return void
 	 */
 	private function updateImpersonatingUser() {
 		$impersonatedAccount = Request::GetImpersonatedUser();
@@ -308,7 +304,6 @@ class DeviceManager extends InterProcessData {
 	 * @throws NoHierarchyCacheAvailableException, NotImplementedException
 	 */
 	public function GetFolderClassFromCacheByID($folderid) {
-		// TODO check if the parent folder exists and is also being synchronized
 		$typeFromCache = $this->device->GetFolderType($folderid);
 		if ($typeFromCache === false) {
 			throw new NoHierarchyCacheAvailableException(sprintf("Folderid '%s' is not fully synchronized on the device", $folderid));
@@ -529,7 +524,6 @@ class DeviceManager extends InterProcessData {
 		// either globally configured SYNC_FILTERTIME_MAX or ALL (no limit)
 		$maxAllowed = (defined('SYNC_FILTERTIME_MAX') && SYNC_FILTERTIME_MAX > SYNC_FILTERTYPE_ALL) ? SYNC_FILTERTIME_MAX : SYNC_FILTERTYPE_ALL;
 
-		// TODO we could/should check for a specific value for the folder, if it's available
 		$maxDevice = $this->device->GetSyncFilterType();
 
 		// ALL has a value of 0, all limitations have higher integer values, see SYNC_FILTERTYPE_ALL definition
@@ -932,8 +926,7 @@ class DeviceManager extends InterProcessData {
 					SLog::Write(LOGLEVEL_DEBUG, "DeviceManager->loadDeviceData(): Device data was changed, reloading");
 				}
 				$device = $this->statemachine->GetState(self::$devid, IStateMachine::DEVICEDATA);
-				// TODO: case should be removed when removing ASDevice backwards compatibility
-				// fallback for old grosync like devicedata
+				// device states from before 2021-11 hold the ASDevice of all users of the device, convert them
 				if (($device instanceof StateObject) && isset($device->devices) && is_array($device->devices)) {
 					SLog::Write(LOGLEVEL_INFO, "Found old style device, converting...");
 					[$_deviceuser, $_domain] = Utils::SplitDomainUser(Request::GetGETUser());
