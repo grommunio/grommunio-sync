@@ -88,18 +88,6 @@ class DeviceManager extends InterProcessData {
 	}
 
 	/**
-	 * Load another different device.
-	 *
-	 * @param ASDevice $asDevice
-	 */
-	public function SetDevice($asDevice) {
-		// TODO: this is broken and callers should be removed/updated. ASDevice is now always overwritten.
-		$this->device = $asDevice;
-		$this->loadDeviceData();
-		// $this->stateManager->SetDevice($this->device);
-	}
-
-	/**
 	 * Returns the StateManager for the current device.
 	 *
 	 * @return StateManager
