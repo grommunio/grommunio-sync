@@ -201,7 +201,7 @@ class StateObject implements JsonSerializable {
 				$this->data[$prop] = [];
 				foreach ($val as $k => $v) {
 					if (is_object($v) && isset($v->gsSyncStateClass)) {
-						// TODO: case should be removed when removing ASDevice backwards compatibility
+						// device states from before 2021-11 hold one ASDevice per user, initialize it for this request
 						if (strcasecmp($v->gsSyncStateClass, "ASDevice") == 0) {
 							$this->data[$prop][$k] = new ASDevice();
 							$this->data[$prop][$k]->Initialize(Request::GetDeviceID(), Request::GetDeviceType(), Request::GetGETUser(), Request::GetUserAgent());
