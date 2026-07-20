@@ -152,7 +152,6 @@ class SyncCollections implements Iterator {
 			// Get SyncParameters for the folder from the state
 			$spa = $this->stateManager->GetSynchedFolderState($folderid, !$loadState);
 
-			// TODO remove resync of folders
 			// this forces a resync of all states
 			if (!$spa instanceof SyncParameters) {
 				throw new StateInvalidException("Saved state are not of type SyncParameters");
@@ -169,9 +168,13 @@ class SyncCollections implements Iterator {
 			// later when trying to retrieve the SyncParameters nothing will be found
 
 			if ($folderid === false) {
-				throw new StatusException(sprintf("SyncCollections->LoadCollection(): could not get FOLDERDATA state of the hierarchy uuid: %s",
-					$spa instanceof SyncParameters ? $spa->GetUuid() : 'not available'),
-					self::ERROR_WRONG_HIERARCHY);
+				throw new StatusException(
+					sprintf(
+						"SyncCollections->LoadCollection(): could not get FOLDERDATA state of the hierarchy uuid: %s",
+						$spa instanceof SyncParameters ? $spa->GetUuid() : 'not available'
+					),
+					self::ERROR_WRONG_HIERARCHY
+				);
 			}
 
 			// we also generate a fake change, so a sync on this folder is triggered
