@@ -19,10 +19,6 @@
 class StateManager {
 	public const FIXEDHIERARCHYCOUNTER = 99999;
 
-	// backend storage types
-	public const BACKENDSTORAGE_PERMANENT = 1;
-	public const BACKENDSTORAGE_STATE = 2;
-
 	private $statemachine;
 	private $device;
 	private $hierarchyOperation = false;
@@ -254,50 +250,6 @@ class StateManager {
 		}
 
 		return $this->statemachine->SetState($syncstate, $this->device->GetDeviceId(), IStateMachine::FAILSAFE, $this->uuid, $this->oldStateCounter);
-	}
-
-	/**
-	 * Gets the backendstorage data.
-	 *
-	 * @param int $type permanent or state related storage
-	 *
-	 * @return mixed
-	 *
-	 * @throws StateNotYetAvailableException, StateNotFoundException
-	 */
-	public function GetBackendStorage($type = self::BACKENDSTORAGE_PERMANENT) {
-		if ($type == self::BACKENDSTORAGE_STATE) {
-			if (!$this->uuid) {
-				throw new StateNotYetAvailableException();
-			}
-
-			return $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, $this->uuid, $this->oldStateCounter, $this->deleteOldStates);
-		}
-
-		return $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, false, $this->device->GetFirstSyncTime(), false);
-	}
-
-	/**
-	 * Writes the backendstorage data.
-	 *
-	 * @param mixed $data
-	 * @param int   $type permanent or state related storage
-	 *
-	 * @return int amount of bytes saved
-	 *
-	 * @throws StateNotYetAvailableException, StateNotFoundException
-	 */
-	public function SetBackendStorage($data, $type = self::BACKENDSTORAGE_PERMANENT) {
-		if ($type == self::BACKENDSTORAGE_STATE) {
-			if (!$this->uuid) {
-				throw new StateNotYetAvailableException();
-			}
-
-			// TODO serialization should be done in the StateMachine
-			return $this->statemachine->SetState($data, $this->device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, $this->uuid, $this->newStateCounter);
-		}
-
-		return $this->statemachine->SetState($data, $this->device->GetDeviceId(), IStateMachine::BACKENDSTORAGE, false, $this->device->GetFirstSyncTime());
 	}
 
 	/**
