@@ -1836,19 +1836,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
-	 * Unlinks a device from a user.
-	 *
-	 * @param string $username
-	 * @param string $devid
-	 *
-	 * @return bool
-	 */
-	public function UnLinkUserDevice($username, $devid) {
-		// TODO: Implement
-		return false;
-	}
-
-	/**
 	 * Returns the current version of the state files
 	 * grommunio:  This is not relevant atm. IStateMachine::STATEVERSION_02 will match GSync::GetLatestStateVersion().
 	 *          If it might be required to update states in the future, this could be implemented on a store level,
