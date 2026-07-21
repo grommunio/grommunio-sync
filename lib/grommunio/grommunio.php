@@ -727,11 +727,13 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// put the mapi stream into a wrapper to get a standard stream
 		$attachment->data = MAPIStreamWrapper::Open($stream);
-		if (isset($attprops[PR_ATTACH_MIME_TAG])) {
+		if (!empty($attprops[PR_ATTACH_MIME_TAG])) {
 			$attachment->contenttype = $attprops[PR_ATTACH_MIME_TAG];
 		}
+		elseif (empty($attachment->contenttype)) {
+			$attachment->contenttype = "application/octet-stream";
+		}
 
-		// TODO default contenttype
 		return $attachment;
 	}
 
