@@ -114,7 +114,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): Trying to authenticate user '%s'..", $user));
 
 		$this->mainUser = strtolower((string) $user);
-		// TODO the impersonated user should be passed directly to IBackend->Logon()
+		// IBackend->Logon() has no parameter for it, so the impersonated user is taken from the request
 		if (Request::GetImpersonatedUser()) {
 			$this->impersonateUser = strtolower(Request::GetImpersonatedUser());
 		}
@@ -504,7 +504,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		if (isset($sm->source->itemid) && $sm->source->itemid) {
 			// answering an email in a public/shared folder
-			// TODO as the store is setup, we should actually user $this->store instead of $this->defaultstore - nevertheless we need to make sure this store is able to send mail (has an outbox)
+			// $this->store is only used to read the source item, the mail itself was created
+			// in the outbox of the default store, a shared store may have no outbox
 			if (!$this->Setup(GSync::GetAdditionalSyncFolderStore($sm->source->folderid))) {
 				throw new StatusException(sprintf("Grommunio->SendMail() could not Setup() the backend for folder id '%s'", $sm->source->folderid), SYNC_COMMONSTATUS_SERVERERROR);
 			}
@@ -637,7 +638,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// override truncation
 		$contentparameters->SetTruncation(SYNC_TRUNCATION_ALL);
 
-		// TODO check for body preferences
+		// body preferences are applied by MAPIProvider->GetMessage()
 		return $mapiprovider->GetMessage($message, $contentparameters);
 	}
 
@@ -1203,7 +1204,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 	public function GetGALSearchResults($searchquery, $searchrange, $searchpicture) {
 		// only return users whose displayName or the username starts with $name
-		// TODO: use PR_ANR for this restriction instead of PR_DISPLAY_NAME and PR_ACCOUNT
+		// no PR_ANR: gromox matches it against PR_ACCOUNT and PR_DISPLAY_NAME only,
+		// GetSearchRestriction() also matches PR_SMTP_ADDRESS
 		$table = null;
 		$ab_dir = $this->getAddressbookDir();
 		if ($ab_dir) {

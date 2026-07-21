@@ -39,7 +39,6 @@ class MAPIUtils {
 	 *
 	 * @return array
 	 */
-	// TODO getting named properties
 	public static function GetCalendarRestriction($store, $timestamp) {
 		$props = getPropIdsFromStrings($store, MAPIMapping::GetAppointmentProperties());
 
@@ -560,6 +559,6 @@ class MAPIUtils {
 				mapi_message_modifyrecipients($mapimessage, MODRECIP_ADD, $origRecipients);
 			}
 		}
-		// TODO check if we need to do this for encrypted (and signed?) message as well
+		// encrypted S/MIME messages cannot be unwrapped here, the server has no private key
 	}
 }
