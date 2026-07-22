@@ -1923,7 +1923,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				mapi_table_restrict($hierarchy, $restriction);
 				$rowCnt = mapi_table_getrowcount($hierarchy);
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d device state folders", $rowCnt));
-				if ($rowCnt == 1) {
+				if ($rowCnt > 1) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->getStateFolder(): expected 1 state folder for device '%s', found %d - using the first one", $devid, $rowCnt));
+				}
+				if ($rowCnt > 0) {
 					$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
 					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex((string) $hierarchyRows[0][PR_ENTRYID])));
@@ -1932,7 +1935,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->storeName, "statefolder");
 					}
 				}
-				elseif ($rowCnt == 0) {
+				else {
 					$devStateFolder = mapi_folder_createfolder($stateRootFolder, $devid, "");
 					if ($devStateFolder) {
 						// we don't cache the entryid in redis, because this will happen on the next request anyway
@@ -1946,12 +1949,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					}
 				}
 			}
-
-			// This case is rather unlikely that there would be several
-			// hidden folders having PR_DISPLAY_NAME the same as device id.
-
-			// TODO: get the hierarchy table again, get entry id of STORE_STATE_FOLDER
-			// and compare it to the parent id of those folders.
 		}
 
 		return $this->stateFolder;
