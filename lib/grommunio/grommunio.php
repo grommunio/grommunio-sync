@@ -1907,9 +1907,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					}
 				}
 			}
-			if (!$stateRootFolder) {
+			if (!$stateRootFolder && $rootfolder) {
 				$stateRootFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
-				mapi_setprops($stateRootFolder, [PR_ATTR_HIDDEN => true]);
+				if ($stateRootFolder) {
+					mapi_setprops($stateRootFolder, [PR_ATTR_HIDDEN => true]);
+				}
+				else {
+					SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getStateFolder(): unable to create the store state folder: 0x%08X", mapi_last_hresult()));
+				}
 			}
 
 			if ($stateRootFolder) {
@@ -1929,13 +1934,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				}
 				elseif ($rowCnt == 0) {
 					$devStateFolder = mapi_folder_createfolder($stateRootFolder, $devid, "");
-					$devStateFolderProps = mapi_getprops($devStateFolder);
-					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
-					mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
-					// we don't cache the entryid in redis, because this will happen on the next request anyway
+					if ($devStateFolder) {
+						// we don't cache the entryid in redis, because this will happen on the next request anyway
+						$devStateFolderProps = mapi_getprops($devStateFolder);
+						$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
+						mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
+					}
+					else {
+						// the state folder stays unset, the state functions throw StateNotFoundException
+						SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getStateFolder(): unable to create the state folder for device '%s': 0x%08X", $devid, mapi_last_hresult()));
+					}
 				}
-
-				// TODO: unable to create state folder - throw exception
 			}
 
 			// This case is rather unlikely that there would be several
