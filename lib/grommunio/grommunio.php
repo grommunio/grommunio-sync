@@ -2846,7 +2846,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->resolveRecipientContact(): Unable to open default store: 0x%X", mapi_last_hresult()));
 		}
 		$rootprops = mapi_getprops($root, [PR_IPM_CONTACT_ENTRYID]);
-		$contacts = $this->getContactsFromFolder($this->defaultstore, $rootprops[PR_IPM_CONTACT_ENTRYID], $to);
+		// contacts are matched by the exact address, so even with 0 ambiguous
+		// recipients requested one of them is returned, as for a single GAL match
+		$limit = max(1, $maxAmbiguousRecipients);
+		$contacts = $this->getContactsFromFolder($this->defaultstore, $rootprops[PR_IPM_CONTACT_ENTRYID], $to, $limit);
 		$recipients = [];
 
 		if ($contacts !== false) {
@@ -2861,7 +2864,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$subfolders = MAPIUtils::GetSubfoldersForType($contactfolder, "IPF.Contact");
 		if ($subfolders !== false) {
 			foreach ($subfolders as $folder) {
-				$contacts = $this->getContactsFromFolder($this->defaultstore, $folder[PR_ENTRYID], $to);
+				$contacts = $this->getContactsFromFolder($this->defaultstore, $folder[PR_ENTRYID], $to, $limit - count($recipients));
 				if ($contacts !== false) {
 					SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in contacts' subfolder.", count($contacts)));
 					foreach ($contacts as $contact) {
@@ -2879,7 +2882,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$subfolders = MAPIUtils::GetSubfoldersForType($publicfolder, "IPF.Contact");
 			if ($subfolders !== false) {
 				foreach ($subfolders as $folder) {
-					$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to);
+					$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to, $limit - count($recipients));
 					if ($contacts !== false) {
 						SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in public contacts folder.", count($contacts)));
 						foreach ($contacts as $contact) {
@@ -3033,16 +3036,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param MAPIStore $store
 	 * @param binary    $folderEntryid
 	 * @param string    $email
+	 * @param int       $limit         maximum number of contacts to return
 	 *
 	 * @return array|bool
 	 */
-	private function getContactsFromFolder($store, $folderEntryid, $email) {
+	private function getContactsFromFolder($store, $folderEntryid, $email, $limit) {
+		if ($limit <= 0) {
+			return false;
+		}
 		$folder = mapi_msgstore_openentry($store, $folderEntryid);
 		$folderContent = mapi_folder_getcontentstable($folder);
 		mapi_table_restrict($folderContent, MAPIUtils::GetEmailAddressRestriction($store, $email));
-		// TODO max limit
 		if (mapi_table_getrowcount($folderContent) > 0) {
-			return mapi_table_queryallrows($folderContent, [PR_DISPLAY_NAME, PR_USER_X509_CERTIFICATE, PR_ENTRYID]);
+			return mapi_table_queryrows($folderContent, [PR_DISPLAY_NAME, PR_USER_X509_CERTIFICATE, PR_ENTRYID], 0, $limit);
 		}
 
 		return false;
