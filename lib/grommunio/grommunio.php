@@ -2872,36 +2872,25 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// search contacts in public folders
-		$storestables = mapi_getmsgstorestable($this->session);
-		$result = mapi_last_hresult();
+		$publicstore = $this->openMessageStore("SYSTEM");
+		if ($publicstore) {
+			$publicfolder = mapi_msgstore_openentry($publicstore);
 
-		if ($result == NOERROR) {
-			$rows = mapi_table_queryallrows($storestables, [PR_ENTRYID, PR_DEFAULT_STORE, PR_MDB_PROVIDER]);
-			foreach ($rows as $row) {
-				if (isset($row[PR_MDB_PROVIDER]) && $row[PR_MDB_PROVIDER] == ZARAFA_STORE_PUBLIC_GUID) {
-					// TODO refactor public store
-					$publicstore = mapi_openmsgstore($this->session, $row[PR_ENTRYID]);
-					$publicfolder = mapi_msgstore_openentry($publicstore);
-
-					$subfolders = MAPIUtils::GetSubfoldersForType($publicfolder, "IPF.Contact");
-					if ($subfolders !== false) {
-						foreach ($subfolders as $folder) {
-							$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to);
-							if ($contacts !== false) {
-								SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in public contacts folder.", count($contacts)));
-								foreach ($contacts as $contact) {
-									$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contact);
-								}
-							}
+			$subfolders = MAPIUtils::GetSubfoldersForType($publicfolder, "IPF.Contact");
+			if ($subfolders !== false) {
+				foreach ($subfolders as $folder) {
+					$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to);
+					if ($contacts !== false) {
+						SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in public contacts folder.", count($contacts)));
+						foreach ($contacts as $contact) {
+							$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contact);
 						}
 					}
-
-					break;
 				}
 			}
 		}
 		else {
-			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientContact(): Unable to open public store: 0x%X", $result));
+			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientContact(): Unable to open public store: 0x%X", mapi_last_hresult()));
 		}
 
 		if (empty($recipients)) {
