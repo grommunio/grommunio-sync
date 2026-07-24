@@ -2988,8 +2988,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$availability = new SyncResolveRecipientsAvailability();
 		$availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_SUCCESS;
 
+		// a recipient made up from the address only (no GAL entry or contact) has no entryid to look up
 		if (!isset($resolveRecipient->id)) {
-			// TODO this shouldn't happen but try to get the recipient in such a case
+			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getAvailability(): no entryid for '%s', free/busy is not available", $to));
+			$availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_FAILED;
+
+			return $availability;
 		}
 
 		$start = strtotime((string) $resolveRecipientsOptions->availability->starttime);
