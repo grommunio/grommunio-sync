@@ -422,6 +422,73 @@ class ImportChangesICS implements IImportChanges {
 
 			$response->serverid = $this->prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
 
+			// AS 16.0+: send the message if the client requested it (draft send).
+			// Clients like Samsung Email submit a message previously saved to
+			// Drafts via a Sync request carrying an empty <Send/> tag
+			// ([MS-ASEMAIL] 2.2.2.69), frequently with an EMPTY From. Do NOT rely on
+			// the transport auto-filling the sender from the authenticated owner:
+			// older gromox does not, and the From-less message is then silently
+			// dropped downstream (or rejected by a From-strict MX) after the draft
+			// has already been removed => invisible mail loss. Instead set the
+			// sender explicitly to the authenticated mailbox owner, so a valid From
+			// is guaranteed regardless of the deployed gromox version, then submit.
+			if ($message instanceof SyncMail && !empty($message->send)) {
+				// resolve the authenticated mailbox owner (display name + SMTP)
+				$storeprops = mapi_getprops($this->store, [PR_MAILBOX_OWNER_ENTRYID]);
+				$owneraddr = '';
+				$ownername = '';
+				if (isset($storeprops[PR_MAILBOX_OWNER_ENTRYID])) {
+					$addrbook = mapi_openaddressbook($this->session);
+					$mailuser = mapi_ab_openentry($addrbook, $storeprops[PR_MAILBOX_OWNER_ENTRYID]);
+					$ownerprops = mapi_getprops($mailuser, [PR_SMTP_ADDRESS, PR_EMAIL_ADDRESS, PR_DISPLAY_NAME]);
+					$owneraddr = $ownerprops[PR_SMTP_ADDRESS] ?? $ownerprops[PR_EMAIL_ADDRESS] ?? '';
+					$ownername = $ownerprops[PR_DISPLAY_NAME] ?? $owneraddr;
+				}
+				if ($owneraddr === '') {
+					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): unable to resolve authenticated mailbox owner for draft send", $id, $messageClass), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				}
+
+				// explicitly set sender / sent-representing = authenticated owner.
+				// A valid one-off ENTRYID is required or the spooler rejects the
+				// "broken" sent-representing (empty name/address) the client left.
+				$owneroneoff = mapi_createoneoff($ownername, "SMTP", $owneraddr);
+				mapi_setprops($mapimessage, [
+					PR_SENDER_NAME => $ownername,
+					PR_SENDER_ADDRTYPE => "SMTP",
+					PR_SENDER_EMAIL_ADDRESS => $owneraddr,
+					PR_SENDER_ENTRYID => $owneroneoff,
+					PR_SENT_REPRESENTING_NAME => $ownername,
+					PR_SENT_REPRESENTING_ADDRTYPE => "SMTP",
+					PR_SENT_REPRESENTING_EMAIL_ADDRESS => $owneraddr,
+					PR_SENT_REPRESENTING_ENTRYID => $owneroneoff,
+				]);
+				mapi_savechanges($mapimessage);
+				if (mapi_last_hresult()) {
+					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error setting sender on draft for sending: 0x%X", $id, $messageClass, mapi_last_hresult()), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				}
+
+				// remember the draft location BEFORE submit so we can clean it up
+				$draftprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_ENTRYID]);
+
+				// submit the draft directly. The explicit sender guarantees a valid
+				// From independent of any gromox auto-fill behaviour.
+				mapi_message_submitmessage($mapimessage);
+				if (mapi_last_hresult()) {
+					// submit failed: keep the draft in place, no mail is lost
+					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error submitting message for sending: 0x%X", $id, $messageClass, mapi_last_hresult()), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+				}
+
+				// submit succeeded: remove the (now sent) draft from its folder. The
+				// spooler files the sent copy into Sent Items itself.
+				if (isset($draftprops[PR_ENTRYID], $draftprops[PR_PARENT_ENTRYID])) {
+					$parentfolder = mapi_msgstore_openentry($this->store, $draftprops[PR_PARENT_ENTRYID]);
+					if ($parentfolder) {
+						mapi_folder_deletemessages($parentfolder, [$draftprops[PR_ENTRYID]], DELETE_HARD_DELETE);
+					}
+				}
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): AS16 draft submitted with explicit sender '%s' and removed from Drafts", $id, $messageClass, $owneraddr));
+			}
+
 			return $response;
 		}
 

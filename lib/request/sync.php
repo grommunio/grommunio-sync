@@ -537,6 +537,22 @@ class Sync extends RequestProcessor {
 								$message = false;
 							}
 
+							// AS 16.0+: the client requests sending of a (draft) message by
+							// including an empty Email2 Send tag as direct child of Add/Change
+							// after ApplicationData ([MS-ASEMAIL] 2.2.2.69) - e.g. Samsung Email.
+							if (($sendtag = self::$decoder->getElementStartTag(SYNC_POOMMAIL2_SEND))) {
+								if ($sendtag[EN_FLAGS] & EN_FLAGS_CONTENT) {
+									self::$decoder->getElementContent();
+									if (!self::$decoder->getElementEndTag()) { // end send
+										return false;
+									}
+								}
+								if ($message !== false) {
+									$message->send = true;
+								}
+								SLog::Write(LOGLEVEL_DEBUG, "Sync command: client requested message to be sent (AS16 draft send)");
+							}
+
 							// InstanceID sent: do action to a recurrency exception
 							if ($instanceid) {
 								// for delete actions we don't have an ASObject
