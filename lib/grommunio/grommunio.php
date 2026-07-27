@@ -1127,6 +1127,15 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$maxAmbiguousRecipients = $resolveRecipientsOptions->maxambiguousrecipients;
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->ResolveRecipients(): The client requested %d max ambiguous recipients to resolve.", $maxAmbiguousRecipients));
 				}
+
+				// StartTime is required with Availability
+				if (isset($resolveRecipientsOptions->availability) &&
+						(empty($resolveRecipientsOptions->availability->starttime) || strtotime((string) $resolveRecipientsOptions->availability->starttime) === false)) {
+					SLog::Write(LOGLEVEL_WARN, "Grommunio->ResolveRecipients(): Availability requested without a valid StartTime.");
+					$resolveRecipients->status = SYNC_RESOLVERECIPSSTATUS_PROTOCOLERROR;
+
+					return $resolveRecipients;
+				}
 			}
 
 			foreach ($resolveRecipients->to as $i => $to) {
@@ -1145,9 +1154,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 								unset($entry->certificates);
 							}
 							if (isset($resolveRecipientsOptions->availability)) {
-								if (!isset($resolveRecipientsOptions->starttime)) {
-									// TODO error, the request must include a valid StartTime element value
-								}
 								$entry->availability = $this->getAvailability($to, $entry, $resolveRecipientsOptions);
 							}
 							if (isset($resolveRecipientsOptions->picture)) {
