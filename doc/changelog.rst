@@ -1,3 +1,23 @@
+grommunio-sync 2.5 (2026-07-27)
+===============================
+
+Fixes:
+
+* Searching for device states in wrong folder
+* Calling member funcions on spa when it is not an object
+* Wrong total count and sort order
+* iOS devices show old emails as new
+* Wrong times for all-day exceptions between Android and Outlook
+* All-day exception turns into a meeting request
+* Wrong exceptionstarttime calculation for deleted occurrences
+* Meeting update for an exception without attendees
+
+Enhancements:
+
+* User impersonation
+* Use getRootProps in IsMAPIDefaultFolder
+* Save impersonatinguser in device data
+
 grommunio-sync 2.4 (2025-12-16)
 ===============================
 
