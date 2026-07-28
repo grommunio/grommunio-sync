@@ -18,6 +18,9 @@
  * convert the data into WBXML which is streamed to the PDA.
  */
 class PHPWrapper {
+	// ImportMessageDeletion() flag of php-mapi for messages which left the sync restriction
+	private const SYNC_SOFT_DELETE = 0x01;
+
 	private $importer;
 	private $mapiprovider;
 	private $contentparameters;
@@ -150,12 +153,13 @@ class PHPWrapper {
 	 */
 	public function ImportMessageDeletion($flags, $sourcekeys) {
 		$amount = count($sourcekeys);
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): Received %d remove requests from ICS", $amount));
+		// soft deletions are messages which still exist but are outside the sync window now
+		$asSoftDelete = ($flags & self::SYNC_SOFT_DELETE) !== 0;
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): Received %d %s requests from ICS", $amount, $asSoftDelete ? "soft delete" : "remove"));
 
 		foreach ($sourcekeys as $sourcekey) {
-			// TODO if we would know that ICS is removing the message because it's outside the sync interval, we could send a $asSoftDelete = true to the importer. Could they pass that via $flags?
-			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey));
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): delete for :'%s'", $this->prefix . bin2hex((string) $sourcekey)));
+			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey), $asSoftDelete);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): %s for :'%s'", $asSoftDelete ? "soft delete" : "delete", $this->prefix . bin2hex((string) $sourcekey)));
 		}
 	}
 
