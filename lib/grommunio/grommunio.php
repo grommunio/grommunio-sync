@@ -1162,10 +1162,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 							++$response->recipientcount;
 							$response->recipient[] = $entry;
 						}
-						elseif (is_int($recipient)) {
-							$response->status = $recipient;
-						}
 					}
+				}
+				elseif (is_int($recipient)) {
+					$response->status = $recipient;
 				}
 
 				$resolveRecipients->response[$i] = $response;
