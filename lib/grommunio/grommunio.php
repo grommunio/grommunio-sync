@@ -2350,19 +2350,20 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param SyncObject $oof
 	 */
 	private function settingsOofGet(&$oof) {
-		$oofprops = mapi_getprops($this->defaultstore, [PR_EC_OUTOFOFFICE, PR_EC_OUTOFOFFICE_MSG, PR_EC_OUTOFOFFICE_SUBJECT, PR_EC_OUTOFOFFICE_FROM, PR_EC_OUTOFOFFICE_UNTIL]);
+		$oofprops = mapi_getprops($this->defaultstore, [PR_EC_OUTOFOFFICE, PR_EC_OUTOFOFFICE_MSG, PR_EC_OUTOFOFFICE_SUBJECT, PR_EC_OUTOFOFFICE_FROM, PR_EC_OUTOFOFFICE_UNTIL, PR_EC_ALLOW_EXTERNAL, PR_EC_EXTERNAL_AUDIENCE, PR_EC_EXTERNAL_REPLY]);
 		$oof->oofstate = SYNC_SETTINGSOOF_DISABLED;
 		$oof->Status = SYNC_SETTINGSSTATUS_SUCCESS;
 		if ($oofprops != false) {
 			$oof->oofstate = isset($oofprops[PR_EC_OUTOFOFFICE]) ? ($oofprops[PR_EC_OUTOFOFFICE] ? SYNC_SETTINGSOOF_GLOBAL : SYNC_SETTINGSOOF_DISABLED) : SYNC_SETTINGSOOF_DISABLED;
-			// TODO external and external unknown
-			$oofmessage = new SyncOOFMessage();
-			$oofmessage->appliesToInternal = "";
-			$oofmessage->enabled = $oof->oofstate;
-			$oofmessage->replymessage = $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "";
-			$oofmessage->bodytype = $oof->bodytype;
-			unset($oofmessage->appliesToExternal, $oofmessage->appliesToExternalUnknown);
-			$oof->oofmessage[] = $oofmessage;
+			$oof->oofmessage[] = $this->createOofMessage("appliesToInternal", $oof->oofstate, $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "", $oof->bodytype);
+
+			// gromox has one reply for all external senders, PR_EC_EXTERNAL_AUDIENCE
+			// restricts it to known senders (contacts) - like EWS ExternalAudience "Known"
+			$allowExternal = !empty($oofprops[PR_EC_ALLOW_EXTERNAL]);
+			$knownOnly = !empty($oofprops[PR_EC_EXTERNAL_AUDIENCE]);
+			$externalReply = $oofprops[PR_EC_EXTERNAL_REPLY] ?? "";
+			$oof->oofmessage[] = $this->createOofMessage("appliesToExternal", $allowExternal ? 1 : 0, $externalReply, $oof->bodytype);
+			$oof->oofmessage[] = $this->createOofMessage("appliesToExternalUnknown", ($allowExternal && !$knownOnly) ? 1 : 0, $externalReply, $oof->bodytype);
 
 			// check whether time based out of office is set
 			if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && isset($oofprops[PR_EC_OUTOFOFFICE_FROM], $oofprops[PR_EC_OUTOFOFFICE_UNTIL])) {
@@ -2415,10 +2416,31 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$props = [];
 		if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL || $oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED) {
 			$props[PR_EC_OUTOFOFFICE] = true;
+			$externalKnown = $externalUnknown = null;
 			foreach ($oof->oofmessage as $oofmessage) {
 				if (isset($oofmessage->appliesToInternal)) {
 					$props[PR_EC_OUTOFOFFICE_MSG] = $oofmessage->replymessage ?? "";
 					$props[PR_EC_OUTOFOFFICE_SUBJECT] = "Out of office";
+				}
+				elseif (isset($oofmessage->appliesToExternal)) {
+					$externalKnown = $oofmessage;
+				}
+				elseif (isset($oofmessage->appliesToExternalUnknown)) {
+					$externalUnknown = $oofmessage;
+				}
+			}
+			if ($externalKnown !== null || $externalUnknown !== null) {
+				// gromox has one reply for all external senders: replying to unknown
+				// senders means all of them, known senders only sets PR_EC_EXTERNAL_AUDIENCE
+				$knownEnabled = !empty($externalKnown->enabled);
+				$unknownEnabled = !empty($externalUnknown->enabled);
+				$props[PR_EC_ALLOW_EXTERNAL] = $knownEnabled || $unknownEnabled;
+				if ($props[PR_EC_ALLOW_EXTERNAL]) {
+					$props[PR_EC_EXTERNAL_AUDIENCE] = !$unknownEnabled;
+				}
+				$replySource = $knownEnabled ? $externalKnown : ($unknownEnabled ? $externalUnknown : null);
+				if (isset($replySource->replymessage)) {
+					$props[PR_EC_EXTERNAL_REPLY] = $replySource->replymessage;
 				}
 			}
 			if ($oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED) {
@@ -2454,6 +2476,26 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return true;
+	}
+
+	/**
+	 * Creates an out of office message for one audience.
+	 *
+	 * @param string $appliesTo    appliesToInternal, appliesToExternal or appliesToExternalUnknown
+	 * @param int    $enabled
+	 * @param string $replymessage
+	 * @param string $bodytype
+	 *
+	 * @return SyncOOFMessage
+	 */
+	private function createOofMessage($appliesTo, $enabled, $replymessage, $bodytype) {
+		$oofmessage = new SyncOOFMessage();
+		$oofmessage->{$appliesTo} = "";
+		$oofmessage->enabled = $enabled;
+		$oofmessage->replymessage = $replymessage;
+		$oofmessage->bodytype = $bodytype;
+
+		return $oofmessage;
 	}
 
 	/**
