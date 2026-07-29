@@ -1138,6 +1138,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				}
 			}
 
+			// MaxPictures limits the photos of the whole response
+			$pictureCount = 0;
 			foreach ($resolveRecipients->to as $i => $to) {
 				$response = new SyncResolveRecipientsResponse();
 				$response->to = $to;
@@ -1157,7 +1159,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 								$entry->availability = $this->getAvailability($to, $entry, $resolveRecipientsOptions);
 							}
 							if (isset($resolveRecipientsOptions->picture)) {
-								// TODO implement picture retrieval of the recipient
+								$entry->picture = $this->getRecipientPicture($entry, $resolveRecipientsOptions->picture, $pictureCount);
 							}
 							++$response->recipientcount;
 							$response->recipient[] = $entry;
@@ -3080,6 +3082,46 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$availability->mergedfreebusy = $mergedFreeBusy;
 
 		return $availability;
+	}
+
+	/**
+	 * Gets the photo of a GAL recipient for ResolveRecipients.
+	 *
+	 * @param SyncResolveRecipient         $resolveRecipient
+	 * @param SyncResolveRecipientsPicture $pictureOptions   MaxSize and MaxPictures of the request
+	 * @param int                          $pictureCount     photos already in the response
+	 *
+	 * @return SyncResolveRecipientsPicture
+	 */
+	private function getRecipientPicture($resolveRecipient, $pictureOptions, &$pictureCount) {
+		$picture = new SyncResolveRecipientsPicture();
+		$photo = '';
+		// only GAL entries have a photo, an entryid of a contact is a message
+		$addrbook = $this->getAddressbook();
+		if ($addrbook && $resolveRecipient->type == SYNC_RESOLVERECIPIENTS_TYPE_GAL && isset($resolveRecipient->id)) {
+			$abentry = @mapi_ab_openentry($addrbook, $resolveRecipient->id);
+			if ($abentry) {
+				$props = mapi_getprops($abentry, [PR_EMS_AB_THUMBNAIL_PHOTO]);
+				$photo = (string) ($props[PR_EMS_AB_THUMBNAIL_PHOTO] ?? '');
+			}
+		}
+
+		if ($photo === '') {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_NOFOTO;
+		}
+		elseif (!empty($pictureOptions->maxsize) && strlen($photo) > (int) $pictureOptions->maxsize) {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_MAXSIZEEXCEEDED;
+		}
+		elseif (!empty($pictureOptions->maxpictures) && $pictureCount >= (int) $pictureOptions->maxpictures) {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_MAXPICTURESEXCEEDED;
+		}
+		else {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_SUCCESS;
+			$picture->data = StringStreamWrapper::Open($photo);
+			++$pictureCount;
+		}
+
+		return $picture;
 	}
 
 	/**
