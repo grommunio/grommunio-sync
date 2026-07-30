@@ -620,7 +620,7 @@ class MAPIProvider {
 		// FIXME: It should be properly fixed when refactoring.
 		$bpReturnType = Utils::GetBodyPreferenceBestMatch($contentparameters->GetBodyPreference());
 		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) ||
-				($key = array_search(SYNC_BODYPREFERENCE_MIME, $contentparameters->GetBodyPreference()) === false) ||
+				!in_array(SYNC_BODYPREFERENCE_MIME, $contentparameters->GetBodyPreference()) ||
 				$bpReturnType != SYNC_BODYPREFERENCE_MIME) {
 			MAPIUtils::ParseSmime($this->session, $this->store, $this->getAddressbook(), $mapimessage);
 		}
@@ -2958,7 +2958,7 @@ class MAPIProvider {
 		if ($bpTypes !== false) {
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("BodyPreference types: %s", implode(', ', $bpTypes)));
 			// do not send mime data if the client requests it
-			if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && ($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes) !== false)) {
+			if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && (($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes)) !== false)) {
 				unset($bpTypes[$key]);
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Remove mime body preference type because the device required no mime support. BodyPreference types: %s", implode(', ', $bpTypes)));
 			}
@@ -2973,7 +2973,7 @@ class MAPIProvider {
 			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
 			if (isset($props[PR_MESSAGE_CLASS]) &&
 					stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false &&
-					($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes) !== false)) {
+					in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setMessageBody(): enforcing SYNC_BODYPREFERENCE_MIME type for a signed message"));
 				$bpReturnType = SYNC_BODYPREFERENCE_MIME;
 			}
