@@ -3118,7 +3118,7 @@ class MAPIProvider {
 				}
 
 				$mapiattach = mapi_message_openattach($mapimessage, $row[PR_ATTACH_NUM]);
-				$attachprops = mapi_getprops($mapiattach, [PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_A, PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_ATTACH_SIZE, PR_ATTACH_FLAGS]);
+				$attachprops = mapi_getprops($mapiattach, [PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_A, PR_ATTACH_CONTENT_LOCATION, PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_ATTACH_SIZE, PR_ATTACH_FLAGS]);
 				if (isset($attachprops[PR_ATTACH_MIME_TAG]) && str_contains(strtolower((string) $attachprops[PR_ATTACH_MIME_TAG]), 'signed')) {
 					continue;
 				}
@@ -3171,6 +3171,10 @@ class MAPIProvider {
 						$attach->contentid = $attachprops[PR_ATTACH_CONTENT_ID_A];
 					}
 
+					if (isset($attachprops[PR_ATTACH_CONTENT_LOCATION]) && $attachprops[PR_ATTACH_CONTENT_LOCATION]) {
+						$attach->contentlocation = $attachprops[PR_ATTACH_CONTENT_LOCATION];
+					}
+
 					if (isset($attachprops[PR_ATTACHMENT_HIDDEN]) && $attachprops[PR_ATTACHMENT_HIDDEN]) {
 						$attach->isinline = 1;
 					}
@@ -3218,7 +3222,6 @@ class MAPIProvider {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Saving attachment %s with name: %s", $att->clientid, $att->displayname));
 				// only create if the attachment does not already exist
 				if ($this->getFileReferenceForClientId($mapimessage, $att->clientid, 0, 0) === false) {
-					// TODO: check: contentlocation
 					$props = [
 						PR_ATTACH_LONG_FILENAME => $att->displayname,
 						PR_DISPLAY_NAME => $att->displayname,
@@ -3233,6 +3236,9 @@ class MAPIProvider {
 					}
 					if (!empty($att->contentid)) {
 						$props[PR_ATTACH_CONTENT_ID] = $att->contentid;
+					}
+					if (!empty($att->contentlocation)) {
+						$props[PR_ATTACH_CONTENT_LOCATION] = $att->contentlocation;
 					}
 
 					$attachment = mapi_message_createattach($mapimessage);
