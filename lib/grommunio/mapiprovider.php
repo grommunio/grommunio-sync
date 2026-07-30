@@ -617,11 +617,13 @@ class MAPIProvider {
 	 * @return SyncEmail
 	 */
 	private function getEmail($mapimessage, $contentparameters) {
-		// FIXME: It should be properly fixed when refactoring.
-		$bpReturnType = Utils::GetBodyPreferenceBestMatch($contentparameters->GetBodyPreference());
-		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) ||
-				!in_array(SYNC_BODYPREFERENCE_MIME, $contentparameters->GetBodyPreference()) ||
-				$bpReturnType != SYNC_BODYPREFERENCE_MIME) {
+		// a signed message is unwrapped only if it is not sent as MIME,
+		// which has to be generated from the original message
+		$bodyPreference = $this->getBodyPreferenceType($mapimessage, $contentparameters);
+		$sendsMime = $bodyPreference === false ?
+			$contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_ALWAYS :
+			$bodyPreference[0] == SYNC_BODYPREFERENCE_MIME;
+		if (!$sendsMime) {
 			MAPIUtils::ParseSmime($this->session, $this->store, $this->getAddressbook(), $mapimessage);
 		}
 
@@ -643,7 +645,7 @@ class MAPIProvider {
 		}
 
 		// set the body according to contentparameters and supported AS version
-		$this->setMessageBody($mapimessage, $contentparameters, $message);
+		$this->setMessageBody($mapimessage, $contentparameters, $message, $bodyPreference);
 
 		$fromname = $fromaddr = "";
 
@@ -2946,37 +2948,59 @@ class MAPIProvider {
 	}
 
 	/**
+	 * Returns the body preference type to send a message with.
+	 *
+	 * @param MAPIMessage       $mapimessage
+	 * @param ContentParameters $contentparameters
+	 *
+	 * @return array|bool the type and the BodyPreference options to apply,
+	 *                    false if the client did not send a body preference
+	 */
+	private function getBodyPreferenceType($mapimessage, $contentparameters) {
+		// get the available body preference types
+		$bpTypes = $contentparameters->GetBodyPreference();
+		if ($bpTypes === false) {
+			return false;
+		}
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("BodyPreference types: %s", implode(', ', $bpTypes)));
+		// do not send mime data if the client requests it
+		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && (($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes)) !== false)) {
+			unset($bpTypes[$key]);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Remove mime body preference type because the device required no mime support. BodyPreference types: %s", implode(', ', $bpTypes)));
+		}
+		// get the best fitting preference type
+		$bpReturnType = Utils::GetBodyPreferenceBestMatch($bpTypes);
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("GetBodyPreferenceBestMatch: %d", $bpReturnType));
+		$bpo = $contentparameters->BodyPreference($bpReturnType);
+
+		// Android Blackberry expects a full mime message for signed emails
+		if ($bpReturnType != SYNC_BODYPREFERENCE_MIME && in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
+			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
+			if (isset($props[PR_MESSAGE_CLASS]) &&
+					stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getBodyPreferenceType(): enforcing SYNC_BODYPREFERENCE_MIME type for a signed message"));
+				$bpReturnType = SYNC_BODYPREFERENCE_MIME;
+			}
+		}
+
+		return [$bpReturnType, $bpo];
+	}
+
+	/**
 	 * Sets the message body.
 	 *
 	 * @param MAPIMessage       $mapimessage
 	 * @param ContentParameters $contentparameters
 	 * @param SyncObject        $message
+	 * @param null|array|bool   $bodyPreference    result of getBodyPreferenceType(), determined if null
 	 */
-	private function setMessageBody($mapimessage, $contentparameters, &$message) {
-		// get the available body preference types
-		$bpTypes = $contentparameters->GetBodyPreference();
-		if ($bpTypes !== false) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("BodyPreference types: %s", implode(', ', $bpTypes)));
-			// do not send mime data if the client requests it
-			if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && (($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes)) !== false)) {
-				unset($bpTypes[$key]);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Remove mime body preference type because the device required no mime support. BodyPreference types: %s", implode(', ', $bpTypes)));
-			}
-			// get the best fitting preference type
-			$bpReturnType = Utils::GetBodyPreferenceBestMatch($bpTypes);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("GetBodyPreferenceBestMatch: %d", $bpReturnType));
-			$bpo = $contentparameters->BodyPreference($bpReturnType);
+	private function setMessageBody($mapimessage, $contentparameters, &$message, $bodyPreference = null) {
+		if ($bodyPreference === null) {
+			$bodyPreference = $this->getBodyPreferenceType($mapimessage, $contentparameters);
+		}
+		if ($bodyPreference !== false) {
+			[$bpReturnType, $bpo] = $bodyPreference;
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("bpo: truncation size:'%d', allornone:'%d', preview:'%d'", $bpo->GetTruncationSize(), $bpo->GetAllOrNone(), $bpo->GetPreview()));
-
-			// Android Blackberry expects a full mime message for signed emails
-			// @TODO change this when refactoring
-			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
-			if (isset($props[PR_MESSAGE_CLASS]) &&
-					stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false &&
-					in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setMessageBody(): enforcing SYNC_BODYPREFERENCE_MIME type for a signed message"));
-				$bpReturnType = SYNC_BODYPREFERENCE_MIME;
-			}
 
 			$this->setMessageBodyForType($mapimessage, $bpReturnType, $message);
 			// only set the truncation size data if device set it in request
