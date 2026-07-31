@@ -935,7 +935,6 @@ class MAPIProvider {
 			$message->internetcpid = (defined('STORE_INTERNET_CPID')) ? constant('STORE_INTERNET_CPID') : INTERNET_CPID_WINDOWS1252;
 		}
 		$this->setFlag($mapimessage, $message);
-		// TODO checkcontentclass
 		if (!isset($message->contentclass)) {
 			$message->contentclass = DEFAULT_EMAIL_CONTENTCLASS;
 		}
@@ -1248,7 +1247,6 @@ class MAPIProvider {
 	 * @return SyncObject
 	 */
 	public function SetMessage($mapimessage, $message) {
-		// TODO check with instanceof
 		return match (strtolower($message::class)) {
 			"synccontact" => $this->setContact($mapimessage, $message),
 			"syncappointment" => $this->setAppointment($mapimessage, $message),
@@ -2113,7 +2111,6 @@ class MAPIProvider {
 			$picsize = strlen($picbinary);
 			$props[$contactprops["haspic"]] = false;
 
-			// TODO contact picture handling
 			// check if contact has already got a picture. delete it first in that case
 			// delete it also if it was removed on a mobile
 			$picprops = mapi_getprops($mapimessage, [$contactprops["haspic"]]);
@@ -3071,8 +3068,8 @@ class MAPIProvider {
 	 * @param array        $appointmentprops
 	 */
 	private function setASbody($asbody, &$props, $appointmentprops) {
-		// TODO: fix checking for the length
-		if (isset($asbody->type, $asbody->data)   /* && strlen($asbody->data) > 0 */) {
+		// data is a stream, an empty one results in an empty body
+		if (isset($asbody->type, $asbody->data)) {
 			switch ($asbody->type) {
 				case SYNC_BODYPREFERENCE_PLAIN:
 				default:
