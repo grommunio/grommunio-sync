@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * This is the entry point through which all requests are processed.
  */
@@ -48,7 +48,10 @@ try {
 
 	// always request the authorization header
 	if (!Request::HasAuthenticationInfo() || !Request::GetGETUser()) {
-		throw new AuthenticationRequiredException("Access denied. Please send authorisation information");
+		throw new AuthenticationRequiredException(
+			message: "Access denied. Please send authorisation information",
+			logLevel: LOGLEVEL_INFO
+		);
 	}
 
 	GSync::CheckAdvancedConfig();
@@ -186,7 +189,10 @@ catch (Exception $ex) {
 		SLog::Write(LOGLEVEL_INFO, sprintf("User-agent: '%s'", Request::GetUserAgent()));
 	}
 
-	SLog::Write(LOGLEVEL_FATAL, sprintf('Exception: (%s) - %s', $exclass, $exception_message));
+	// GSyncException logs its messages in the constructor
+	if (!$ex instanceof GSyncException) {
+		SLog::Write(LOGLEVEL_FATAL, sprintf('Exception: (%s) - %s', $exclass, $exception_message));
+	}
 
 	if (!headers_sent()) {
 		if ($ex instanceof GSyncException) {
