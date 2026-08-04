@@ -2417,7 +2417,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$oof->Status = SYNC_SETTINGSSTATUS_SUCCESS;
 		$props = [];
 		if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL || $oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED) {
-			$props[PR_EC_OUTOFOFFICE] = true;
+			// gromox only honours the from/until dates with state 2
+			$props[PR_EC_OUTOFOFFICE] = $oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED ? 2 : 1;
 			$externalKnown = $externalUnknown = null;
 			foreach ($oof->oofmessage as $oofmessage) {
 				if (isset($oofmessage->appliesToInternal)) {
