@@ -89,9 +89,9 @@ class Settings extends RequestProcessor {
 						break;
 
 					case SYNC_SETTINGS_DEVICEPW:
-						// TODO device password
 						$devicepassword = new SyncDevicePassword();
 						$devicepassword->Decode(self::$decoder);
+						$devicepassword->Status = SYNC_SETTINGSSTATUS_DEVIPASS_SUCCESS;
 						break;
 
 					case SYNC_SETTINGS_DEVICEINFORMATION:
