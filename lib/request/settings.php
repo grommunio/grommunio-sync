@@ -159,8 +159,9 @@ class Settings extends RequestProcessor {
 		}
 
 		// get user information
-		// TODO none email address found
 		if (isset($userInformation)) {
+			// the backend sets the success status only if it could read the user information
+			$userInformation->Status = SYNC_SETTINGSSTATUS_USERINFO_PROTOCOLLERROR;
 			self::$backend->Settings($userInformation);
 			self::$encoder->startTag(SYNC_SETTINGS_USERINFORMATION);
 			self::$encoder->startTag(SYNC_SETTINGS_STATUS);
