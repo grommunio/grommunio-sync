@@ -102,8 +102,7 @@ class SyncFindProperties extends SyncObject {
 		$fp->displaybcc = $mail->Displaybcc;
 		$fp->importance = $mail->importance;
 		$fp->read = $mail->read;
-		// TODO: fix me
-		$fp->isdraft = 0;
+		$fp->isdraft = empty($mail->isdraft) ? 0 : 1;
 		$fp->preview = stream_get_contents($mail->asbody->data, 254);
 		$fp->hasattachments = empty($mail->attachments) ? 0 : 1;
 		$fp->from = $mail->from;
