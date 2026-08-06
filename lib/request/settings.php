@@ -21,9 +21,6 @@ class Settings extends RequestProcessor {
 			return false;
 		}
 
-		// save the request parameters
-		$request = [];
-
 		// Loop through properties. Possible are:
 		// - Out of office
 		// - DevicePassword
@@ -48,7 +45,6 @@ class Settings extends RequestProcessor {
 			if (self::$decoder->getElementStartTag(SYNC_SETTINGS_RIGHTSMANAGEMENTINFORMATION)) {
 				$propertyName = SYNC_SETTINGS_RIGHTSMANAGEMENTINFORMATION;
 			}
-			// TODO - check if it is necessary
 			// no property name available - break
 			if (!$propertyName) {
 				break;
@@ -75,7 +71,6 @@ class Settings extends RequestProcessor {
 						break;
 
 					default:
-						// TODO: a special status code needed?
 						SLog::Write(LOGLEVEL_WARN, sprintf("This property ('%s') is not allowed to use get in request", $propertyName));
 				}
 			}
@@ -85,7 +80,6 @@ class Settings extends RequestProcessor {
 					case SYNC_SETTINGS_OOF:
 						$oofSet = new SyncOOF();
 						$oofSet->Decode(self::$decoder);
-						// TODO check - do it after while(1) finished?
 						break;
 
 					case SYNC_SETTINGS_DEVICEPW:
@@ -102,7 +96,6 @@ class Settings extends RequestProcessor {
 						break;
 
 					default:
-						// TODO: a special status code needed?
 						SLog::Write(LOGLEVEL_WARN, sprintf("This property ('%s') is not allowed to use set in request", $propertyName));
 				}
 
@@ -130,12 +123,6 @@ class Settings extends RequestProcessor {
 		}
 
 		$status = SYNC_SETTINGSSTATUS_SUCCESS;
-
-		// TODO put it in try catch block
-		// TODO implement Settings in the backend
-		// TODO save device information in device manager
-		// TODO status handling
-		//        $data = self::$backend->Settings($request);
 
 		self::$encoder->startWBXML();
 		self::$encoder->startTag(SYNC_SETTINGS_SETTINGS);
