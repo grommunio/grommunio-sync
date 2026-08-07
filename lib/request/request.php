@@ -62,8 +62,6 @@ class Request {
 	private static $attachmentName;
 	private static $collectionId;
 	private static $itemId;
-	private static $longId; // TODO
-	private static $occurrence; // TODO
 	private static $saveInSent;
 	private static $acceptMultipart;
 	private static $base64QueryDecoded;
@@ -112,7 +110,6 @@ class Request {
 		if (isset($_SERVER["REQUEST_METHOD"])) {
 			self::$method = self::filterEvilInput($_SERVER["REQUEST_METHOD"], self::LETTERS_ONLY);
 		}
-		// TODO check IPv6 addresses
 		if (isset($_SERVER["REMOTE_ADDR"])) {
 			self::$remoteAddr = self::filterIP($_SERVER["REMOTE_ADDR"]);
 		}
