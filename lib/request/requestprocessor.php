@@ -113,6 +113,59 @@ abstract class RequestProcessor {
 	}
 
 	/**
+	 * Returns the root and status tags of a command response which can carry
+	 * a command-level status, or false if the response has no such status.
+	 *
+	 * @param int $commandCode
+	 *
+	 * @return array|bool
+	 */
+	public static function GetCommandStatusTags($commandCode) {
+		return match ($commandCode) {
+			GSync::COMMAND_SYNC => [SYNC_SYNCHRONIZE, SYNC_STATUS],
+			GSync::COMMAND_SENDMAIL => [SYNC_COMPOSEMAIL_SENDMAIL, SYNC_COMPOSEMAIL_STATUS],
+			GSync::COMMAND_SMARTFORWARD => [SYNC_COMPOSEMAIL_SMARTFORWARD, SYNC_COMPOSEMAIL_STATUS],
+			GSync::COMMAND_SMARTREPLY => [SYNC_COMPOSEMAIL_SMARTREPLY, SYNC_COMPOSEMAIL_STATUS],
+			GSync::COMMAND_FOLDERSYNC => [SYNC_FOLDERHIERARCHY_FOLDERSYNC, SYNC_FOLDERHIERARCHY_STATUS],
+			GSync::COMMAND_FOLDERCREATE => [SYNC_FOLDERHIERARCHY_FOLDERCREATE, SYNC_FOLDERHIERARCHY_STATUS],
+			GSync::COMMAND_FOLDERDELETE => [SYNC_FOLDERHIERARCHY_FOLDERDELETE, SYNC_FOLDERHIERARCHY_STATUS],
+			GSync::COMMAND_FOLDERUPDATE => [SYNC_FOLDERHIERARCHY_FOLDERUPDATE, SYNC_FOLDERHIERARCHY_STATUS],
+			GSync::COMMAND_MOVEITEMS => [SYNC_MOVE_MOVES, SYNC_MOVE_STATUS],
+			GSync::COMMAND_GETITEMESTIMATE => [SYNC_GETITEMESTIMATE_GETITEMESTIMATE, SYNC_GETITEMESTIMATE_STATUS],
+			GSync::COMMAND_RESOLVERECIPIENTS => [SYNC_RESOLVERECIPIENTS_RESOLVERECIPIENTS, SYNC_RESOLVERECIPIENTS_STATUS],
+			GSync::COMMAND_VALIDATECERT => [SYNC_VALIDATECERT_VALIDATECERT, SYNC_VALIDATECERT_STATUS],
+			GSync::COMMAND_SEARCH => [SYNC_SEARCH_SEARCH, SYNC_SEARCH_STATUS],
+			GSync::COMMAND_ITEMOPERATIONS => [SYNC_ITEMOPERATIONS_ITEMOPERATIONS, SYNC_ITEMOPERATIONS_STATUS],
+			GSync::COMMAND_SETTINGS => [SYNC_SETTINGS_SETTINGS, SYNC_SETTINGS_STATUS],
+			GSync::COMMAND_FIND => [SYNC_FIND_FIND, SYNC_FIND_STATUS],
+			default => false,
+		};
+	}
+
+	/**
+	 * Answers the command with status 142 (DeviceNotProvisioned), which
+	 * AS 14.0 and later expect instead of HTTP 449.
+	 *
+	 * @return bool
+	 */
+	public static function HandleProvisioningRequired() {
+		$tags = self::GetCommandStatusTags(Request::GetCommandCode());
+		if ($tags === false) {
+			return false;
+		}
+		[$roottag, $statustag] = $tags;
+
+		self::$encoder->startWBXML();
+		self::$encoder->startTag($roottag);
+		self::$encoder->startTag($statustag);
+		self::$encoder->content(SYNC_COMMONSTATUS_DEVICENOTPROVISIONED);
+		self::$encoder->endTag(); // status
+		self::$encoder->endTag(); // command
+
+		return true;
+	}
+
+	/**
 	 * Returns any additional headers which should be sent to the mobile.
 	 *
 	 * @return array
