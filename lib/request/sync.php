@@ -123,12 +123,6 @@ class Sync extends RequestProcessor {
 					try {
 						$spa = self::$deviceManager->GetStateManager()->GetSynchedFolderState($folderid);
 
-						// TODO remove resync of folders
-						// this forces a resync of all states
-						if (!$spa instanceof SyncParameters) {
-							throw new StateInvalidException("Saved state are not of type SyncParameters");
-						}
-
 						// new/resync requested
 						if ($synckey == "0") {
 							$spa->RemoveSyncKey();
