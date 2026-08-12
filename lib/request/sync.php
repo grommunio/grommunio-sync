@@ -868,7 +868,6 @@ class Sync extends RequestProcessor {
 			$newFolderStat = false;
 			$setupExporter = true;
 
-			// TODO we could check against $sc->GetChangedFolderIds() on heartbeat so we do not need to configure all exporter again
 			if ($status == SYNC_STATUS_SUCCESS && ($sc->GetParameter($spa, "getchanges") || !$spa->HasSyncKey())) {
 				// no need to run the exporter if the globalwindowsize is already full - if collection already has a synckey
 				if ($sc->GetGlobalWindowSize() == $this->globallyExportedItems && $spa->HasSyncKey()) {
@@ -1541,6 +1540,7 @@ class Sync extends RequestProcessor {
 		}
 
 		if (!$ignoreMessage) {
+			// SMS sync is not supported, SMS changes from the device are acknowledged but not saved
 			switch ($todo) {
 				case SYNC_MODIFY:
 					self::$topCollector->AnnounceInformation(sprintf("Saving modified message %d", $messageCount));
@@ -1549,7 +1549,6 @@ class Sync extends RequestProcessor {
 						// ignore sms messages
 						if ($foldertype == "SMS" || stripos($serverid, self::GSYNCIGNORESMS) !== false) {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
-							// TODO we should update the SMS
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
 						}
 						// check incoming message without logging WARN messages about errors
@@ -1585,7 +1584,6 @@ class Sync extends RequestProcessor {
 						// ignore sms messages
 						if ($foldertype == "SMS") {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
-							// TODO we should create the SMS
 							// return a fake serverid which we can identify later
 							$actiondata["clientids"][$clientid] = self::GSYNCIGNORESMS . $clientid;
 							$actiondata["statusids"][$clientid] = SYNC_STATUS_SUCCESS;
@@ -1614,7 +1612,6 @@ class Sync extends RequestProcessor {
 						// ignore sms messages
 						if ($foldertype == "SMS" || stripos($serverid, self::GSYNCIGNORESMS) !== false) {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
-							// TODO we should delete the SMS
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
 						}
 						else {
