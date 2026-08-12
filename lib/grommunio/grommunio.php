@@ -3204,4 +3204,89 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		return true;
 	}
+
+	/**
+	 * Moves all messages of a conversation in the user's mailbox to a folder.
+	 * Messages in the destination folder, Deleted Items, Sent Items and the
+	 * Outbox are left untouched. Messages arriving later are not moved.
+	 *
+	 * @param string $conversationid the PR_CONVERSATION_ID of the conversation
+	 * @param string $folderid       backend id of the destination folder
+	 *
+	 * @return int number of moved messages
+	 *
+	 * @throws StatusException
+	 */
+	public function MoveConversation($conversationid, $folderid) {
+		$dstentryid = mapi_msgstore_entryidfromsourcekey($this->defaultstore, hex2bin($folderid));
+		$dstfolder = $dstentryid ? mapi_msgstore_openentry($this->defaultstore, $dstentryid) : false;
+		if (!$dstfolder) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): Error, unable to open destination folder: 0x%X", bin2hex($conversationid), $folderid, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
+
+		$storeprops = mapi_getprops($this->defaultstore, [PR_IPM_SUBTREE_ENTRYID, PR_IPM_WASTEBASKET_ENTRYID, PR_IPM_SENTMAIL_ENTRYID, PR_IPM_OUTBOX_ENTRYID]);
+		$skip = [];
+		foreach ([PR_IPM_WASTEBASKET_ENTRYID, PR_IPM_SENTMAIL_ENTRYID, PR_IPM_OUTBOX_ENTRYID] as $prop) {
+			if (isset($storeprops[$prop])) {
+				$skip[] = $storeprops[$prop];
+			}
+		}
+
+		// php-mapi has no conversation members table, so the content table of each mail folder is searched
+		$root = mapi_msgstore_openentry($this->defaultstore, $storeprops[PR_IPM_SUBTREE_ENTRYID]);
+		$hierarchy = mapi_folder_gethierarchytable($root, CONVENIENT_DEPTH);
+		mapi_table_restrict($hierarchy, [
+			RES_PROPERTY,
+			[
+				RELOP => RELOP_NE,
+				ULPROPTAG => PR_FOLDER_TYPE,
+				VALUE => [PR_FOLDER_TYPE => FOLDER_SEARCH],
+			],
+		], TBL_BATCH);
+		$folders = mapi_table_queryallrows($hierarchy, [PR_ENTRYID, PR_SOURCE_KEY, PR_CONTAINER_CLASS]);
+
+		$restriction = [
+			RES_PROPERTY,
+			[
+				RELOP => RELOP_EQ,
+				ULPROPTAG => PR_CONVERSATION_ID,
+				VALUE => [PR_CONVERSATION_ID => $conversationid],
+			],
+		];
+		$moved = 0;
+		$failed = false;
+		foreach ($folders as $row) {
+			if (bin2hex((string) ($row[PR_SOURCE_KEY] ?? '')) === strtolower($folderid) || in_array($row[PR_ENTRYID], $skip, true) ||
+				(isset($row[PR_CONTAINER_CLASS]) && !str_starts_with((string) $row[PR_CONTAINER_CLASS], "IPF.Note"))) {
+				continue;
+			}
+
+			try {
+				$folder = mapi_msgstore_openentry($this->defaultstore, $row[PR_ENTRYID]);
+				$contents = mapi_folder_getcontentstable($folder, MAPI_DEFERRED_ERRORS);
+				mapi_table_restrict($contents, $restriction, TBL_BATCH);
+				$messages = mapi_table_queryallrows($contents, [PR_ENTRYID]);
+				if (empty($messages)) {
+					continue;
+				}
+				$entryids = array_column($messages, PR_ENTRYID);
+				mapi_folder_copymessages($folder, $entryids, $dstfolder, MESSAGE_MOVE);
+				if (mapi_last_hresult()) {
+					throw new MAPIException(sprintf("mapi_folder_copymessages() failed: 0x%X", mapi_last_hresult()));
+				}
+				$moved += count($entryids);
+			}
+			catch (MAPIException $e) {
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MoveConversation('%s','%s'): Error moving messages of folder '%s': %s", bin2hex($conversationid), $folderid, bin2hex((string) $row[PR_ENTRYID]), $e->getMessage()));
+				$failed = true;
+			}
+		}
+
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MoveConversation('%s','%s'): moved %d messages", bin2hex($conversationid), $folderid, $moved));
+		if ($failed) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): not all messages could be moved, %d moved", bin2hex($conversationid), $folderid, $moved), $moved > 0 ? SYNC_ITEMOPERATIONSSTATUS_EMPTYFOLDER : SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
+
+		return $moved;
+	}
 }

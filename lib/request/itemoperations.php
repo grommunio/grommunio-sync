@@ -260,7 +260,33 @@ class ItemOperations extends RequestProcessor {
 					}
 				}
 
-				// TODO move
+				if ($move) {
+					if (self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_CONVERSATIONID)) {
+						$operation['conversationid'] = self::$decoder->getElementContent();
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}// SYNC_ITEMOPERATIONS_CONVERSATIONID
+					}
+
+					if (self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_DSTFLDID)) {
+						$operation['dstfldid'] = self::$decoder->getElementContent();
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}// SYNC_ITEMOPERATIONS_DSTFLDID
+					}
+
+					if (($el = self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_OPTIONS)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
+						if ($el = self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_MOVEALWAYS)) {
+							$operation['movealways'] = true;
+							if (($el[EN_FLAGS] & EN_FLAGS_CONTENT) && !self::$decoder->getElementEndTag()) {
+								return false;
+							}// SYNC_ITEMOPERATIONS_MOVEALWAYS
+						}
+						if (!self::$decoder->getElementEndTag()) {
+							return false;
+						}// SYNC_ITEMOPERATIONS_OPTIONS
+					}
+				}
 
 				// break if it reached the endtag SYNC_ITEMOPERATIONS_FETCH or SYNC_ITEMOPERATIONS_EMPTYFOLDERCONTENTS or SYNC_ITEMOPERATIONS_MOVE
 				$e = self::$decoder->peek();
@@ -415,16 +441,48 @@ class ItemOperations extends RequestProcessor {
 				}
 				self::$encoder->endTag(); // SYNC_ITEMOPERATIONS_EMPTYFOLDERCONTENTS
 			}
-			// TODO implement ItemOperations Move
-			// move operation
+			// move conversation operation
 			else {
-				self::$topCollector->AnnounceInformation("not implemented", true);
+				$status = SYNC_ITEMOPERATIONSSTATUS_SUCCESS;
+				if (empty($operation['conversationid']) || empty($operation['dstfldid'])) {
+					$status = SYNC_ITEMOPERATIONSSTATUS_PROTERROR;
+				}
+				elseif (!isset($operation['movealways'])) {
+					$status = SYNC_ITEMOPERATIONSSTATUS_PROTOCOLERROR;
+				}
+				else {
+					try {
+						$dstclass = self::$deviceManager->GetFolderClassFromCacheByID($operation['dstfldid']);
+					}
+					catch (Exception) {
+						$dstclass = false;
+					}
+					if ($dstclass !== "Email") {
+						$status = SYNC_ITEMOPERATIONSSTATUS_UNSUPPORTEDACTION;
+					}
+				}
 
-				// reply with "can't do"
+				if ($status == SYNC_ITEMOPERATIONSSTATUS_SUCCESS) {
+					try {
+						self::$topCollector->AnnounceInformation("Moving conversation");
+						// MoveAlways is accepted, but only the messages of the conversation which exist now are moved
+						self::$backend->MoveConversation($operation['conversationid'], self::$deviceManager->GetBackendIdForFolderId($operation['dstfldid']));
+					}
+					catch (StatusException $stex) {
+						$status = $stex->getCode();
+					}
+				}
+
 				self::$encoder->startTag(SYNC_ITEMOPERATIONS_MOVE);
 				self::$encoder->startTag(SYNC_ITEMOPERATIONS_STATUS);
-				self::$encoder->content(SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+				self::$encoder->content($status);
 				self::$encoder->endTag(); // SYNC_ITEMOPERATIONS_STATUS
+
+				if (!empty($operation['conversationid'])) {
+					self::$encoder->startTag(SYNC_ITEMOPERATIONS_CONVERSATIONID);
+					self::$encoder->contentStream(StringStreamWrapper::Open($operation['conversationid']), false, true);
+					self::$encoder->endTag(); // SYNC_ITEMOPERATIONS_CONVERSATIONID
+				}
 				self::$encoder->endTag(); // SYNC_ITEMOPERATIONS_MOVE
 			}
 		}

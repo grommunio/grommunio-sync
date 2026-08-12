@@ -280,4 +280,16 @@ interface IBackend {
 	 * @return string
 	 */
 	public function GetFolderStat($store, $folderid);
+
+	/**
+	 * Moves all messages of a conversation in the user's mailbox to a folder.
+	 *
+	 * @param string $conversationid the conversation id
+	 * @param string $folderid       backend id of the destination folder
+	 *
+	 * @return int number of moved messages
+	 *
+	 * @throws StatusException
+	 */
+	public function MoveConversation($conversationid, $folderid);
 }
