@@ -27,7 +27,6 @@ class ItemOperations extends RequestProcessor {
 		// ItemOperations can either be Fetch, EmptyFolderContents or Move
 		WBXMLDecoder::ResetInWhile("itemOperationsActions");
 		while (WBXMLDecoder::InWhile("itemOperationsActions")) {
-			// TODO check if multiple item operations are possible in one request
 			$el = self::$decoder->getElement();
 
 			if ($el[EN_TYPE] != EN_TYPE_STARTTAG) {
@@ -102,13 +101,7 @@ class ItemOperations extends RequestProcessor {
 					}
 
 					if (($el = self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_OPTIONS)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
-						// TODO other options
-						// schema
-						// range
-						// username
-						// password
-						// bodypartpreference
-						// rm:RightsManagementSupport
+						// UserName and Password are only used for document libraries, which are not supported
 
 						WBXMLDecoder::ResetInWhile("itemOperationsOptions");
 						while (WBXMLDecoder::InWhile("itemOperationsOptions")) {
@@ -197,10 +190,9 @@ class ItemOperations extends RequestProcessor {
 							}
 
 							if (self::$decoder->getElementStartTag(SYNC_ITEMOPERATIONS_SCHEMA)) {
-								// read schema tags
+								// the schema is skipped, the complete item is returned
 								WBXMLDecoder::ResetInWhile("itemOperationsSchema");
 								while (WBXMLDecoder::InWhile("itemOperationsSchema")) {
-									// TODO save elements
 									$el = self::$decoder->getElement();
 									$e = self::$decoder->peek();
 									if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
