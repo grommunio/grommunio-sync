@@ -25,7 +25,6 @@ class Search extends RequestProcessor {
 			return false;
 		}
 
-		// TODO check: possible to search in other stores?
 		if (!self::$decoder->getElementStartTag(SYNC_SEARCH_STORE)) {
 			return false;
 		}
@@ -76,7 +75,6 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				// TODO - review
 				if (self::$decoder->getElementStartTag(SYNC_SEARCH_GREATERTHAN)) {
 					if (self::$decoder->getElementStartTag(SYNC_POOMMAIL_DATERECEIVED)) {
 						$datereceivedgreater = true;
@@ -208,7 +206,6 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				// TODO body preferences
 				while (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODYPREFERENCE)) {
 					if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
 						$bptype = self::$decoder->getElementContent();
@@ -332,7 +329,7 @@ class Search extends RequestProcessor {
 		$status = SYNC_SEARCHSTATUS_SUCCESS;
 		$rows = [];
 
-		// TODO support other searches
+		// GAL and Mailbox searches are supported, DocumentLibrary is not
 		if ($searchprovider->SupportsType($searchname)) {
 			$storestatus = SYNC_SEARCHSTATUS_STORE_SUCCESS;
 
@@ -470,9 +467,7 @@ class Search extends RequestProcessor {
 			}
 			elseif ($searchname == ISearchProvider::SEARCH_MAILBOX) {
 				foreach ($rows as $u) {
-					// TODO: unclear if any clients *require* the folder id where the message is located (it's not available anymore)
-					// $folderid = self::$deviceManager->GetFolderIdForBackendId($u['folderid']);
-
+					// the search provider does not return the folder of a message, so the searched folder id is sent if known
 					self::$encoder->startTag(SYNC_SEARCH_RESULT);
 					self::$encoder->startTag(SYNC_FOLDERTYPE);
 					self::$encoder->content($u['class']);
