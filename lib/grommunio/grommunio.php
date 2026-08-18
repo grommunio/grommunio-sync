@@ -2778,7 +2778,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param int    $maxAmbiguousRecipients
 	 * @param bool   $expandDistlist
 	 *
-	 * @return array|bool
+	 * @return array|int the recipients or a status if none was found
 	 */
 	private function resolveRecipient($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		$recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist);
@@ -2793,7 +2793,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return $recipient;
 		}
 
-		return false;
+		return SYNC_RESOLVERECIPSSTATUS_RESPONSE_UNRESOLVEDRECIP;
 	}
 
 	/**
@@ -2875,8 +2875,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientGAL(): No recipient found for: '%s' in GAL", $to));
 
-		return SYNC_RESOLVERECIPSSTATUS_RESPONSE_UNRESOLVEDRECIP;
-
 		return false;
 	}
 
@@ -2948,11 +2946,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		if (empty($recipients)) {
-			$contactProperties = [];
-			$contactProperties[PR_DISPLAY_NAME] = $to;
-			$contactProperties[PR_USER_X509_CERTIFICATE] = false;
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientContact(): No recipient found for: '%s' in contacts", $to));
 
-			$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contactProperties);
+			return false;
 		}
 
 		return $recipients;
