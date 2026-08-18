@@ -107,7 +107,71 @@ class Find extends RequestProcessor {
 
 		if (self::$decoder->getElementStartTag(SYNC_FIND_GALSEARCHCRITERION)) {
 			$searchname = ISearchProvider::SEARCH_GAL;
-			$galSearchCriterion = self::$decoder->getElementContent();
+			$galquery = "";
+			$galrange = "0-99";
+			$galpicture = false;
+
+			if (!($el = self::$decoder->getElementStartTag(SYNC_FIND_QUERY))) {
+				return false;
+			}
+			if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+				// the query is a string, but accept it wrapped in FreeText like a mailbox query
+				if (self::$decoder->getElementStartTag(SYNC_FIND_FREETEXT)) {
+					$galquery = self::$decoder->getElementContent();
+					if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_FREETEXT
+						return false;
+					}
+				}
+				else {
+					$galquery = self::$decoder->getElementContent();
+				}
+				if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_QUERY
+					return false;
+				}
+			}
+
+			if (($el = self::$decoder->getElementStartTag(SYNC_FIND_OPTIONS)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
+				WBXMLDecoder::ResetInWhile("findGalOptions");
+				while (WBXMLDecoder::InWhile("findGalOptions")) {
+					if (self::$decoder->getElementStartTag(SYNC_FIND_RANGE)) {
+						$galrange = self::$decoder->getElementContent();
+						if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_RANGE
+							return false;
+						}
+					}
+
+					if (($el = self::$decoder->getElementStartTag(SYNC_FIND_PICTURE)) !== false) {
+						$galpicture = new SyncResolveRecipientsPicture();
+						if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+							if (self::$decoder->getElementStartTag(SYNC_FIND_MAXSIZE)) {
+								$galpicture->maxsize = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_MAXSIZE
+									return false;
+								}
+							}
+
+							if (self::$decoder->getElementStartTag(SYNC_FIND_MAXPICTURES)) {
+								$galpicture->maxpictures = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_MAXPICTURES
+									return false;
+								}
+							}
+
+							if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_PICTURE
+								return false;
+							}
+						}
+					}
+
+					$e = self::$decoder->peek();
+					if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
+						self::$decoder->getElementEndTag(); // SYNC_FIND_OPTIONS
+
+						break;
+					}
+				}
+			}
+
 			if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_GALSEARCHCRITERION
 				return false;
 			}
@@ -138,12 +202,25 @@ class Find extends RequestProcessor {
 
 		if ($findstatus == SYNC_FINDSTATUS_SUCCESS) {
 			$status = SYNC_FINDSTATUS_SUCCESS;
+			$rows = [];
+			$searchtotal = 0;
 
 			try {
 				if ($searchname == ISearchProvider::SEARCH_GAL) {
-					// TODO: Fix GAL search in Find command
-					// $rows = $searchprovider->GetGALSearchResults($cpo->GetFindFreeText(), "0-100", null);
-					throw new StatusException("GAL search in FIND command is not implemented. Please report this including the 'WBXML debug data' logged. Be aware that the debug data could contain confidential information.", SYNC_FINDSTATUS_INVALIDREQUEST, null, LOGLEVEL_FATAL);
+					if (!str_starts_with((string) $galrange, "0-")) {
+						throw new StatusException(sprintf("Find(): GAL search range '%s' does not start with 0", $galrange), SYNC_FINDSTATUS_STARTRANGEZER0);
+					}
+					if (strlen((string) $galquery) == 0) {
+						throw new StatusException("Find(): empty GAL search query", SYNC_FINDSTATUS_INVALIDREQUEST);
+					}
+
+					try {
+						$rows = $searchprovider->GetGALSearchResults($galquery, $galrange, $galpicture);
+					}
+					catch (StatusException $stex) {
+						// the search provider uses Search status codes, Find has no server error status
+						throw new StatusException($stex->getMessage(), SYNC_FINDSTATUS_INVALIDREQUEST);
+					}
 				}
 				if ($searchname == ISearchProvider::SEARCH_MAILBOX) {
 					$backendFolderId = self::$deviceManager->GetBackendIdForFolderId($cpo->GetFindFolderid());
@@ -174,7 +251,17 @@ class Find extends RequestProcessor {
 				unset($rows['searchtotal']);
 			}
 
-			if ($searchtotal > 0) {
+			if ($searchtotal > 0 && $searchname == ISearchProvider::SEARCH_GAL) {
+				// GAL entries have no class, server or collection id
+				foreach ($rows as $u) {
+					self::$encoder->startTag(SYNC_FIND_RESULT);
+					self::$encoder->startTag(SYNC_FIND_PROPERTIES);
+					self::encodeGALProperties($u);
+					self::$encoder->endTag(); // SYNC_FIND_PROPERTIES
+					self::$encoder->endTag(); // SYNC_FIND_RESULT
+				}
+			}
+			elseif ($searchtotal > 0) {
 				foreach ($rows as $u) {
 					// fetch the SyncObject for this result
 					$message = self::$backend->Fetch(false, $u['longid'], $cpo);
@@ -202,7 +289,7 @@ class Find extends RequestProcessor {
 			}
 
 			self::$encoder->startTag(SYNC_FIND_RANGE);
-			self::$encoder->content("0-" . $searchtotal);
+			self::$encoder->content($searchname == ISearchProvider::SEARCH_GAL && isset($searchrange) ? $searchrange : "0-" . $searchtotal);
 			self::$encoder->endTag();
 			if ($searchtotal > 0) {
 				self::$encoder->startTag(SYNC_FIND_TOTAL);
