@@ -3235,7 +3235,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// php-mapi has no conversation members table, so the content table of each mail folder is searched
-		$root = mapi_msgstore_openentry($this->defaultstore, $storeprops[PR_IPM_SUBTREE_ENTRYID]);
+		$root = isset($storeprops[PR_IPM_SUBTREE_ENTRYID]) ? mapi_msgstore_openentry($this->defaultstore, $storeprops[PR_IPM_SUBTREE_ENTRYID]) : false;
+		if (!$root) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): Error, unable to open the IPM subtree: 0x%X", bin2hex($conversationid), $folderid, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
 		$hierarchy = mapi_folder_gethierarchytable($root, CONVENIENT_DEPTH);
 		mapi_table_restrict($hierarchy, [
 			RES_PROPERTY,
@@ -3265,7 +3268,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 			try {
 				$folder = mapi_msgstore_openentry($this->defaultstore, $row[PR_ENTRYID]);
-				$contents = mapi_folder_getcontentstable($folder, MAPI_DEFERRED_ERRORS);
+				$contents = $folder ? mapi_folder_getcontentstable($folder, MAPI_DEFERRED_ERRORS) : false;
+				if (!$contents) {
+					throw new MAPIException(sprintf("unable to open the folder contents: 0x%X", mapi_last_hresult()));
+				}
 				mapi_table_restrict($contents, $restriction, TBL_BATCH);
 				$messages = mapi_table_queryallrows($contents, [PR_ENTRYID]);
 				if (empty($messages)) {
