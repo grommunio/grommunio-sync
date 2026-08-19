@@ -2356,7 +2356,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$oof->oofstate = SYNC_SETTINGSOOF_DISABLED;
 		$oof->Status = SYNC_SETTINGSSTATUS_SUCCESS;
 		if ($oofprops != false) {
-			$oof->oofstate = isset($oofprops[PR_EC_OUTOFOFFICE]) ? ($oofprops[PR_EC_OUTOFOFFICE] ? SYNC_SETTINGSOOF_GLOBAL : SYNC_SETTINGSOOF_DISABLED) : SYNC_SETTINGSOOF_DISABLED;
+			// 1 replies always, 2 only between from and until
+			$oofstate = (int) ($oofprops[PR_EC_OUTOFOFFICE] ?? 0);
+			$oof->oofstate = $oofstate ? SYNC_SETTINGSOOF_GLOBAL : SYNC_SETTINGSOOF_DISABLED;
 			$oof->oofmessage[] = $this->createOofMessage("appliesToInternal", $oof->oofstate, $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "", $oof->bodytype);
 
 			// gromox has one reply for all external senders, PR_EC_EXTERNAL_AUDIENCE
@@ -2368,7 +2370,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$oof->oofmessage[] = $this->createOofMessage("appliesToExternalUnknown", ($allowExternal && !$knownOnly) ? 1 : 0, $externalReply, $oof->bodytype);
 
 			// check whether time based out of office is set
-			if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && isset($oofprops[PR_EC_OUTOFOFFICE_FROM], $oofprops[PR_EC_OUTOFOFFICE_UNTIL])) {
+			if ($oofstate == 2 && isset($oofprops[PR_EC_OUTOFOFFICE_FROM], $oofprops[PR_EC_OUTOFOFFICE_UNTIL])) {
 				$now = time();
 				if ($now > $oofprops[PR_EC_OUTOFOFFICE_FROM] && $now > $oofprops[PR_EC_OUTOFOFFICE_UNTIL]) {
 					// Out of office is set but the date is in the past. Set the state to disabled.
@@ -2391,7 +2393,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$oof->Status = SYNC_SETTINGSSTATUS_PROTOCOLLERROR;
 				}
 			}
-			elseif ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && (isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) || isset($oofprops[PR_EC_OUTOFOFFICE_UNTIL]))) {
+			elseif ($oofstate == 2) {
 				SLog::Write(LOGLEVEL_WARN, sprintf(
 					"Grommunio->settingsOofGet(): Time based out of office set but either start time ('%s') or end time ('%s') is missing.",
 					isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_FROM]) : 'empty',
@@ -2451,8 +2453,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$props[PR_EC_OUTOFOFFICE_FROM] = $oof->starttime;
 					$props[PR_EC_OUTOFOFFICE_UNTIL] = $oof->endtime;
 				}
-				elseif (isset($oof->starttime) || isset($oof->endtime)) {
+				else {
+					// a time based out of office requires both dates, keep the current settings
+					SLog::Write(LOGLEVEL_WARN, "Grommunio->settingsOofSet(): time based out of office without start and end time");
 					$oof->Status = SYNC_SETTINGSSTATUS_PROTOCOLLERROR;
+
+					return false;
 				}
 			}
 			else {
