@@ -25,6 +25,7 @@ class PHPWrapper {
 	private $mapiprovider;
 	private $contentparameters;
 	private $prefix;
+	private $folderSourceKey;
 
 	/**
 	 * Constructor of the PHPWrapper.
@@ -38,6 +39,7 @@ class PHPWrapper {
 		$this->importer = &$importer;
 		$this->mapiprovider = new MAPIProvider($session, $this->store);
 		$this->prefix = '';
+		$this->folderSourceKey = $this->folderid;
 
 		if ($this->folderid) {
 			$folderidHex = bin2hex($this->folderid);
@@ -153,13 +155,15 @@ class PHPWrapper {
 	 */
 	public function ImportMessageDeletion($flags, $sourcekeys) {
 		$amount = count($sourcekeys);
-		// soft deletions are messages which still exist but are outside the sync window now
+		// soft deletions are messages which still exist but are outside the sync window now,
+		// but ICS also flags messages which were deleted without DELETE_HARD_DELETE
 		$asSoftDelete = ($flags & self::SYNC_SOFT_DELETE) !== 0;
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): Received %d %s requests from ICS", $amount, $asSoftDelete ? "soft delete" : "remove"));
 
 		foreach ($sourcekeys as $sourcekey) {
-			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey), $asSoftDelete);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): %s for :'%s'", $asSoftDelete ? "soft delete" : "delete", $this->prefix . bin2hex((string) $sourcekey)));
+			$softDelete = $asSoftDelete && $this->messageExists($sourcekey);
+			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey), $softDelete);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): %s for :'%s'", $softDelete ? "soft delete" : "delete", $this->prefix . bin2hex((string) $sourcekey)));
 		}
 	}
 
@@ -219,5 +223,24 @@ class PHPWrapper {
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Checks if a message can still be opened, i.e. was not deleted.
+	 *
+	 * @param string $sourcekey
+	 *
+	 * @return bool
+	 */
+	private function messageExists($sourcekey) {
+		if (!$this->folderSourceKey) {
+			return false;
+		}
+		$entryid = @mapi_msgstore_entryidfromsourcekey($this->store, $this->folderSourceKey, $sourcekey);
+		if (!$entryid) {
+			return false;
+		}
+
+		return @mapi_msgstore_openentry($this->store, $entryid) !== false;
 	}
 }
