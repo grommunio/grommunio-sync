@@ -2968,7 +2968,8 @@ class MAPIProvider {
 		// get the best fitting preference type
 		$bpReturnType = Utils::GetBodyPreferenceBestMatch($bpTypes);
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("GetBodyPreferenceBestMatch: %d", $bpReturnType));
-		$bpo = $contentparameters->BodyPreference($bpReturnType);
+		// do not add a type the device did not request to the saved body preferences
+		$bpo = in_array($bpReturnType, $bpTypes) ? $contentparameters->BodyPreference($bpReturnType) : new BodyPreference();
 
 		// Android Blackberry expects a full mime message for signed emails
 		if ($bpReturnType != SYNC_BODYPREFERENCE_MIME && in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
