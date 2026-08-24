@@ -1410,36 +1410,6 @@ class MAPIProvider {
 			}
 		}
 
-		// AS 16.0+ draft send (e.g. Samsung Email): the client asked to send this
-		// draft ([MS-ASEMAIL] 2.2.2.69) but often leaves an empty From. Stamp the
-		// authenticated mailbox owner as the sender so a valid From is present
-		// regardless of the gromox version.
-		if (!empty($message->send)) {
-			$storeprops = mapi_getprops($this->store, [PR_MAILBOX_OWNER_ENTRYID]);
-			$owneraddr = $ownername = '';
-			if (isset($storeprops[PR_MAILBOX_OWNER_ENTRYID])) {
-				$addrbook = mapi_openaddressbook($this->session);
-				$mailuser = mapi_ab_openentry($addrbook, $storeprops[PR_MAILBOX_OWNER_ENTRYID]);
-				$ownerprops = mapi_getprops($mailuser, [PR_SMTP_ADDRESS, PR_EMAIL_ADDRESS, PR_DISPLAY_NAME]);
-				$owneraddr = $ownerprops[PR_SMTP_ADDRESS] ?? $ownerprops[PR_EMAIL_ADDRESS] ?? '';
-				$ownername = $ownerprops[PR_DISPLAY_NAME] ?? $owneraddr;
-			}
-			if ($owneraddr === '') {
-				throw new StatusException("MAPIProvider->setEmail(): unable to resolve authenticated mailbox owner for draft send", SYNC_STATUS_SYNCCANNOTBECOMPLETED);
-			}
-			// a valid one-off ENTRYID is required or the spooler rejects the empty
-			// sent-representing the client left behind
-			$owneroneoff = mapi_createoneoff($ownername, "SMTP", $owneraddr);
-			$props[PR_SENDER_NAME] = $ownername;
-			$props[PR_SENDER_ADDRTYPE] = "SMTP";
-			$props[PR_SENDER_EMAIL_ADDRESS] = $owneraddr;
-			$props[PR_SENDER_ENTRYID] = $owneroneoff;
-			$props[PR_SENT_REPRESENTING_NAME] = $ownername;
-			$props[PR_SENT_REPRESENTING_ADDRTYPE] = "SMTP";
-			$props[PR_SENT_REPRESENTING_EMAIL_ADDRESS] = $owneraddr;
-			$props[PR_SENT_REPRESENTING_ENTRYID] = $owneroneoff;
-		}
-
 		if (!empty($props)) {
 			mapi_setprops($mapimessage, $props);
 		}
