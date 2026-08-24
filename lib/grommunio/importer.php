@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * This is a generic class that is used by both the proxy importer (for
  * outgoing messages) and our local importer (for incoming messages). Basically
@@ -426,25 +426,13 @@ class ImportChangesICS implements IImportChanges {
 			// the sender (drafts from e.g. Samsung Email often carry an empty From).
 			// Submit the message and remove the draft only after a successful submit,
 			// so a failed submit never loses the mail.
-			if ($message instanceof SyncMail && !empty($message->send)) {
-				// remember the draft location before submit so we can clean it up
-				$draftprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_ENTRYID]);
-
-				mapi_message_submitmessage($mapimessage);
-				if (mapi_last_hresult()) {
-					// submit failed: keep the draft in place, no mail is lost
-					throw new StatusException(sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): Error submitting message for sending: 0x%X", $id, $messageClass, mapi_last_hresult()), SYNC_STATUS_SYNCCANNOTBECOMPLETED);
-				}
-
-				// submit succeeded: remove the (now sent) draft from its folder. The
-				// spooler files the sent copy into Sent Items itself.
-				if (isset($draftprops[PR_ENTRYID], $draftprops[PR_PARENT_ENTRYID])) {
-					$parentfolder = mapi_msgstore_openentry($this->store, $draftprops[PR_PARENT_ENTRYID]);
-					if ($parentfolder) {
-						mapi_folder_deletemessages($parentfolder, [$draftprops[PR_ENTRYID]], DELETE_HARD_DELETE);
-					}
-				}
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): AS16 draft submitted and removed from Drafts", $id, $messageClass));
+			if ($message instanceof SyncMail &&
+			    !empty($message->send) &&
+			    $this->mapiprovider->SubmitMessage($this->store, $mapimessage)) {
+				$this->ImportMessageDeletion($id, true);
+				SLog::Write(LOGLEVEL_DEBUG, sprintf(
+					"ImportChangesICS->ImportMessageChange('%s','%s'): AS16 draft submitted and removed from Drafts",
+					$id, $messageClass));
 			}
 
 			return $response;

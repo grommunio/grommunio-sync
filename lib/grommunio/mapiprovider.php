@@ -3743,4 +3743,46 @@ class MAPIProvider {
 			}
 		}
 	}
+
+	/**
+	 * Submits a message for sending.
+	 *
+	 * @return bool
+	 */
+	public function SubmitMessage(mixed $store = null, mixed $mapimessage = null): bool {
+		if ($mapimessage === null) {
+			throw new GSyncException(sprintf("MAPIProvider->submitMessage: mapimessage must not be null"));
+		}
+		if ($store === null) {
+			$store = $this->store;
+		}
+		try {
+			$storeProps = $this->GetStoreProps();
+			$outbox = mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]);
+			$out = mapi_folder_createmessage($outbox);
+			mapi_copyto($mapimessage, [], [], $out, 0);
+			$recipienttable = mapi_message_getrecipienttable($mapimessage);
+			$messageRecipients = mapi_table_queryallrows($recipienttable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]);
+			mapi_message_submitmessage($out);
+		}
+		catch (Exception $e) {
+			$props = $mapi_getprops($mapimessage, [PR_ENTRYID, PR_SUBJECT]);
+			SLog::Write(LOGLEVEL_FATAL, sprintf(
+				"MAPIProvider->submitMessage: caught Exception (0x%X) when submitting message: '%s' (entryid: %s). Exception: %s.",
+				mapi_last_hresult(), $props[PR_SUBJECT] ?? '<empty subject>', bin2hex($props[PR_ENTRYID]), $e));
+			throw new GSyncException(sprintf("MAPIProvider->submitMessage failed"));
+		}
+
+		$hr = mapi_last_hresult();
+		if ($hr) {
+			$code = match ($hr) {
+				MAPI_E_STORE_FULL => SYNC_COMMONSTATUS_MAILBOXQUOTAEXCEEDED,
+				default => SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED,
+			};
+
+			throw new StatusException(sprintf("MAPIProvider->submitMessage(): Error saving/submitting the message to the Outbox: 0x%X", $hr), $code);
+		}
+
+		return true;
+	}
 }
