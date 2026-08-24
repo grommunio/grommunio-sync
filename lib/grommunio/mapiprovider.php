@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2025 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  */
 
 class MAPIProvider {
@@ -1302,12 +1302,39 @@ class MAPIProvider {
 
 			// Android devices send the recipients in to, cc and bcc tags
 			if (isset($message->to) || isset($message->cc) || isset($message->bcc)) {
-				$recips = [];
-				$this->addRecips($message->to, MAPI_TO, $recips);
-				$this->addRecips($message->cc, MAPI_CC, $recips);
-				$this->addRecips($message->bcc, MAPI_BCC, $recips);
+				$reciptable = mapi_message_getrecipienttable($mapimessage);
+				$origRecips = mapi_table_queryallrows($reciptable, [
+					PR_RECIPIENT_TYPE,
+					PR_DISPLAY_NAME,
+					PR_ADDRTYPE,
+					PR_EMAIL_ADDRESS,
+					PR_SMTP_ADDRESS,
+					PR_ENTRYID,
+					PR_SEARCH_KEY,
+					PR_ROWID
+				]);
+				$typesToRemove = $newRecipients = $removeRecipients = [];
+				foreach (['to' => MAPI_TO, 'cc' => MAPI_CC, 'bcc' => MAPI_BCC] as $recipType => $mapiRecipType) {
+					// The device hasn't sent any information for this recipient type, so leave it unchanged
+					if (!isset($message->{$recipType})) {
+						continue;
+					}
+					// Remove the recipients for this type and add the ones sent by the devices
+					$typesToRemove[] = $mapiRecipType;
+					if (!empty(array_filter($message->{$recipType}))) {
+						$this->addRecips($message->{$recipType}, $mapiRecipType, $newRecipients);
+					}
+				}
+				if (!empty($typesToRemove)) {
+					$this->removeRecips($typesToRemove, $origRecips, $removeRecipients);
+					if (!empty($removeRecipients)) {
+						mapi_message_modifyrecipients($mapimessage, MODRECIP_REMOVE, $removeRecipients);
+					}
+				}
 
-				mapi_message_modifyrecipients($mapimessage, MODRECIP_MODIFY, $recips);
+				if (!empty($newRecipients)) {
+					mapi_message_modifyrecipients($mapimessage, MODRECIP_ADD, $newRecipients);
+				}
 			}
 			// remove PR_CLIENT_SUBMIT_TIME
 			mapi_deleteprops(
@@ -3640,13 +3667,13 @@ class MAPIProvider {
 	}
 
 	/**
-	 * Adds recipients to the recips array.
+	 * Adds recipients to the newRecipients array.
 	 *
-	 * @param string $recip
-	 * @param int    $type
-	 * @param array  $recips
+	 * @param array $recip
+	 * @param int   $type
+	 * @param array $newRecipients
 	 */
-	private function addRecips($recip, $type, &$recips) {
+	private function addRecips(array $recip, int $type, array &$newRecipients) {
 		if (!empty($recip) && is_array($recip)) {
 			$emails = $recip;
 			// Recipients should be comma separated, but android devices separate
@@ -3659,7 +3686,7 @@ class MAPIProvider {
 				$extEmail = $this->extractEmailAddress($email);
 				if ($extEmail !== false) {
 					$r = $this->createMapiRecipient($extEmail, $type);
-					$recips[] = $r;
+					$newRecipients[] = $r;
 				}
 			}
 		}
@@ -3700,5 +3727,20 @@ class MAPIProvider {
 		}
 
 		return $recip;
+	}
+
+	/**
+	 * Gathers the types of recipients to be removed.
+	 *
+	 * @param array $typesToRemove
+	 * @param array $origRecips
+	 * @param array $removeRecipients
+	 */
+	private function removeRecips(array $typesToRemove, array $origRecips, array &$removeRecipients) {
+		foreach ($origRecips as $origRecip) {
+			if (in_array($origRecip[PR_RECIPIENT_TYPE], $typesToRemove)) {
+				$removeRecipients[] = $origRecip;
+			}
+		}
 	}
 }
