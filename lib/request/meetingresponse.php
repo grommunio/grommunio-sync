@@ -55,34 +55,51 @@ class MeetingResponse extends RequestProcessor {
 					}
 				}
 
-				if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_SENDRESPONSE)) {
-					if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODY)) {
-						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
-							$req["bodytype"] = self::$decoder->getElementContent();
-							if (!self::$decoder->getElementEndTag()) {
-								return false;
+				if ($el = self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_SENDRESPONSE)) {
+					// an empty SendResponse also requests a response mail, just without a body
+					$req["sendresponse"] = true;
+					if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+						WBXMLDecoder::ResetInWhile("meetingResponseSendResponse");
+						while (WBXMLDecoder::InWhile("meetingResponseSendResponse")) {
+							if (($el = self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODY)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
+								if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
+									$req["bodytype"] = self::$decoder->getElementContent();
+									if (!self::$decoder->getElementEndTag()) {
+										return false;
+									}
+								}
+								if ($el = self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_DATA)) {
+									$req["body"] = "";
+									if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+										$req["body"] = self::$decoder->getElementContent();
+										if (!self::$decoder->getElementEndTag()) {
+											return false;
+										}
+									}
+								}
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
+							} // end body
+							if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME)) {
+								$req["proposedstarttime"] = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
 							}
-						}
-						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_DATA)) {
-							$req["body"] = self::$decoder->getElementContent();
-							if (!self::$decoder->getElementEndTag()) {
-								return false;
+							if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDENDTIME)) {
+								$req["proposedendtime"] = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
 							}
-						}
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					} // end body
-					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME)) {
-						$req["proposedstarttime"] = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDENDTIME)) {
-						$req["proposedendtime"] = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
+
+							$e = self::$decoder->peek();
+							if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
+								self::$decoder->getElementEndTag();
+
+								break;
+							}
 						}
 					}
 				} // end send response
