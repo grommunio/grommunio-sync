@@ -872,12 +872,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		else {
 			$request['proposedendtime'] = false;
 		}
-		if (!isset($request['body'])) {
-			$request['body'] = false;
+		$body = false;
+		// AS-16.0: a response mail is only sent if the client requested it, with the body it sent
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$sendresponse = !empty($request['sendresponse']);
+			if ($sendresponse) {
+				$body = $this->setMeetingResponseBody($meetingrequest, $request);
+			}
 		}
-
 		// from AS-14.0 we have to take care of sending out meeting request responses
-		if (Request::GetProtocolVersion() >= 14.0) {
+		elseif (Request::GetProtocolVersion() >= 14.0) {
 			$sendresponse = true;
 		}
 		else {
@@ -888,15 +892,15 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		switch ($response) {
 			case 1:     // accept
 			default:
-				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, false, true); // last true is the $userAction
+				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true); // last true is the $userAction
 				break;
 
 			case 2:        // tentative
-				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $request['body'], true); // last true is the $userAction
+				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true); // last true is the $userAction
 				break;
 
 			case 3:        // decline
-				$meetingrequest->doDecline($sendresponse);
+				$meetingrequest->doDecline($sendresponse, false, $body);
 				break;
 		}
 
@@ -961,6 +965,34 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return $calendarid;
+	}
+
+	/**
+	 * Prepares the body of a meeting response mail from the SendResponse of a MeetingResponse request.
+	 * A HTML body is passed as meeting time info, which the Meetingrequest class writes to PR_HTML.
+	 *
+	 * @param Meetingrequest $meetingrequest
+	 * @param array          $request
+	 *
+	 * @return null|string plain text body, null if there is none or it was passed as HTML
+	 */
+	private function setMeetingResponseBody($meetingrequest, $request) {
+		if (!isset($request['body']) || $request['body'] === false) {
+			return null;
+		}
+		$bodytype = $request['bodytype'] ?? SYNC_BODYPREFERENCE_PLAIN;
+		if ($bodytype == SYNC_BODYPREFERENCE_HTML) {
+			$meetingrequest->setMeetingTimeInfo($request['body'], true);
+
+			return null;
+		}
+		if ($bodytype != SYNC_BODYPREFERENCE_PLAIN) {
+			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->setMeetingResponseBody(): body type %d is not supported for meeting responses, sending the response without a body", $bodytype));
+
+			return null;
+		}
+
+		return $request['body'];
 	}
 
 	/**
