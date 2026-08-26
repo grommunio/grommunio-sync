@@ -137,6 +137,14 @@ class MeetingResponse extends RequestProcessor {
 					}
 				}
 
+				// a new time proposal needs both the start and the end
+				if (isset($req["proposedstarttime"]) !== isset($req["proposedendtime"])) {
+					throw new StatusException("HandleMeetingResponse(): ProposedStartTime and ProposedEndTime have to be sent together", SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+				}
+				if (isset($req["proposedstarttime"]) && (!Utils::ParseDate($req["proposedstarttime"]) || !Utils::ParseDate($req["proposedendtime"]))) {
+					throw new StatusException(sprintf("HandleMeetingResponse(): invalid proposed time '%s' - '%s'", $req["proposedstarttime"], $req["proposedendtime"]), SYNC_COMMONSTATUS_INVALIDDATETIME);
+				}
+
 				$backendFolderId = self::$deviceManager->GetBackendIdForFolderId($req["folderid"]);
 
 				// if the source folder is an additional folder the backend has to be setup correctly

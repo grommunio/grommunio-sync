@@ -908,6 +908,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				break;
 
 			case 3:        // decline
+				if ($request['proposedstarttime'] !== false) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): a new time proposal can not be sent with a decline, declining without it", $requestid, $folderid, $response));
+				}
 				$meetingrequest->doDecline($sendresponse, $basedate, $body);
 				break;
 		}
