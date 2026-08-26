@@ -939,11 +939,20 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				}
 			}
 
-			// delete meeting request from Inbox
-			if (isset($folderClass) && $folderClass == 'Email') {
-				$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
-				$folder = mapi_msgstore_openentry($this->store, $folderentryid);
-				mapi_folder_deletemessages($folder, [$reqentryid], 0);
+			// Move the request mail to the wastebasket. $folderid is the folder the
+			// response was made in, which is the calendar when the client responds
+			// there, so take the folder from the request itself. Declining is
+			// excluded: doDecline() already moves the request.
+			if ($response != 3 && ($meetingrequest->isMeetingRequest() || $meetingrequest->isMeetingCancellation())) {
+				$mrprops = mapi_getprops($mapimessage, [PR_PARENT_ENTRYID]);
+				$storeprops = mapi_getprops($this->store, [PR_IPM_WASTEBASKET_ENTRYID]);
+				if (isset($mrprops[PR_PARENT_ENTRYID], $storeprops[PR_IPM_WASTEBASKET_ENTRYID])) {
+					$mrfolder = mapi_msgstore_openentry($this->store, $mrprops[PR_PARENT_ENTRYID]);
+					$wastebasket = mapi_msgstore_openentry($this->store, $storeprops[PR_IPM_WASTEBASKET_ENTRYID]);
+					if ($mrfolder && $wastebasket) {
+						mapi_folder_copymessages($mrfolder, [$reqentryid], $wastebasket, MESSAGE_MOVE);
+					}
+				}
 			}
 
 			$prefix = '';
