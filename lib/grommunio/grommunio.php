@@ -803,10 +803,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		$searchForResultCalendarItem = false;
+		$basedate = false;
 		$folderClass = GSync::GetDeviceManager()->GetFolderClassFromCacheByID($fid);
 		if ($folderClass == 'Email') {
+			if (!empty($request['instanceid'])) {
+				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, InstanceId is only valid for calendar items", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			}
 			// The mobile requested this on a MR, when finishing we need to search for the resulting calendar item!
 			$searchForResultCalendarItem = true;
+		}
+		// a single occurrence is answered on the calendar item itself
+		elseif (!empty($request['instanceid'])) {
+			$basedate = $this->getOccurrenceBasedate($mapimessage, $request['instanceid']);
 		}
 		// we are operating on the calendar item - try searching for the corresponding meeting request first
 		else {
@@ -892,15 +900,15 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		switch ($response) {
 			case 1:     // accept
 			default:
-				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true); // last true is the $userAction
+				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true, false, $basedate); // the last true is the $userAction
 				break;
 
 			case 2:        // tentative
-				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true); // last true is the $userAction
+				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true, false, $basedate); // the last true is the $userAction
 				break;
 
 			case 3:        // decline
-				$meetingrequest->doDecline($sendresponse, false, $body);
+				$meetingrequest->doDecline($sendresponse, $basedate, $body);
 				break;
 		}
 
@@ -965,6 +973,33 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return $calendarid;
+	}
+
+	/**
+	 * Returns the basedate of the occurrence of a recurring calendar item for a MeetingResponse InstanceId.
+	 * The basedate is the start of the local day of the original start of the occurrence.
+	 *
+	 * @param mixed  $mapimessage the calendar item
+	 * @param string $instanceid  original UTC start of the occurrence
+	 *
+	 * @return int
+	 *
+	 * @throws StatusException
+	 */
+	private function getOccurrenceBasedate($mapimessage, $instanceid) {
+		$props = getPropIdsFromStrings($this->store, MAPIMapping::GetMeetingRequestProperties());
+		$messageprops = mapi_getprops($mapimessage, [$props["isrecurringtag"]]);
+		if (empty($messageprops[$props["isrecurringtag"]])) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the calendar item is not recurring", $instanceid), SYNC_COMMONSTATUS_NORECURRINCAL);
+		}
+
+		$recurrence = new Recurrence($this->store, $mapimessage);
+		$basedate = $recurrence->dayStartOf($recurrence->fromGMT($recurrence->tz, Utils::ParseDate($instanceid)));
+		if ($recurrence->isDeleteException($basedate)) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+		}
+
+		return $basedate;
 	}
 
 	/**
