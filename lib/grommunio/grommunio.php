@@ -36,6 +36,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private $addressbook;
 	private $folderStatCache;
 	private $impersonateUser;
+	private $removeRequestOnResponse;
 	private $stateFolder;
 	private $userDeviceData;
 
@@ -944,6 +945,20 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$folderentryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin($folderid));
 				$folder = mapi_msgstore_openentry($this->store, $folderentryid);
 				mapi_folder_deletemessages($folder, [$reqentryid], 0);
+			}
+			// Opt-in. $folderid is the folder the response was made in, so take the
+			// request's own parent instead. Declines are moved by doDecline() already.
+			elseif ($response != 3 && $this->removeRequestOnCalendarResponse() &&
+				($meetingrequest->isMeetingRequest() || $meetingrequest->isMeetingCancellation())) {
+				$mrprops = mapi_getprops($mapimessage, [PR_PARENT_ENTRYID]);
+				$storeprops = mapi_getprops($this->store, [PR_IPM_WASTEBASKET_ENTRYID]);
+				if (isset($mrprops[PR_PARENT_ENTRYID], $storeprops[PR_IPM_WASTEBASKET_ENTRYID])) {
+					$mrfolder = mapi_msgstore_openentry($this->store, $mrprops[PR_PARENT_ENTRYID]);
+					$wastebasket = mapi_msgstore_openentry($this->store, $storeprops[PR_IPM_WASTEBASKET_ENTRYID]);
+					if ($mrfolder && $wastebasket) {
+						mapi_folder_copymessages($mrfolder, [$reqentryid], $wastebasket, MESSAGE_MOVE);
+					}
+				}
 			}
 
 			$prefix = '';
@@ -3094,5 +3109,30 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return true;
+	}
+
+	/**
+	 * Whether the user opted in to removing the request mail on a response made
+	 * outside it. Read from grommunio Web's settings in the user's own store, as a
+	 * stream because the blob outgrows mapi_getprops. Anything missing means no.
+	 *
+	 * @return bool
+	 */
+	private function removeRequestOnCalendarResponse() {
+		if ($this->removeRequestOnResponse !== null) {
+			return $this->removeRequestOnResponse;
+		}
+		$this->removeRequestOnResponse = false;
+
+		$json = MAPIUtils::readPropStream($this->store, PR_EC_WEBACCESS_SETTINGS_JSON);
+		if (!empty($json)) {
+			$settings = json_decode($json, true);
+			$value = $settings['settings']['zarafa']['v1']['contexts']['calendar']['remove_meetingrequest_on_calendar_response'] ?? false;
+			// JSON, so the value may arrive as a bool or as a string.
+			$this->removeRequestOnResponse = $value === true || $value === 'true' || $value === 1 || $value === '1';
+		}
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->removeRequestOnCalendarResponse(): %s", $this->removeRequestOnResponse ? 'opted in' : 'not opted in'));
+
+		return $this->removeRequestOnResponse;
 	}
 }
