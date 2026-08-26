@@ -310,7 +310,18 @@ class MAPIProvider {
 					array_push($message->attendees, $attendee);
 				}
 			}
+		}
+
+		// always send the response status, also 1 for the organizer of the meeting
+		if (isset($messageprops[$appointmentprops["responsestatus"]])) {
 			$message->responsetype = $messageprops[$appointmentprops["responsestatus"]];
+		}
+		if (isset($messageprops[$appointmentprops["appointmentreplytime"]])) {
+			$message->appointmentreplytime = $messageprops[$appointmentprops["appointmentreplytime"]];
+		}
+		// new time proposals are allowed if the property is missing
+		if (!isset($message->disallownewtimeprop)) {
+			$message->disallownewtimeprop = 0;
 		}
 
 		// If it's an appointment which doesn't have any attendees, we have to make sure that

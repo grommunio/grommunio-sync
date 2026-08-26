@@ -259,6 +259,8 @@ class MAPIMapping {
 			"starttime" => "PT_SYSTIME:PSETID_Appointment:0x820d",
 			"uid" => "PT_BINARY:PSETID_Meeting:0x3",
 			"nativebodytype" => PR_NATIVE_BODY_INFO,
+			"responserequested" => PR_RESPONSE_REQUESTED,
+			"disallownewtimeprop" => "PT_BOOLEAN:PSETID_Appointment:0x825A", // PidLidAppointmentNotAllowPropose
 		];
 	}
 
@@ -307,6 +309,7 @@ class MAPIMapping {
 			"tzdefstart" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionStartDisplay,
 			"tzdefend" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionEndDisplay,
 			"tzdefrecur" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionRecur,
+			"appointmentreplytime" => "PT_SYSTIME:PSETID_Appointment:0x8220", // PidLidAppointmentReplyTime
 		];
 	}
 

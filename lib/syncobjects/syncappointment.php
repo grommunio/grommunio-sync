@@ -44,6 +44,7 @@ class SyncAppointment extends SyncObject {
 	public $disallownewtimeprop;
 	public $responsetype;
 	public $responserequested;
+	public $appointmentreplytime;
 
 	// AS 14.1 props
 	public $onlineMeetingConfLink;
@@ -239,6 +240,11 @@ class SyncAppointment extends SyncObject {
 			];
 			$mapping[SYNC_POOMCAL_RESPONSETYPE] = [
 				self::STREAMER_VAR => "responsetype",
+				self::STREAMER_RONOTIFY => true,
+			];
+			$mapping[SYNC_POOMCAL_APPOINTMENTREPLYTIME] = [
+				self::STREAMER_VAR => "appointmentreplytime",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
 				self::STREAMER_RONOTIFY => true,
 			];
 		}
