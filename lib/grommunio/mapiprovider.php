@@ -718,6 +718,19 @@ class MAPIProvider {
 				$message->meetingrequest->globalobjid = base64_encode($props[$meetingrequestproperties["goidtag"]]);
 			}
 
+			// AS 16.0: calendar:UID and airsyncbase:Location replace GlobalObjId and Location
+			if (Request::GetProtocolVersion() >= 16.0) {
+				// the clean GOID is the same for all occurrences, like the UID of the calendar item
+				$goid = $props[$meetingrequestproperties["goid2tag"]] ?? $props[$meetingrequestproperties["goidtag"]] ?? null;
+				if (isset($goid)) {
+					$message->meetingrequest->uid = getUidFromGoid($goid) ?? strtoupper(bin2hex((string) $goid));
+				}
+				$locationprops = array_intersect_key(MAPIMapping::GetAppointmentProperties(), ["location" => true, "locations" => true]);
+				$locationprops = $this->getPropIdsFromStrings($locationprops);
+				$message->meetingrequest->location2 = new SyncLocation();
+				$this->getASlocation($mapimessage, $message->meetingrequest->location2, $locationprops);
+			}
+
 			// Set Timezone
 			if (isset($props[$meetingrequestproperties["timezonetag"]])) {
 				$tz = TimezoneUtil::GetTzFromTimezoneStruct($props[$meetingrequestproperties["timezonetag"]]);

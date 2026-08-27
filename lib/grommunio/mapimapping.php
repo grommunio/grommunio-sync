@@ -197,6 +197,7 @@ class MAPIMapping {
 	public static function GetMeetingRequestProperties() {
 		return [
 			"goidtag" => "PT_BINARY:PSETID_Meeting:0x3",
+			"goid2tag" => "PT_BINARY:PSETID_Meeting:0x23",
 			"timezonetag" => "PT_BINARY:PSETID_Appointment:0x8233",
 			"recReplTime" => "PT_SYSTIME:PSETID_Appointment:0x8228",
 			"isrecurringtag" => "PT_BOOLEAN:PSETID_Appointment:0x8223",

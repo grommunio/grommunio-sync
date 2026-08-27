@@ -29,6 +29,10 @@ class SyncMeetingRequest extends SyncObject {
 	public $meetingmessagetype;
 	public $disallownewtimeproposal;
 
+	// AS 16.0 props
+	public $location2; // SyncLocation object
+	public $uid;
+
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMMAIL_ALLDAYEVENT => [
@@ -68,7 +72,20 @@ class SyncMeetingRequest extends SyncObject {
 					self::STREAMER_CHECK_ONEVALUEOF => [0, 1, 2, 3],
 				],
 			],
-			SYNC_POOMMAIL_LOCATION => [self::STREAMER_VAR => "location"],
+		];
+
+		// AS 16.0 uses airsyncbase:Location at the place of email:Location
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_AIRSYNCBASE_LOCATION] = [
+				self::STREAMER_VAR => "location2",
+				self::STREAMER_TYPE => "SyncLocation",
+			];
+		}
+		else {
+			$mapping[SYNC_POOMMAIL_LOCATION] = [self::STREAMER_VAR => "location"];
+		}
+
+		$mapping += [
 			SYNC_POOMMAIL_ORGANIZER => [
 				self::STREAMER_VAR => "organizer",
 				self::STREAMER_CHECKS => [self::STREAMER_CHECK_REQUIRED => self::STREAMER_CHECK_SETEMPTY],
@@ -118,8 +135,12 @@ class SyncMeetingRequest extends SyncObject {
 					self::STREAMER_CHECK_REQUIRED => base64_encode(pack("la64vvvvvvvvla64vvvvvvvvl", 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, 0, 0)),
 				],
 			],
-			SYNC_POOMMAIL_GLOBALOBJID => [self::STREAMER_VAR => "globalobjid"],
 		];
+
+		// AS 16.0 sends calendar:UID instead
+		if (Request::GetProtocolVersion() < 16.0) {
+			$mapping[SYNC_POOMMAIL_GLOBALOBJID] = [self::STREAMER_VAR => "globalobjid"];
+		}
 
 		if (Request::GetProtocolVersion() >= 14.0) {
 			$mapping[SYNC_POOMMAIL_DISALLOWNEWTIMEPROPOSAL] = [
@@ -147,6 +168,10 @@ class SyncMeetingRequest extends SyncObject {
 					self::STREAMER_CHECK_ONEVALUEOF => [0, 1, 2, 3, 4, 5, 6],
 				],
 			];
+		}
+
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_POOMCAL_UID] = [self::STREAMER_VAR => "uid"];
 		}
 
 		parent::__construct($mapping);
