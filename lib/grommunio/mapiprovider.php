@@ -228,7 +228,7 @@ class MAPIProvider {
 		// Do attendees
 		$reciptable = mapi_message_getrecipienttable($mapimessage);
 		// Only get first 256 recipients, to prevent possible load issues.
-		$rows = mapi_table_queryrows($reciptable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_ADDRTYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TYPE, PR_SEARCH_KEY], 0, 256);
+		$rows = mapi_table_queryrows($reciptable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_ADDRTYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TYPE, PR_SEARCH_KEY, PR_RECIPIENT_PROPOSED, PR_RECIPIENT_PROPOSEDSTARTTIME, PR_RECIPIENT_PROPOSEDENDTIME], 0, 256);
 
 		// Exception: we do not synchronize appointments with more than 250 attendees
 		if (count($rows) > 250) {
@@ -280,6 +280,11 @@ class MAPIProvider {
 			}
 			if (isset($row[PR_RECIPIENT_TYPE])) {
 				$attendee->attendeetype = $row[PR_RECIPIENT_TYPE];
+			}
+			// the attendee proposed a new time
+			if (!empty($row[PR_RECIPIENT_PROPOSED]) && isset($row[PR_RECIPIENT_PROPOSEDSTARTTIME], $row[PR_RECIPIENT_PROPOSEDENDTIME])) {
+				$attendee->proposedstarttime = $row[PR_RECIPIENT_PROPOSEDSTARTTIME];
+				$attendee->proposedendtime = $row[PR_RECIPIENT_PROPOSEDENDTIME];
 			}
 			// Some attendees have no email or name (eg resources), and if you
 			// don't send one of those fields, the phone will give an error ... so

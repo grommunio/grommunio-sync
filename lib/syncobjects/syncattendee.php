@@ -15,6 +15,8 @@ class SyncAttendee extends SyncObject {
 	public $name;
 	public $attendeestatus;
 	public $attendeetype;
+	public $proposedstarttime;
+	public $proposedendtime;
 
 	public function __construct() {
 		$mapping = [
@@ -40,6 +42,21 @@ class SyncAttendee extends SyncObject {
 			];
 			$mapping[SYNC_POOMCAL_ATTENDEETYPE] = [
 				self::STREAMER_VAR => "attendeetype",
+				self::STREAMER_RONOTIFY => true,
+				self::STREAMER_PRIVATE => true,
+			];
+		}
+
+		if (Request::GetProtocolVersion() >= 16.1) {
+			$mapping[SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME] = [
+				self::STREAMER_VAR => "proposedstarttime",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
+				self::STREAMER_RONOTIFY => true,
+				self::STREAMER_PRIVATE => true,
+			];
+			$mapping[SYNC_MEETINGRESPONSE_PROPOSEDENDTIME] = [
+				self::STREAMER_VAR => "proposedendtime",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
 				self::STREAMER_RONOTIFY => true,
 				self::STREAMER_PRIVATE => true,
 			];
