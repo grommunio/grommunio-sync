@@ -731,6 +731,12 @@ class MAPIProvider {
 				$this->getASlocation($mapimessage, $message->meetingrequest->location2, $locationprops);
 			}
 
+			// AS 16.1: the new time an attendee proposed with the response
+			if (!empty($props[$meetingrequestproperties["counterproposal"]]) && isset($props[$meetingrequestproperties["proposedstarttime"]], $props[$meetingrequestproperties["proposedendtime"]])) {
+				$message->meetingrequest->proposedstarttime = $props[$meetingrequestproperties["proposedstarttime"]];
+				$message->meetingrequest->proposedendtime = $props[$meetingrequestproperties["proposedendtime"]];
+			}
+
 			// Set Timezone
 			if (isset($props[$meetingrequestproperties["timezonetag"]])) {
 				$tz = TimezoneUtil::GetTzFromTimezoneStruct($props[$meetingrequestproperties["timezonetag"]]);

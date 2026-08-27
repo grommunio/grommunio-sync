@@ -33,6 +33,10 @@ class SyncMeetingRequest extends SyncObject {
 	public $location2; // SyncLocation object
 	public $uid;
 
+	// AS 16.1 props
+	public $proposedstarttime;
+	public $proposedendtime;
+
 	public function __construct() {
 		$mapping = [
 			SYNC_POOMMAIL_ALLDAYEVENT => [
@@ -172,6 +176,17 @@ class SyncMeetingRequest extends SyncObject {
 
 		if (Request::GetProtocolVersion() >= 16.0) {
 			$mapping[SYNC_POOMCAL_UID] = [self::STREAMER_VAR => "uid"];
+		}
+
+		if (Request::GetProtocolVersion() >= 16.1) {
+			$mapping[SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME] = [
+				self::STREAMER_VAR => "proposedstarttime",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
+			];
+			$mapping[SYNC_MEETINGRESPONSE_PROPOSEDENDTIME] = [
+				self::STREAMER_VAR => "proposedendtime",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_DATE,
+			];
 		}
 
 		parent::__construct($mapping);

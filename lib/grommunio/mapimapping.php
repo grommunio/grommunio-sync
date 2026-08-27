@@ -209,6 +209,9 @@ class MAPIMapping {
 			"remindertime" => "PT_LONG:PSETID_Common:0x8501",
 			"recurrenceend" => "PT_SYSTIME:PSETID_Appointment:0x8236",
 			"meetingType" => "PT_LONG:PSETID_Meeting:0x26",
+			"counterproposal" => "PT_BOOLEAN:PSETID_Appointment:0x8257", // PidLidAppointmentCounterProposal
+			"proposedstarttime" => "PT_SYSTIME:PSETID_Appointment:0x8250", // PidLidAppointmentProposedStartWhole
+			"proposedendtime" => "PT_SYSTIME:PSETID_Appointment:0x8251", // PidLidAppointmentProposedEndWhole
 		];
 	}
 
