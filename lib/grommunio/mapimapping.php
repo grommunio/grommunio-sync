@@ -191,6 +191,7 @@ class MAPIMapping {
 			"reminder" => "PT_LONG:PSETID_Common:0x8501",
 			"starttime" => "PT_SYSTIME:PSETID_Appointment:0x820d",
 			"sensitivity" => PR_SENSITIVITY,
+			"disallownewtimeproposal" => "PT_BOOLEAN:PSETID_Appointment:0x825A", // PidLidAppointmentNotAllowPropose
 		];
 	}
 
