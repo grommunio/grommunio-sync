@@ -273,4 +273,7 @@ class SyncMail extends SyncObject {
 
 class SyncMailResponse extends SyncMail {
 	use ResponseTrait;
+
+	// status of a failed submission of a new draft (not streamed)
+	public $submitstatus;
 }

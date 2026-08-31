@@ -1595,8 +1595,10 @@ class Sync extends RequestProcessor {
 						}
 						else {
 							$actiondata["clientids"][$clientid] = false;
-							$actiondata["clientids"][$clientid] = $this->importer->ImportMessageChange(false, $message);
-							$actiondata["statusids"][$clientid] = SYNC_STATUS_SUCCESS;
+							$response = $this->importer->ImportMessageChange(false, $message);
+							$actiondata["clientids"][$clientid] = $response;
+							// a draft which was saved but could not be sent
+							$actiondata["statusids"][$clientid] = !empty($response->submitstatus) ? $response->submitstatus : SYNC_STATUS_SUCCESS;
 						}
 					}
 					catch (StatusException $stex) {
