@@ -3673,40 +3673,84 @@ class MAPIProvider {
 	/**
 	 * Submits a message for sending.
 	 *
+	 * A copy of the message is submitted from the outbox, the message itself
+	 * is not changed, so a draft is kept if the submission fails.
+	 *
 	 * @return bool
+	 *
+	 * @throws StatusException
 	 */
 	public function SubmitMessage(mixed $store = null, mixed $mapimessage = null): bool {
 		if ($mapimessage === null) {
-			throw new GSyncException(sprintf("MAPIProvider->submitMessage: mapimessage must not be null"));
+			throw new StatusException("MAPIProvider->SubmitMessage(): mapimessage must not be null", SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED);
 		}
 		if ($store === null) {
 			$store = $this->store;
 		}
+
+		// a mail without or with an invalid recipient can not be sent
+		$recipienttable = mapi_message_getrecipienttable($mapimessage);
+		$recipients = mapi_table_queryallrows($recipienttable, [PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]);
+		if (empty($recipients)) {
+			throw new StatusException("MAPIProvider->SubmitMessage(): the message has no recipients", SYNC_COMMONSTATUS_INVALIDRECIPIENTS);
+		}
+		foreach ($recipients as $recipient) {
+			$smtp = $recipient[PR_SMTP_ADDRESS] ?? null;
+			if ($smtp === null && isset($recipient[PR_ADDRTYPE]) && $recipient[PR_ADDRTYPE] == "SMTP") {
+				$smtp = $recipient[PR_EMAIL_ADDRESS] ?? "";
+			}
+			if ($smtp !== null && filter_var($smtp, FILTER_VALIDATE_EMAIL) === false) {
+				throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): the recipient address '%s' is invalid", $smtp), SYNC_COMMONSTATUS_INVALIDRECIPIENTS);
+			}
+		}
+
+		$outbox = $out = false;
+		$hr = NOERROR;
+
 		try {
 			$storeProps = $this->GetStoreProps();
 			$outbox = mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]);
 			$out = mapi_folder_createmessage($outbox);
 			mapi_copyto($mapimessage, [], [], $out, 0);
-			$recipienttable = mapi_message_getrecipienttable($mapimessage);
-			$messageRecipients = mapi_table_queryallrows($recipienttable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]);
+			// move the sent mail to the sent items folder
+			if ($storeProps[PR_IPM_SENTMAIL_ENTRYID]) {
+				mapi_setprops($out, [PR_SENTMAIL_ENTRYID => $storeProps[PR_IPM_SENTMAIL_ENTRYID]]);
+			}
+			mapi_savechanges($out);
 			mapi_message_submitmessage($out);
+			$hr = mapi_last_hresult();
 		}
 		catch (Exception $e) {
-			$props = $mapi_getprops($mapimessage, [PR_ENTRYID, PR_SUBJECT]);
-			SLog::Write(LOGLEVEL_FATAL, sprintf(
-				"MAPIProvider->submitMessage: caught Exception (0x%X) when submitting message: '%s' (entryid: %s). Exception: %s.",
-				mapi_last_hresult(), $props[PR_SUBJECT] ?? '<empty subject>', bin2hex($props[PR_ENTRYID]), $e));
-			throw new GSyncException(sprintf("MAPIProvider->submitMessage failed"));
+			$hr = $e->getCode() ?: mapi_last_hresult();
+			if ($e instanceof MAPIException) {
+				$e->setHandled();
+			}
+			$props = mapi_getprops($mapimessage, [PR_SUBJECT]);
+			SLog::Write(LOGLEVEL_ERROR, sprintf(
+				"MAPIProvider->SubmitMessage(): caught exception (0x%X) when submitting message '%s': %s",
+				$hr,
+				$props[PR_SUBJECT] ?? '<empty subject>',
+				$e->getMessage()
+			));
+			if (!$hr) {
+				$hr = MAPI_E_CALL_FAILED;
+			}
 		}
 
-		$hr = mapi_last_hresult();
 		if ($hr) {
+			// do not leave the unsent copy in the outbox
+			if ($outbox && $out) {
+				$outProps = mapi_getprops($out, [PR_ENTRYID]);
+				if (isset($outProps[PR_ENTRYID])) {
+					mapi_folder_deletemessages($outbox, [$outProps[PR_ENTRYID]]);
+				}
+			}
 			$code = match ($hr) {
 				MAPI_E_STORE_FULL => SYNC_COMMONSTATUS_MAILBOXQUOTAEXCEEDED,
 				default => SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED,
 			};
 
-			throw new StatusException(sprintf("MAPIProvider->submitMessage(): Error saving/submitting the message to the Outbox: 0x%X", $hr), $code);
+			throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): Error saving/submitting the message to the Outbox: 0x%X", $hr), $code);
 		}
 
 		return true;
