@@ -1316,23 +1316,39 @@ class MAPIProvider {
 		// flag specific properties to be set
 		$props = $delprops = [];
 
+		// AS 16: a new draft or a draft change may come without a body, e.g. only changing the recipients
+		$hasBody = isset($message->asbody) && $message->asbody instanceof SyncBaseBody;
+		$isNew = isset($message->flags) && $message->flags === SYNC_NEWMESSAGE;
+		$isDraft = $hasBody;
+		if (!$isDraft && Request::GetProtocolVersion() >= 16.0) {
+			$draftprops = mapi_getprops($mapimessage, [$emailprops["messageflags"]]);
+			$isDraft = $isNew || (($draftprops[$emailprops["messageflags"]] ?? 0) & MSGFLAG_UNSENT);
+		}
+
 		// save DRAFTs
-		if (isset($message->asbody) && $message->asbody instanceof SyncBaseBody) {
+		if ($isDraft) {
 			// iOS+Nine send a RFC822 message
-			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
+			if ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setEmail(): Use the mapi_inetmapi_imtomapi function to save draft email");
 				$mime = stream_get_contents($message->asbody->data);
 				$ab = mapi_openaddressbook($this->session);
 				mapi_inetmapi_imtomapi($this->session, $this->store, $ab, $mapimessage, $mime, []);
 			}
-			else {
+			elseif ($hasBody || $isNew) {
 				$props[$emailmap["messageclass"]] = "IPM.Note";
 				$this->setPropsInMAPI($mapimessage, $message, $emailmap);
 			}
+			else {
+				// only the header fields of an existing draft are changed
+				$this->setPropsInMAPI($mapimessage, $message, ["subject" => $emailmap["subject"], "importance" => $emailmap["importance"]]);
+			}
 			$props[$emailprops["messageflags"]] = MSGFLAG_UNSENT | MSGFLAG_READ;
 
-			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
+			if ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
 				$props[$emailprops["html"]] = stream_get_contents($message->asbody->data);
+			}
+			elseif ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_PLAIN && isset($message->asbody->data)) {
+				$props[$emailprops["body"]] = stream_get_contents($message->asbody->data);
 			}
 
 			// Android devices send the recipients in to, cc and bcc tags
@@ -3675,8 +3691,6 @@ class MAPIProvider {
 	 *
 	 * A copy of the message is submitted from the outbox, the message itself
 	 * is not changed, so a draft is kept if the submission fails.
-	 *
-	 * @return bool
 	 *
 	 * @throws StatusException
 	 */
