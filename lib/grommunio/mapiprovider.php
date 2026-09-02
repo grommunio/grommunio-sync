@@ -1336,7 +1336,8 @@ class MAPIProvider {
 			}
 			elseif ($hasBody || $isNew) {
 				$props[$emailmap["messageclass"]] = "IPM.Note";
-				$this->setPropsInMAPI($mapimessage, $message, $emailmap);
+				// the conversation properties are set by the server
+				$this->setPropsInMAPI($mapimessage, $message, array_diff_key($emailmap, ["conversationid" => 0, "conversationindex" => 0]));
 			}
 			else {
 				// only the header fields of an existing draft are changed

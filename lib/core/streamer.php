@@ -30,6 +30,7 @@ class Streamer implements JsonSerializable {
 	public const STREAMER_TYPE_STREAM_ASBASE64 = 11;
 	public const STREAMER_TYPE_STREAM_ASPLAIN = 12;
 	public const STREAMER_PRIVATE = 13;
+	public const STREAMER_TYPE_OPAQUE = 14; // binary string, sent as WBXML opaque data
 	public const STRIP_PRIVATE_DATA = 1;
 	public const STRIP_PRIVATE_SUBSTITUTE = 'Private';
 	public $flags;
@@ -178,6 +179,12 @@ class Streamer implements JsonSerializable {
 						elseif ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_COMMA_SEPARATED || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_SEMICOLON_SEPARATED) {
 							$glue = ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_COMMA_SEPARATED) ? ", " : "; ";
 							$decoded = explode($glue, $decoder->getElementContent());
+							if (!$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+						elseif ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_OPAQUE) {
+							$decoded = $decoder->getElementContent();
 							if (!$decoder->getElementEndTag()) {
 								return false;
 							}
@@ -339,6 +346,9 @@ class Streamer implements JsonSerializable {
 					}
 					elseif (isset($map[self::STREAMER_TYPE]) && $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_STREAM_ASPLAIN) {
 						$encoder->contentStream($this->{$map[self::STREAMER_VAR]}, false);
+					}
+					elseif (isset($map[self::STREAMER_TYPE]) && $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_OPAQUE) {
+						$encoder->contentStream(StringStreamWrapper::Open((string) $this->{$map[self::STREAMER_VAR]}), false, true);
 					}
 					elseif (isset($map[self::STREAMER_TYPE]) && ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_STREAM_ASBASE64 || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_STREAM)) {
 						$encoder->contentStream($this->{$map[self::STREAMER_VAR]}, true);

@@ -202,8 +202,14 @@ class SyncMail extends SyncObject {
 		if (Request::GetProtocolVersion() >= 14.0) {
 			$mapping[SYNC_POOMMAIL2_UMCALLERID] = [self::STREAMER_VAR => "umcallerid"];
 			$mapping[SYNC_POOMMAIL2_UMUSERNOTES] = [self::STREAMER_VAR => "umusernotes"];
-			$mapping[SYNC_POOMMAIL2_CONVERSATIONID] = [self::STREAMER_VAR => "conversationid"];
-			$mapping[SYNC_POOMMAIL2_CONVERSATIONINDEX] = [self::STREAMER_VAR => "conversationindex"];
+			$mapping[SYNC_POOMMAIL2_CONVERSATIONID] = [
+				self::STREAMER_VAR => "conversationid",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_OPAQUE,
+			];
+			$mapping[SYNC_POOMMAIL2_CONVERSATIONINDEX] = [
+				self::STREAMER_VAR => "conversationindex",
+				self::STREAMER_TYPE => self::STREAMER_TYPE_OPAQUE,
+			];
 			$mapping[SYNC_POOMMAIL2_LASTVERBEXECUTED] = [self::STREAMER_VAR => "lastverbexecuted"];
 			$mapping[SYNC_POOMMAIL2_LASTVERBEXECUTIONTIME] = [
 				self::STREAMER_VAR => "lastverbexectime",

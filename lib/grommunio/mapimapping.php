@@ -146,6 +146,8 @@ class MAPIMapping {
 			"Displaycc" => PR_DISPLAY_CC,
 			"Displaybcc" => PR_DISPLAY_BCC,
 			"ParentSourceKey" => PR_PARENT_SOURCE_KEY,
+			"conversationid" => PR_CONVERSATION_ID,
+			"conversationindex" => PR_CONVERSATION_INDEX,
 		];
 	}
 
