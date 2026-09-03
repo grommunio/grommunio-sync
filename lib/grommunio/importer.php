@@ -422,6 +422,26 @@ class ImportChangesICS implements IImportChanges {
 
 			$response->serverid = $this->prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
 
+			// AS 16.0+: the response to a new draft contains its conversation id and index
+			if (!$id && $message instanceof SyncMail && Request::GetProtocolVersion() >= 16.0) {
+				$cprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_CONVERSATION_ID, PR_CONVERSATION_INDEX]);
+				// the server sets them when saving, they might only be available in a reopened message
+				if ((!isset($cprops[PR_CONVERSATION_ID]) || !isset($cprops[PR_CONVERSATION_INDEX])) && isset($cprops[PR_ENTRYID])) {
+					$savedmessage = mapi_msgstore_openentry($this->store, $cprops[PR_ENTRYID]);
+					if ($savedmessage) {
+						$cprops = mapi_getprops($savedmessage, [PR_CONVERSATION_ID, PR_CONVERSATION_INDEX]);
+					}
+				}
+				if (isset($cprops[PR_CONVERSATION_ID])) {
+					$response->conversationid = $cprops[PR_CONVERSATION_ID];
+					$response->hasResponse = true;
+				}
+				if (isset($cprops[PR_CONVERSATION_INDEX])) {
+					$response->conversationindex = $cprops[PR_CONVERSATION_INDEX];
+					$response->hasResponse = true;
+				}
+			}
+
 			// AS 16.0+ draft send: submit a copy of the draft and remove the draft
 			// only after a successful submit, so a failed submit never loses the mail.
 			// The sender is set by the server when the mail is submitted.
