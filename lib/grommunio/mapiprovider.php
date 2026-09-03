@@ -3258,6 +3258,8 @@ class MAPIProvider {
 	 * @param MAPIMessage $mapimessage
 	 * @param array       $asattachments
 	 * @param SyncObject  $response
+	 *
+	 * @throws StatusException
 	 */
 	public function editAttachments($mapimessage, $asattachments, &$response) {
 		foreach ($asattachments as $att) {
@@ -3275,7 +3277,7 @@ class MAPIProvider {
 					$props = [
 						PR_ATTACH_LONG_FILENAME => $att->displayname,
 						PR_DISPLAY_NAME => $att->displayname,
-						PR_ATTACH_METHOD => $att->method, // is this correct ??
+						PR_ATTACH_METHOD => $att->method ?? ATTACH_BY_VALUE,
 						PR_ATTACH_DATA_BIN => "",
 						PR_ATTACHMENT_HIDDEN => false,
 						PR_ATTACH_EXTENSION => pathinfo((string) $att->displayname, PATHINFO_EXTENSION),
@@ -3310,9 +3312,17 @@ class MAPIProvider {
 			}
 			// attachment to be removed
 			elseif ($att instanceof SyncBaseAttachmentDelete) {
-				[$id, $attachnum, $parentEntryid, $exceptionBasedate] = explode(":", (string) $att->filereference);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Deleting attachment with num: %s", $attachnum));
-				mapi_message_deleteattach($mapimessage, (int) $attachnum);
+				$fileref = explode(":", (string) $att->filereference);
+				if (!isset($messageEntryid)) {
+					$messageprops = mapi_getprops($mapimessage, [PR_ENTRYID]);
+					$messageEntryid = isset($messageprops[PR_ENTRYID]) ? bin2hex((string) $messageprops[PR_ENTRYID]) : "";
+				}
+				// the file reference has to point to an attachment of this message, not of an exception
+				if (count($fileref) != 4 || strcasecmp($fileref[0], $messageEntryid) != 0 || !ctype_digit($fileref[1]) || !empty($fileref[3])) {
+					throw new StatusException(sprintf("MAPIProvider->editAttachments(): attachment '%s' to be deleted does not belong to this message", $att->filereference), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+				}
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Deleting attachment with num: %s", $fileref[1]));
+				mapi_message_deleteattach($mapimessage, (int) $fileref[1]);
 			}
 		}
 	}
