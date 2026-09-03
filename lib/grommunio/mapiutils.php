@@ -407,40 +407,6 @@ class MAPIUtils {
 	}
 
 	/**
-	 * Reads data of large properties from a stream.
-	 *
-	 * @param MAPIMessage $message
-	 * @param long        $prop
-	 *
-	 * @return string
-	 */
-	public static function readPropStream($message, $prop) {
-		$stream = mapi_openproperty($message, $prop, IID_IStream, 0, 0);
-		$ret = mapi_last_hresult();
-		if ($ret == MAPI_E_NOT_FOUND) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIUtils->readPropStream: property 0x%08X not found. It is either empty or not set. It will be ignored.", $prop));
-
-			return "";
-		}
-		if ($ret) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIUtils->readPropStream error opening stream: 0x%08X", $ret));
-
-			return "";
-		}
-		$data = "";
-		$string = "";
-		while (1) {
-			$data = mapi_stream_read($stream, 1024);
-			if (strlen($data) == 0) {
-				break;
-			}
-			$string .= $data;
-		}
-
-		return $string;
-	}
-
-	/**
 	 * Checks if a store supports properties containing unicode characters.
 	 *
 	 * @param MAPIStore $store

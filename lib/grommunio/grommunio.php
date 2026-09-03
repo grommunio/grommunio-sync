@@ -467,7 +467,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): Sent email cpid is not unicode (%d). Set it to unicode and convert email html body.", $props[$sendMailProps["internetcpid"]]));
 			$mapiprops[$sendMailProps["internetcpid"]] = INTERNET_CPID_UTF8;
 
-			$bodyHtml = MAPIUtils::readPropStream($mapimessage, PR_HTML);
+			$bodyHtml = readMapiPropStream($mapimessage, PR_HTML);
 			$bodyHtml = Utils::ConvertCodepageStringToUtf8($props[$sendMailProps["internetcpid"]], $bodyHtml);
 			$mapiprops[$sendMailProps["html"]] = $bodyHtml;
 
@@ -538,9 +538,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				// only attach the original message if the mobile does not send it itself
 				if (!isset($sm->replacemime)) {
 					// get message's body in order to append forward or reply text
-					$body = MAPIUtils::readPropStream($mapimessage, PR_BODY);
+					$body = readMapiPropStream($mapimessage, PR_BODY);
 					if (!isset($bodyHtml)) {
-						$bodyHtml = MAPIUtils::readPropStream($mapimessage, PR_HTML);
+						$bodyHtml = readMapiPropStream($mapimessage, PR_HTML);
 					}
 					$cpid = mapi_getprops($fwmessage, [$sendMailProps["internetcpid"]]);
 					if ($sm->forwardflag) {
@@ -549,7 +549,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					}
 
 					if (strlen($body) > 0) {
-						$fwbody = MAPIUtils::readPropStream($fwmessage, PR_BODY);
+						$fwbody = readMapiPropStream($fwmessage, PR_BODY);
 						// if only the old message's cpid is set, convert from old charset to utf-8
 						if (isset($cpid[$sendMailProps["internetcpid"]]) && $cpid[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8) {
 							SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): convert plain forwarded message charset (only fw set) from '%s' to '65001'", $cpid[$sendMailProps["internetcpid"]]));
@@ -560,7 +560,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					}
 
 					if (strlen($bodyHtml) > 0) {
-						$fwbodyHtml = MAPIUtils::readPropStream($fwmessage, PR_HTML);
+						$fwbodyHtml = readMapiPropStream($fwmessage, PR_HTML);
 						// if only new message's cpid is set, convert to UTF-8
 						if (isset($cpid[$sendMailProps["internetcpid"]]) && $cpid[$sendMailProps["internetcpid"]] != INTERNET_CPID_UTF8) {
 							SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->SendMail(): convert html forwarded message charset (only fw set) from '%s' to '65001'", $cpid[$sendMailProps["internetcpid"]]));
@@ -1719,7 +1719,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			}
 		}
 		$stateMessage = $this->getStateMessage($devid, $type, $key, $counter);
-		$state = base64_decode(MAPIUtils::readPropStream($stateMessage, PR_BODY));
+		$state = base64_decode(readMapiPropStream($stateMessage, PR_BODY));
 
 		if ($state && $state[0] === '{') {
 			$jsonDec = json_decode($state);

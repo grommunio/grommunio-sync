@@ -2337,13 +2337,13 @@ class MAPIProvider {
 	 */
 	private function getPropsFromMAPI(&$message, $mapimessage, $mapping) {
 		$messageprops = $this->getProps($mapimessage, $mapping);
+		if (!is_array($messageprops)) {
+			return;
+		}
 		foreach ($mapping as $asprop => $mapiprop) {
 			// Get long strings via openproperty
-			if (isset($messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))])) {
-				if ($messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))] == MAPI_E_NOT_ENOUGH_MEMORY_32BIT ||
-					$messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))] == MAPI_E_NOT_ENOUGH_MEMORY_64BIT) {
-					$messageprops[$mapiprop] = MAPIUtils::readPropStream($mapimessage, $mapiprop);
-				}
+			if (propIsTooLarge($mapiprop, $messageprops)) {
+				$messageprops[$mapiprop] = readMapiPropStream($mapimessage, $mapiprop);
 			}
 
 			if (isset($messageprops[$mapiprop])) {
@@ -3101,7 +3101,7 @@ class MAPIProvider {
 			}
 			// set the preview or windows phones won't show the preview of an email
 			if (Request::GetProtocolVersion() >= 14.0 && $bpo->GetPreview()) {
-				$message->asbody->preview = Utils::Utf8_truncate(MAPIUtils::readPropStream($mapimessage, PR_BODY), $bpo->GetPreview());
+				$message->asbody->preview = Utils::Utf8_truncate(readMapiPropStream($mapimessage, PR_BODY), $bpo->GetPreview());
 			}
 		}
 		else {
