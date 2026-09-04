@@ -245,6 +245,11 @@ class Provisioning extends RequestProcessor {
 				GSync::GetProvisioningManager()->SetProvisioningWipeStatus(($rwstatusWiped) ? SYNC_PROVISION_RWSTATUS_WIPED : SYNC_PROVISION_RWSTATUS_REQUESTED);
 				self::$topCollector->AnnounceInformation(sprintf("Remote wipe %s", ($rwstatusWiped) ? "executed" : "requested"), true);
 			}
+			// AccountOnlyRemoteWipe is only known since AS 16.1. Older clients are not wiped,
+			// as a full wipe could hit a device which only accesses the account by impersonation.
+			elseif (Request::GetProtocolVersion() < 16.1) {
+				SLog::Write(LOGLEVEL_WARN, sprintf("Provisioning(): account only remote wipe requested, but it is not supported by AS %s", Request::GetProtocolVersion()));
+			}
 			else {
 				self::$encoder->startTag(SYNC_PROVISION_ACCOUNTONLYREMOTEWIPE, false, true);
 				GSync::GetProvisioningManager()->SetProvisioningWipeStatus(($rwstatusWiped) ? SYNC_PROVISION_RWSTATUS_WIPED_ACCOUNT_ONLY : SYNC_PROVISION_RWSTATUS_REQUESTED_ACCOUNT_ONLY);
