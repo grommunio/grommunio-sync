@@ -52,6 +52,16 @@ class SendMail extends RequestProcessor {
 			}
 
 			$sm->Decode(self::$decoder);
+
+			// AS 16: Forwardees and Body are only valid for a SmartForward of a calendar item without MIME
+			if (isset($sm->forwardees) || isset($sm->asbody)) {
+				if (!$smartforward) {
+					$invalidStatus = SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS;
+				}
+				elseif (isset($sm->mime) || isset($sm->saveinsent) || isset($sm->replacemime) || isset($sm->templateid)) {
+					$invalidStatus = SYNC_COMMONSTATUS_INVALIDMIMEBODYCOMBINATION;
+				}
+			}
 		}
 		else {
 			$sm->mime = self::$decoder->GetPlainInputStream();
@@ -108,6 +118,9 @@ class SendMail extends RequestProcessor {
 		$statusMessage = '';
 
 		try {
+			if (isset($invalidStatus)) {
+				throw new StatusException(sprintf("SendMail(): invalid combination of elements, status %d", $invalidStatus), $invalidStatus);
+			}
 			$status = self::$backend->SendMail($sm);
 		}
 		catch (StatusException $se) {

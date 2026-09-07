@@ -19,6 +19,9 @@ class SyncSendMail extends SyncObject {
 	public $mime;
 	public $replyflag;
 	public $forwardflag;
+	public $templateid;
+	public $forwardees;
+	public $asbody;
 
 	public function __construct() {
 		$mapping = [
@@ -46,6 +49,23 @@ class SyncSendMail extends SyncObject {
 				self::STREAMER_TYPE => self::STREAMER_TYPE_IGNORE,
 			],
 		];
+
+		if (Request::GetProtocolVersion() >= 14.1) {
+			$mapping[SYNC_RIGHTSMANAGEMENT_TEMPLATEID] = [self::STREAMER_VAR => "templateid"];
+		}
+
+		// SmartForward of a calendar item to forwardees, without MIME
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$mapping[SYNC_COMPOSEMAIL_FORWARDEES] = [
+				self::STREAMER_VAR => "forwardees",
+				self::STREAMER_TYPE => "SyncForwardee",
+				self::STREAMER_ARRAY => SYNC_COMPOSEMAIL_FORWARDEE,
+			];
+			$mapping[SYNC_AIRSYNCBASE_BODY] = [
+				self::STREAMER_VAR => "asbody",
+				self::STREAMER_TYPE => "SyncBaseBody",
+			];
+		}
 
 		parent::__construct($mapping);
 	}

@@ -410,6 +410,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @throws StatusException
 	 */
 	public function SendMail($sm) {
+		// AS 16: SmartForward of a calendar item to forwardees without MIME
+		if (isset($sm->forwardees) || isset($sm->asbody)) {
+			return $this->forwardCalendarItem($sm);
+		}
+
 		// Check if imtomapi function is available and use it to send the mime message.
 		// It is available since ZCP 7.0.6
 		if (!(function_exists('mapi_feature') && mapi_feature('INETMAPI_IMTOMAPI'))) {
@@ -2660,6 +2665,99 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 		$mapiprops[$sendMailProps["importance"]] = $importance;
 		$mapiprops[$sendMailProps["priority"]] = $priority;
+	}
+
+	/**
+	 * Forwards a calendar item as meeting request to the forwardees of a
+	 * SmartForward (AS 16.0+), with the body of the request prepended.
+	 *
+	 * @param SyncSendMail $sm
+	 *
+	 * @return bool
+	 *
+	 * @throws StatusException
+	 */
+	private function forwardCalendarItem($sm) {
+		if (empty($sm->forwardees) || empty($sm->source->itemid) || empty($sm->source->folderid)) {
+			throw new StatusException("Grommunio->forwardCalendarItem(): forwardees and the source item are required", SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+		// a single occurrence would have to be sent as exception
+		if (!empty($sm->source->instanceid)) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding the occurrence '%s' is not supported", $sm->source->instanceid), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+
+		$recipients = [];
+		$ab = $this->getAddressbook();
+		foreach ($sm->forwardees as $forwardee) {
+			$email = trim((string) ($forwardee->email ?? ''));
+			if (!($forwardee instanceof SyncForwardee) || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+				throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): invalid forwardee '%s'", $email), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+			}
+			$name = !empty($forwardee->name) ? $forwardee->name : $email;
+			$recip = [
+				PR_DISPLAY_NAME => $name,
+				PR_EMAIL_ADDRESS => $email,
+				PR_SMTP_ADDRESS => $email,
+				PR_ADDRTYPE => "SMTP",
+				PR_SEARCH_KEY => "SMTP:" . strtoupper($email) . "\0",
+				PR_ENTRYID => mapi_createoneoff($name, "SMTP", $email),
+				PR_RECIPIENT_TYPE => MAPI_TO,
+				PR_RECIPIENT_FLAGS => recipSendable,
+			];
+
+			// use the address book entry of a local recipient
+			try {
+				$userinfo = mapi_ab_resolvename($ab, [[PR_DISPLAY_NAME => $email]], EMS_AB_ADDRESS_LOOKUP);
+				if (mapi_last_hresult() == NOERROR && isset($userinfo[0][PR_ENTRYID])) {
+					$recip[PR_DISPLAY_NAME] = $userinfo[0][PR_DISPLAY_NAME] ?? $name;
+					$recip[PR_EMAIL_ADDRESS] = $userinfo[0][PR_EMAIL_ADDRESS] ?? $email;
+					$recip[PR_SEARCH_KEY] = $userinfo[0][PR_SEARCH_KEY] ?? $recip[PR_SEARCH_KEY];
+					$recip[PR_ADDRTYPE] = $userinfo[0][PR_ADDRTYPE] ?? "SMTP";
+					$recip[PR_ENTRYID] = $userinfo[0][PR_ENTRYID];
+				}
+			}
+			catch (MAPIException $e) {
+				$e->setHandled();
+			}
+			$recipients[] = $recip;
+		}
+
+		// the calendar item might be in a shared folder
+		if (!$this->Setup(GSync::GetAdditionalSyncFolderStore($sm->source->folderid))) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): could not Setup() the backend for folder id '%s'", $sm->source->folderid), SYNC_COMMONSTATUS_SERVERERROR);
+		}
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $sm->source->folderid), hex2bin((string) $sm->source->itemid));
+		$item = $entryid ? mapi_msgstore_openentry($this->store, $entryid) : false;
+		if (!$item) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): could not open item '%s' in folder '%s': 0x%X", $sm->source->itemid, $sm->source->folderid, mapi_last_hresult()), SYNC_COMMONSTATUS_ITEMNOTFOUND);
+		}
+		$itemprops = mapi_getprops($item, [PR_MESSAGE_CLASS]);
+		$messageclass = (string) ($itemprops[PR_MESSAGE_CLASS] ?? "");
+		if (stripos($messageclass, "IPM.Appointment") !== 0 && stripos($messageclass, "IPM.Schedule.Meeting.Request") !== 0) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): item of class '%s' is no calendar item", $messageclass), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+
+		try {
+			$mr = new Meetingrequest($this->store, $item, $this->session);
+			if (isset($sm->asbody->data)) {
+				$html = isset($sm->asbody->type) && $sm->asbody->type == SYNC_BODYPREFERENCE_HTML;
+				$body = stream_get_contents($sm->asbody->data);
+				$itembody = readMapiPropStream($item, $html ? PR_HTML : PR_BODY);
+				$mr->setMeetingTimeInfo($body . ($html ? "<br><br>" : "\r\n\r\n") . $itembody, $html);
+			}
+			// sends the request only to the forwardees, the changes to the calendar item are not saved
+			$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+		}
+		catch (MAPIException $e) {
+			$e->setHandled();
+			$code = $e->getCode() == MAPI_E_STORE_FULL ? SYNC_COMMONSTATUS_MAILBOXQUOTAEXCEEDED : SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED;
+
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding failed: %s (0x%X)", $e->getMessage(), $e->getCode()), $code);
+		}
+
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->forwardCalendarItem(): calendar item forwarded to %d recipients", count($recipients)));
+
+		return true;
 	}
 
 	/**
