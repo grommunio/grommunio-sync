@@ -1593,9 +1593,10 @@ class Sync extends RequestProcessor {
 							$actiondata["clientids"][$clientid] = false;
 							$actiondata["statusids"][$clientid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
 						}
-						// only drafts can be added to an email folder, and only to the drafts folder (AS 16.0+)
-						elseif ($message instanceof SyncMail &&
-								(Request::GetProtocolVersion() < 16.0 || self::$deviceManager->GetFolderTypeFromCacheById($spa->GetFolderId()) != SYNC_FOLDER_TYPE_DRAFTS)) {
+						// AS 16.0 allows to add emails only as drafts to the drafts folder,
+						// adding emails with older versions is accepted as before
+						elseif ($message instanceof SyncMail && Request::GetProtocolVersion() >= 16.0 &&
+								self::$deviceManager->GetFolderTypeFromCacheById($spa->GetFolderId()) != SYNC_FOLDER_TYPE_DRAFTS) {
 							SLog::Write(LOGLEVEL_INFO, sprintf("Sync->importMessage(): email '%s' can only be added as draft to the drafts folder", $clientid));
 							$actiondata["clientids"][$clientid] = false;
 							$actiondata["statusids"][$clientid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
