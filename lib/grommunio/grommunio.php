@@ -2025,10 +2025,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$encodedState = base64_encode((string) $jsonEncodedState);
 			$encodedStateLength = strlen($encodedState);
 			mapi_setprops($stateMessage, [PR_LAST_VERB_EXECUTED => is_int($counter) ? $counter : 0]);
-			$stream = mapi_openproperty($stateMessage, PR_BODY, IID_IStream, STGM_DIRECT, MAPI_CREATE | MAPI_MODIFY);
-			mapi_stream_setsize($stream, $encodedStateLength);
-			mapi_stream_write($stream, $encodedState);
-			mapi_stream_commit($stream);
+			writeMapiPropStream($stateMessage, PR_BODY, $encodedState);
 			mapi_savechanges($stateMessage);
 
 			return $encodedStateLength;

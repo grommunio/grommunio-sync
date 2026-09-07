@@ -3318,11 +3318,7 @@ class MAPIProvider {
 					mapi_setprops($attachment, $props);
 
 					// Stream the file to the PR_ATTACH_DATA_BIN property
-					$stream = mapi_openproperty($attachment, PR_ATTACH_DATA_BIN, IID_IStream, 0, MAPI_CREATE | MAPI_MODIFY);
-					mapi_stream_write($stream, stream_get_contents($att->content));
-
-					// Commit the stream and save changes
-					mapi_stream_commit($stream);
+					writeMapiPropStream($attachment, PR_ATTACH_DATA_BIN, stream_get_contents($att->content));
 					mapi_savechanges($attachment);
 				}
 				if (!isset($response->asattachments)) {
