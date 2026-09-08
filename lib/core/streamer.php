@@ -35,6 +35,7 @@ class Streamer implements JsonSerializable {
 	public const STRIP_PRIVATE_SUBSTITUTE = 'Private';
 	public $flags;
 	public $content;
+	protected $emptyContainers = [];
 
 	/**
 	 * Constructor.
@@ -78,6 +79,10 @@ class Streamer implements JsonSerializable {
 					}
 					elseif ($map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE || $map[self::STREAMER_TYPE] == self::STREAMER_TYPE_DATE_DASHES) {
 						$this->{$map[self::STREAMER_VAR]} = "";
+					}
+					// an empty object element is not instantiated, remember it was sent
+					elseif (is_string($map[self::STREAMER_TYPE])) {
+						$this->emptyContainers[$map[self::STREAMER_VAR]] = true;
 					}
 
 					continue;
@@ -241,6 +246,18 @@ class Streamer implements JsonSerializable {
 				break;
 			}
 		}
+	}
+
+	/**
+	 * Checks if the element of a variable holding an object was sent empty,
+	 * e.g. <Recurrence/>, which is not decoded into an object.
+	 *
+	 * @param string $var
+	 *
+	 * @return bool
+	 */
+	public function IsEmptyContainer($var) {
+		return isset($this->emptyContainers[$var]);
 	}
 
 	/**
