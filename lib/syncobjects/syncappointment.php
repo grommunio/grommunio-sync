@@ -350,6 +350,11 @@ class SyncAppointment extends SyncObject {
 			}
 		}
 
+		// AS 16: a recurrence sent with a change may be partial as well
+		if ($this->ghosted && $this->recurrence instanceof SyncRecurrence) {
+			$this->recurrence->SetGhosted(true);
+		}
+
 		$ret = parent::Check($logAsDebug);
 
 		// semantic checks general "turn off switch"
@@ -367,8 +372,9 @@ class SyncAppointment extends SyncObject {
 			}
 		}
 
-		// do not sync a recurrent appointment without a timezone (except all day events)
-		if (isset($this->recurrence) && !isset($this->timezone) && empty($this->alldayevent)) {
+		// do not sync a recurrent appointment without a timezone (except all day events),
+		// a ghosted change keeps the stored timezone
+		if (isset($this->recurrence) && !isset($this->timezone) && empty($this->alldayevent) && !$this->ghosted) {
 			SLog::Write(LOGLEVEL_INFO, "SyncAppointment->Check(): timezone for a recurring appointment is not set.");
 
 			return false;

@@ -28,12 +28,33 @@ abstract class SyncObject extends Streamer implements Stringable {
 	protected $unsetVars;
 	protected $supportsPrivateStripping;
 	protected $checkedParameters;
+	protected $ghosted;
 
 	public function __construct($mapping) {
 		$this->unsetVars = [];
 		$this->supportsPrivateStripping = false;
 		$this->checkedParameters = false;
+		$this->ghosted = false;
 		parent::__construct($mapping);
+	}
+
+	/**
+	 * Marks the object as a change in which omitted elements keep their
+	 * stored value, as all Calendar properties in AS 16 (MS-ASCMD 2.2.3.179).
+	 *
+	 * @param bool $ghosted
+	 */
+	public function SetGhosted($ghosted) {
+		$this->ghosted = $ghosted;
+	}
+
+	/**
+	 * Returns if omitted elements of this change keep their stored value.
+	 *
+	 * @return bool
+	 */
+	public function IsGhosted() {
+		return $this->ghosted;
 	}
 
 	/**
@@ -45,6 +66,11 @@ abstract class SyncObject extends Streamer implements Stringable {
 	 * @return bool
 	 */
 	public function emptySupported($supportedFields) {
+		// AS 16: all Calendar properties are ghosted (MS-ASCMD 2.2.3.179)
+		if ($this instanceof SyncAppointment && Request::GetProtocolVersion() >= 16.0) {
+			return false;
+		}
+
 		// Some devices do not send supported tag. In such a case remove all not set properties.
 		if ($supportedFields === false || !is_array($supportedFields) || (empty($supportedFields))) {
 			if (defined('UNSET_UNDEFINED_PROPERTIES') &&
@@ -304,8 +330,8 @@ abstract class SyncObject extends Streamer implements Stringable {
 						++$this->checkedParameters;
 					}
 
-					// check REQUIRED settings
-					if ($rule === self::STREAMER_CHECK_REQUIRED && (!isset($this->{$v[self::STREAMER_VAR]}) || $this->{$v[self::STREAMER_VAR]} === '')) {
+					// check REQUIRED settings, an omitted ghosted value is kept
+					if ($rule === self::STREAMER_CHECK_REQUIRED && ((!isset($this->{$v[self::STREAMER_VAR]}) && !$this->ghosted) || ($this->{$v[self::STREAMER_VAR]} ?? null) === '')) {
 						// parameter is not set but ..
 						// requested to set to 0
 						if ($condition === self::STREAMER_CHECK_SETZERO) {
@@ -381,6 +407,10 @@ abstract class SyncObject extends Streamer implements Stringable {
 								}
 							}
 
+							// the comparable of a ghosted change is the stored value
+							if ($cmp === false && $this->ghosted) {
+								continue;
+							}
 							if ($cmp === false) {
 								SLog::Write(LOGLEVEL_WARN, sprintf("SyncObject->Check(): Unmet condition in object from type %s: parameter '%s' can not be compared, as the comparable is not set. Check failed!", $objClass, $v[self::STREAMER_VAR]));
 

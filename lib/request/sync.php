@@ -1482,6 +1482,22 @@ class Sync extends RequestProcessor {
 	}
 
 	/**
+	 * Checks an incoming change. In AS 16 all Calendar properties are
+	 * ghosted, omitted elements keep their stored value (MS-ASCMD 2.2.3.179).
+	 *
+	 * @param SyncObject $message
+	 *
+	 * @return bool
+	 */
+	private function checkChange($message) {
+		if ($message instanceof SyncAppointment && Request::GetProtocolVersion() >= 16.0) {
+			$message->SetGhosted(true);
+		}
+
+		return $message->Check(true);
+	}
+
+	/**
 	 * Imports a message.
 	 *
 	 * @param SyncParameters $spa          SyncParameters object
@@ -1552,7 +1568,7 @@ class Sync extends RequestProcessor {
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
 						}
 						// check incoming message without logging WARN messages about errors
-						elseif (!($message instanceof SyncObject) || !$message->Check(true)) {
+						elseif (!($message instanceof SyncObject) || !$this->checkChange($message)) {
 							$actiondata["statusids"][$serverid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
 						}
 						else {
