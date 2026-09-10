@@ -197,22 +197,9 @@ class MAPIProvider {
 			$message->organizername = $messageprops[$appointmentprops["representingname"]];
 		}
 
-		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
-			$tz = TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
+		$tz = $this->getAppointmentTz($messageprops, $appointmentprops, $tzStored);
+		if ($tzStored) {
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
-			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
-			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
-			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		elseif (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
-			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($messageprops[$appointmentprops["timezonedesc"]]));
-			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		else {
-			// set server default timezone (correct timezone should be configured!)
-			$tz = TimezoneUtil::GetFullTZ();
 		}
 
 		if (isset($messageprops[$appointmentprops["isrecurring"]]) && $messageprops[$appointmentprops["isrecurring"]]) {
@@ -403,6 +390,35 @@ class MAPIProvider {
 		}
 
 		return $message;
+	}
+
+	/**
+	 * Returns the timezone of an appointment as it is sent to the device.
+	 *
+	 * @param array $messageprops     properties of the appointment
+	 * @param array $appointmentprops property definitions
+	 * @param bool  $stored           set to false if the server timezone is used
+	 *
+	 * @return array
+	 */
+	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = null) {
+		$stored = true;
+		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
+			return TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
+		}
+		if (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
+			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
+
+			return TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
+		}
+		if (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
+			return TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($messageprops[$appointmentprops["timezonedesc"]]));
+		}
+
+		// set server default timezone (correct timezone should be configured!)
+		$stored = false;
+
+		return TimezoneUtil::GetFullTZ();
 	}
 
 	/**
@@ -1506,86 +1522,7 @@ class MAPIProvider {
 
 		// AS 16: incoming instanceid means we need to create/update an appointment exception
 		if ($isAs16 && isset($appointment->instanceid) && $appointment->instanceid) {
-			// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp and get basedate from it
-			$instanceid = Utils::ParseDate($appointment->instanceid);
-			$basedate = $this->getDayStartOfTimestamp($instanceid);
-
-			// get compatible TZ data
-			$props = [$appointmentprops["timezonetag"], $appointmentprops["isrecurring"]];
-			$tzprop = $this->getProps($mapimessage, $props);
-			$tz = TimezoneUtil::GetTzFromTimezoneStruct($tzprop[$appointmentprops["timezonetag"]]);
-
-			if ($appointmentprops["isrecurring"] == false) {
-				SLog::Write(LOGLEVEL_INFO, sprintf("MAPIProvider->setAppointment(): Cannot modify exception instanceId '%s' as target appointment is not recurring. Ignoring.", $appointment->instanceid));
-
-				return false;
-			}
-			// get a recurrence object
-			$recurrence = new Recurrence($this->store, $mapimessage);
-
-			// check if the exception is to be deleted
-			if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
-				// Delete exception
-				$recurrence->createException([], $basedate, true);
-			}
-			// create or update the exception
-			else {
-				$exceptionprops = [];
-
-				if (isset($appointment->starttime)) {
-					$exceptionprops[$appointmentprops["starttime"]] = $appointment->alldayevent ?
-						TimezoneUtil::GetUtcTimeByTz($appointment->starttime, $tz) :
-						$appointment->starttime;
-				}
-				if (isset($appointment->endtime)) {
-					$exceptionprops[$appointmentprops["endtime"]] = $appointment->alldayevent ?
-						TimezoneUtil::GetUtcTimeByTz($appointment->endtime, $tz) :
-						$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
-				}
-				if (isset($appointment->subject)) {
-					$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
-				}
-				if (isset($appointment->location)) {
-					$exceptionprops[$appointmentprops["location"]] = $appointment->location;
-				}
-				if (isset($appointment->busystatus)) {
-					$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
-				}
-				if (isset($appointment->reminder)) {
-					$exceptionprops[$appointmentprops["reminderset"]] = 1;
-					$exceptionprops[$appointmentprops["remindertime"]] = $appointment->reminder;
-				}
-				if (isset($appointment->alldayevent)) {
-					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $appointment->alldayevent;
-				}
-				if (isset($appointment->body)) {
-					$exceptionprops[$appointmentprops["body"]] = $appointment->body;
-				}
-				if (isset($appointment->asbody)) {
-					$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
-				}
-				if (isset($appointment->location2)) {
-					$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
-				}
-
-				// modify if exists else create exception
-				if ($recurrence->isException($basedate)) {
-					$recurrence->modifyException($exceptionprops, $basedate);
-				}
-				else {
-					$recurrence->createException($exceptionprops, $basedate);
-				}
-			}
-
-			if ($hasAttendees && !empty($appointment->attendees) && $isMeeting) {
-				// instantiate the MR so we can send a updates to the attendees
-				$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
-				$mr->updateMeetingRequest($basedate);
-				$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
-				$mr->sendMeetingRequest($deleteException, false, $basedate);
-			}
-
-			return $response;
+			return $this->setAppointmentOccurrence($mapimessage, $appointment, $appointmentprops, $response);
 		}
 
 		// Save OldProps to later check which data is being changed
@@ -1986,6 +1923,86 @@ class MAPIProvider {
 					$appointmentprops['tzdefend'] => $utc,
 				]);
 			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Changes or deletes an occurrence of a recurring appointment identified
+	 * by the InstanceId of an AS 16 Change or Delete.
+	 *
+	 * @param mixed                   $mapimessage
+	 * @param SyncAppointment         $appointment
+	 * @param array                   $appointmentprops
+	 * @param SyncAppointmentResponse $response
+	 *
+	 * @return SyncAppointmentResponse
+	 *
+	 * @throws StatusException if the appointment is not recurring
+	 */
+	private function setAppointmentOccurrence($mapimessage, $appointment, $appointmentprops, $response) {
+		$messageprops = $this->getProps($mapimessage, $appointmentprops);
+		if (empty($messageprops[$appointmentprops["isrecurring"]])) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Cannot modify exception instanceId '%s' as target appointment is not recurring.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
+		}
+
+		$recurrence = new Recurrence($this->store, $mapimessage);
+		$tz = $this->getAppointmentTz($messageprops, $appointmentprops);
+		$seriesAllday = !empty($messageprops[$appointmentprops["alldayevent"]]) ||
+			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
+
+		// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp
+		$instanceid = Utils::ParseDate($appointment->instanceid);
+		// the basedate is the local day of the occurrence, see getRecurrence()
+		$basedate = $this->getDayStartOfTimestamp($seriesAllday ? $instanceid : TimezoneUtil::GetLocalTimeByTz($instanceid, $tz));
+
+		// check if the exception is to be deleted
+		if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
+			$recurrence->createException([], $basedate, true);
+
+			return $response;
+		}
+
+		// the times of an all-day exception are local, the timezone of the series applies
+		$isAllday = isset($appointment->alldayevent) ? (bool) $appointment->alldayevent : $seriesAllday;
+		$exceptionprops = [];
+		if (isset($appointment->starttime)) {
+			$exceptionprops[$appointmentprops["starttime"]] = $isAllday ?
+				TimezoneUtil::GetUtcTimeByTz($appointment->starttime, $tz) :
+				$appointment->starttime;
+		}
+		if (isset($appointment->endtime)) {
+			$exceptionprops[$appointmentprops["endtime"]] = $isAllday ?
+				TimezoneUtil::GetUtcTimeByTz($appointment->endtime, $tz) :
+				$appointment->endtime;
+		}
+		if (isset($appointment->subject)) {
+			$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
+		}
+		if (isset($appointment->busystatus)) {
+			$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
+		}
+		if (isset($appointment->reminder)) {
+			$exceptionprops[$appointmentprops["reminderset"]] = 1;
+			$exceptionprops[$appointmentprops["remindertime"]] = $appointment->reminder;
+		}
+		if (isset($appointment->alldayevent)) {
+			$exceptionprops[$appointmentprops["alldayevent"]] = $appointment->alldayevent;
+		}
+		if (isset($appointment->asbody)) {
+			$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
+		}
+		if (isset($appointment->location2)) {
+			$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
+		}
+
+		// modify if exists else create exception
+		if ($recurrence->isException($basedate)) {
+			$recurrence->modifyException($exceptionprops, $basedate);
+		}
+		else {
+			$recurrence->createException($exceptionprops, $basedate);
 		}
 
 		return $response;
