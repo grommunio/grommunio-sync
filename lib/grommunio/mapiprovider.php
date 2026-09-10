@@ -202,7 +202,7 @@ class MAPIProvider {
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
-			$tzDefStart = TimezoneUtil::CreateTimezoneDefinitionObject($messageprops[$appointmentprops["tzdefstart"]]);
+			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
 			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
