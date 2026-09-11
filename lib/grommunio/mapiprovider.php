@@ -1957,9 +1957,22 @@ class MAPIProvider {
 		// the basedate is the local day of the occurrence, see getRecurrence()
 		$basedate = $this->getDayStartOfTimestamp($seriesAllday ? $instanceid : TimezoneUtil::GetLocalTimeByTz($instanceid, $tz));
 
+		// the attendees of a meeting organized by the user are informed
+		$notify = false;
+		if (!empty($messageprops[$appointmentprops["meetingstatus"]])) {
+			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
+			$notify = $mr->isLocalOrganiser();
+		}
+
 		// check if the exception is to be deleted
 		if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
-			$recurrence->createException([], $basedate, true);
+			if ($notify) {
+				// creates the deleted exception and sends the cancellation
+				$mr->doCancelInvitation($basedate);
+			}
+			else {
+				$recurrence->createException([], $basedate, true);
+			}
 
 			return $response;
 		}
@@ -1997,12 +2010,29 @@ class MAPIProvider {
 			$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
 		}
 
+		// times of the occurrence before the change
+		$oldExceptionProps = [
+			$appointmentprops["starttime"] => $recurrence->getOccurrenceStart($basedate),
+			$appointmentprops["endtime"] => $recurrence->getOccurrenceEnd($basedate),
+		];
+
 		// modify if exists else create exception
 		if ($recurrence->isException($basedate)) {
+			$exceptionatt = $recurrence->getExceptionAttachment($basedate);
+			if ($exceptionatt) {
+				$oldExceptionProps = mapi_getprops(mapi_attach_openobj($exceptionatt, 0), array_keys($oldExceptionProps)) + $oldExceptionProps;
+			}
 			$recurrence->modifyException($exceptionprops, $basedate);
 		}
 		else {
 			$recurrence->createException($exceptionprops, $basedate);
+		}
+
+		if ($notify) {
+			$mr->updateMeetingRequest($basedate);
+			// clears the responses of the attendees if the time changed
+			$mr->checkSignificantChanges($oldExceptionProps, $basedate);
+			$mr->sendMeetingRequest(false, false, $basedate);
 		}
 
 		return $response;
