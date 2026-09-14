@@ -3183,23 +3183,24 @@ class MAPIProvider {
 				break;
 
 			case 4:
+				// mapi-header-php keeps the period of a yearly recurrence in years
 				$recur["type"] = 13;
 				$recur["subtype"] = 1;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 
 			case 5:
 				$recur["type"] = 13;
 				$recur["subtype"] = 2;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 
 			case 6:
 				$recur["type"] = 13;
 				$recur["subtype"] = 3;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 		}
