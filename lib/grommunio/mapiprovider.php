@@ -402,7 +402,7 @@ class MAPIProvider {
 	 *
 	 * @return array
 	 */
-	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = null) {
+	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = false) {
 		$stored = true;
 		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
 			return TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
@@ -3261,9 +3261,9 @@ class MAPIProvider {
 	/**
 	 * Returns the message body for a required format.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param int         $bpReturnType
-	 * @param SyncObject  $message
+	 * @param mixed      $mapimessage
+	 * @param int        $bpReturnType
+	 * @param SyncObject $message
 	 *
 	 * @return bool
 	 */
@@ -3345,11 +3345,11 @@ class MAPIProvider {
 	/**
 	 * Build a filereference key by the clientid.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param mixed       $clientid
-	 * @param mixed       $entryid
-	 * @param mixed       $parentSourcekey
-	 * @param mixed       $exceptionBasedate
+	 * @param mixed $mapimessage
+	 * @param mixed $clientid
+	 * @param mixed $entryid
+	 * @param mixed $parentSourcekey
+	 * @param mixed $exceptionBasedate
 	 *
 	 * @return string/bool
 	 */
@@ -3378,8 +3378,8 @@ class MAPIProvider {
 	/**
 	 * A wrapper for mapi_inetmapi_imtoinet function.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param SyncObject  $message
+	 * @param mixed      $mapimessage
+	 * @param SyncObject $message
 	 *
 	 * @return bool
 	 */
@@ -3417,11 +3417,11 @@ class MAPIProvider {
 	/**
 	 * Returns the body preference type to send a message with.
 	 *
-	 * @param MAPIMessage       $mapimessage
+	 * @param mixed             $mapimessage
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @return array|bool the type and the BodyPreference options to apply,
-	 *                    false if the client did not send a body preference
+	 * @return array|false the type and the BodyPreference options to apply,
+	 *                     false if the client did not send a body preference
 	 */
 	private function getBodyPreferenceType($mapimessage, $contentparameters) {
 		// get the available body preference types
@@ -3457,10 +3457,10 @@ class MAPIProvider {
 	/**
 	 * Sets the message body.
 	 *
-	 * @param MAPIMessage       $mapimessage
+	 * @param mixed             $mapimessage
 	 * @param ContentParameters $contentparameters
 	 * @param SyncObject        $message
-	 * @param null|array|bool   $bodyPreference    result of getBodyPreferenceType(), determined if null
+	 * @param null|array|false  $bodyPreference    result of getBodyPreferenceType(), determined if null
 	 */
 	private function setMessageBody($mapimessage, $contentparameters, &$message, $bodyPreference = null) {
 		if ($bodyPreference === null) {
@@ -3673,9 +3673,9 @@ class MAPIProvider {
 	/**
 	 * Update attachments of a mapimessage based on asattachments received.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param array       $asattachments
-	 * @param SyncObject  $response
+	 * @param mixed      $mapimessage
+	 * @param array      $asattachments
+	 * @param SyncObject $response
 	 *
 	 * @throws StatusException
 	 */
@@ -3797,9 +3797,9 @@ class MAPIProvider {
 	/**
 	 * Gets information from a MAPI message and applies it to a SyncLocation object.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param SyncObject  $aslocation
-	 * @param array       $appointmentprops
+	 * @param mixed      $mapimessage
+	 * @param SyncObject $aslocation
+	 * @param array      $appointmentprops
 	 */
 	private function getASlocation($mapimessage, &$aslocation, $appointmentprops) {
 		$props = mapi_getprops($mapimessage, [$appointmentprops["locations"], $appointmentprops["location"]]);
