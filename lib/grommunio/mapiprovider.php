@@ -439,98 +439,12 @@ class MAPIProvider {
 			$recurrence = new Recurrence($this->store, $mapimessage);
 		}
 
-		switch ($recurrence->recur["type"]) {
-			case 10: // daily
-				switch ($recurrence->recur["subtype"]) {
-					default:
-						$syncRecurrence->type = 0;
-						break;
-
-					case 1:
-						$syncRecurrence->type = 0;
-						$syncRecurrence->dayofweek = 62; // mon-fri
-						$syncRecurrence->interval = 1;
-						break;
-				}
-				break;
-
-			case 11: // weekly
-				$syncRecurrence->type = 1;
-				break;
-
-			case 12: // monthly
-				$syncRecurrence->type = match ($recurrence->recur["subtype"]) {
-					3 => 3,
-					default => 2,
-				};
-				break;
-
-			case 13: // yearly
-				$syncRecurrence->type = match ($recurrence->recur["subtype"]) {
-					2 => 5,
-					3 => 6,
-					default => 4,
-				};
-		}
-
-		// Termination
-		switch ($recurrence->recur["term"]) {
-			case 0x21:
-				$syncRecurrence->until = $recurrence->recur["end"];
-				// fixes Mantis #350 : recur-end does not consider timezones - use ClipEnd if available
-				if (isset($recurprops[$recurrence->proptags["enddate_recurring"]])) {
-					$syncRecurrence->until = $recurprops[$recurrence->proptags["enddate_recurring"]];
-				}
-				// add one day (minus 1 sec) to the end time to make sure the last occurrence is covered
-				$syncRecurrence->until += 86399;
-				break;
-
-			case 0x22:
-				$syncRecurrence->occurrences = $recurrence->recur["numoccur"];
-				break;
-
-			case 0x23:
-				// never ends
-				break;
-		}
+		$this->getRecurrencePattern($recurrence, $recurprops, $syncRecurrence);
 
 		// Correct 'alldayevent' because outlook fails to set it on recurring items of 24 hours or longer
 		if (isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && ($recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440)) {
 			$syncMessage->alldayevent = true;
 		}
-
-		// Interval is different according to the type/subtype
-		switch ($recurrence->recur["type"]) {
-			case 10:
-				if ($recurrence->recur["subtype"] == 0) {
-					$syncRecurrence->interval = (int) ($recurrence->recur["everyn"] / 1440);
-				}  // minutes
-				break;
-
-			case 11:
-			case 12:
-				$syncRecurrence->interval = $recurrence->recur["everyn"];
-				break; // months / weeks
-
-			case 13:
-				$syncRecurrence->interval = ($syncRecurrence->type) < 5 ?
-					(int) ($recurrence->recur["everyn"] / 12) :
-					(int) $recurrence->recur["everyn"]; // years
-				break; // months
-		}
-
-		if (isset($recurrence->recur["weekdays"])) {
-			$syncRecurrence->dayofweek = $recurrence->recur["weekdays"];
-		} // bitmask of days (1 == sunday, 128 == saturday
-		if (isset($recurrence->recur["nday"])) {
-			$syncRecurrence->weekofmonth = $recurrence->recur["nday"];
-		} // N'th {DAY} of {X} (0-5)
-		if (isset($recurrence->recur["month"])) {
-			$syncRecurrence->monthofyear = (int) ($recurrence->recur["month"] / (60 * 24 * 29)) + 1;
-		} // works ok due to rounding. see also $monthminutes below (1-12)
-		if (isset($recurrence->recur["monthday"])) {
-			$syncRecurrence->dayofmonth = $recurrence->recur["monthday"];
-		} // day of month (1-31)
 
 		// All changed exceptions are appointments within the 'exceptions' array. They contain the same items as a normal appointment
 		foreach ($recurrence->recur["changed_occurrences"] as $change) {
@@ -638,6 +552,103 @@ class MAPIProvider {
 		if (isset($syncMessage->complete) && $syncMessage->complete) {
 			$syncRecurrence->complete = $syncMessage->complete;
 		}
+	}
+
+	/**
+	 * Reads the recurrence pattern from MAPI.
+	 *
+	 * @param BaseRecurrence $recurrence
+	 * @param array          $recurprops
+	 * @param SyncObject     $syncRecurrence the recurrence message
+	 */
+	private function getRecurrencePattern($recurrence, $recurprops, $syncRecurrence) {
+		switch ($recurrence->recur["type"]) {
+			case 10: // daily
+				switch ($recurrence->recur["subtype"]) {
+					default:
+						$syncRecurrence->type = 0;
+						break;
+
+					case 1:
+						$syncRecurrence->type = 0;
+						$syncRecurrence->dayofweek = 62; // mon-fri
+						$syncRecurrence->interval = 1;
+						break;
+				}
+				break;
+
+			case 11: // weekly
+				$syncRecurrence->type = 1;
+				break;
+
+			case 12: // monthly
+				$syncRecurrence->type = match ($recurrence->recur["subtype"]) {
+					3 => 3,
+					default => 2,
+				};
+				break;
+
+			case 13: // yearly
+				$syncRecurrence->type = match ($recurrence->recur["subtype"]) {
+					2 => 5,
+					3 => 6,
+					default => 4,
+				};
+		}
+
+		// Termination
+		switch ($recurrence->recur["term"]) {
+			case 0x21:
+				$syncRecurrence->until = $recurrence->recur["end"];
+				// fixes Mantis #350 : recur-end does not consider timezones - use ClipEnd if available
+				if (isset($recurprops[$recurrence->proptags["enddate_recurring"]])) {
+					$syncRecurrence->until = $recurprops[$recurrence->proptags["enddate_recurring"]];
+				}
+				// add one day (minus 1 sec) to the end time to make sure the last occurrence is covered
+				$syncRecurrence->until += 86399;
+				break;
+
+			case 0x22:
+				$syncRecurrence->occurrences = $recurrence->recur["numoccur"];
+				break;
+
+			case 0x23:
+				// never ends
+				break;
+		}
+
+		// Interval is different according to the type/subtype
+		switch ($recurrence->recur["type"]) {
+			case 10:
+				if ($recurrence->recur["subtype"] == 0) {
+					$syncRecurrence->interval = (int) ($recurrence->recur["everyn"] / 1440);
+				}  // minutes
+				break;
+
+			case 11:
+			case 12:
+				$syncRecurrence->interval = $recurrence->recur["everyn"];
+				break; // months / weeks
+
+			case 13:
+				$syncRecurrence->interval = ($syncRecurrence->type) < 5 ?
+					(int) ($recurrence->recur["everyn"] / 12) :
+					(int) $recurrence->recur["everyn"]; // years
+				break; // months
+		}
+
+		if (isset($recurrence->recur["weekdays"])) {
+			$syncRecurrence->dayofweek = $recurrence->recur["weekdays"];
+		} // bitmask of days (1 == sunday, 128 == saturday
+		if (isset($recurrence->recur["nday"])) {
+			$syncRecurrence->weekofmonth = $recurrence->recur["nday"];
+		} // N'th {DAY} of {X} (0-5)
+		if (isset($recurrence->recur["month"])) {
+			$syncRecurrence->monthofyear = (int) ($recurrence->recur["month"] / (60 * 24 * 29)) + 1;
+		} // works ok due to rounding. see also $monthminutes below (1-12)
+		if (isset($recurrence->recur["monthday"])) {
+			$syncRecurrence->dayofmonth = $recurrence->recur["monthday"];
+		} // day of month (1-31)
 	}
 
 	/**
