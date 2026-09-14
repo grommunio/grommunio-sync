@@ -2781,35 +2781,28 @@ class MAPIProvider {
 	 */
 
 	/**
-	 * Returns the timestamp offset.
+	 * UTC time of the timestamp, with the keys of localtime($time, true).
 	 *
-	 * @param string $ts
-	 *
-	 * @return long
-	 */
-	private function GetTZOffset($ts) {
-		$Offset = date("O", $ts);
-
-		$Parity = $Offset < 0 ? -1 : 1;
-		$Offset *= $Parity;
-		$Offset = ($Offset - ($Offset % 100)) / 100 * 60 + $Offset % 100;
-
-		return $Parity * $Offset;
-	}
-
-	/**
-	 * UTC time of the timestamp.
-	 *
-	 * @param long $time
+	 * @param int $time
 	 *
 	 * @return array
 	 */
 	private function gmtime($time) {
-		$TZOffset = $this->GetTZOffset($time);
+		// shifting the timestamp by the server offset for localtime() is
+		// wrong around the daylight saving changes of the server timezone
+		[$sec, $min, $hour, $mday, $mon, $year, $wday, $yday] = array_map('intval', explode(' ', gmdate('s i G j n Y w z', $time)));
 
-		$t_time = $time - $TZOffset * 60; # Counter adjust for localtime()
-
-		return localtime($t_time, 1);
+		return [
+			'tm_sec' => $sec,
+			'tm_min' => $min,
+			'tm_hour' => $hour,
+			'tm_mday' => $mday,
+			'tm_mon' => $mon - 1,
+			'tm_year' => $year - 1900,
+			'tm_wday' => $wday,
+			'tm_yday' => $yday,
+			'tm_isdst' => 0,
+		];
 	}
 
 	/**
