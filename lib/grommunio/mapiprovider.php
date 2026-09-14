@@ -3351,7 +3351,7 @@ class MAPIProvider {
 	 * @param mixed $parentSourcekey
 	 * @param mixed $exceptionBasedate
 	 *
-	 * @return string/bool
+	 * @return false|string
 	 */
 	private function getFileReferenceForClientId($mapimessage, $clientid, $entryid = 0, $parentSourcekey = 0, $exceptionBasedate = 0) {
 		if (!$entryid || !$parentSourcekey) {

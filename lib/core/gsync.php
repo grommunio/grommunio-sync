@@ -864,7 +864,7 @@ END;
 	/**
 	 * Indicates if the Provisioning check has to be forced on these commands.
 	 *
-	 * @param string $commandCode
+	 * @param int $commandCode
 	 *
 	 * @return bool
 	 */
@@ -878,7 +878,7 @@ END;
 	/**
 	 * Indicates if these commands expect plain text input instead of wbxml.
 	 *
-	 * @param string $commandCode
+	 * @param int $commandCode
 	 *
 	 * @return bool
 	 */
