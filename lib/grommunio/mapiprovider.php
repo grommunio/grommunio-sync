@@ -1510,22 +1510,10 @@ class MAPIProvider {
 	private function setAppointment($mapimessage, $appointment) {
 		$response = new SyncAppointmentResponse();
 
-		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
-		$isMeeting = isset($appointment->meetingstatus) && $appointment->meetingstatus > 0;
 		$isAs16 = Request::GetProtocolVersion() >= 16.0;
+		// AS 16: an element omitted in a change keeps its stored value
+		$isGhosted = $appointment->IsGhosted();
 		$hasAttendees = isset($appointment->attendees) && is_array($appointment->attendees);
-
-		// Get timezone info
-		if (isset($appointment->timezone)) {
-			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
-		}
-		// AS 16: doesn't sent a timezone - use server TZ
-		elseif ($isAs16 && $isAllday) {
-			$tz = TimezoneUtil::GetFullTZ();
-		}
-		else {
-			$tz = false;
-		}
 
 		$appointmentmapping = MAPIMapping::GetAppointmentMapping();
 		$appointmentprops = MAPIMapping::GetAppointmentProperties();
@@ -1538,6 +1526,30 @@ class MAPIProvider {
 
 		// Save OldProps to later check which data is being changed
 		$oldProps = $this->getProps($mapimessage, $appointmentprops);
+
+		$isAllday = isset($appointment->alldayevent) ?
+			(bool) $appointment->alldayevent :
+			$isGhosted && !empty($oldProps[$appointmentprops["alldayevent"]]);
+		$isMeeting = isset($appointment->meetingstatus) ?
+			$appointment->meetingstatus > 0 :
+			$isGhosted && !empty($oldProps[$appointmentprops["meetingstatus"]]);
+		// the stored timezone properties are kept if the device did not send one
+		$keepTimezone = $isGhosted && !isset($appointment->timezone);
+
+		// Get timezone info
+		if (isset($appointment->timezone)) {
+			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
+		}
+		// AS 16: doesn't sent a timezone - use server TZ
+		elseif ($isAs16 && $isAllday) {
+			$tz = TimezoneUtil::GetFullTZ();
+		}
+		elseif ($keepTimezone && !empty($oldProps[$appointmentprops["timezonetag"]])) {
+			$tz = TimezoneUtil::GetTzFromTimezoneStruct($oldProps[$appointmentprops["timezonetag"]]);
+		}
+		else {
+			$tz = false;
+		}
 
 		// start and end time may not be set - try to get them from the existing appointment for further calculation.
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
@@ -1605,19 +1617,28 @@ class MAPIProvider {
 		$props[$appointmentprops["commonstart"]] = $appointment->starttime;
 		$props[$appointmentprops["commonend"]] = $appointment->endtime;
 		$props[$appointmentprops["reminderstart"]] = $appointment->starttime;
-		// Set reminder boolean to 'true' if reminder is set
-		$props[$appointmentprops["reminderset"]] = isset($appointment->reminder) ? true : false;
 		$props[$appointmentprops["duration"]] = $duration;
-		$props[$appointmentprops["private"]] = $private;
-		$props[$appointmentprops["uid"]] = $appointment->uid;
+		if (isset($appointment->sensitivity) || !$isGhosted) {
+			$props[$appointmentprops["private"]] = $private;
+		}
+		if (isset($appointment->uid) || !$isGhosted) {
+			$props[$appointmentprops["uid"]] = $appointment->uid;
+		}
 		// Set named prop 8510, unknown property, but enables deleting a single occurrence of a recurring
 		// type in OLK2003.
 		$props[$appointmentprops["sideeffects"]] = 369;
 
 		if (isset($appointment->reminder) && $appointment->reminder >= 0) {
+			$props[$appointmentprops["reminderset"]] = true;
 			// Set 'flagdueby' to correct value (start - reminderminutes)
 			$props[$appointmentprops["flagdueby"]] = $appointment->starttime - $appointment->reminder * 60;
 			$props[$appointmentprops["remindertime"]] = $appointment->reminder;
+		}
+		// AS 16: keep the reminder, it moves with the start
+		elseif ($isGhosted && !isset($appointment->reminder)) {
+			if (!empty($oldProps[$appointmentprops["reminderset"]]) && isset($oldProps[$appointmentprops["remindertime"]])) {
+				$props[$appointmentprops["flagdueby"]] = $appointment->starttime - $oldProps[$appointmentprops["remindertime"]] * 60;
+			}
 		}
 		// unset the reminder
 		else {
@@ -1631,7 +1652,12 @@ class MAPIProvider {
 		if (isset($appointment->location2)) {
 			$this->setASlocation($appointment->location2, $props, $appointmentprops);
 		}
-		if ($tz !== false) {
+		// AS 16: an empty Location element removes the location
+		elseif ($appointment->IsEmptyContainer("location2")) {
+			$props[$appointmentprops["location"]] = "";
+			mapi_deleteprops($mapimessage, [$appointmentprops["locations"]]);
+		}
+		if ($tz !== false && !$keepTimezone) {
 			if (!($isAs16 && $isAllday)) {
 				$props[$appointmentprops["timezonetag"]] = TimezoneUtil::GetTimezoneStructFromTz($tz);
 			}
@@ -1641,7 +1667,31 @@ class MAPIProvider {
 			}
 		}
 
-		if (isset($appointment->recurrence)) {
+		// AS 16: an omitted recurrence is kept, an empty one removes it
+		$keepRecurrence = $isGhosted && !isset($appointment->recurrence) && !$appointment->IsEmptyContainer("recurrence");
+		if ($isGhosted && !empty($oldProps[$appointmentprops["isrecurring"]]) && ($keepRecurrence || (isset($appointment->recurrence) && !isset($appointment->recurrence->type)))) {
+			$storedRecurrence = new SyncRecurrence();
+			$this->getRecurrencePattern(new Recurrence($this->store, $mapimessage), $oldProps, $storedRecurrence);
+			// a series moved to other times is saved again
+			if ($keepRecurrence && ($appointment->starttime != ($oldProps[$appointmentprops["starttime"]] ?? null) || $appointment->endtime != ($oldProps[$appointmentprops["endtime"]] ?? null))) {
+				$appointment->recurrence = $storedRecurrence;
+				$keepRecurrence = false;
+			}
+			// complete a recurrence sent without its type
+			elseif (isset($appointment->recurrence)) {
+				foreach ($storedRecurrence->GetStreamerVars() as $var) {
+					$appointment->recurrence->{$var} ??= $storedRecurrence->{$var};
+				}
+			}
+		}
+		if (isset($appointment->recurrence) && !isset($appointment->recurrence->type)) {
+			$appointment->recurrence->type = 0;
+		}
+
+		if ($keepRecurrence) {
+			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence not sent, keeping the stored one");
+		}
+		elseif (isset($appointment->recurrence)) {
 			// Set PR_ICON_INDEX to 1025 to show correct icon in category view
 			$props[$appointmentprops["icon"]] = 1025;
 
@@ -1795,10 +1845,10 @@ class MAPIProvider {
 		$forceMRUpdateSend = false;
 
 		// Do attendees
-		// For AS-16 get a list of the current attendees (pre update)
+		// For AS-16 get a list of the current attendees (pre update), only sent attendees can be removed
 		$old_receips = [];
 		$old_receipkeys = [];
-		if ($isAs16 && $isMeeting) {
+		if ($isAs16 && $isMeeting && $hasAttendees) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
 			$old_receipstable = mapi_table_queryallrows(
 				$old_recipienttable,
@@ -2019,6 +2069,10 @@ class MAPIProvider {
 		}
 		if (isset($appointment->location2)) {
 			$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
+		}
+		elseif ($appointment->IsEmptyContainer("location2")) {
+			$exceptionprops[$appointmentprops["location"]] = "";
+			$exceptionprops[$appointmentprops["locations"]] = "";
 		}
 
 		// times of the occurrence before the change
