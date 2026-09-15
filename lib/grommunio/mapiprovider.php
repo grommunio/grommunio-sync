@@ -183,8 +183,7 @@ class MAPIProvider {
 			$message->uid = bin2hex((string) $messageprops[$appointmentprops["sourcekey"]]);
 		}
 		else {
-			// if no embedded vCal-Uid is found use hexed GOID
-			$message->uid = getUidFromGoid($message->uid) ?? strtoupper(bin2hex($message->uid));
+			$message->uid = $this->getUidOfGoid($message->uid);
 		}
 
 		// Always set organizer information because some devices do not work properly without it
@@ -419,6 +418,32 @@ class MAPIProvider {
 		$stored = false;
 
 		return TimezoneUtil::GetFullTZ();
+	}
+
+	/**
+	 * Returns the UID of an appointment as it is sent to the device.
+	 *
+	 * @param string $goid PidLidGlobalObjectId
+	 *
+	 * @return string
+	 */
+	private function getUidOfGoid($goid) {
+		// if no embedded vCal-Uid is found use hexed GOID
+		return getUidFromGoid((string) $goid) ?? strtoupper(bin2hex((string) $goid));
+	}
+
+	/**
+	 * Creates an Outlook compatible PidLidGlobalObjectId.
+	 *
+	 * @return string
+	 */
+	private function createGoid() {
+		// MS-OXOCAL 2.2.1.27: class id, instance date (none), creation time, reserved, size and random data
+		$filetime = (time() + 11644473600) * 10000000;
+
+		return hex2bin("040000008200E00074C5B7101A82E00800000000") .
+			pack("VV", $filetime & 0xFFFFFFFF, $filetime >> 32) . str_repeat("\0", 8) .
+			pack("V", 16) . random_bytes(16);
 	}
 
 	/**
@@ -1592,14 +1617,24 @@ class MAPIProvider {
 				$appointment->uid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split($appointment->uid, 4));
 			}
 		}
-		// is the transmitted UID OL compatible?
-		if ($appointment->uid && !str_starts_with($appointment->uid, "040000008200E000")) {
-			// if not, encapsulate the transmitted uid
+		// AS 16: the server creates the UID of a new item
+		$createdUid = false;
+		if ($isAs16 && $appointment->flags === SYNC_NEWMESSAGE && !$appointment->uid) {
+			$appointment->uid = $this->createGoid();
+			$createdUid = true;
+		}
+		// a hex encoded GOID, as sent by getAppointment(), is saved as it is
+		elseif ($appointment->uid && stripos((string) $appointment->uid, "040000008200E000") === 0 &&
+				ctype_xdigit((string) $appointment->uid) && strlen((string) $appointment->uid) % 2 == 0) {
+			$appointment->uid = hex2bin((string) $appointment->uid);
+		}
+		// encapsulate the transmitted uid
+		elseif ($appointment->uid) {
 			$appointment->uid = getGoidFromUid($appointment->uid);
 		}
-		// if there was a clientuid transport the new UID to the response
-		if ($appointment->clientuid) {
-			$response->uid = bin2hex($appointment->uid);
+		// the UID of a new item is sent as the device receives it later
+		if ($appointment->clientuid || $createdUid) {
+			$response->uid = $this->getUidOfGoid($appointment->uid);
 			$response->hasResponse = true;
 		}
 
