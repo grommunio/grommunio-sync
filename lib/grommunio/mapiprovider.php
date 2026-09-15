@@ -1688,6 +1688,7 @@ class MAPIProvider {
 			$appointment->recurrence->type = 0;
 		}
 
+		$recurChanged = false;
 		if ($keepRecurrence) {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence not sent, keeping the stored one");
 		}
@@ -1716,6 +1717,12 @@ class MAPIProvider {
 
 			// only tasks can regenerate
 			$recur["regen"] = false;
+
+			// saving the recurrence removes the exceptions, keep them if the series did not change
+			$recurChanged = !$this->isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops);
+			if (!$recurChanged) {
+				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence did not change, keeping the stored one");
+			}
 
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
 			if (isset($appointment->exceptions)) {
@@ -1791,11 +1798,12 @@ class MAPIProvider {
 			}
 
 			// setRecurrence deletes the attachments from an appointment
-			if ($noexceptions) {
+			if ($noexceptions && $recurChanged) {
 				$recurrence->setRecurrence($tz, $recur);
 			}
 		}
 		else {
+			$recurChanged = !empty($oldProps[$appointmentprops["isrecurring"]]);
 			$props[$appointmentprops["isrecurring"]] = false;
 			// remove recurringstate
 			mapi_deleteprops($mapimessage, [$appointmentprops["recurringstate"]]);
@@ -1959,7 +1967,7 @@ class MAPIProvider {
 				$mr->updateMeetingRequest();
 				// when updating, check for significant changes and if needed will clear the existing recipient responses
 				if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
-					$mr->checkSignificantChanges($oldProps, false, false);
+					$mr->checkSignificantChanges($oldProps, false, $recurChanged);
 				}
 				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 			}
@@ -2101,6 +2109,48 @@ class MAPIProvider {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Checks if the recurrence and the times of a series sent by the device
+	 * are the stored ones, as the device sends the unchanged recurrence with
+	 * every change.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param Recurrence      $recurrence       the stored recurrence
+	 * @param array           $recur            the recurrence to be saved
+	 * @param array           $oldProps         properties before the update
+	 * @param array           $appointmentprops
+	 *
+	 * @return bool
+	 */
+	private function isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops) {
+		if (empty($oldProps[$appointmentprops["isrecurring"]]) || empty($recurrence->recur) ||
+				$appointment->starttime != ($oldProps[$appointmentprops["starttime"]] ?? null) ||
+				$appointment->endtime != ($oldProps[$appointmentprops["endtime"]] ?? null) ||
+				$recur["startocc"] != ($recurrence->recur["startocc"] ?? null) ||
+				$recur["endocc"] != ($recurrence->recur["endocc"] ?? null)) {
+			return false;
+		}
+
+		$stored = new SyncRecurrence();
+		$this->getRecurrencePattern($recurrence, $oldProps, $stored);
+		$sent = $appointment->recurrence;
+		foreach (["type", "occurrences", "dayofweek", "dayofmonth", "weekofmonth", "monthofyear"] as $var) {
+			if ((isset($sent->{$var}) ? (int) $sent->{$var} : null) !== (isset($stored->{$var}) ? (int) $stored->{$var} : null)) {
+				return false;
+			}
+		}
+		if ((int) ($sent->interval ?? 1) !== (int) ($stored->interval ?? 1)) {
+			return false;
+		}
+		// the device may send another time of the last day
+		if (isset($sent->until) !== isset($stored->until) ||
+				(isset($sent->until) && $this->getDayStartOfTimestamp($sent->until) != $this->getDayStartOfTimestamp($stored->until))) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
