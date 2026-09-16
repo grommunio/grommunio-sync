@@ -70,6 +70,7 @@ class Sync extends RequestProcessor {
 					$actiondata["requested"] = true;
 					$actiondata["clientids"] = [];
 					$actiondata["modifyids"] = [];
+					$actiondata["instanceids"] = [];
 					$actiondata["removeids"] = [];
 					$actiondata["fetchids"] = [];
 					$actiondata["statusids"] = [];
@@ -1148,16 +1149,23 @@ class Sync extends RequestProcessor {
 			}
 
 			// loop through modify operations which were not a success, send status
-			foreach ($actiondata["modifyids"] as $serverid => $response) {
-				if (isset($actiondata["statusids"][$serverid]) && ($actiondata["statusids"][$serverid] !== SYNC_STATUS_SUCCESS || !empty($response->hasResponse))) {
-					self::$encoder->startTag(SYNC_MODIFY);
+			foreach ($actiondata["modifyids"] as $modifyid => $response) {
+				if (isset($actiondata["statusids"][$modifyid]) && ($actiondata["statusids"][$modifyid] !== SYNC_STATUS_SUCCESS || !empty($response->hasResponse))) {
+					// AS 16: a Change or Delete of an occurrence
+					[$serverid, $instanceid, $isDelete] = $actiondata["instanceids"][$modifyid] ?? [$modifyid, false, false];
+					self::$encoder->startTag($isDelete ? SYNC_REMOVE : SYNC_MODIFY);
 					self::$encoder->startTag(SYNC_SERVERENTRYID);
 					self::$encoder->content($serverid);
 					self::$encoder->endTag();
+					if ($instanceid !== false) {
+						self::$encoder->startTag(SYNC_AIRSYNCBASE_INSTANCEID);
+						self::$encoder->content($instanceid);
+						self::$encoder->endTag();
+					}
 					self::$encoder->startTag(SYNC_STATUS);
-					self::$encoder->content($actiondata["statusids"][$serverid]);
+					self::$encoder->content($actiondata["statusids"][$modifyid]);
 					self::$encoder->endTag();
-					if (!empty($response->hasResponse)) {
+					if (!$isDelete && !empty($response->hasResponse)) {
 						self::$encoder->startTag(SYNC_DATA);
 						$response->Encode(self::$encoder);
 						self::$encoder->endTag();
@@ -1561,15 +1569,23 @@ class Sync extends RequestProcessor {
 				case SYNC_MODIFY:
 					self::$topCollector->AnnounceInformation(sprintf("Saving modified message %d", $messageCount));
 
+					// AS 16: an occurrence is identified by the series and its InstanceId
+					$modifyid = $serverid;
+					if ($message instanceof SyncAppointment && !empty($message->instanceid)) {
+						$modifyid = $serverid . "/" . $message->instanceid;
+						$actiondata["instanceids"][$modifyid] = [$serverid, $message->instanceid, !empty($message->instanceiddelete)];
+					}
+
 					try {
 						// ignore sms messages
 						if ($foldertype == "SMS" || stripos($serverid, self::GSYNCIGNORESMS) !== false) {
 							SLog::Write(LOGLEVEL_DEBUG, "SMS sync are not supported. Ignoring message.");
-							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
+							$actiondata["statusids"][$modifyid] = SYNC_STATUS_SUCCESS;
 						}
 						// check incoming message without logging WARN messages about errors
 						elseif (!($message instanceof SyncObject) || !$this->checkChange($message)) {
-							$actiondata["statusids"][$serverid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
+							$actiondata["modifyids"][$modifyid] = false;
+							$actiondata["statusids"][$modifyid] = SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR;
 						}
 						else {
 							// if there is just a read flag change, import it via ImportMessageReadFlag()
@@ -1581,12 +1597,14 @@ class Sync extends RequestProcessor {
 							}
 
 							$response->serverid = $serverid;
-							$actiondata["modifyids"][$serverid] = $response;
-							$actiondata["statusids"][$serverid] = SYNC_STATUS_SUCCESS;
+							$actiondata["modifyids"][$modifyid] = $response;
+							$actiondata["statusids"][$modifyid] = SYNC_STATUS_SUCCESS;
 						}
 					}
 					catch (StatusException $stex) {
-						$actiondata["statusids"][$serverid] = $stex->getCode();
+						// failed changes are reported to the device
+						$actiondata["modifyids"][$modifyid] = false;
+						$actiondata["statusids"][$modifyid] = $stex->getCode();
 					}
 					break;
 
