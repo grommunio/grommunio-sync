@@ -1993,6 +1993,11 @@ class MAPIProvider {
 		}
 		mapi_setprops($mapimessage, $props);
 
+		// update attachments send by the mobile, before they are sent with a meeting request
+		if (!empty($appointment->asattachments)) {
+			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
+		}
+
 		// Since AS 16 we have to take care of MeetingRequest updates
 		if ($isAs16 && $isMeeting) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
@@ -2006,11 +2011,6 @@ class MAPIProvider {
 				}
 				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 			}
-		}
-
-		// update attachments send by the mobile
-		if (!empty($appointment->asattachments)) {
-			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
 		}
 
 		// Existing allday events may have tzdef* properties set,
