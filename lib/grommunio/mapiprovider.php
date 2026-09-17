@@ -661,10 +661,9 @@ class MAPIProvider {
 				break; // months / weeks
 
 			case 13:
-				$syncRecurrence->interval = ($syncRecurrence->type) < 5 ?
-					(int) ($recurrence->recur["everyn"] / 12) :
-					(int) $recurrence->recur["everyn"]; // years
-				break; // months
+				// mapi-header-php keeps the period of a yearly recurrence in years
+				$syncRecurrence->interval = (int) $recurrence->recur["everyn"];
+				break;
 		}
 
 		if (isset($recurrence->recur["weekdays"])) {
