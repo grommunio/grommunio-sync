@@ -337,7 +337,8 @@ class MAPIProvider {
 		}
 
 		// If the user is working from a location other than the office the busystatus should be interpreted as free.
-		if (isset($message->busystatus) && $message->busystatus == fbWorkingElsewhere) {
+		// AS 16 supports working elsewhere (MS-ASCAL 2.2.2.9)
+		if (isset($message->busystatus) && $message->busystatus == fbWorkingElsewhere && Request::GetProtocolVersion() < 16.0) {
 			$message->busystatus = fbFree;
 		}
 
@@ -524,15 +525,17 @@ class MAPIProvider {
 				$exception->alldayevent = $change["alldayevent"];
 			}
 
-			// set some data from the original appointment
-			if (isset($syncMessage->uid)) {
-				$exception->uid = $syncMessage->uid;
-			}
-			if (isset($syncMessage->organizername)) {
-				$exception->organizername = $syncMessage->organizername;
-			}
-			if (isset($syncMessage->organizeremail)) {
-				$exception->organizeremail = $syncMessage->organizeremail;
+			// set some data from the original appointment, an exception only has these in AS 2.5 (MS-ASCAL 2.2.2.21)
+			if (Request::GetProtocolVersion() < 12.0) {
+				if (isset($syncMessage->uid)) {
+					$exception->uid = $syncMessage->uid;
+				}
+				if (isset($syncMessage->organizername)) {
+					$exception->organizername = $syncMessage->organizername;
+				}
+				if (isset($syncMessage->organizeremail)) {
+					$exception->organizeremail = $syncMessage->organizeremail;
+				}
 			}
 
 			if (!isset($syncMessage->exceptions)) {
@@ -540,7 +543,7 @@ class MAPIProvider {
 			}
 
 			// If the user is working from a location other than the office the busystatus should be interpreted as free.
-			if (isset($exception->busystatus) && $exception->busystatus == fbWorkingElsewhere) {
+			if (isset($exception->busystatus) && $exception->busystatus == fbWorkingElsewhere && Request::GetProtocolVersion() < 16.0) {
 				$exception->busystatus = fbFree;
 			}
 
