@@ -3552,6 +3552,9 @@ class MAPIProvider {
 		elseif ($aslocation->city) {
 			$props[$appointmentprops["location"]] = $aslocation->city;
 		}
+		else {
+			$props[$appointmentprops["location"]] = "";
+		}
 		$loc = [];
 		$loc["DisplayName"] = ($useStreet) ? $aslocation->street : $props[$appointmentprops["location"]];
 		$loc["LocationAnnotation"] = $aslocation->annotation ?: "";
@@ -3589,7 +3592,9 @@ class MAPIProvider {
 
 		if (isset($props[$appointmentprops["locations"]])) {
 			$loc = json_decode((string) $props[$appointmentprops["locations"]], true);
-			if (is_array($loc) && count($loc) == 1) {
+			// a location changed by a client not knowing the locations is used alone
+			if (is_array($loc) && count($loc) == 1 && (empty($aslocation->displayname) ||
+					in_array($aslocation->displayname, [$loc[0]['DisplayName'] ?? null, $loc[0]['LocationFullAddress'] ?? null], true))) {
 				$l = $loc[0];
 				if (!empty($l['DisplayName'])) {
 					$aslocation->displayname = $l['DisplayName'];
