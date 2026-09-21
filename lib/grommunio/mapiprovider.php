@@ -1761,6 +1761,11 @@ class MAPIProvider {
 			if (!$recurChanged) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence did not change, keeping the stored one");
 			}
+			// a new or, with AS 16, changed recurrence is saved before the exceptions sent with it
+			$recurrenceSaved = $recurChanged && (empty($oldProps[$appointmentprops["isrecurring"]]) || $isGhosted);
+			if ($recurrenceSaved) {
+				$recurrence->setRecurrence($tz, $recur);
+			}
 
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
 			if (isset($appointment->exceptions)) {
@@ -1838,7 +1843,7 @@ class MAPIProvider {
 			}
 
 			// setRecurrence deletes the attachments from an appointment
-			if ($noexceptions && $recurChanged) {
+			if ($noexceptions && $recurChanged && !$recurrenceSaved) {
 				$recurrence->setRecurrence($tz, $recur);
 			}
 		}
