@@ -1765,12 +1765,14 @@ class MAPIProvider {
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
 			if (isset($appointment->exceptions)) {
 				foreach ($appointment->exceptions as $exception) {
-					// we always need the base date
-					if (!isset($exception->exceptionstarttime)) {
+					// we always need the base date, AS 16 has the InstanceId instead of the ExceptionStartTime
+					$exceptionstart = $exception->exceptionstarttime ?? $exception->instanceid ?? null;
+					if (!isset($exceptionstart)) {
 						continue;
 					}
 
-					$basedate = $this->getDayStartOfTimestamp($exception->exceptionstarttime);
+					// the basedate is the local day of the occurrence, see getRecurrence()
+					$basedate = $this->getDayStartOfTimestamp($isAllday ? $exceptionstart : TimezoneUtil::GetLocalTimeByTz($exceptionstart, $tz));
 					if (isset($exception->deleted) && $exception->deleted) {
 						$noexceptions = false;
 						// Delete exception
