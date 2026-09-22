@@ -691,7 +691,8 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		// Delete the old message
-		if (!mapi_folder_deletemessages($srcfolder, [$entryid])) {
+		// hard delete, the copy is in the destination folder and a soft deleted original would be a duplicate
+		if (!mapi_folder_deletemessages($srcfolder, [$entryid], DELETE_HARD_DELETE)) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportMessageMove('%s','%s'): Error, delete of source message failed: 0x%X. Possible duplicates.", $sk, $newfolder, mapi_last_hresult()), SYNC_MOVEITEMSSTATUS_SOURCEORDESTLOCKED);
 		}
 
