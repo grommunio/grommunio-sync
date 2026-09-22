@@ -761,12 +761,12 @@ class Utils {
 	 */
 	public static function FormatDate($ts, $type = "") {
 		// fallback to a human readable format (used for logging)
-		$formatString = "yyyy-MM-dd HH:mm:SS' UTC'";
+		$formatString = "yyyy-MM-dd HH:mm:ss' UTC'";
 		if ($type == Streamer::STREAMER_TYPE_DATE) {
-			$formatString = "yyyyMMdd'T'HHmmSS'Z'";
+			$formatString = "yyyyMMdd'T'HHmmss'Z'";
 		}
 		elseif ($type == Streamer::STREAMER_TYPE_DATE_DASHES) {
-			$formatString = "yyyy-MM-dd'T'HH:mm:SS'.000Z'";
+			$formatString = "yyyy-MM-dd'T'HH:mm:ss'.000Z'";
 		}
 
 		$formatter = datefmt_create(
