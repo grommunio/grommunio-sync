@@ -3,7 +3,7 @@
 /*
  * SPDX-License-Identifier: AGPL-3.0-only
  * SPDX-FileCopyrightText: Copyright 2007-2016 Zarafa Deutschland GmbH
- * SPDX-FileCopyrightText: Copyright 2020-2024 grommunio GmbH
+ * SPDX-FileCopyrightText: Copyright 2020-2026 grommunio GmbH
  *
  * This is a generic class that is used by both the proxy importer (for
  * outgoing messages) and our local importer (for incoming messages). Basically
@@ -421,6 +421,19 @@ class ImportChangesICS implements IImportChanges {
 			$sourcekeyprops = mapi_getprops($mapimessage, [PR_SOURCE_KEY]);
 
 			$response->serverid = $this->prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
+
+			// AS 16.0+ draft send: setEmail() has stamped the authenticated owner as
+			// the sender (drafts from e.g. Samsung Email often carry an empty From).
+			// Submit the message and remove the draft only after a successful submit,
+			// so a failed submit never loses the mail.
+			if ($message instanceof SyncMail &&
+			    !empty($message->send) &&
+			    $this->mapiprovider->SubmitMessage($this->store, $mapimessage)) {
+				$this->ImportMessageDeletion($id, true);
+				SLog::Write(LOGLEVEL_DEBUG, sprintf(
+					"ImportChangesICS->ImportMessageChange('%s','%s'): AS16 draft submitted and removed from Drafts",
+					$id, $messageClass));
+			}
 
 			return $response;
 		}
