@@ -41,109 +41,10 @@ class MAPIUtils {
 	 */
 	// TODO getting named properties
 	public static function GetCalendarRestriction($store, $timestamp) {
-		// This is our viewing window
-		$start = $timestamp;
-		$end = 0x7FFFFFFF; // infinite end
+		$props = getPropIdsFromStrings($store, MAPIMapping::GetAppointmentProperties());
 
-		$props = MAPIMapping::GetAppointmentProperties();
-		$props = getPropIdsFromStrings($store, $props);
-
-		// ATTENTION: ON CHANGING THIS RESTRICTION, MAPIUtils::IsInCalendarSyncInterval() also needs to be changed
-		return [
-			RES_OR,
-			[
-				// OR
-				// item.end > window.start && item.start < window.end
-				[
-					RES_AND,
-					[
-						[
-							RES_PROPERTY,
-							[
-								RELOP => RELOP_LE,
-								ULPROPTAG => $props["starttime"],
-								VALUE => $end,
-							],
-						],
-						[
-							RES_PROPERTY,
-							[
-								RELOP => RELOP_GE,
-								ULPROPTAG => $props["endtime"],
-								VALUE => $start,
-							],
-						],
-					],
-				],
-				// OR
-				[
-					RES_OR,
-					[
-						// OR
-						// (EXIST(recurrence_enddate_property) && item[isRecurring] == true && recurrence_enddate_property >= start)
-						[
-							RES_AND,
-							[
-								[
-									RES_EXIST,
-									[ULPROPTAG => $props["recurrenceend"],
-									],
-								],
-								[
-									RES_PROPERTY,
-									[
-										RELOP => RELOP_EQ,
-										ULPROPTAG => $props["isrecurring"],
-										VALUE => true,
-									],
-								],
-								[
-									RES_PROPERTY,
-									[
-										RELOP => RELOP_GE,
-										ULPROPTAG => $props["recurrenceend"],
-										VALUE => $start,
-									],
-								],
-							],
-						],
-						// OR
-						// (!EXIST(recurrence_enddate_property) && item[isRecurring] == true && item[start] <= end)
-						[
-							RES_AND,
-							[
-								[
-									RES_NOT,
-									[
-										[
-											RES_EXIST,
-											[ULPROPTAG => $props["recurrenceend"],
-											],
-										],
-									],
-								],
-								[
-									RES_PROPERTY,
-									[
-										RELOP => RELOP_LE,
-										ULPROPTAG => $props["starttime"],
-										VALUE => $end,
-									],
-								],
-								[
-									RES_PROPERTY,
-									[
-										RELOP => RELOP_EQ,
-										ULPROPTAG => $props["isrecurring"],
-										VALUE => true,
-									],
-								],
-							],
-						],
-					],
-				], // EXISTS OR
-			],
-		];        // global OR
+		// the sync window has no end
+		return getCalendarRestriction($props, $timestamp, 0x7FFFFFFF);
 	}
 
 	/**
@@ -404,40 +305,6 @@ class MAPIUtils {
 		}
 
 		return false;
-	}
-
-	/**
-	 * Reads data of large properties from a stream.
-	 *
-	 * @param MAPIMessage $message
-	 * @param long        $prop
-	 *
-	 * @return string
-	 */
-	public static function readPropStream($message, $prop) {
-		$stream = mapi_openproperty($message, $prop, IID_IStream, 0, 0);
-		$ret = mapi_last_hresult();
-		if ($ret == MAPI_E_NOT_FOUND) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIUtils->readPropStream: property 0x%08X not found. It is either empty or not set. It will be ignored.", $prop));
-
-			return "";
-		}
-		if ($ret) {
-			SLog::Write(LOGLEVEL_ERROR, sprintf("MAPIUtils->readPropStream error opening stream: 0x%08X", $ret));
-
-			return "";
-		}
-		$data = "";
-		$string = "";
-		while (1) {
-			$data = mapi_stream_read($stream, 1024);
-			if (strlen($data) == 0) {
-				break;
-			}
-			$string .= $data;
-		}
-
-		return $string;
 	}
 
 	/**

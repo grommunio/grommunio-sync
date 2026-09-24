@@ -202,7 +202,7 @@ class MAPIProvider {
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
-			$tzDefStart = TimezoneUtil::CreateTimezoneDefinitionObject($messageprops[$appointmentprops["tzdefstart"]]);
+			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
 			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
@@ -2337,13 +2337,13 @@ class MAPIProvider {
 	 */
 	private function getPropsFromMAPI(&$message, $mapimessage, $mapping) {
 		$messageprops = $this->getProps($mapimessage, $mapping);
+		if (!is_array($messageprops)) {
+			return;
+		}
 		foreach ($mapping as $asprop => $mapiprop) {
 			// Get long strings via openproperty
-			if (isset($messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))])) {
-				if ($messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))] == MAPI_E_NOT_ENOUGH_MEMORY_32BIT ||
-					$messageprops[mapi_prop_tag(PT_ERROR, mapi_prop_id($mapiprop))] == MAPI_E_NOT_ENOUGH_MEMORY_64BIT) {
-					$messageprops[$mapiprop] = MAPIUtils::readPropStream($mapimessage, $mapiprop);
-				}
+			if (propIsTooLarge($mapiprop, $messageprops)) {
+				$messageprops[$mapiprop] = readMapiPropStream($mapimessage, $mapiprop);
 			}
 
 			if (isset($messageprops[$mapiprop])) {
@@ -3101,7 +3101,7 @@ class MAPIProvider {
 			}
 			// set the preview or windows phones won't show the preview of an email
 			if (Request::GetProtocolVersion() >= 14.0 && $bpo->GetPreview()) {
-				$message->asbody->preview = Utils::Utf8_truncate(MAPIUtils::readPropStream($mapimessage, PR_BODY), $bpo->GetPreview());
+				$message->asbody->preview = Utils::Utf8_truncate(readMapiPropStream($mapimessage, PR_BODY), $bpo->GetPreview());
 			}
 		}
 		else {
@@ -3318,11 +3318,7 @@ class MAPIProvider {
 					mapi_setprops($attachment, $props);
 
 					// Stream the file to the PR_ATTACH_DATA_BIN property
-					$stream = mapi_openproperty($attachment, PR_ATTACH_DATA_BIN, IID_IStream, 0, MAPI_CREATE | MAPI_MODIFY);
-					mapi_stream_write($stream, stream_get_contents($att->content));
-
-					// Commit the stream and save changes
-					mapi_stream_commit($stream);
+					writeMapiPropStream($attachment, PR_ATTACH_DATA_BIN, stream_get_contents($att->content));
 					mapi_savechanges($attachment);
 				}
 				if (!isset($response->asattachments)) {
