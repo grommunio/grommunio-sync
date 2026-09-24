@@ -3772,6 +3772,11 @@ class MAPIProvider {
 					if (strlen($persistData) == 4 && intval($persistData) == PERSIST_SENTINEL) {
 						break;
 					}
+					if (strlen($persistData) < 8) {
+						SLog::Write(LOGLEVEL_INFO, "MAPIProvider->getSpecialFoldersData(): persistent data is truncated");
+
+						break;
+					}
 					$unpackedData = unpack("vdataSize/velementID/velDataSize", substr($persistData, 2, 6));
 					if (isset($unpackedData['dataSize'], $unpackedData['elementID']) && $unpackedData['elementID'] == RSF_ELID_ENTRYID && isset($unpackedData['elDataSize'])) {
 						$this->specialFoldersData[] = substr($persistData, 8, $unpackedData['elDataSize']);
