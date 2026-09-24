@@ -1,3 +1,20 @@
+grommunio-sync 2.6 (2026-09-24)
+===============================
+
+Fixes:
+
+* AS 16.0 clients sending a draft with an empty <Send/> tag aborted the Sync
+* Wrong attendees after saving a draft
+* Sender properties set needlessly before sending
+
+Enhancements:
+
+* Send messages from the ICS importer when the client requests it
+* Log auth challenges at INFO level
+* Shared MAPI helpers from mapi-header-php 2.3 (now required): property
+  streams, timezone definitions, calendar restriction
+* Codepage table with iconv-resolvable names, 936 decoded as GB18030
+
 grommunio-sync 2.5 (2026-07-27)
 ===============================
 
