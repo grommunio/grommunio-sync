@@ -184,7 +184,7 @@ class Request {
 		self::$authUser = self::$authUserString;
 		self::$impersonatedUser = false;
 
-		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos(self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
+		if (defined('ALLOW_IMPERSONATE') && ALLOW_IMPERSONATE && stripos((string) self::$authUserString, self::IMPERSONATE_DELIM) !== false) {
 			$parts = explode(self::IMPERSONATE_DELIM, self::$authUserString);
 			if (count($parts) === 2) {
 				[$impersonatedUser, $authUser] = $parts;
