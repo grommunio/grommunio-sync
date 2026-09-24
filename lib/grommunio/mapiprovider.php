@@ -483,7 +483,9 @@ class MAPIProvider {
 				break; // months / weeks
 
 			case 13:
-				$syncRecurrence->interval = (int) ($recurrence->recur["everyn"] / 12);
+				$syncRecurrence->interval = ($syncRecurrence->type) < 5 ?
+					(int) ($recurrence->recur["everyn"] / 12) :
+					(int) $recurrence->recur["everyn"]; // years
 				break; // months
 		}
 
