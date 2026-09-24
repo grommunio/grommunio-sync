@@ -265,7 +265,8 @@ class MAPIProvider {
 				$attendee->attendeestatus = $row[PR_RECIPIENT_TRACKSTATUS];
 			}
 			if (isset($row[PR_RECIPIENT_TYPE])) {
-				$attendee->attendeetype = $row[PR_RECIPIENT_TYPE];
+				// the organizer row has MAPI_ORIG (0), which is no valid AttendeeType
+				$attendee->attendeetype = $row[PR_RECIPIENT_TYPE] == MAPI_ORIG ? MAPI_TO : $row[PR_RECIPIENT_TYPE];
 			}
 			// the attendee proposed a new time
 			if (!empty($row[PR_RECIPIENT_PROPOSED]) && isset($row[PR_RECIPIENT_PROPOSEDSTARTTIME], $row[PR_RECIPIENT_PROPOSEDENDTIME])) {
