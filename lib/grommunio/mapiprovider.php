@@ -1573,8 +1573,11 @@ class MAPIProvider {
 		elseif ($isAs16 && $isAllday) {
 			$tz = TimezoneUtil::GetFullTZ();
 		}
-		elseif ($keepTimezone && !empty($oldProps[$appointmentprops["timezonetag"]])) {
-			$tz = TimezoneUtil::GetTzFromTimezoneStruct($oldProps[$appointmentprops["timezonetag"]]);
+		elseif ($keepTimezone) {
+			$tz = $this->getAppointmentTz($oldProps, $appointmentprops, $tzStored);
+			if (!$tzStored) {
+				$tz = false;
+			}
 		}
 		else {
 			$tz = false;
