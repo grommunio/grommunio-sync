@@ -2069,8 +2069,15 @@ class MAPIProvider {
 
 		// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp
 		$instanceid = Utils::ParseDate($appointment->instanceid);
+		// without a basedate the whole series would be changed or cancelled
+		if (!$instanceid) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Invalid instanceId '%s'.", $appointment->instanceid), SYNC_COMMONSTATUS_INVALIDDATETIME);
+		}
 		// the basedate is the local day of the occurrence, see getRecurrence()
 		$basedate = $this->getDayStartOfTimestamp($seriesAllday ? $instanceid : TimezoneUtil::GetLocalTimeByTz($instanceid, $tz));
+		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): The series has no occurrence with instanceId '%s'.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
+		}
 
 		// the attendees of a meeting organized by the user are informed
 		$notify = false;
@@ -2081,6 +2088,12 @@ class MAPIProvider {
 
 		// check if the exception is to be deleted
 		if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
+			// the attendees were already informed
+			if ($recurrence->isDeleteException($basedate)) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointmentOccurrence(): occurrence '%s' is already deleted", $appointment->instanceid));
+
+				return $response;
+			}
 			if ($notify) {
 				// creates the deleted exception and sends the cancellation
 				$mr->doCancelInvitation($basedate);
@@ -2090,6 +2103,10 @@ class MAPIProvider {
 			}
 
 			return $response;
+		}
+
+		if ($recurrence->isDeleteException($basedate)) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Cannot modify the deleted occurrence '%s'.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
 		}
 
 		// the times of an all-day exception are local, the timezone of the series applies
