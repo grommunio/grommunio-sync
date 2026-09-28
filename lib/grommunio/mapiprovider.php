@@ -1751,7 +1751,8 @@ class MAPIProvider {
 			$starttime = $this->gmtime($localstart);
 
 			// set recurrence start here because it's calculated differently for tasks and appointments
-			$recur["start"] = $this->getDayStartOfTimestamp(TimezoneUtil::GetUtcTimeByTz($localstart, $tz));
+			// the recurrence starts on the local day of the first occurrence
+			$recur["start"] = $this->getDayStartOfTimestamp($localstart);
 
 			$recur["startocc"] = (($localstart % 86400) == 3600) && ($duration % 1440) == 0 ?
 				0 : $starttime["tm_hour"] * 60 + $starttime["tm_min"];
