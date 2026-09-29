@@ -491,7 +491,8 @@ class MAPIProvider {
 			}
 			if (isset($change["basedate"])) {
 				// depending on the AS version the streamer is going to send the correct value
-				$exception->exceptionstarttime = $exception->instanceid = $exceptIsAllday ?
+				// the original start follows the series, also for an all-day exception of a timed series
+				$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
 					$this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60 :
 					TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
 
