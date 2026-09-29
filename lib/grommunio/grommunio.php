@@ -988,7 +988,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * The basedate is the start of the local day of the original start of the occurrence.
 	 *
 	 * @param mixed  $mapimessage the calendar item
-	 * @param string $instanceid  original UTC start of the occurrence
+	 * @param string $instanceid  original start of the occurrence, UTC or local for an all-day series
 	 *
 	 * @return int
 	 *
@@ -1001,8 +1001,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the calendar item is not recurring", $instanceid), SYNC_COMMONSTATUS_NORECURRINCAL);
 		}
 
+		$start = Utils::ParseDate($instanceid);
+		if (!$start) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, invalid InstanceId", $instanceid), SYNC_COMMONSTATUS_INVALIDDATETIME);
+		}
+
 		$recurrence = new Recurrence($this->store, $mapimessage);
-		$basedate = $recurrence->dayStartOf($recurrence->fromGMT($recurrence->tz, Utils::ParseDate($instanceid)));
+		// the InstanceId of an all-day series is the local start, see MAPIProvider->getRecurrence()
+		$allday = !empty($recurrence->messageprops[$recurrence->proptags["alldayevent"]]) ||
+			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
+		$basedate = $recurrence->dayStartOf($allday ? $start : $recurrence->fromGMT($recurrence->tz, $start));
+		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+		}
 		if ($recurrence->isDeleteException($basedate)) {
 			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
 		}
