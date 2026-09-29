@@ -1569,9 +1569,9 @@ class MAPIProvider {
 		if (isset($appointment->timezone)) {
 			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
 		}
-		// AS 16: doesn't sent a timezone - use server TZ
+		// AS 16: doesn't sent a timezone - use the stored or the server TZ
 		elseif ($isAs16 && $isAllday) {
-			$tz = TimezoneUtil::GetFullTZ();
+			$tz = $this->getAppointmentTz($oldProps, $appointmentprops);
 		}
 		elseif ($keepTimezone) {
 			$tz = $this->getAppointmentTz($oldProps, $appointmentprops, $tzStored);
@@ -1581,6 +1581,18 @@ class MAPIProvider {
 		}
 		else {
 			$tz = false;
+		}
+
+		// AS 16: the times of an all-day event are dates without timezone, a series
+		// is saved at the local midnight of its timezone like the ones of other clients
+		$floatingSeries = $isAs16 && $isAllday && $tz && (isset($appointment->recurrence) ||
+			($isGhosted && !$appointment->IsEmptyContainer("recurrence") && !empty($oldProps[$appointmentprops["isrecurring"]])));
+		if ($floatingSeries) {
+			foreach (["starttime", "endtime"] as $var) {
+				if (isset($appointment->{$var})) {
+					$appointment->{$var} = TimezoneUtil::GetUtcTimeByTz($appointment->{$var}, $tz);
+				}
+			}
 		}
 
 		// start and end time may not be set - try to get them from the existing appointment for further calculation.
@@ -1715,7 +1727,7 @@ class MAPIProvider {
 			$storedRecurrence = new SyncRecurrence();
 			$this->getRecurrencePattern(new Recurrence($this->store, $mapimessage), $oldProps, $storedRecurrence);
 			// a series moved to other times is saved again
-			if ($keepRecurrence && ($appointment->starttime != ($oldProps[$appointmentprops["starttime"]] ?? null) || $appointment->endtime != ($oldProps[$appointmentprops["endtime"]] ?? null))) {
+			if ($keepRecurrence && !$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $floatingSeries, $tz)) {
 				$appointment->recurrence = $storedRecurrence;
 				$keepRecurrence = false;
 			}
@@ -1762,7 +1774,7 @@ class MAPIProvider {
 			$recur["regen"] = false;
 
 			// saving the recurrence removes the exceptions, keep them if the series did not change
-			$recurChanged = !$this->isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops);
+			$recurChanged = !$this->isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops, $floatingSeries, $tz);
 			if (!$recurChanged) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence did not change, keeping the stored one");
 			}
@@ -1794,13 +1806,15 @@ class MAPIProvider {
 						// other exception properties which are not handled in recurrence
 						$exceptionprops = [];
 
+						// AS 16: the times of an all-day exception are local, see setAppointmentOccurrence()
+						$floatingException = $isAs16 && (isset($exception->alldayevent) ? (bool) $exception->alldayevent : $isAllday);
 						if (isset($exception->starttime)) {
-							$mapiexception["start"] = TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
-							$exceptionprops[$appointmentprops["starttime"]] = $exception->starttime;
+							$mapiexception["start"] = $floatingException ? $exception->starttime : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
+							$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->starttime, $tz) : $exception->starttime;
 						}
 						if (isset($exception->endtime)) {
-							$mapiexception["end"] = TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
-							$exceptionprops[$appointmentprops["endtime"]] = $exception->endtime;
+							$mapiexception["end"] = $floatingException ? $exception->endtime : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
+							$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->endtime, $tz) : $exception->endtime;
 						}
 						if (isset($exception->subject)) {
 							$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
@@ -1857,6 +1871,11 @@ class MAPIProvider {
 			$props[$appointmentprops["isrecurring"]] = false;
 			// remove recurringstate
 			mapi_deleteprops($mapimessage, [$appointmentprops["recurringstate"]]);
+		}
+		// an unchanged all-day series keeps its times, the device only sent the days
+		if ($floatingSeries && !$recurChanged) {
+			$props[$appointmentprops["starttime"]] = $props[$appointmentprops["commonstart"]] = $oldProps[$appointmentprops["starttime"]];
+			$props[$appointmentprops["endtime"]] = $props[$appointmentprops["commonend"]] = $oldProps[$appointmentprops["endtime"]];
 		}
 
 		// always set the PR_SENT_REPRESENTING_* props so that the attendee status update also works with the webaccess
@@ -2188,13 +2207,14 @@ class MAPIProvider {
 	 * @param array           $recur            the recurrence to be saved
 	 * @param array           $oldProps         properties before the update
 	 * @param array           $appointmentprops
+	 * @param bool            $allday           AS 16 all-day series
+	 * @param mixed           $tz               timezone of the series
 	 *
 	 * @return bool
 	 */
-	private function isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops) {
+	private function isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops, $allday, $tz) {
 		if (empty($oldProps[$appointmentprops["isrecurring"]]) || empty($recurrence->recur) ||
-				$appointment->starttime != ($oldProps[$appointmentprops["starttime"]] ?? null) ||
-				$appointment->endtime != ($oldProps[$appointmentprops["endtime"]] ?? null) ||
+				!$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $allday, $tz) ||
 				$recur["startocc"] != ($recurrence->recur["startocc"] ?? null) ||
 				$recur["endocc"] != ($recurrence->recur["endocc"] ?? null)) {
 			return false;
@@ -2215,6 +2235,35 @@ class MAPIProvider {
 		if (isset($sent->until) !== isset($stored->until) ||
 				(isset($sent->until) && $this->getDayStartOfTimestamp($sent->until) != $this->getDayStartOfTimestamp($stored->until))) {
 			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Checks if the start and end sent by the device are the stored ones.
+	 * The days of an AS 16 all-day series are compared, as its stored times
+	 * may differ from the local midnight, e.g. in a daylight saving change.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param array           $oldProps         properties before the update
+	 * @param array           $appointmentprops
+	 * @param bool            $allday           AS 16 all-day series
+	 * @param mixed           $tz               timezone of the series
+	 *
+	 * @return bool
+	 */
+	private function hasSeriesTimes($appointment, $oldProps, $appointmentprops, $allday, $tz) {
+		foreach (["starttime", "endtime"] as $var) {
+			$stored = $oldProps[$appointmentprops[$var]] ?? null;
+			if (!isset($stored)) {
+				return false;
+			}
+			if ($allday ?
+					$this->getDayStartOfTimestamp(TimezoneUtil::GetLocalTimeByTz($appointment->{$var}, $tz)) != $this->getDayStartOfTimestamp(TimezoneUtil::GetLocalTimeByTz($stored, $tz)) :
+					$appointment->{$var} != $stored) {
+				return false;
+			}
 		}
 
 		return true;
