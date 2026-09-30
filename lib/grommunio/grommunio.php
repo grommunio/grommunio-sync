@@ -811,8 +811,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$basedate = false;
 		$folderClass = GSync::GetDeviceManager()->GetFolderClassFromCacheByID($fid);
 		if ($folderClass == 'Email') {
+			// the meeting request already identifies the occurrence it is for
 			if (!empty($request['instanceid'])) {
-				throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, InstanceId is only valid for calendar items", $requestid, $folderid, $response), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): ignoring InstanceId '%s' of a meeting request", $requestid, $folderid, $response, $request['instanceid']));
 			}
 			// The mobile requested this on a MR, when finishing we need to search for the resulting calendar item!
 			$searchForResultCalendarItem = true;
