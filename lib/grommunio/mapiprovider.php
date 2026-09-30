@@ -1746,6 +1746,14 @@ class MAPIProvider {
 		$recurChanged = false;
 		if ($keepRecurrence) {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence not sent, keeping the stored one");
+			// exceptions sent without the recurrence change the stored one
+			if (!empty($appointment->exceptions)) {
+				if (empty($oldProps[$appointmentprops["isrecurring"]])) {
+					throw new StatusException("MAPIProvider->setAppointment(): Exceptions sent for an appointment which is not recurring.", SYNC_STATUS_OBJECTNOTFOUND);
+				}
+				$recur = [];
+				$this->setAppointmentExceptions($appointment, new Recurrence($this->store, $mapimessage), $recur, $tz, $isAllday, $appointmentprops);
+			}
 		}
 		elseif (isset($appointment->recurrence)) {
 			// Set PR_ICON_INDEX to 1025 to show correct icon in category view
@@ -1786,80 +1794,8 @@ class MAPIProvider {
 			}
 
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
-			if (isset($appointment->exceptions)) {
-				foreach ($appointment->exceptions as $exception) {
-					// we always need the base date, AS 16 has the InstanceId instead of the ExceptionStartTime
-					$exceptionstart = $exception->exceptionstarttime ?? $exception->instanceid ?? null;
-					if (!isset($exceptionstart)) {
-						continue;
-					}
-
-					// the basedate is the local day of the occurrence, see getRecurrence()
-					$basedate = $this->getDayStartOfTimestamp($isAllday ? $exceptionstart : TimezoneUtil::GetLocalTimeByTz($exceptionstart, $tz));
-					if (isset($exception->deleted) && $exception->deleted) {
-						$noexceptions = false;
-						// Delete exception
-						$recurrence->createException([], $basedate, true);
-					}
-					else {
-						// Change exception
-						$mapiexception = ["basedate" => $basedate];
-						// other exception properties which are not handled in recurrence
-						$exceptionprops = [];
-
-						// AS 16: the times of an all-day exception are local, see setAppointmentOccurrence()
-						$floatingException = $isAs16 && (isset($exception->alldayevent) ? (bool) $exception->alldayevent : $isAllday);
-						if (isset($exception->starttime)) {
-							$mapiexception["start"] = $floatingException ? $exception->starttime : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
-							$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->starttime, $tz) : $exception->starttime;
-						}
-						if (isset($exception->endtime)) {
-							$mapiexception["end"] = $floatingException ? $exception->endtime : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
-							$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->endtime, $tz) : $exception->endtime;
-						}
-						if (isset($exception->subject)) {
-							$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
-						}
-						if (isset($exception->location)) {
-							$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = $exception->location;
-						}
-						if (isset($exception->busystatus)) {
-							$exceptionprops[$appointmentprops["busystatus"]] = $mapiexception["busystatus"] = $exception->busystatus;
-						}
-						if (isset($exception->reminder)) {
-							$exceptionprops[$appointmentprops["reminderset"]] = $mapiexception["reminder_set"] = 1;
-							$exceptionprops[$appointmentprops["remindertime"]] = $mapiexception["remind_before"] = $exception->reminder;
-						}
-						if (isset($exception->alldayevent)) {
-							$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $exception->alldayevent;
-						}
-
-						if (!isset($recur["changed_occurrences"])) {
-							$recur["changed_occurrences"] = [];
-						}
-
-						if (isset($exception->body)) {
-							$exceptionprops[$appointmentprops["body"]] = $exception->body;
-						}
-
-						if (isset($exception->asbody)) {
-							$this->setASbody($exception->asbody, $exceptionprops, $appointmentprops);
-							$mapiexception["body"] = ($exceptionprops[$appointmentprops["body"]] ??= $exceptionprops[$appointmentprops["html"]] ?? "");
-						}
-
-						array_push($recur["changed_occurrences"], $mapiexception);
-
-						if (!empty($exceptionprops)) {
-							$noexceptions = false;
-							if ($recurrence->isException($basedate)) {
-								$recurrence->modifyException($exceptionprops, $basedate);
-							}
-							else {
-								$recurrence->createException($exceptionprops, $basedate);
-							}
-						}
-					}
-				}
+			if (isset($appointment->exceptions) && $this->setAppointmentExceptions($appointment, $recurrence, $recur, $tz, $isAllday, $appointmentprops)) {
+				$noexceptions = false;
 			}
 
 			// setRecurrence deletes the attachments from an appointment
@@ -2065,6 +2001,97 @@ class MAPIProvider {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Saves the exceptions of a series sent by the device.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param Recurrence      $recurrence
+	 * @param array           $recur            the recurrence to be saved
+	 * @param mixed           $tz               timezone of the series
+	 * @param bool            $isAllday         all-day series
+	 * @param array           $appointmentprops
+	 *
+	 * @return bool true if an exception was saved
+	 */
+	private function setAppointmentExceptions($appointment, $recurrence, &$recur, $tz, $isAllday, $appointmentprops) {
+		$saved = false;
+		foreach ($appointment->exceptions as $exception) {
+			// we always need the base date, AS 16 has the InstanceId instead of the ExceptionStartTime
+			$exceptionstart = $exception->exceptionstarttime ?? $exception->instanceid ?? null;
+			if (!isset($exceptionstart)) {
+				continue;
+			}
+
+			// the basedate is the local day of the occurrence, see getRecurrence()
+			$basedate = $this->getDayStartOfTimestamp($isAllday ? $exceptionstart : TimezoneUtil::GetLocalTimeByTz($exceptionstart, $tz));
+			if (isset($exception->deleted) && $exception->deleted) {
+				$saved = true;
+				// Delete exception
+				$recurrence->createException([], $basedate, true);
+			}
+			else {
+				// Change exception
+				$mapiexception = ["basedate" => $basedate];
+				// other exception properties which are not handled in recurrence
+				$exceptionprops = [];
+
+				// AS 16: the times of an all-day exception are local, see setAppointmentOccurrence()
+				$floatingException = Request::GetProtocolVersion() >= 16.0 && (isset($exception->alldayevent) ? (bool) $exception->alldayevent : $isAllday);
+				if (isset($exception->starttime)) {
+					$mapiexception["start"] = $floatingException ? $exception->starttime : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
+					$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->starttime, $tz) : $exception->starttime;
+				}
+				if (isset($exception->endtime)) {
+					$mapiexception["end"] = $floatingException ? $exception->endtime : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
+					$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->endtime, $tz) : $exception->endtime;
+				}
+				if (isset($exception->subject)) {
+					$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
+				}
+				if (isset($exception->location)) {
+					$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = $exception->location;
+				}
+				if (isset($exception->busystatus)) {
+					$exceptionprops[$appointmentprops["busystatus"]] = $mapiexception["busystatus"] = $exception->busystatus;
+				}
+				if (isset($exception->reminder)) {
+					$exceptionprops[$appointmentprops["reminderset"]] = $mapiexception["reminder_set"] = 1;
+					$exceptionprops[$appointmentprops["remindertime"]] = $mapiexception["remind_before"] = $exception->reminder;
+				}
+				if (isset($exception->alldayevent)) {
+					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $exception->alldayevent;
+				}
+
+				if (!isset($recur["changed_occurrences"])) {
+					$recur["changed_occurrences"] = [];
+				}
+
+				if (isset($exception->body)) {
+					$exceptionprops[$appointmentprops["body"]] = $exception->body;
+				}
+
+				if (isset($exception->asbody)) {
+					$this->setASbody($exception->asbody, $exceptionprops, $appointmentprops);
+					$mapiexception["body"] = ($exceptionprops[$appointmentprops["body"]] ??= $exceptionprops[$appointmentprops["html"]] ?? "");
+				}
+
+				array_push($recur["changed_occurrences"], $mapiexception);
+
+				if (!empty($exceptionprops)) {
+					$saved = true;
+					if ($recurrence->isException($basedate)) {
+						$recurrence->modifyException($exceptionprops, $basedate);
+					}
+					else {
+						$recurrence->createException($exceptionprops, $basedate);
+					}
+				}
+			}
+		}
+
+		return $saved;
 	}
 
 	/**
