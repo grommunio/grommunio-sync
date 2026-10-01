@@ -1615,6 +1615,10 @@ class MAPIProvider {
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
 			throw new StatusException("MAPIProvider->setAppointment(): Error, start and/or end time not set and can not be retrieved from MAPI.", SYNC_STATUS_SYNCCANNOTBECOMPLETED);
 		}
+		// AS 16: Check() could not compare a time with the omitted stored one
+		if ($isGhosted && $appointment->starttime > $appointment->endtime) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointment(): Error, the start %s is after the end %s.", Utils::FormatDate($appointment->starttime), Utils::FormatDate($appointment->endtime)), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+		}
 
 		// calculate duration because without it some webaccess views are broken. duration is in min
 		$localstart = TimezoneUtil::GetLocalTimeByTz($appointment->starttime, $tz);
@@ -2202,13 +2206,22 @@ class MAPIProvider {
 			$appointmentprops["starttime"] => $recurrence->getOccurrenceStart($basedate),
 			$appointmentprops["endtime"] => $recurrence->getOccurrenceEnd($basedate),
 		];
-
-		// modify if exists else create exception
-		if ($recurrence->isException($basedate)) {
+		$isException = $recurrence->isException($basedate);
+		if ($isException) {
 			$exceptionatt = $recurrence->getExceptionAttachment($basedate);
 			if ($exceptionatt) {
 				$oldExceptionProps = mapi_getprops(mapi_attach_openobj($exceptionatt, 0), array_keys($oldExceptionProps)) + $oldExceptionProps;
 			}
+		}
+		// a time sent alone is compared with the stored one of the occurrence
+		$start = $exceptionprops[$appointmentprops["starttime"]] ?? $oldExceptionProps[$appointmentprops["starttime"]];
+		$end = $exceptionprops[$appointmentprops["endtime"]] ?? $oldExceptionProps[$appointmentprops["endtime"]];
+		if ($start > $end) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Error, the start %s is after the end %s.", Utils::FormatDate($start), Utils::FormatDate($end)), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+		}
+
+		// modify if exists else create exception
+		if ($isException) {
 			$recurrence->modifyException($exceptionprops, $basedate);
 		}
 		else {
