@@ -463,8 +463,10 @@ class ImportChangesICS implements IImportChanges {
 				// delete the draft outside of the importer, so the deletion is exported to the client
 				try {
 					$draftprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_ENTRYID]);
-					$draftfolder = mapi_msgstore_openentry($this->store, $draftprops[PR_PARENT_ENTRYID]);
-					mapi_folder_deletemessages($draftfolder, [$draftprops[PR_ENTRYID]]);
+					$draftfolder = isset($draftprops[PR_ENTRYID], $draftprops[PR_PARENT_ENTRYID]) ? mapi_msgstore_openentry($this->store, $draftprops[PR_PARENT_ENTRYID]) : false;
+					if (!$draftfolder || !mapi_folder_deletemessages($draftfolder, [$draftprops[PR_ENTRYID]])) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): draft sent but not removed: 0x%X", $response->serverid, $messageClass, mapi_last_hresult()));
+					}
 				}
 				catch (Exception $e) {
 					// the mail was sent, so do not report an error which would make the client send it again

@@ -4109,7 +4109,10 @@ class MAPIProvider {
 
 		// a mail without or with an invalid recipient can not be sent
 		$recipienttable = mapi_message_getrecipienttable($mapimessage);
-		$recipients = mapi_table_queryallrows($recipienttable, [PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]);
+		$recipients = $recipienttable ? mapi_table_queryallrows($recipienttable, [PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]) : false;
+		if ($recipients === false) {
+			throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): the recipients could not be read: 0x%X", mapi_last_hresult()), SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED);
+		}
 		if (empty($recipients)) {
 			throw new StatusException("MAPIProvider->SubmitMessage(): the message has no recipients", SYNC_COMMONSTATUS_INVALIDRECIPIENTS);
 		}
@@ -4127,17 +4130,17 @@ class MAPIProvider {
 		$hr = NOERROR;
 
 		try {
+			// without exceptions enabled in php-mapi a failed call returns false
 			$storeProps = $this->GetStoreProps();
-			$outbox = mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]);
-			$out = mapi_folder_createmessage($outbox);
-			mapi_copyto($mapimessage, [], [], $out, 0);
+			$outbox = isset($storeProps[PR_IPM_OUTBOX_ENTRYID]) ? mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]) : false;
+			$out = $outbox ? mapi_folder_createmessage($outbox) : false;
+			$ok = $out && mapi_copyto($mapimessage, [], [], $out, 0);
 			// move the sent mail to the sent items folder
-			if ($storeProps[PR_IPM_SENTMAIL_ENTRYID]) {
-				mapi_setprops($out, [PR_SENTMAIL_ENTRYID => $storeProps[PR_IPM_SENTMAIL_ENTRYID]]);
+			if ($ok && !empty($storeProps[PR_IPM_SENTMAIL_ENTRYID])) {
+				$ok = mapi_setprops($out, [PR_SENTMAIL_ENTRYID => $storeProps[PR_IPM_SENTMAIL_ENTRYID]]);
 			}
-			mapi_savechanges($out);
-			mapi_message_submitmessage($out);
-			$hr = mapi_last_hresult();
+			$ok = $ok && mapi_savechanges($out) && mapi_message_submitmessage($out);
+			$hr = $ok ? NOERROR : (mapi_last_hresult() ?: MAPI_E_CALL_FAILED);
 		}
 		catch (Exception $e) {
 			$hr = $e->getCode() ?: mapi_last_hresult();
@@ -4160,7 +4163,7 @@ class MAPIProvider {
 			// do not leave the unsent copy in the outbox
 			if ($outbox && $out) {
 				$outProps = mapi_getprops($out, [PR_ENTRYID]);
-				if (isset($outProps[PR_ENTRYID])) {
+				if (is_array($outProps) && isset($outProps[PR_ENTRYID])) {
 					mapi_folder_deletemessages($outbox, [$outProps[PR_ENTRYID]]);
 				}
 			}
