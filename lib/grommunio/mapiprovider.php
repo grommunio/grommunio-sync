@@ -1748,6 +1748,7 @@ class MAPIProvider {
 		}
 
 		$recurChanged = false;
+		$exceptionsChanged = false;
 		if ($keepRecurrence) {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence not sent, keeping the stored one");
 			// exceptions sent without the recurrence change the stored one
@@ -1756,7 +1757,7 @@ class MAPIProvider {
 					throw new StatusException("MAPIProvider->setAppointment(): Exceptions sent for an appointment which is not recurring.", SYNC_STATUS_OBJECTNOTFOUND);
 				}
 				$recur = [];
-				$this->setAppointmentExceptions($appointment, new Recurrence($this->store, $mapimessage), $recur, $tz, $isAllday, $appointmentprops);
+				$this->setAppointmentExceptions($appointment, new Recurrence($this->store, $mapimessage), $recur, $tz, $isAllday, $appointmentprops, $exceptionsChanged);
 			}
 		}
 		elseif (isset($appointment->recurrence)) {
@@ -1798,7 +1799,7 @@ class MAPIProvider {
 			}
 
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
-			if (isset($appointment->exceptions) && $this->setAppointmentExceptions($appointment, $recurrence, $recur, $tz, $isAllday, $appointmentprops)) {
+			if (isset($appointment->exceptions) && $this->setAppointmentExceptions($appointment, $recurrence, $recur, $tz, $isAllday, $appointmentprops, $exceptionsChanged)) {
 				$noexceptions = false;
 			}
 
@@ -1966,6 +1967,15 @@ class MAPIProvider {
 
 			mapi_message_modifyrecipients($mapimessage, ($appointment->clientuid) ? MODRECIP_ADD : MODRECIP_MODIFY, $recips);
 		}
+
+		// AS 16: the attendees are only informed of significant changes, not e.g. of a new reminder
+		$significant = !$isGhosted || $recurChanged || $exceptionsChanged || !empty($old_receips) ||
+			!$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $floatingSeries, $tz) ||
+			(isset($appointment->alldayevent) && (bool) $appointment->alldayevent !== !empty($oldProps[$appointmentprops["alldayevent"]])) ||
+			(isset($appointment->subject) && $appointment->subject != ($oldProps[$appointmentprops["subject"]] ?? "")) ||
+			(isset($props[$appointmentprops["location"]]) && $props[$appointmentprops["location"]] != ($oldProps[$appointmentprops["location"]] ?? "")) ||
+			$this->isBodyChanged($mapimessage, $props, $oldProps, $appointmentprops);
+
 		mapi_setprops($mapimessage, $props);
 
 		// update attachments send by the mobile, before they are sent with a meeting request
@@ -1977,7 +1987,10 @@ class MAPIProvider {
 		if ($isAs16 && $isMeeting) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// Only send updates if this is a new MR or we are the organizer
-			if ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
+			if (!$significant && !$forceMRUpdateSend) {
+				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): no significant change, the attendees are not informed");
+			}
+			elseif ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
 				// initialize MR and/or update internal counters
 				$mr->updateMeetingRequest();
 				// when updating, check for significant changes and if needed will clear the existing recipient responses
@@ -2016,10 +2029,11 @@ class MAPIProvider {
 	 * @param mixed           $tz               timezone of the series
 	 * @param bool            $isAllday         all-day series
 	 * @param array           $appointmentprops
+	 * @param bool            $significant      set to true if the attendees are to be informed
 	 *
 	 * @return bool true if an exception was saved
 	 */
-	private function setAppointmentExceptions($appointment, $recurrence, &$recur, $tz, $isAllday, $appointmentprops) {
+	private function setAppointmentExceptions($appointment, $recurrence, &$recur, $tz, $isAllday, $appointmentprops, &$significant) {
 		$saved = false;
 		foreach ($appointment->exceptions as $exception) {
 			// we always need the base date, AS 16 has the InstanceId instead of the ExceptionStartTime
@@ -2032,6 +2046,7 @@ class MAPIProvider {
 			$basedate = $this->getDayStartOfTimestamp($isAllday ? $exceptionstart : TimezoneUtil::GetLocalTimeByTz($exceptionstart, $tz));
 			if (isset($exception->deleted) && $exception->deleted) {
 				$saved = true;
+				$significant = $significant || !$recurrence->isDeleteException($basedate);
 				// Delete exception
 				$recurrence->createException([], $basedate, true);
 			}
@@ -2082,6 +2097,20 @@ class MAPIProvider {
 				}
 
 				array_push($recur["changed_occurrences"], $mapiexception);
+
+				// the occurrence as the attendees know it
+				$current = $recurrence->getChangeException($basedate) ?: [
+					"start" => $recurrence->fromGMT($recurrence->tz, $recurrence->getOccurrenceStart($basedate)),
+					"end" => $recurrence->fromGMT($recurrence->tz, $recurrence->getOccurrenceEnd($basedate)),
+				];
+				foreach (["subject", "location"] as $key) {
+					$current[$key] ??= $recurrence->messageprops[$recurrence->proptags[$key]] ?? "";
+				}
+				foreach (["start", "end", "subject", "location"] as $key) {
+					if (isset($mapiexception[$key]) && $mapiexception[$key] != $current[$key]) {
+						$significant = true;
+					}
+				}
 
 				if (!empty($exceptionprops)) {
 					$saved = true;
@@ -2201,16 +2230,28 @@ class MAPIProvider {
 			$exceptionprops[$appointmentprops["locations"]] = "";
 		}
 
-		// times of the occurrence before the change
+		// the occurrence before the change
 		$oldExceptionProps = [
 			$appointmentprops["starttime"] => $recurrence->getOccurrenceStart($basedate),
 			$appointmentprops["endtime"] => $recurrence->getOccurrenceEnd($basedate),
+			$appointmentprops["subject"] => $messageprops[$appointmentprops["subject"]] ?? "",
+			$appointmentprops["location"] => $messageprops[$appointmentprops["location"]] ?? "",
+			$appointmentprops["alldayevent"] => $seriesAllday,
 		];
+		$oldMessage = $mapimessage;
 		$isException = $recurrence->isException($basedate);
 		if ($isException) {
 			$exceptionatt = $recurrence->getExceptionAttachment($basedate);
 			if ($exceptionatt) {
-				$oldExceptionProps = mapi_getprops(mapi_attach_openobj($exceptionatt, 0), array_keys($oldExceptionProps)) + $oldExceptionProps;
+				$oldMessage = mapi_attach_openobj($exceptionatt, 0);
+				$oldExceptionProps = mapi_getprops($oldMessage, array_keys($oldExceptionProps)) + $oldExceptionProps;
+			}
+		}
+		// the attendees are only informed of significant changes, not e.g. of a new reminder
+		$significant = $this->isBodyChanged($oldMessage, $exceptionprops, mapi_getprops($oldMessage, [$appointmentprops["body"], $appointmentprops["html"]]), $appointmentprops);
+		foreach (["starttime", "endtime", "subject", "location", "alldayevent"] as $key) {
+			if (isset($exceptionprops[$appointmentprops[$key]]) && $exceptionprops[$appointmentprops[$key]] != $oldExceptionProps[$appointmentprops[$key]]) {
+				$significant = true;
 			}
 		}
 		// a time sent alone is compared with the stored one of the occurrence
@@ -2228,7 +2269,10 @@ class MAPIProvider {
 			$recurrence->createException($exceptionprops, $basedate);
 		}
 
-		if ($notify) {
+		if ($notify && !$significant) {
+			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointmentOccurrence(): no significant change, the attendees are not informed");
+		}
+		elseif ($notify) {
 			$mr->updateMeetingRequest($basedate);
 			// clears the responses of the attendees if the time changed
 			$mr->checkSignificantChanges($oldExceptionProps, $basedate);
@@ -2279,6 +2323,27 @@ class MAPIProvider {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Checks if the body to be saved differs from the stored one.
+	 *
+	 * @param mixed $mapimessage      message with the stored body
+	 * @param array $props            properties to be saved
+	 * @param array $oldProps         stored properties
+	 * @param array $appointmentprops
+	 *
+	 * @return bool
+	 */
+	private function isBodyChanged($mapimessage, $props, $oldProps, $appointmentprops) {
+		foreach (["body", "html"] as $key) {
+			$tag = $appointmentprops[$key];
+			if (isset($props[$tag]) && $props[$tag] !== (string) readMapiProp($mapimessage, $tag, $oldProps)) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
