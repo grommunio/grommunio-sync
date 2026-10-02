@@ -45,7 +45,7 @@ class Search extends RequestProcessor {
 		// check if it is a content of an element (= GAL search)
 		// or a starttag (= mailbox or documentlibrary search)
 		$searchquery = self::$decoder->getElementContent();
-		if ($searchquery && !self::$decoder->getElementEndTag()) {
+		if ($searchquery !== false && !self::$decoder->getElementEndTag()) {
 			return false;
 		}
 
