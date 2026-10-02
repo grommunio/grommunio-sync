@@ -1794,6 +1794,8 @@ class MAPIProvider {
 
 		// Do attendees
 		// For AS-16 get a list of the current attendees (pre update)
+		$old_receips = [];
+		$old_receipkeys = [];
 		if ($isAs16 && $isMeeting) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
 			$old_receipstable = mapi_table_queryallrows(
@@ -1802,6 +1804,7 @@ class MAPIProvider {
 					PR_ENTRYID,
 					PR_DISPLAY_NAME,
 					PR_EMAIL_ADDRESS,
+					PR_SMTP_ADDRESS,
 					PR_RECIPIENT_ENTRYID,
 					PR_RECIPIENT_TYPE,
 					PR_SEND_INTERNET_ENCODING,
@@ -1818,10 +1821,12 @@ class MAPIProvider {
 					PR_SEARCH_KEY,
 				]
 			);
-			$old_receips = [];
-			foreach ($old_receipstable as $oldrec) {
-				if (isset($oldrec[PR_EMAIL_ADDRESS])) {
-					$old_receips[$oldrec[PR_EMAIL_ADDRESS]] = $oldrec;
+			foreach ($old_receipstable as $idx => $oldrec) {
+				foreach ([PR_SMTP_ADDRESS, PR_EMAIL_ADDRESS] as $tag) {
+					if (!empty($oldrec[$tag])) {
+						$old_receips[$idx] = $oldrec;
+						$old_receipkeys[strtolower((string) $oldrec[$tag])][] = $idx;
+					}
 				}
 			}
 		}
@@ -1847,9 +1852,7 @@ class MAPIProvider {
 
 				array_push($recips, $org);
 				// remove organizer from old_receips
-				if (isset($old_receips[$org[PR_EMAIL_ADDRESS]])) {
-					unset($old_receips[$org[PR_EMAIL_ADDRESS]]);
-				}
+				$this->removeOldRecipient($old_receips, $old_receipkeys, $org);
 			}
 
 			// Open address book for user resolve
@@ -1880,11 +1883,8 @@ class MAPIProvider {
 				}
 
 				// remove still existing attendees from the list of pre-update attendees - remaining pre-update are considered deleted attendees
-				if (isset($old_receips[$recip[PR_EMAIL_ADDRESS]])) {
-					unset($old_receips[$recip[PR_EMAIL_ADDRESS]]);
-				}
 				// if there is a new attendee a MR update must be send -> Appointment to MR update
-				else {
+				if (!$this->removeOldRecipient($old_receips, $old_receipkeys, $recip)) {
 					$forceMRUpdateSend = true;
 				}
 				// the organizer is already in the recipient list, no need to add him again
@@ -1935,6 +1935,28 @@ class MAPIProvider {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Drops the pre-update attendee rows matching the SMTP or email address
+	 * of $recip.
+	 *
+	 * @return bool true if a row was found
+	 */
+	private function removeOldRecipient(array &$old_receips, array $old_receipkeys, array $recip): bool {
+		$found = false;
+		foreach ([PR_SMTP_ADDRESS, PR_EMAIL_ADDRESS] as $tag) {
+			$key = strtolower((string) ($recip[$tag] ?? ''));
+			if ($key === '' || !isset($old_receipkeys[$key])) {
+				continue;
+			}
+			foreach ($old_receipkeys[$key] as $idx) {
+				unset($old_receips[$idx]);
+			}
+			$found = true;
+		}
+
+		return $found;
 	}
 
 	/**
