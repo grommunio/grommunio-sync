@@ -286,24 +286,25 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				if (self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) { // TODO - do something with maxsize and maxpictures in the backend
+				if (($el = self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) !== false) { // TODO - do something with maxsize and maxpictures in the backend
 					$searchpicture = new SyncResolveRecipientsPicture();
-					if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXSIZE)) {
-						$searchpicture->maxsize = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-
-					if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXPICTURES)) {
-						$searchpicture->maxpictures = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-
 					// iOs devices send empty picture tag: <Search:Picture/>
-					if (($sp = self::$decoder->getElementContent()) !== false) {
+					if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+						if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXSIZE)) {
+							$searchpicture->maxsize = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+
+						if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXPICTURES)) {
+							$searchpicture->maxpictures = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+
+						self::$decoder->getElementContent();
 						if (!self::$decoder->getElementEndTag()) {
 							return false;
 						}
