@@ -1991,13 +1991,18 @@ class MAPIProvider {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): no significant change, the attendees are not informed");
 			}
 			elseif ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
-				// initialize MR and/or update internal counters
-				$mr->updateMeetingRequest();
-				// when updating, check for significant changes and if needed will clear the existing recipient responses
-				if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
-					$mr->checkSignificantChanges($oldProps, false, $recurChanged);
+				try {
+					// initialize MR and/or update internal counters
+					$mr->updateMeetingRequest();
+					// when updating, check for significant changes and if needed will clear the existing recipient responses
+					if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
+						$mr->checkSignificantChanges($oldProps, false, $recurChanged);
+					}
+					$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
 				}
-				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
+				catch (MAPIException $e) {
+					throw $this->getMeetingRequestStatusException($e, "setAppointment");
+				}
 			}
 		}
 
@@ -2180,7 +2185,12 @@ class MAPIProvider {
 			}
 			if ($notify) {
 				// creates the deleted exception and sends the cancellation
-				$mr->doCancelInvitation($basedate);
+				try {
+					$mr->doCancelInvitation($basedate);
+				}
+				catch (MAPIException $e) {
+					throw $this->getMeetingRequestStatusException($e, "setAppointmentOccurrence");
+				}
 			}
 			else {
 				$recurrence->createException([], $basedate, true);
@@ -2273,10 +2283,15 @@ class MAPIProvider {
 			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointmentOccurrence(): no significant change, the attendees are not informed");
 		}
 		elseif ($notify) {
-			$mr->updateMeetingRequest($basedate);
-			// clears the responses of the attendees if the time changed
-			$mr->checkSignificantChanges($oldExceptionProps, $basedate);
-			$mr->sendMeetingRequest(false, false, $basedate);
+			try {
+				$mr->updateMeetingRequest($basedate);
+				// clears the responses of the attendees if the time changed
+				$mr->checkSignificantChanges($oldExceptionProps, $basedate);
+				$mr->sendMeetingRequest(false, false, $basedate);
+			}
+			catch (MAPIException $e) {
+				throw $this->getMeetingRequestStatusException($e, "setAppointmentOccurrence");
+			}
 		}
 
 		return $response;
@@ -2323,6 +2338,24 @@ class MAPIProvider {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Returns the status of a failed meeting request update, the Meetingrequest
+	 * class throws a MAPIException e.g. without write access to the calendar.
+	 *
+	 * @param MAPIException $e
+	 * @param string        $method calling method
+	 *
+	 * @return StatusException
+	 */
+	private function getMeetingRequestStatusException($e, $method) {
+		$e->setHandled();
+
+		return new StatusException(
+			sprintf("MAPIProvider->%s(): Error, the attendees could not be informed: %s (0x%X)", $method, $e->getMessage(), $e->getCode()),
+			$e->getCode() == MAPI_E_NO_ACCESS ? SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR : SYNC_STATUS_SERVERERROR
+		);
 	}
 
 	/**

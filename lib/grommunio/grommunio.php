@@ -903,22 +903,30 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$sendresponse = false;
 		}
 
-		switch ($response) {
-			case 1:     // accept
-			default:
-				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true, false, $basedate); // the last true is the $userAction
-				break;
+		// the Meetingrequest class throws e.g. without write access to the calendar
+		try {
+			switch ($response) {
+				case 1:     // accept
+				default:
+					$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true, false, $basedate); // the last true is the $userAction
+					break;
 
-			case 2:        // tentative
-				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true, false, $basedate); // the last true is the $userAction
-				break;
+				case 2:        // tentative
+					$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true, false, $basedate); // the last true is the $userAction
+					break;
 
-			case 3:        // decline
-				if ($request['proposedstarttime'] !== false) {
-					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): a new time proposal can not be sent with a decline, declining without it", $requestid, $folderid, $response));
-				}
-				$meetingrequest->doDecline($sendresponse, $basedate, $body);
-				break;
+				case 3:        // decline
+					if ($request['proposedstarttime'] !== false) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): a new time proposal can not be sent with a decline, declining without it", $requestid, $folderid, $response));
+					}
+					$meetingrequest->doDecline($sendresponse, $basedate, $body);
+					break;
+			}
+		}
+		catch (MAPIException $e) {
+			$e->setHandled();
+
+			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, the response failed: %s (0x%X)", $requestid, $folderid, $response, $e->getMessage(), $e->getCode()), SYNC_MEETRESPSTATUS_SERVERERROR);
 		}
 
 		// We have to return the ID of the new calendar item if it was created from an email
