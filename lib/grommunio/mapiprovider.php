@@ -1591,7 +1591,8 @@ class MAPIProvider {
 		if ($floatingSeries) {
 			foreach (["starttime", "endtime"] as $var) {
 				if (isset($appointment->{$var})) {
-					$appointment->{$var} = TimezoneUtil::GetUtcTimeByTz($appointment->{$var}, $tz);
+					// all-day times have no time component in AS 16, only the day counts
+					$appointment->{$var} = TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->{$var}), $tz);
 				}
 			}
 		}
@@ -2064,12 +2065,12 @@ class MAPIProvider {
 				// AS 16: the times of an all-day exception are local, see setAppointmentOccurrence()
 				$floatingException = Request::GetProtocolVersion() >= 16.0 && (isset($exception->alldayevent) ? (bool) $exception->alldayevent : $isAllday);
 				if (isset($exception->starttime)) {
-					$mapiexception["start"] = $floatingException ? $exception->starttime : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
-					$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->starttime, $tz) : $exception->starttime;
+					$mapiexception["start"] = $floatingException ? $this->getDayStartOfTimestamp($exception->starttime) : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
+					$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($exception->starttime), $tz) : $exception->starttime;
 				}
 				if (isset($exception->endtime)) {
-					$mapiexception["end"] = $floatingException ? $exception->endtime : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
-					$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($exception->endtime, $tz) : $exception->endtime;
+					$mapiexception["end"] = $floatingException ? $this->getDayStartOfTimestamp($exception->endtime) : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
+					$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($exception->endtime), $tz) : $exception->endtime;
 				}
 				if (isset($exception->subject)) {
 					$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
@@ -2208,12 +2209,12 @@ class MAPIProvider {
 		$exceptionprops = [];
 		if (isset($appointment->starttime)) {
 			$exceptionprops[$appointmentprops["starttime"]] = $isAllday ?
-				TimezoneUtil::GetUtcTimeByTz($appointment->starttime, $tz) :
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->starttime), $tz) :
 				$appointment->starttime;
 		}
 		if (isset($appointment->endtime)) {
 			$exceptionprops[$appointmentprops["endtime"]] = $isAllday ?
-				TimezoneUtil::GetUtcTimeByTz($appointment->endtime, $tz) :
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->endtime), $tz) :
 				$appointment->endtime;
 		}
 		if (isset($appointment->subject)) {
