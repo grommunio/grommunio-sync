@@ -286,7 +286,7 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				if (($el = self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) !== false) { // TODO - do something with maxsize and maxpictures in the backend
+				if (($el = self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) !== false) {
 					$searchpicture = new SyncResolveRecipientsPicture();
 					// iOs devices send empty picture tag: <Search:Picture/>
 					if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
@@ -449,15 +449,17 @@ class Search extends RequestProcessor {
 						self::$encoder->content($u[SYNC_GAL_EMAILADDRESS] ?? "");
 						self::$encoder->endTag();
 
-						if (isset($u[SYNC_GAL_PICTURE])) {
+						if (isset($u[SYNC_GAL_STATUS])) {
 							self::$encoder->startTag(SYNC_GAL_PICTURE);
 							self::$encoder->startTag(SYNC_GAL_STATUS);
-							self::$encoder->content(SYNC_SEARCHSTATUS_PICTURE_SUCCESS); // FIXME: status code
-							self::$encoder->endTag(); // SYNC_SEARCH_STATUS
+							self::$encoder->content($u[SYNC_GAL_STATUS]);
+							self::$encoder->endTag(); // SYNC_GAL_STATUS
 
-							self::$encoder->startTag(SYNC_GAL_DATA);
-							self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
-							self::$encoder->endTag(); // SYNC_GAL_DATA
+							if (isset($u[SYNC_GAL_PICTURE])) {
+								self::$encoder->startTag(SYNC_GAL_DATA);
+								self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
+								self::$encoder->endTag(); // SYNC_GAL_DATA
+							}
 							self::$encoder->endTag(); // SYNC_GAL_PICTURE
 						}
 
