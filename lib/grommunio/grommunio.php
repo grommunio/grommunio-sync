@@ -1242,6 +1242,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$abentries = mapi_table_queryrows($table, [PR_ENTRYID, PR_ACCOUNT, PR_DISPLAY_NAME, PR_SMTP_ADDRESS, PR_BUSINESS_TELEPHONE_NUMBER, PR_GIVEN_NAME, PR_SURNAME, PR_MOBILE_TELEPHONE_NUMBER, PR_HOME_TELEPHONE_NUMBER, PR_TITLE, PR_COMPANY_NAME, PR_OFFICE_LOCATION, PR_EMS_AB_THUMBNAIL_PHOTO], $rangestart, $querylimit);
 		}
 
+		$picturecount = 0;
 		for ($i = 0; $i < $querylimit; ++$i) {
 			if (!isset($abentries[$i][PR_SMTP_ADDRESS])) {
 				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->GetGALSearchResults(): The GAL entry '%s' does not have an email address and will be ignored.", $abentries[$i][PR_DISPLAY_NAME]));
@@ -1298,8 +1299,22 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$items[$i][SYNC_GAL_OFFICE] = $abentries[$i][PR_OFFICE_LOCATION];
 			}
 
-			if ($searchpicture !== false && isset($abentries[$i][PR_EMS_AB_THUMBNAIL_PHOTO])) {
-				$items[$i][SYNC_GAL_PICTURE] = StringStreamWrapper::Open($abentries[$i][PR_EMS_AB_THUMBNAIL_PHOTO]);
+			if ($searchpicture !== false) {
+				$photo = (string) ($abentries[$i][PR_EMS_AB_THUMBNAIL_PHOTO] ?? '');
+				if ($photo === '') {
+					$items[$i][SYNC_GAL_STATUS] = SYNC_SEARCHSTATUS_PICTURE_NOFOTO;
+				}
+				elseif (!empty($searchpicture->maxsize) && strlen($photo) > (int) $searchpicture->maxsize) {
+					$items[$i][SYNC_GAL_STATUS] = SYNC_SEARCHSTATUS_PICTURE_MAXSIZEEXCEEDED;
+				}
+				elseif (!empty($searchpicture->maxpictures) && $picturecount >= (int) $searchpicture->maxpictures) {
+					$items[$i][SYNC_GAL_STATUS] = SYNC_SEARCHSTATUS_PICTURE_MAXPICTURESEXCEEDED;
+				}
+				else {
+					$items[$i][SYNC_GAL_STATUS] = SYNC_SEARCHSTATUS_PICTURE_SUCCESS;
+					$items[$i][SYNC_GAL_PICTURE] = StringStreamWrapper::Open($photo);
+					++$picturecount;
+				}
 			}
 		}
 		$nrResults = count($items);

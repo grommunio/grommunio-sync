@@ -45,7 +45,7 @@ class Search extends RequestProcessor {
 		// check if it is a content of an element (= GAL search)
 		// or a starttag (= mailbox or documentlibrary search)
 		$searchquery = self::$decoder->getElementContent();
-		if ($searchquery && !self::$decoder->getElementEndTag()) {
+		if ($searchquery !== false && !self::$decoder->getElementEndTag()) {
 			return false;
 		}
 
@@ -286,24 +286,25 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				if (self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) { // TODO - do something with maxsize and maxpictures in the backend
+				if (($el = self::$decoder->getElementStartTag(SYNC_SEARCH_PICTURE)) !== false) {
 					$searchpicture = new SyncResolveRecipientsPicture();
-					if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXSIZE)) {
-						$searchpicture->maxsize = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-
-					if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXPICTURES)) {
-						$searchpicture->maxpictures = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-
 					// iOs devices send empty picture tag: <Search:Picture/>
-					if (($sp = self::$decoder->getElementContent()) !== false) {
+					if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+						if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXSIZE)) {
+							$searchpicture->maxsize = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+
+						if (self::$decoder->getElementStartTag(SYNC_SEARCH_MAXPICTURES)) {
+							$searchpicture->maxpictures = self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) {
+								return false;
+							}
+						}
+
+						self::$decoder->getElementContent();
 						if (!self::$decoder->getElementEndTag()) {
 							return false;
 						}
@@ -448,15 +449,17 @@ class Search extends RequestProcessor {
 						self::$encoder->content($u[SYNC_GAL_EMAILADDRESS] ?? "");
 						self::$encoder->endTag();
 
-						if (isset($u[SYNC_GAL_PICTURE])) {
+						if (isset($u[SYNC_GAL_STATUS])) {
 							self::$encoder->startTag(SYNC_GAL_PICTURE);
 							self::$encoder->startTag(SYNC_GAL_STATUS);
-							self::$encoder->content(SYNC_SEARCHSTATUS_PICTURE_SUCCESS); // FIXME: status code
-							self::$encoder->endTag(); // SYNC_SEARCH_STATUS
+							self::$encoder->content($u[SYNC_GAL_STATUS]);
+							self::$encoder->endTag(); // SYNC_GAL_STATUS
 
-							self::$encoder->startTag(SYNC_GAL_DATA);
-							self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
-							self::$encoder->endTag(); // SYNC_GAL_DATA
+							if (isset($u[SYNC_GAL_PICTURE])) {
+								self::$encoder->startTag(SYNC_GAL_DATA);
+								self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
+								self::$encoder->endTag(); // SYNC_GAL_DATA
+							}
 							self::$encoder->endTag(); // SYNC_GAL_PICTURE
 						}
 
