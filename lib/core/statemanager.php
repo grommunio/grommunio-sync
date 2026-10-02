@@ -99,8 +99,11 @@ class StateManager {
 		if ($uuid) {
 			try {
 				$data = $this->statemachine->GetState($this->device->GetDeviceId(), IStateMachine::FOLDERDATA, $uuid);
-				if ($data !== false) {
+				if ($data instanceof SyncParameters) {
 					$this->synchedFolders[$folderid] = $data;
+				}
+				elseif ($data !== false) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("StateManager->GetSynchedFolderState(): discarding invalid folder state '%s' for folder '%s'", $uuid, Utils::PrintAsString($folderid)));
 				}
 			}
 			catch (StateNotFoundException) {
