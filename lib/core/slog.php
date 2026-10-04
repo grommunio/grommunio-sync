@@ -34,6 +34,10 @@ class SLog {
 
 		$logger = self::getLogger();
 
+		// TimezoneUtil comes with mapi-header-php, which may be older
+		if (!class_exists('TimezoneUtil') || !method_exists('TimezoneUtil', 'SetLogger')) {
+			return true;
+		}
 		TimezoneUtil::SetLogger(static function (string $level, string $message): void {
 			$loglevels = [
 				TimezoneUtil::LOG_DEBUG => LOGLEVEL_DEBUG,
