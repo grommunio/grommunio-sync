@@ -143,7 +143,7 @@ return [
 	'Syslog' => $baseDir . '/lib/log/syslog.php',
 	'TaskRecurrence' => '/usr/share/php-mapi/class.taskrecurrence.php',
 	'TaskRequest' => '/usr/share/php-mapi/class.taskrequest.php',
-	'TimezoneUtil' => $baseDir . '/lib/utils/timezoneutil.php',
+	'TimezoneUtil' => '/usr/share/php-mapi/class.timezoneutil.php',
 	'TopCollector' => $baseDir . '/lib/core/topcollector.php',
 	'UnavailableException' => $baseDir . '/lib/exceptions/unavailableexception.php',
 	'UserStoreInfo' => $baseDir . '/lib/core/userstoreinfo.php',

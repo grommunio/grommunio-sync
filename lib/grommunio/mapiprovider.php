@@ -198,7 +198,7 @@ class MAPIProvider {
 		}
 
 		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
-			$tz = $this->getTZFromMAPIBlob($messageprops[$appointmentprops["timezonetag"]]);
+			$tz = TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
@@ -356,7 +356,7 @@ class MAPIProvider {
 				if ($localStartTime['tm_hour'] || $localStartTime['tm_min']) {
 					SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->getAppointment(): all-day event starting not midnight - convert to local time");
 					$serverTz = TimezoneUtil::GetFullTZ();
-					$message->starttime = $this->getGMTTimeByTZ($this->getLocaltimeByTZ($message->starttime, $tz), $serverTz);
+					$message->starttime = TimezoneUtil::GetUtcTimeByTz(TimezoneUtil::GetLocalTimeByTz($message->starttime, $tz), $serverTz);
 					if (!$message->timezone) {
 						$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 					}
@@ -367,7 +367,7 @@ class MAPIProvider {
 				// Adjust for TZ only if a timezone was saved with the message.
 				// If the starttime is not at midnight and if there is no saved timezone with the message, try applying the server TZ as well.
 				if ($message->timezone || boolval(intval(gmdate("H", $message->starttime))) || boolval(intval(gmdate("i", $message->starttime)))) {
-					$message->starttime = $this->getLocaltimeByTZ($message->starttime, $tz);
+					$message->starttime = TimezoneUtil::GetLocalTimeByTz($message->starttime, $tz);
 				}
 			}
 			$message->endtime = $message->starttime + $duration;
@@ -512,17 +512,17 @@ class MAPIProvider {
 			// start, end, basedate, subject, remind_before, reminderset, location, busystatus, alldayevent, label
 			if (isset($change["start"])) {
 				$exception->starttime = $exceptIsAllday ?
-					$change["start"] : $this->getGMTTimeByTZ($change["start"], $tz);
+					$change["start"] : TimezoneUtil::GetUtcTimeByTz($change["start"], $tz);
 			}
 			if (isset($change["end"])) {
 				$exception->endtime = $exceptIsAllday ?
-					$change["end"] : $this->getGMTTimeByTZ($change["end"], $tz);
+					$change["end"] : TimezoneUtil::GetUtcTimeByTz($change["end"], $tz);
 			}
 			if (isset($change["basedate"])) {
 				// depending on the AS version the streamer is going to send the correct value
 				$exception->exceptionstarttime = $exception->instanceid = $exceptIsAllday ?
 					$this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60 :
-					$this->getGMTTimeByTZ($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+					TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
 
 				// open body because getting only property might not work because of memory limit
 				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
@@ -595,7 +595,7 @@ class MAPIProvider {
 			// depending on the AS version the streamer is going to send the correct value
 			$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
 				$this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60 :
-				$this->getGMTTimeByTZ($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
 			$exception->deleted = "1";
 
 			if (!isset($syncMessage->exceptions)) {
@@ -704,7 +704,7 @@ class MAPIProvider {
 
 			// Set Timezone
 			if (isset($props[$meetingrequestproperties["timezonetag"]])) {
-				$tz = $this->getTZFromMAPIBlob($props[$meetingrequestproperties["timezonetag"]]);
+				$tz = TimezoneUtil::GetTzFromTimezoneStruct($props[$meetingrequestproperties["timezonetag"]]);
 			}
 			else {
 				$tz = TimezoneUtil::GetFullTZ();
@@ -717,7 +717,7 @@ class MAPIProvider {
 				(isset($props[$meetingrequestproperties["lidIsException"]]) && $props[$meetingrequestproperties["lidIsException"]] == true)) {
 				if (isset($props[$meetingrequestproperties["recReplTime"]])) {
 					$basedate = $props[$meetingrequestproperties["recReplTime"]];
-					$message->meetingrequest->recurrenceid = $this->getGMTTimeByTZ($basedate, TimezoneUtil::GetGMTTz());
+					$message->meetingrequest->recurrenceid = TimezoneUtil::GetUtcTimeByTz($basedate, TimezoneUtil::GetGMTTz());
 				}
 				else {
 					if (!isset($props[$meetingrequestproperties["goidtag"]]) || !isset($props[$meetingrequestproperties["recurStartTime"]]) || !isset($props[$meetingrequestproperties["timezonetag"]])) {
@@ -725,7 +725,7 @@ class MAPIProvider {
 					}
 					else {
 						$basedate = Utils::ExtractBaseDate($props[$meetingrequestproperties["goidtag"]], $props[$meetingrequestproperties["recurStartTime"]]);
-						$message->meetingrequest->recurrenceid = $this->getGMTTimeByTZ($basedate, $tz);
+						$message->meetingrequest->recurrenceid = TimezoneUtil::GetUtcTimeByTz($basedate, $tz);
 					}
 				}
 			}
@@ -1440,7 +1440,7 @@ class MAPIProvider {
 
 		// Get timezone info
 		if (isset($appointment->timezone)) {
-			$tz = $this->getTZFromSyncBlob(base64_decode($appointment->timezone));
+			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
 		}
 		// AS 16: doesn't sent a timezone - use server TZ
 		elseif ($isAs16 && $isAllday) {
@@ -1463,7 +1463,7 @@ class MAPIProvider {
 			// get compatible TZ data
 			$props = [$appointmentprops["timezonetag"], $appointmentprops["isrecurring"]];
 			$tzprop = $this->getProps($mapimessage, $props);
-			$tz = $this->getTZFromMAPIBlob($tzprop[$appointmentprops["timezonetag"]]);
+			$tz = TimezoneUtil::GetTzFromTimezoneStruct($tzprop[$appointmentprops["timezonetag"]]);
 
 			if ($appointmentprops["isrecurring"] == false) {
 				SLog::Write(LOGLEVEL_INFO, sprintf("MAPIProvider->setAppointment(): Cannot modify exception instanceId '%s' as target appointment is not recurring. Ignoring.", $appointment->instanceid));
@@ -1484,12 +1484,12 @@ class MAPIProvider {
 
 				if (isset($appointment->starttime)) {
 					$exceptionprops[$appointmentprops["starttime"]] = $appointment->alldayevent ?
-						$this->getGMTTimeByTZ($appointment->starttime, $tz) :
+						TimezoneUtil::GetUtcTimeByTz($appointment->starttime, $tz) :
 						$appointment->starttime;
 				}
 				if (isset($appointment->endtime)) {
 					$exceptionprops[$appointmentprops["endtime"]] = $appointment->alldayevent ?
-						$this->getGMTTimeByTZ($appointment->endtime, $tz) :
+						TimezoneUtil::GetUtcTimeByTz($appointment->endtime, $tz) :
 						$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
 				}
 				if (isset($appointment->subject)) {
@@ -1562,8 +1562,8 @@ class MAPIProvider {
 		}
 
 		// calculate duration because without it some webaccess views are broken. duration is in min
-		$localstart = $this->getLocaltimeByTZ($appointment->starttime, $tz);
-		$localend = $this->getLocaltimeByTZ($appointment->endtime, $tz);
+		$localstart = TimezoneUtil::GetLocalTimeByTz($appointment->starttime, $tz);
+		$localend = TimezoneUtil::GetLocalTimeByTz($appointment->endtime, $tz);
 		$duration = ($localend - $localstart) / 60;
 
 		// nokia sends an yearly event with 0 mins duration but as all day event,
@@ -1635,7 +1635,7 @@ class MAPIProvider {
 		}
 		if ($tz !== false) {
 			if (!($isAs16 && $isAllday)) {
-				$props[$appointmentprops["timezonetag"]] = $this->getMAPIBlobFromTZ($tz);
+				$props[$appointmentprops["timezonetag"]] = TimezoneUtil::GetTimezoneStructFromTz($tz);
 			}
 		}
 
@@ -1656,7 +1656,7 @@ class MAPIProvider {
 			$starttime = $this->gmtime($localstart);
 
 			// set recurrence start here because it's calculated differently for tasks and appointments
-			$recur["start"] = $this->getDayStartOfTimestamp($this->getGMTTimeByTZ($localstart, $tz));
+			$recur["start"] = $this->getDayStartOfTimestamp(TimezoneUtil::GetUtcTimeByTz($localstart, $tz));
 
 			$recur["startocc"] = (($localstart % 86400) == 3600) && ($duration % 1440) == 0 ?
 				0 : $starttime["tm_hour"] * 60 + $starttime["tm_min"];
@@ -1686,11 +1686,11 @@ class MAPIProvider {
 						$exceptionprops = [];
 
 						if (isset($exception->starttime)) {
-							$mapiexception["start"] = $this->getLocaltimeByTZ($exception->starttime, $tz);
+							$mapiexception["start"] = TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
 							$exceptionprops[$appointmentprops["starttime"]] = $exception->starttime;
 						}
 						if (isset($exception->endtime)) {
-							$mapiexception["end"] = $this->getLocaltimeByTZ($exception->endtime, $tz);
+							$mapiexception["end"] = TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
 							$exceptionprops[$appointmentprops["endtime"]] = $exception->endtime;
 						}
 						if (isset($exception->subject)) {
@@ -2412,201 +2412,6 @@ class MAPIProvider {
 		$mapiproperties = $this->getPropIdsFromStrings($mapiproperties);
 
 		return mapi_getprops($mapimessage, $mapiproperties);
-	}
-
-	/**
-	 * Unpack timezone info from MAPI.
-	 *
-	 * @param string $data
-	 *
-	 * @return array
-	 */
-	private function getTZFromMAPIBlob($data) {
-		return unpack("lbias/lstdbias/ldstbias/" .
-						   "vconst1/vdstendyear/vdstendmonth/vdstendday/vdstendweek/vdstendhour/vdstendminute/vdstendsecond/vdstendmillis/" .
-						   "vconst2/vdststartyear/vdststartmonth/vdststartday/vdststartweek/vdststarthour/vdststartminute/vdststartsecond/vdststartmillis", $data);
-	}
-
-	/**
-	 * Unpack timezone info from Sync.
-	 *
-	 * @param string $data
-	 *
-	 * @return array
-	 */
-	private function getTZFromSyncBlob($data) {
-		$tz = unpack("lbias/a64tzname/vdstendyear/vdstendmonth/vdstendday/vdstendweek/vdstendhour/vdstendminute/vdstendsecond/vdstendmillis/" .
-						"lstdbias/a64tznamedst/vdststartyear/vdststartmonth/vdststartday/vdststartweek/vdststarthour/vdststartminute/vdststartsecond/vdststartmillis/" .
-						"ldstbias", $data);
-
-		// Make the structure compatible with class.recurrence.php
-		$tz["timezone"] = $tz["bias"];
-		$tz["timezonedst"] = $tz["dstbias"];
-
-		return $tz;
-	}
-
-	/**
-	 * Pack timezone info for MAPI.
-	 *
-	 * @param array $tz
-	 *
-	 * @return string
-	 */
-	private function getMAPIBlobFromTZ($tz) {
-		return pack(
-			"lllvvvvvvvvvvvvvvvvvv",
-			$tz["bias"],
-			$tz["stdbias"],
-			$tz["dstbias"],
-			0,
-			0,
-			$tz["dstendmonth"],
-			$tz["dstendday"],
-			$tz["dstendweek"],
-			$tz["dstendhour"],
-			$tz["dstendminute"],
-			$tz["dstendsecond"],
-			$tz["dstendmillis"],
-			0,
-			0,
-			$tz["dststartmonth"],
-			$tz["dststartday"],
-			$tz["dststartweek"],
-			$tz["dststarthour"],
-			$tz["dststartminute"],
-			$tz["dststartsecond"],
-			$tz["dststartmillis"]
-		);
-	}
-
-	/**
-	 * Checks the date to see if it is in DST, and returns correct GMT date accordingly.
-	 *
-	 * @param long  $localtime
-	 * @param array $tz
-	 *
-	 * @return long
-	 */
-	private function getGMTTimeByTZ($localtime, $tz) {
-		if (!isset($tz) || !is_array($tz)) {
-			return $localtime;
-		}
-
-		if ($this->isDST($localtime, $tz)) {
-			return $localtime + $tz["bias"] * 60 + $tz["dstbias"] * 60;
-		}
-
-		return $localtime + $tz["bias"] * 60;
-	}
-
-	/**
-	 * Returns the local time for the given GMT time, taking account of the given timezone.
-	 *
-	 * @param long  $gmttime
-	 * @param array $tz
-	 *
-	 * @return long
-	 */
-	private function getLocaltimeByTZ($gmttime, $tz) {
-		if (!isset($tz) || !is_array($tz)) {
-			return $gmttime;
-		}
-
-		if ($this->isDST($gmttime - $tz["bias"] * 60, $tz)) { // may bug around the switch time because it may have to be 'gmttime - bias - dstbias'
-			return $gmttime - $tz["bias"] * 60 - $tz["dstbias"] * 60;
-		}
-
-		return $gmttime - $tz["bias"] * 60;
-	}
-
-	/**
-	 * Returns TRUE if it is the summer and therefore DST is in effect.
-	 *
-	 * @param long  $localtime
-	 * @param array $tz
-	 *
-	 * @return bool
-	 */
-	private function isDST($localtime, $tz) {
-		if (!isset($tz) || !is_array($tz) ||
-			!isset($tz["dstbias"]) || $tz["dstbias"] == 0 ||
-			!isset($tz["dststartmonth"]) || $tz["dststartmonth"] == 0 ||
-			!isset($tz["dstendmonth"]) || $tz["dstendmonth"] == 0) {
-			return false;
-		}
-
-		$year = gmdate("Y", $localtime);
-		$start = $this->getTimestampOfWeek($year, $tz["dststartmonth"], $tz["dststartweek"], $tz["dststartday"], $tz["dststarthour"], $tz["dststartminute"], $tz["dststartsecond"]);
-		$end = $this->getTimestampOfWeek($year, $tz["dstendmonth"], $tz["dstendweek"], $tz["dstendday"], $tz["dstendhour"], $tz["dstendminute"], $tz["dstendsecond"]);
-
-		if ($start < $end) {
-			// northern hemisphere (july = dst)
-			if ($localtime >= $start && $localtime < $end) {
-				$dst = true;
-			}
-			else {
-				$dst = false;
-			}
-		}
-		else {
-			// southern hemisphere (january = dst)
-			if ($localtime >= $end && $localtime < $start) {
-				$dst = false;
-			}
-			else {
-				$dst = true;
-			}
-		}
-
-		return $dst;
-	}
-
-	/**
-	 * Returns the local timestamp for the $week'th $wday of $month in $year at $hour:$minute:$second.
-	 *
-	 * @param int $year
-	 * @param int $month
-	 * @param int $week
-	 * @param int $wday
-	 * @param int $hour
-	 * @param int $minute
-	 * @param int $second
-	 *
-	 * @return long
-	 */
-	private function getTimestampOfWeek($year, $month, $week, $wday, $hour, $minute, $second) {
-		if ($month == 0) {
-			return;
-		}
-
-		$date = gmmktime($hour, $minute, $second, $month, 1, $year);
-
-		// Find first day in month which matches day of the week
-		while (1) {
-			$wdaynow = gmdate("w", $date);
-			if ($wdaynow == $wday) {
-				break;
-			}
-			$date += 24 * 60 * 60;
-		}
-
-		// Forward $week weeks (may 'overflow' into the next month)
-		$date = $date + $week * (24 * 60 * 60 * 7);
-
-		// Reverse 'overflow'. Eg week '10' will always be the last week of the month in which the
-		// specified weekday exists
-		while (1) {
-			$monthnow = gmdate("n", $date); // gmdate returns 1-12
-			if ($monthnow > $month) {
-				$date -= (24 * 7 * 60 * 60);
-			}
-			else {
-				break;
-			}
-		}
-
-		return $date;
 	}
 
 	/**

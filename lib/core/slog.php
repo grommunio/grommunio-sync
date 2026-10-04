@@ -34,6 +34,16 @@ class SLog {
 
 		$logger = self::getLogger();
 
+		TimezoneUtil::SetLogger(static function (string $level, string $message): void {
+			$loglevels = [
+				TimezoneUtil::LOG_DEBUG => LOGLEVEL_DEBUG,
+				TimezoneUtil::LOG_INFO => LOGLEVEL_INFO,
+				TimezoneUtil::LOG_WARN => LOGLEVEL_WARN,
+				TimezoneUtil::LOG_ERROR => LOGLEVEL_ERROR,
+			];
+			self::Write($loglevels[$level] ?? LOGLEVEL_INFO, $message);
+		});
+
 		return true;
 	}
 

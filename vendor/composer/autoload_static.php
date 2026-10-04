@@ -150,7 +150,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'Syslog' => __DIR__ . '/../..' . '/lib/log/syslog.php',
         'TaskRecurrence' => '/usr/share/php-mapi/class.taskrecurrence.php',
         'TaskRequest' => '/usr/share/php-mapi/class.taskrequest.php',
-        'TimezoneUtil' => __DIR__ . '/../..' . '/lib/utils/timezoneutil.php',
+        'TimezoneUtil' => '/usr/share/php-mapi/class.timezoneutil.php',
         'TopCollector' => __DIR__ . '/../..' . '/lib/core/topcollector.php',
         'UnavailableException' => __DIR__ . '/../..' . '/lib/exceptions/unavailableexception.php',
         'UserStoreInfo' => __DIR__ . '/../..' . '/lib/core/userstoreinfo.php',
