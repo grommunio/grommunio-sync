@@ -77,8 +77,6 @@ class GetItemEstimate extends RequestProcessor {
 						return false;
 					}
 				}
-
-				// TODO AS 2.5 and filtertype not set
 				elseif (self::$decoder->getElementStartTag(SYNC_FILTERTYPE)) {
 					$spa->SetFilterType(self::$decoder->getElementContent());
 

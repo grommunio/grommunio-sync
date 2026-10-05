@@ -113,16 +113,6 @@ interface IStateMachine {
 	public function LinkUserDevice($username, $devid);
 
 	/**
-	 * Unlinks a device from a user.
-	 *
-	 * @param string $username
-	 * @param string $devid
-	 *
-	 * @return bool
-	 */
-	public function UnLinkUserDevice($username, $devid);
-
-	/**
 	 * Returns the current version of the state files.
 	 *
 	 * @return int

@@ -80,7 +80,6 @@ class SLog {
 			self::getLogger()->Log($loglevel, $message);
 		}
 		catch (Exception) {
-			// @TODO How should we handle logging error ?
 			// Ignore any error.
 		}
 
@@ -167,7 +166,6 @@ class SLog {
  * Legacy debug stuff
  */
 
-// TODO review error handler
 function gsync_error_handler($errno, $errstr, $errfile, $errline) {
 	if (defined('LOG_ERROR_MASK')) {
 		$errno &= LOG_ERROR_MASK;
@@ -184,10 +182,6 @@ function gsync_error_handler($errno, $errstr, $errfile, $errline) {
 
 		case E_NOTICE:
 		case E_WARNING:
-			// TODO check if there is a better way to avoid these messages
-			if (stripos((string) $errfile, 'interprocessdata') !== false && stripos((string) $errstr, 'shm_get_var()') !== false) {
-				break;
-			}
 			SLog::Write(LOGLEVEL_WARN, "{$errfile}:{$errline} {$errstr} ({$errno})");
 			break;
 

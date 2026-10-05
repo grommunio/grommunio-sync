@@ -114,7 +114,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->Logon(): Trying to authenticate user '%s'..", $user));
 
 		$this->mainUser = strtolower((string) $user);
-		// TODO the impersonated user should be passed directly to IBackend->Logon()
+		// IBackend->Logon() has no parameter for it, so the impersonated user is taken from the request
 		if (Request::GetImpersonatedUser()) {
 			$this->impersonateUser = strtolower(Request::GetImpersonatedUser());
 		}
@@ -504,7 +504,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		if (isset($sm->source->itemid) && $sm->source->itemid) {
 			// answering an email in a public/shared folder
-			// TODO as the store is setup, we should actually user $this->store instead of $this->defaultstore - nevertheless we need to make sure this store is able to send mail (has an outbox)
+			// $this->store is only used to read the source item, the mail itself was created
+			// in the outbox of the default store, a shared store may have no outbox
 			if (!$this->Setup(GSync::GetAdditionalSyncFolderStore($sm->source->folderid))) {
 				throw new StatusException(sprintf("Grommunio->SendMail() could not Setup() the backend for folder id '%s'", $sm->source->folderid), SYNC_COMMONSTATUS_SERVERERROR);
 			}
@@ -637,7 +638,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		// override truncation
 		$contentparameters->SetTruncation(SYNC_TRUNCATION_ALL);
 
-		// TODO check for body preferences
+		// body preferences are applied by MAPIProvider->GetMessage()
 		return $mapiprovider->GetMessage($message, $contentparameters);
 	}
 
@@ -726,11 +727,13 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		// put the mapi stream into a wrapper to get a standard stream
 		$attachment->data = MAPIStreamWrapper::Open($stream);
-		if (isset($attprops[PR_ATTACH_MIME_TAG])) {
+		if (!empty($attprops[PR_ATTACH_MIME_TAG])) {
 			$attachment->contenttype = $attprops[PR_ATTACH_MIME_TAG];
 		}
+		elseif (empty($attachment->contenttype)) {
+			$attachment->contenttype = "application/octet-stream";
+		}
 
-		// TODO default contenttype
 		return $attachment;
 	}
 
@@ -1124,8 +1127,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$maxAmbiguousRecipients = $resolveRecipientsOptions->maxambiguousrecipients;
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->ResolveRecipients(): The client requested %d max ambiguous recipients to resolve.", $maxAmbiguousRecipients));
 				}
+
+				// StartTime is required with Availability
+				if (isset($resolveRecipientsOptions->availability) &&
+						(empty($resolveRecipientsOptions->availability->starttime) || strtotime((string) $resolveRecipientsOptions->availability->starttime) === false)) {
+					SLog::Write(LOGLEVEL_WARN, "Grommunio->ResolveRecipients(): Availability requested without a valid StartTime.");
+					$resolveRecipients->status = SYNC_RESOLVERECIPSSTATUS_PROTOCOLERROR;
+
+					return $resolveRecipients;
+				}
 			}
 
+			// MaxPictures limits the photos of the whole response
+			$pictureCount = 0;
 			foreach ($resolveRecipients->to as $i => $to) {
 				$response = new SyncResolveRecipientsResponse();
 				$response->to = $to;
@@ -1142,21 +1156,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 								unset($entry->certificates);
 							}
 							if (isset($resolveRecipientsOptions->availability)) {
-								if (!isset($resolveRecipientsOptions->starttime)) {
-									// TODO error, the request must include a valid StartTime element value
-								}
 								$entry->availability = $this->getAvailability($to, $entry, $resolveRecipientsOptions);
 							}
 							if (isset($resolveRecipientsOptions->picture)) {
-								// TODO implement picture retrieval of the recipient
+								$entry->picture = $this->getRecipientPicture($entry, $resolveRecipientsOptions->picture, $pictureCount);
 							}
 							++$response->recipientcount;
 							$response->recipient[] = $entry;
 						}
-						elseif (is_int($recipient)) {
-							$response->status = $recipient;
-						}
 					}
+				}
+				elseif (is_int($recipient)) {
+					$response->status = $recipient;
 				}
 
 				$resolveRecipients->response[$i] = $response;
@@ -1203,7 +1214,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 */
 	public function GetGALSearchResults($searchquery, $searchrange, $searchpicture) {
 		// only return users whose displayName or the username starts with $name
-		// TODO: use PR_ANR for this restriction instead of PR_DISPLAY_NAME and PR_ACCOUNT
+		// no PR_ANR: gromox matches it against PR_ACCOUNT and PR_DISPLAY_NAME only,
+		// GetSearchRestriction() also matches PR_SMTP_ADDRESS
 		$table = null;
 		$ab_dir = $this->getAddressbookDir();
 		if ($ab_dir) {
@@ -1836,19 +1848,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
-	 * Unlinks a device from a user.
-	 *
-	 * @param string $username
-	 * @param string $devid
-	 *
-	 * @return bool
-	 */
-	public function UnLinkUserDevice($username, $devid) {
-		// TODO: Implement
-		return false;
-	}
-
-	/**
 	 * Returns the current version of the state files
 	 * grommunio:  This is not relevant atm. IStateMachine::STATEVERSION_02 will match GSync::GetLatestStateVersion().
 	 *          If it might be required to update states in the future, this could be implemented on a store level,
@@ -1916,9 +1915,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					}
 				}
 			}
-			if (!$stateRootFolder) {
+			if (!$stateRootFolder && $rootfolder) {
 				$stateRootFolder = mapi_folder_createfolder($rootfolder, STORE_STATE_FOLDER, "");
-				mapi_setprops($stateRootFolder, [PR_ATTR_HIDDEN => true]);
+				if ($stateRootFolder) {
+					mapi_setprops($stateRootFolder, [PR_ATTR_HIDDEN => true]);
+				}
+				else {
+					SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getStateFolder(): unable to create the store state folder: 0x%08X", mapi_last_hresult()));
+				}
 			}
 
 			if ($stateRootFolder) {
@@ -1927,7 +1931,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				mapi_table_restrict($hierarchy, $restriction);
 				$rowCnt = mapi_table_getrowcount($hierarchy);
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): found %d device state folders", $rowCnt));
-				if ($rowCnt == 1) {
+				if ($rowCnt > 1) {
+					SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->getStateFolder(): expected 1 state folder for device '%s', found %d - using the first one", $devid, $rowCnt));
+				}
+				if ($rowCnt > 0) {
 					$hierarchyRows = mapi_table_queryrows($hierarchy, [PR_ENTRYID], 0, 1);
 					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $hierarchyRows[0][PR_ENTRYID]);
 					SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->getStateFolder(): %s", bin2hex((string) $hierarchyRows[0][PR_ENTRYID])));
@@ -1936,22 +1943,20 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 						$this->setDeviceUserData($this->userDeviceData, bin2hex((string) $hierarchyRows[0][PR_ENTRYID]), $devid, $this->storeName, "statefolder");
 					}
 				}
-				elseif ($rowCnt == 0) {
+				else {
 					$devStateFolder = mapi_folder_createfolder($stateRootFolder, $devid, "");
-					$devStateFolderProps = mapi_getprops($devStateFolder);
-					$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
-					mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
-					// we don't cache the entryid in redis, because this will happen on the next request anyway
+					if ($devStateFolder) {
+						// we don't cache the entryid in redis, because this will happen on the next request anyway
+						$devStateFolderProps = mapi_getprops($devStateFolder);
+						$this->stateFolder = mapi_msgstore_openentry($this->defaultstore, $devStateFolderProps[PR_ENTRYID]);
+						mapi_setprops($this->stateFolder, [PR_ATTR_HIDDEN => true]);
+					}
+					else {
+						// the state folder stays unset, the state functions throw StateNotFoundException
+						SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->getStateFolder(): unable to create the state folder for device '%s': 0x%08X", $devid, mapi_last_hresult()));
+					}
 				}
-
-				// TODO: unable to create state folder - throw exception
 			}
-
-			// This case is rather unlikely that there would be several
-			// hidden folders having PR_DISPLAY_NAME the same as device id.
-
-			// TODO: get the hierarchy table again, get entry id of STORE_STATE_FOLDER
-			// and compare it to the parent id of those folders.
 		}
 
 		return $this->stateFolder;
@@ -2347,22 +2352,25 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param SyncObject $oof
 	 */
 	private function settingsOofGet(&$oof) {
-		$oofprops = mapi_getprops($this->defaultstore, [PR_EC_OUTOFOFFICE, PR_EC_OUTOFOFFICE_MSG, PR_EC_OUTOFOFFICE_SUBJECT, PR_EC_OUTOFOFFICE_FROM, PR_EC_OUTOFOFFICE_UNTIL]);
+		$oofprops = mapi_getprops($this->defaultstore, [PR_EC_OUTOFOFFICE, PR_EC_OUTOFOFFICE_MSG, PR_EC_OUTOFOFFICE_SUBJECT, PR_EC_OUTOFOFFICE_FROM, PR_EC_OUTOFOFFICE_UNTIL, PR_EC_ALLOW_EXTERNAL, PR_EC_EXTERNAL_AUDIENCE, PR_EC_EXTERNAL_REPLY]);
 		$oof->oofstate = SYNC_SETTINGSOOF_DISABLED;
 		$oof->Status = SYNC_SETTINGSSTATUS_SUCCESS;
 		if ($oofprops != false) {
-			$oof->oofstate = isset($oofprops[PR_EC_OUTOFOFFICE]) ? ($oofprops[PR_EC_OUTOFOFFICE] ? SYNC_SETTINGSOOF_GLOBAL : SYNC_SETTINGSOOF_DISABLED) : SYNC_SETTINGSOOF_DISABLED;
-			// TODO external and external unknown
-			$oofmessage = new SyncOOFMessage();
-			$oofmessage->appliesToInternal = "";
-			$oofmessage->enabled = $oof->oofstate;
-			$oofmessage->replymessage = $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "";
-			$oofmessage->bodytype = $oof->bodytype;
-			unset($oofmessage->appliesToExternal, $oofmessage->appliesToExternalUnknown);
-			$oof->oofmessage[] = $oofmessage;
+			// 1 replies always, 2 only between from and until
+			$oofstate = (int) ($oofprops[PR_EC_OUTOFOFFICE] ?? 0);
+			$oof->oofstate = $oofstate ? SYNC_SETTINGSOOF_GLOBAL : SYNC_SETTINGSOOF_DISABLED;
+			$oof->oofmessage[] = $this->createOofMessage("appliesToInternal", $oof->oofstate, $oofprops[PR_EC_OUTOFOFFICE_MSG] ?? "", $oof->bodytype);
+
+			// gromox has one reply for all external senders, PR_EC_EXTERNAL_AUDIENCE
+			// restricts it to known senders (contacts) - like EWS ExternalAudience "Known"
+			$allowExternal = !empty($oofprops[PR_EC_ALLOW_EXTERNAL]);
+			$knownOnly = !empty($oofprops[PR_EC_EXTERNAL_AUDIENCE]);
+			$externalReply = $oofprops[PR_EC_EXTERNAL_REPLY] ?? "";
+			$oof->oofmessage[] = $this->createOofMessage("appliesToExternal", $allowExternal ? 1 : 0, $externalReply, $oof->bodytype);
+			$oof->oofmessage[] = $this->createOofMessage("appliesToExternalUnknown", ($allowExternal && !$knownOnly) ? 1 : 0, $externalReply, $oof->bodytype);
 
 			// check whether time based out of office is set
-			if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && isset($oofprops[PR_EC_OUTOFOFFICE_FROM], $oofprops[PR_EC_OUTOFOFFICE_UNTIL])) {
+			if ($oofstate == 2 && isset($oofprops[PR_EC_OUTOFOFFICE_FROM], $oofprops[PR_EC_OUTOFOFFICE_UNTIL])) {
 				$now = time();
 				if ($now > $oofprops[PR_EC_OUTOFOFFICE_FROM] && $now > $oofprops[PR_EC_OUTOFOFFICE_UNTIL]) {
 					// Out of office is set but the date is in the past. Set the state to disabled.
@@ -2385,7 +2393,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$oof->Status = SYNC_SETTINGSSTATUS_PROTOCOLLERROR;
 				}
 			}
-			elseif ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL && (isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) || isset($oofprops[PR_EC_OUTOFOFFICE_UNTIL]))) {
+			elseif ($oofstate == 2) {
 				SLog::Write(LOGLEVEL_WARN, sprintf(
 					"Grommunio->settingsOofGet(): Time based out of office set but either start time ('%s') or end time ('%s') is missing.",
 					isset($oofprops[PR_EC_OUTOFOFFICE_FROM]) ? date("Y-m-d H:i:s", $oofprops[PR_EC_OUTOFOFFICE_FROM]) : 'empty',
@@ -2411,11 +2419,33 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$oof->Status = SYNC_SETTINGSSTATUS_SUCCESS;
 		$props = [];
 		if ($oof->oofstate == SYNC_SETTINGSOOF_GLOBAL || $oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED) {
-			$props[PR_EC_OUTOFOFFICE] = true;
+			// gromox only honours the from/until dates with state 2
+			$props[PR_EC_OUTOFOFFICE] = $oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED ? 2 : 1;
+			$externalKnown = $externalUnknown = null;
 			foreach ($oof->oofmessage as $oofmessage) {
 				if (isset($oofmessage->appliesToInternal)) {
 					$props[PR_EC_OUTOFOFFICE_MSG] = $oofmessage->replymessage ?? "";
 					$props[PR_EC_OUTOFOFFICE_SUBJECT] = "Out of office";
+				}
+				elseif (isset($oofmessage->appliesToExternal)) {
+					$externalKnown = $oofmessage;
+				}
+				elseif (isset($oofmessage->appliesToExternalUnknown)) {
+					$externalUnknown = $oofmessage;
+				}
+			}
+			if ($externalKnown !== null || $externalUnknown !== null) {
+				// gromox has one reply for all external senders: replying to unknown
+				// senders means all of them, known senders only sets PR_EC_EXTERNAL_AUDIENCE
+				$knownEnabled = !empty($externalKnown->enabled);
+				$unknownEnabled = !empty($externalUnknown->enabled);
+				$props[PR_EC_ALLOW_EXTERNAL] = $knownEnabled || $unknownEnabled;
+				if ($props[PR_EC_ALLOW_EXTERNAL]) {
+					$props[PR_EC_EXTERNAL_AUDIENCE] = !$unknownEnabled;
+				}
+				$replySource = $knownEnabled ? $externalKnown : ($unknownEnabled ? $externalUnknown : null);
+				if (isset($replySource->replymessage)) {
+					$props[PR_EC_EXTERNAL_REPLY] = $replySource->replymessage;
 				}
 			}
 			if ($oof->oofstate == SYNC_SETTINGSOOF_TIMEBASED) {
@@ -2423,8 +2453,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 					$props[PR_EC_OUTOFOFFICE_FROM] = $oof->starttime;
 					$props[PR_EC_OUTOFOFFICE_UNTIL] = $oof->endtime;
 				}
-				elseif (isset($oof->starttime) || isset($oof->endtime)) {
+				else {
+					// a time based out of office requires both dates, keep the current settings
+					SLog::Write(LOGLEVEL_WARN, "Grommunio->settingsOofSet(): time based out of office without start and end time");
 					$oof->Status = SYNC_SETTINGSSTATUS_PROTOCOLLERROR;
+
+					return false;
 				}
 			}
 			else {
@@ -2451,6 +2485,26 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return true;
+	}
+
+	/**
+	 * Creates an out of office message for one audience.
+	 *
+	 * @param string $appliesTo    appliesToInternal, appliesToExternal or appliesToExternalUnknown
+	 * @param int    $enabled
+	 * @param string $replymessage
+	 * @param string $bodytype
+	 *
+	 * @return SyncOOFMessage
+	 */
+	private function createOofMessage($appliesTo, $enabled, $replymessage, $bodytype) {
+		$oofmessage = new SyncOOFMessage();
+		$oofmessage->{$appliesTo} = "";
+		$oofmessage->enabled = $enabled;
+		$oofmessage->replymessage = $replymessage;
+		$oofmessage->bodytype = $bodytype;
+
+		return $oofmessage;
 	}
 
 	/**
@@ -2730,7 +2784,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param int    $maxAmbiguousRecipients
 	 * @param bool   $expandDistlist
 	 *
-	 * @return array|bool
+	 * @return array|int the recipients or a status if none was found
 	 */
 	private function resolveRecipient($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		$recipient = $this->resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist);
@@ -2745,7 +2799,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			return $recipient;
 		}
 
-		return false;
+		return SYNC_RESOLVERECIPSSTATUS_RESPONSE_UNRESOLVEDRECIP;
 	}
 
 	/**
@@ -2827,8 +2881,6 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 
 		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientGAL(): No recipient found for: '%s' in GAL", $to));
 
-		return SYNC_RESOLVERECIPSSTATUS_RESPONSE_UNRESOLVEDRECIP;
-
 		return false;
 	}
 
@@ -2849,7 +2901,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			SLog::Write(LOGLEVEL_ERROR, sprintf("Grommunio->resolveRecipientContact(): Unable to open default store: 0x%X", mapi_last_hresult()));
 		}
 		$rootprops = mapi_getprops($root, [PR_IPM_CONTACT_ENTRYID]);
-		$contacts = $this->getContactsFromFolder($this->defaultstore, $rootprops[PR_IPM_CONTACT_ENTRYID], $to);
+		// contacts are matched by the exact address, so even with 0 ambiguous
+		// recipients requested one of them is returned, as for a single GAL match
+		$limit = max(1, $maxAmbiguousRecipients);
+		$contacts = $this->getContactsFromFolder($this->defaultstore, $rootprops[PR_IPM_CONTACT_ENTRYID], $to, $limit);
 		$recipients = [];
 
 		if ($contacts !== false) {
@@ -2864,7 +2919,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$subfolders = MAPIUtils::GetSubfoldersForType($contactfolder, "IPF.Contact");
 		if ($subfolders !== false) {
 			foreach ($subfolders as $folder) {
-				$contacts = $this->getContactsFromFolder($this->defaultstore, $folder[PR_ENTRYID], $to);
+				$contacts = $this->getContactsFromFolder($this->defaultstore, $folder[PR_ENTRYID], $to, $limit - count($recipients));
 				if ($contacts !== false) {
 					SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in contacts' subfolder.", count($contacts)));
 					foreach ($contacts as $contact) {
@@ -2875,44 +2930,31 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		// search contacts in public folders
-		$storestables = mapi_getmsgstorestable($this->session);
-		$result = mapi_last_hresult();
+		$publicstore = $this->openMessageStore("SYSTEM");
+		if ($publicstore) {
+			$publicfolder = mapi_msgstore_openentry($publicstore);
 
-		if ($result == NOERROR) {
-			$rows = mapi_table_queryallrows($storestables, [PR_ENTRYID, PR_DEFAULT_STORE, PR_MDB_PROVIDER]);
-			foreach ($rows as $row) {
-				if (isset($row[PR_MDB_PROVIDER]) && $row[PR_MDB_PROVIDER] == ZARAFA_STORE_PUBLIC_GUID) {
-					// TODO refactor public store
-					$publicstore = mapi_openmsgstore($this->session, $row[PR_ENTRYID]);
-					$publicfolder = mapi_msgstore_openentry($publicstore);
-
-					$subfolders = MAPIUtils::GetSubfoldersForType($publicfolder, "IPF.Contact");
-					if ($subfolders !== false) {
-						foreach ($subfolders as $folder) {
-							$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to);
-							if ($contacts !== false) {
-								SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in public contacts folder.", count($contacts)));
-								foreach ($contacts as $contact) {
-									$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contact);
-								}
-							}
+			$subfolders = MAPIUtils::GetSubfoldersForType($publicfolder, "IPF.Contact");
+			if ($subfolders !== false) {
+				foreach ($subfolders as $folder) {
+					$contacts = $this->getContactsFromFolder($publicstore, $folder[PR_ENTRYID], $to, $limit - count($recipients));
+					if ($contacts !== false) {
+						SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Found %d contacts in public contacts folder.", count($contacts)));
+						foreach ($contacts as $contact) {
+							$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contact);
 						}
 					}
-
-					break;
 				}
 			}
 		}
 		else {
-			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientContact(): Unable to open public store: 0x%X", $result));
+			SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->resolveRecipientContact(): Unable to open public store: 0x%X", mapi_last_hresult()));
 		}
 
 		if (empty($recipients)) {
-			$contactProperties = [];
-			$contactProperties[PR_DISPLAY_NAME] = $to;
-			$contactProperties[PR_USER_X509_CERTIFICATE] = false;
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->resolveRecipientContact(): No recipient found for: '%s' in contacts", $to));
 
-			$recipients[] = $this->createResolveRecipient(SYNC_RESOLVERECIPIENTS_TYPE_CONTACT, $to, $contactProperties);
+			return false;
 		}
 
 		return $recipients;
@@ -2999,8 +3041,12 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		$availability = new SyncResolveRecipientsAvailability();
 		$availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_SUCCESS;
 
+		// a recipient made up from the address only (no GAL entry or contact) has no entryid to look up
 		if (!isset($resolveRecipient->id)) {
-			// TODO this shouldn't happen but try to get the recipient in such a case
+			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->getAvailability(): no entryid for '%s', free/busy is not available", $to));
+			$availability->status = SYNC_RESOLVERECIPSSTATUS_AVAILABILITY_FAILED;
+
+			return $availability;
 		}
 
 		$start = strtotime((string) $resolveRecipientsOptions->availability->starttime);
@@ -3042,21 +3088,64 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
+	 * Gets the photo of a GAL recipient for ResolveRecipients.
+	 *
+	 * @param SyncResolveRecipient         $resolveRecipient
+	 * @param SyncResolveRecipientsPicture $pictureOptions   MaxSize and MaxPictures of the request
+	 * @param int                          $pictureCount     photos already in the response
+	 *
+	 * @return SyncResolveRecipientsPicture
+	 */
+	private function getRecipientPicture($resolveRecipient, $pictureOptions, &$pictureCount) {
+		$picture = new SyncResolveRecipientsPicture();
+		$photo = '';
+		// only GAL entries have a photo, an entryid of a contact is a message
+		$addrbook = $this->getAddressbook();
+		if ($addrbook && $resolveRecipient->type == SYNC_RESOLVERECIPIENTS_TYPE_GAL && isset($resolveRecipient->id)) {
+			$abentry = @mapi_ab_openentry($addrbook, $resolveRecipient->id);
+			if ($abentry) {
+				$props = mapi_getprops($abentry, [PR_EMS_AB_THUMBNAIL_PHOTO]);
+				$photo = (string) ($props[PR_EMS_AB_THUMBNAIL_PHOTO] ?? '');
+			}
+		}
+
+		if ($photo === '') {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_NOFOTO;
+		}
+		elseif (!empty($pictureOptions->maxsize) && strlen($photo) > (int) $pictureOptions->maxsize) {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_MAXSIZEEXCEEDED;
+		}
+		elseif (!empty($pictureOptions->maxpictures) && $pictureCount >= (int) $pictureOptions->maxpictures) {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_MAXPICTURESEXCEEDED;
+		}
+		else {
+			$picture->status = SYNC_RESOLVERECIPSSTATUS_PICTURE_SUCCESS;
+			$picture->data = StringStreamWrapper::Open($photo);
+			++$pictureCount;
+		}
+
+		return $picture;
+	}
+
+	/**
 	 * Returns contacts matching given email address from a folder.
 	 *
 	 * @param MAPIStore $store
 	 * @param binary    $folderEntryid
 	 * @param string    $email
+	 * @param int       $limit         maximum number of contacts to return
 	 *
 	 * @return array|bool
 	 */
-	private function getContactsFromFolder($store, $folderEntryid, $email) {
+	private function getContactsFromFolder($store, $folderEntryid, $email, $limit) {
+		if ($limit <= 0) {
+			return false;
+		}
 		$folder = mapi_msgstore_openentry($store, $folderEntryid);
 		$folderContent = mapi_folder_getcontentstable($folder);
 		mapi_table_restrict($folderContent, MAPIUtils::GetEmailAddressRestriction($store, $email));
-		// TODO max limit
 		if (mapi_table_getrowcount($folderContent) > 0) {
-			return mapi_table_queryallrows($folderContent, [PR_DISPLAY_NAME, PR_USER_X509_CERTIFICATE, PR_ENTRYID]);
+			return mapi_table_queryrows($folderContent, [PR_DISPLAY_NAME, PR_USER_X509_CERTIFICATE, PR_ENTRYID], 0, $limit);
 		}
 
 		return false;
@@ -3116,5 +3205,96 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return true;
+	}
+
+	/**
+	 * Moves all messages of a conversation in the user's mailbox to a folder.
+	 * Messages in the destination folder, Deleted Items, Sent Items and the
+	 * Outbox are left untouched. Messages arriving later are not moved.
+	 *
+	 * @param string $conversationid the PR_CONVERSATION_ID of the conversation
+	 * @param string $folderid       backend id of the destination folder
+	 *
+	 * @return int number of moved messages
+	 *
+	 * @throws StatusException
+	 */
+	public function MoveConversation($conversationid, $folderid) {
+		$dstentryid = mapi_msgstore_entryidfromsourcekey($this->defaultstore, hex2bin($folderid));
+		$dstfolder = $dstentryid ? mapi_msgstore_openentry($this->defaultstore, $dstentryid) : false;
+		if (!$dstfolder) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): Error, unable to open destination folder: 0x%X", bin2hex($conversationid), $folderid, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
+
+		$storeprops = mapi_getprops($this->defaultstore, [PR_IPM_SUBTREE_ENTRYID, PR_IPM_WASTEBASKET_ENTRYID, PR_IPM_SENTMAIL_ENTRYID, PR_IPM_OUTBOX_ENTRYID]);
+		$skip = [];
+		foreach ([PR_IPM_WASTEBASKET_ENTRYID, PR_IPM_SENTMAIL_ENTRYID, PR_IPM_OUTBOX_ENTRYID] as $prop) {
+			if (isset($storeprops[$prop])) {
+				$skip[] = $storeprops[$prop];
+			}
+		}
+
+		// php-mapi has no conversation members table, so the content table of each mail folder is searched
+		$root = isset($storeprops[PR_IPM_SUBTREE_ENTRYID]) ? mapi_msgstore_openentry($this->defaultstore, $storeprops[PR_IPM_SUBTREE_ENTRYID]) : false;
+		if (!$root) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): Error, unable to open the IPM subtree: 0x%X", bin2hex($conversationid), $folderid, mapi_last_hresult()), SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
+		$hierarchy = mapi_folder_gethierarchytable($root, CONVENIENT_DEPTH);
+		mapi_table_restrict($hierarchy, [
+			RES_PROPERTY,
+			[
+				RELOP => RELOP_NE,
+				ULPROPTAG => PR_FOLDER_TYPE,
+				VALUE => [PR_FOLDER_TYPE => FOLDER_SEARCH],
+			],
+		], TBL_BATCH);
+		$folders = mapi_table_queryallrows($hierarchy, [PR_ENTRYID, PR_SOURCE_KEY, PR_CONTAINER_CLASS]);
+
+		$restriction = [
+			RES_PROPERTY,
+			[
+				RELOP => RELOP_EQ,
+				ULPROPTAG => PR_CONVERSATION_ID,
+				VALUE => [PR_CONVERSATION_ID => $conversationid],
+			],
+		];
+		$moved = 0;
+		$failed = false;
+		foreach ($folders as $row) {
+			if (bin2hex((string) ($row[PR_SOURCE_KEY] ?? '')) === strtolower($folderid) || in_array($row[PR_ENTRYID], $skip, true) ||
+				(isset($row[PR_CONTAINER_CLASS]) && !str_starts_with((string) $row[PR_CONTAINER_CLASS], "IPF.Note"))) {
+				continue;
+			}
+
+			try {
+				$folder = mapi_msgstore_openentry($this->defaultstore, $row[PR_ENTRYID]);
+				$contents = $folder ? mapi_folder_getcontentstable($folder, MAPI_DEFERRED_ERRORS) : false;
+				if (!$contents) {
+					throw new MAPIException(sprintf("unable to open the folder contents: 0x%X", mapi_last_hresult()));
+				}
+				mapi_table_restrict($contents, $restriction, TBL_BATCH);
+				$messages = mapi_table_queryallrows($contents, [PR_ENTRYID]);
+				if (empty($messages)) {
+					continue;
+				}
+				$entryids = array_column($messages, PR_ENTRYID);
+				mapi_folder_copymessages($folder, $entryids, $dstfolder, MESSAGE_MOVE);
+				if (mapi_last_hresult()) {
+					throw new MAPIException(sprintf("mapi_folder_copymessages() failed: 0x%X", mapi_last_hresult()));
+				}
+				$moved += count($entryids);
+			}
+			catch (MAPIException $e) {
+				SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MoveConversation('%s','%s'): Error moving messages of folder '%s': %s", bin2hex($conversationid), $folderid, bin2hex((string) $row[PR_ENTRYID]), $e->getMessage()));
+				$failed = true;
+			}
+		}
+
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MoveConversation('%s','%s'): moved %d messages", bin2hex($conversationid), $folderid, $moved));
+		if ($failed) {
+			throw new StatusException(sprintf("Grommunio->MoveConversation('%s','%s'): not all messages could be moved, %d moved", bin2hex($conversationid), $folderid, $moved), $moved > 0 ? SYNC_ITEMOPERATIONSSTATUS_EMPTYFOLDER : SYNC_ITEMOPERATIONSSTATUS_SERVERERROR);
+		}
+
+		return $moved;
 	}
 }

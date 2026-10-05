@@ -73,22 +73,12 @@ abstract class InterProcessData {
 	}
 
 	/**
-	 * Reinitializes the IPC data by removing, detaching and re-allocating it.
+	 * Reinitializes the IPC data. Used by grommunio-sync-top "clear",
+	 * subclasses remove their data. There is nothing to re-allocate in redis.
 	 *
 	 * @return bool
 	 */
 	public function ReInitIPC() {
-		// TODO: do we need this?
-		return false;
-	}
-
-	/**
-	 * Cleans up the IPC data block.
-	 *
-	 * @return bool
-	 */
-	public function Clean() {
-		// TODO: do we need this?
 		return false;
 	}
 
@@ -176,7 +166,6 @@ abstract class InterProcessData {
 		// merge data and do CAS on the $compKey
 		elseif ($doCas == "merge") {
 			$okCount = 0;
-			// TODO: make this configurable (retrycount)?
 			while (!$ok && $okCount < 5) {
 				$newData = $data;
 				// step 1:  get current data
@@ -192,8 +181,7 @@ abstract class InterProcessData {
 				if (!$ok) {
 					++$okCount;
 					// retry in 0.1s
-					// TODO: make this configurable?
-					usleep(1000000);
+					usleep(100000);
 				}
 			}
 		}
@@ -209,7 +197,6 @@ abstract class InterProcessData {
 		// delete keys of data and do CAS on the $compKey
 		elseif ($doCas == "deletekeys") {
 			$okCount = 0;
-			// TODO: make this configurable (retrycount)?
 			while (!$ok && $okCount < 5) {
 				// step 1:  get current data
 				$_rawdata = $this->ipcProvider->get()->hget($key, $compKey);
@@ -231,7 +218,6 @@ abstract class InterProcessData {
 				$ok = $this->ipcProvider->CASHash($key, $compKey, $_rawdata, $rawNewData);
 				if (!$ok) {
 					++$okCount;
-					// TODO: make this configurable?
 					// retry in 0.1s
 					usleep(100000);
 					SLog::Write(LOGLEVEL_DEBUG, "InterProcessData: setDeviceUserData CAS failed, retrying...");
@@ -289,6 +275,7 @@ abstract class InterProcessData {
 			}
 			if ($subkey === null || $subkey === '') {
 				$_data[$devid][$user] = $_linedata;
+
 				continue;
 			}
 			if (!isset($_data[$devid][$user]) || !is_array($_data[$devid][$user])) {

@@ -82,7 +82,6 @@ class Provisioning extends RequestProcessor {
 
 					$phase2 = false;
 					$rwstatusWiped = true;
-					// TODO check - do it after while(1) finished?
 					break;
 
 				case SYNC_PROVISION_POLICIES:
@@ -154,10 +153,6 @@ class Provisioning extends RequestProcessor {
 						return false;
 					}
 					break;
-
-				default:
-					// TODO: a special status code needed?
-					SLog::Write(LOGLEVEL_WARN, sprintf("This property ('%s') is not allowed to be used in a provision request", $requestName));
 			}
 		}
 

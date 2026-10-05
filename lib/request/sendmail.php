@@ -117,11 +117,19 @@ class SendMail extends RequestProcessor {
 
 		if ($status != SYNC_COMMONSTATUS_SUCCESS) {
 			if (self::$decoder->IsWBXML()) {
-				// TODO check no WBXML on SmartReply and SmartForward
+				if ($smartreply) {
+					$roottag = SYNC_COMPOSEMAIL_SMARTREPLY;
+				}
+				elseif ($smartforward) {
+					$roottag = SYNC_COMPOSEMAIL_SMARTFORWARD;
+				}
+				else {
+					$roottag = SYNC_COMPOSEMAIL_SENDMAIL;
+				}
 				self::$encoder->StartWBXML();
-				self::$encoder->startTag(SYNC_COMPOSEMAIL_SENDMAIL);
+				self::$encoder->startTag($roottag);
 				self::$encoder->startTag(SYNC_COMPOSEMAIL_STATUS);
-				self::$encoder->content($status); // TODO return the correct status
+				self::$encoder->content($status);
 				self::$encoder->endTag();
 				self::$encoder->endTag();
 			}

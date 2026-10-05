@@ -232,12 +232,12 @@ class SyncProvisioning extends SyncObject {
 					self::STREAMER_VAR => "unapprovedinromapplist",
 					self::STREAMER_PROP => self::STREAMER_TYPE_SEND_EMPTY,
 					self::STREAMER_ARRAY => SYNC_PROVISION_APPNAME,
-				],  // TODO check
+				],
 				SYNC_PROVISION_APPROVEDAPPLIST => [
 					self::STREAMER_VAR => "approvedapplist",
 					self::STREAMER_PROP => self::STREAMER_TYPE_SEND_EMPTY,
 					self::STREAMER_ARRAY => SYNC_PROVISION_HASH,
-				], // TODO check
+				],
 				SYNC_PROVISION_REQSTORAGECARDENC => [
 					self::STREAMER_VAR => "reqstoragecardenc",
 					self::STREAMER_CHECKS => [self::STREAMER_CHECK_ONEVALUEOF => [0, 1]],

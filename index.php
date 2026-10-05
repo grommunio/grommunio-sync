@@ -86,8 +86,12 @@ try {
 			LOOSE_PROVISIONING === false ||
 			(LOOSE_PROVISIONING === true && Request::WasPolicyKeySent())
 		)) {
-		// TODO for AS 14 send a wbxml response
-		throw new ProvisioningRequiredException();
+		// AS 14.0 and later expect status 142 in the command response instead of HTTP 449
+		if (Request::GetProtocolVersion() < 14.0 || RequestProcessor::GetCommandStatusTags(Request::GetCommandCode()) === false) {
+			throw new ProvisioningRequiredException();
+		}
+		SLog::Write(LOGLEVEL_INFO, "Provisioning required, answering with status 142");
+		$provisioningRequired = true;
 	}
 
 	// most commands require an authenticated user
@@ -116,7 +120,12 @@ try {
 	}
 
 	RequestProcessor::Initialize();
-	RequestProcessor::HandleRequest();
+	if (isset($provisioningRequired)) {
+		RequestProcessor::HandleProvisioningRequired();
+	}
+	else {
+		RequestProcessor::HandleRequest();
+	}
 
 	// eventually the RequestProcessor wants to send other headers to the mobile
 	foreach (RequestProcessor::GetSpecialHeaders() as $header) {
@@ -128,12 +137,6 @@ try {
 	$len = ob_get_length();
 	$data = ob_get_contents();
 	ob_end_clean();
-
-	// log amount of data transferred
-	// TODO check $len when streaming more data (e.g. Attachments), as the data will be send chunked
-	if (GSync::GetDeviceManager(false)) {
-		GSync::GetDeviceManager()->SentData($len);
-	}
 
 	// Unfortunately, even though grommunio-sync can stream the data to the client
 	// with a chunked encoding, using chunked encoding breaks the progress bar

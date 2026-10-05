@@ -617,11 +617,13 @@ class MAPIProvider {
 	 * @return SyncEmail
 	 */
 	private function getEmail($mapimessage, $contentparameters) {
-		// FIXME: It should be properly fixed when refactoring.
-		$bpReturnType = Utils::GetBodyPreferenceBestMatch($contentparameters->GetBodyPreference());
-		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) ||
-				($key = array_search(SYNC_BODYPREFERENCE_MIME, $contentparameters->GetBodyPreference()) === false) ||
-				$bpReturnType != SYNC_BODYPREFERENCE_MIME) {
+		// a signed message is unwrapped only if it is not sent as MIME,
+		// which has to be generated from the original message
+		$bodyPreference = $this->getBodyPreferenceType($mapimessage, $contentparameters);
+		$sendsMime = $bodyPreference === false ?
+			$contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_ALWAYS :
+			$bodyPreference[0] == SYNC_BODYPREFERENCE_MIME;
+		if (!$sendsMime) {
 			MAPIUtils::ParseSmime($this->session, $this->store, $this->getAddressbook(), $mapimessage);
 		}
 
@@ -643,7 +645,7 @@ class MAPIProvider {
 		}
 
 		// set the body according to contentparameters and supported AS version
-		$this->setMessageBody($mapimessage, $contentparameters, $message);
+		$this->setMessageBody($mapimessage, $contentparameters, $message, $bodyPreference);
 
 		$fromname = $fromaddr = "";
 
@@ -933,7 +935,6 @@ class MAPIProvider {
 			$message->internetcpid = (defined('STORE_INTERNET_CPID')) ? constant('STORE_INTERNET_CPID') : INTERNET_CPID_WINDOWS1252;
 		}
 		$this->setFlag($mapimessage, $message);
-		// TODO checkcontentclass
 		if (!isset($message->contentclass)) {
 			$message->contentclass = DEFAULT_EMAIL_CONTENTCLASS;
 		}
@@ -1246,7 +1247,6 @@ class MAPIProvider {
 	 * @return SyncObject
 	 */
 	public function SetMessage($mapimessage, $message) {
-		// TODO check with instanceof
 		return match (strtolower($message::class)) {
 			"synccontact" => $this->setContact($mapimessage, $message),
 			"syncappointment" => $this->setAppointment($mapimessage, $message),
@@ -2111,7 +2111,6 @@ class MAPIProvider {
 			$picsize = strlen($picbinary);
 			$props[$contactprops["haspic"]] = false;
 
-			// TODO contact picture handling
 			// check if contact has already got a picture. delete it first in that case
 			// delete it also if it was removed on a mobile
 			$picprops = mapi_getprops($mapimessage, [$contactprops["haspic"]]);
@@ -2946,37 +2945,60 @@ class MAPIProvider {
 	}
 
 	/**
+	 * Returns the body preference type to send a message with.
+	 *
+	 * @param MAPIMessage       $mapimessage
+	 * @param ContentParameters $contentparameters
+	 *
+	 * @return array|bool the type and the BodyPreference options to apply,
+	 *                    false if the client did not send a body preference
+	 */
+	private function getBodyPreferenceType($mapimessage, $contentparameters) {
+		// get the available body preference types
+		$bpTypes = $contentparameters->GetBodyPreference();
+		if ($bpTypes === false) {
+			return false;
+		}
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("BodyPreference types: %s", implode(', ', $bpTypes)));
+		// do not send mime data if the client requests it
+		if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && (($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes)) !== false)) {
+			unset($bpTypes[$key]);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("Remove mime body preference type because the device required no mime support. BodyPreference types: %s", implode(', ', $bpTypes)));
+		}
+		// get the best fitting preference type
+		$bpReturnType = Utils::GetBodyPreferenceBestMatch($bpTypes);
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("GetBodyPreferenceBestMatch: %d", $bpReturnType));
+		// do not add a type the device did not request to the saved body preferences
+		$bpo = in_array($bpReturnType, $bpTypes) ? $contentparameters->BodyPreference($bpReturnType) : new BodyPreference();
+
+		// Android Blackberry expects a full mime message for signed emails
+		if ($bpReturnType != SYNC_BODYPREFERENCE_MIME && in_array(SYNC_BODYPREFERENCE_MIME, $bpTypes)) {
+			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
+			if (isset($props[PR_MESSAGE_CLASS]) &&
+					stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->getBodyPreferenceType(): enforcing SYNC_BODYPREFERENCE_MIME type for a signed message"));
+				$bpReturnType = SYNC_BODYPREFERENCE_MIME;
+			}
+		}
+
+		return [$bpReturnType, $bpo];
+	}
+
+	/**
 	 * Sets the message body.
 	 *
 	 * @param MAPIMessage       $mapimessage
 	 * @param ContentParameters $contentparameters
 	 * @param SyncObject        $message
+	 * @param null|array|bool   $bodyPreference    result of getBodyPreferenceType(), determined if null
 	 */
-	private function setMessageBody($mapimessage, $contentparameters, &$message) {
-		// get the available body preference types
-		$bpTypes = $contentparameters->GetBodyPreference();
-		if ($bpTypes !== false) {
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("BodyPreference types: %s", implode(', ', $bpTypes)));
-			// do not send mime data if the client requests it
-			if (($contentparameters->GetMimeSupport() == SYNC_MIMESUPPORT_NEVER) && ($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes) !== false)) {
-				unset($bpTypes[$key]);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("Remove mime body preference type because the device required no mime support. BodyPreference types: %s", implode(', ', $bpTypes)));
-			}
-			// get the best fitting preference type
-			$bpReturnType = Utils::GetBodyPreferenceBestMatch($bpTypes);
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("GetBodyPreferenceBestMatch: %d", $bpReturnType));
-			$bpo = $contentparameters->BodyPreference($bpReturnType);
+	private function setMessageBody($mapimessage, $contentparameters, &$message, $bodyPreference = null) {
+		if ($bodyPreference === null) {
+			$bodyPreference = $this->getBodyPreferenceType($mapimessage, $contentparameters);
+		}
+		if ($bodyPreference !== false) {
+			[$bpReturnType, $bpo] = $bodyPreference;
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("bpo: truncation size:'%d', allornone:'%d', preview:'%d'", $bpo->GetTruncationSize(), $bpo->GetAllOrNone(), $bpo->GetPreview()));
-
-			// Android Blackberry expects a full mime message for signed emails
-			// @TODO change this when refactoring
-			$props = mapi_getprops($mapimessage, [PR_MESSAGE_CLASS]);
-			if (isset($props[PR_MESSAGE_CLASS]) &&
-					stripos((string) $props[PR_MESSAGE_CLASS], 'IPM.Note.SMIME.MultipartSigned') !== false &&
-					($key = array_search(SYNC_BODYPREFERENCE_MIME, $bpTypes) !== false)) {
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setMessageBody(): enforcing SYNC_BODYPREFERENCE_MIME type for a signed message"));
-				$bpReturnType = SYNC_BODYPREFERENCE_MIME;
-			}
 
 			$this->setMessageBodyForType($mapimessage, $bpReturnType, $message);
 			// only set the truncation size data if device set it in request
@@ -3047,8 +3069,8 @@ class MAPIProvider {
 	 * @param array        $appointmentprops
 	 */
 	private function setASbody($asbody, &$props, $appointmentprops) {
-		// TODO: fix checking for the length
-		if (isset($asbody->type, $asbody->data)   /* && strlen($asbody->data) > 0 */) {
+		// data is a stream, an empty one results in an empty body
+		if (isset($asbody->type, $asbody->data)) {
 			switch ($asbody->type) {
 				case SYNC_BODYPREFERENCE_PLAIN:
 				default:
@@ -3094,7 +3116,7 @@ class MAPIProvider {
 				}
 
 				$mapiattach = mapi_message_openattach($mapimessage, $row[PR_ATTACH_NUM]);
-				$attachprops = mapi_getprops($mapiattach, [PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_A, PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_ATTACH_SIZE, PR_ATTACH_FLAGS]);
+				$attachprops = mapi_getprops($mapiattach, [PR_ATTACH_LONG_FILENAME, PR_ATTACH_FILENAME, PR_ATTACHMENT_HIDDEN, PR_ATTACH_CONTENT_ID, PR_ATTACH_CONTENT_ID_A, PR_ATTACH_CONTENT_LOCATION, PR_ATTACH_MIME_TAG, PR_ATTACH_METHOD, PR_DISPLAY_NAME, PR_ATTACH_SIZE, PR_ATTACH_FLAGS]);
 				if (isset($attachprops[PR_ATTACH_MIME_TAG]) && str_contains(strtolower((string) $attachprops[PR_ATTACH_MIME_TAG]), 'signed')) {
 					continue;
 				}
@@ -3147,6 +3169,10 @@ class MAPIProvider {
 						$attach->contentid = $attachprops[PR_ATTACH_CONTENT_ID_A];
 					}
 
+					if (isset($attachprops[PR_ATTACH_CONTENT_LOCATION]) && $attachprops[PR_ATTACH_CONTENT_LOCATION]) {
+						$attach->contentlocation = $attachprops[PR_ATTACH_CONTENT_LOCATION];
+					}
+
 					if (isset($attachprops[PR_ATTACHMENT_HIDDEN]) && $attachprops[PR_ATTACHMENT_HIDDEN]) {
 						$attach->isinline = 1;
 					}
@@ -3194,7 +3220,6 @@ class MAPIProvider {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Saving attachment %s with name: %s", $att->clientid, $att->displayname));
 				// only create if the attachment does not already exist
 				if ($this->getFileReferenceForClientId($mapimessage, $att->clientid, 0, 0) === false) {
-					// TODO: check: contentlocation
 					$props = [
 						PR_ATTACH_LONG_FILENAME => $att->displayname,
 						PR_DISPLAY_NAME => $att->displayname,
@@ -3209,6 +3234,9 @@ class MAPIProvider {
 					}
 					if (!empty($att->contentid)) {
 						$props[PR_ATTACH_CONTENT_ID] = $att->contentid;
+					}
+					if (!empty($att->contentlocation)) {
+						$props[PR_ATTACH_CONTENT_LOCATION] = $att->contentlocation;
 					}
 
 					$attachment = mapi_message_createattach($mapimessage);

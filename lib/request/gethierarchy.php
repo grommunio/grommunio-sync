@@ -23,8 +23,6 @@ class GetHierarchy extends RequestProcessor {
 			if (!$folders || count($folders) == 0) {
 				throw new StatusException("GetHierarchy() did not return any data.");
 			}
-
-			// TODO execute $data->Check() to see if SyncObject is valid
 		}
 		catch (StatusException) {
 			return false;

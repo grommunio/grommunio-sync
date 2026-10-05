@@ -85,30 +85,11 @@ class Syslog extends Log {
 
 	/**
 	 * Return the full program name for syslog.
-	 * The name can be grommunio-sync/core or grommunio-sync/{backend} where backend is the backend that initiated the log.
+	 * The backends are part of the core, so this is always grommunio-sync/core.
 	 *
 	 * @return string
 	 */
 	protected function GenerateProgramName() {
-		// @TODO Use another mechanism than debug_backtrace to determine to origin of the log
-		$backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-		// Shift the "syslog.php" entry.
-		array_shift($backtrace);
-		foreach ($backtrace as $trace) {
-			if (!isset($trace['file'])) {
-				continue;
-			}
-			if (str_contains($trace['file'], REAL_BASE_PATH . 'backend/')) {
-				preg_match('/\/backend\/([a-zA-Z]*)/', $trace['file'], $match);
-				if (isset($match[1])) {
-					return $this->GetProgramName() . '/' . $match[1];
-				}
-			}
-			elseif (basename($trace['file'], '.php') != 'slog') {
-				return $this->GetProgramName() . '/core';
-			}
-		}
-
 		return $this->GetProgramName() . '/core';
 	}
 

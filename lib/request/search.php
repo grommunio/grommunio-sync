@@ -25,7 +25,6 @@ class Search extends RequestProcessor {
 			return false;
 		}
 
-		// TODO check: possible to search in other stores?
 		if (!self::$decoder->getElementStartTag(SYNC_SEARCH_STORE)) {
 			return false;
 		}
@@ -76,7 +75,6 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				// TODO - review
 				if (self::$decoder->getElementStartTag(SYNC_SEARCH_GREATERTHAN)) {
 					if (self::$decoder->getElementStartTag(SYNC_POOMMAIL_DATERECEIVED)) {
 						$datereceivedgreater = true;
@@ -208,7 +206,6 @@ class Search extends RequestProcessor {
 					}
 				}
 
-				// TODO body preferences
 				while (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODYPREFERENCE)) {
 					if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
 						$bptype = self::$decoder->getElementContent();
@@ -332,7 +329,7 @@ class Search extends RequestProcessor {
 		$status = SYNC_SEARCHSTATUS_SUCCESS;
 		$rows = [];
 
-		// TODO support other searches
+		// GAL and Mailbox searches are supported, DocumentLibrary is not
 		if ($searchprovider->SupportsType($searchname)) {
 			$storestatus = SYNC_SEARCHSTATUS_STORE_SUCCESS;
 
@@ -390,78 +387,7 @@ class Search extends RequestProcessor {
 						self::$encoder->startTag(SYNC_SEARCH_RESULT);
 						self::$encoder->startTag(SYNC_SEARCH_PROPERTIES);
 
-						self::$encoder->startTag(SYNC_GAL_DISPLAYNAME);
-						self::$encoder->content($u[SYNC_GAL_DISPLAYNAME] ?? "No name");
-						self::$encoder->endTag();
-
-						if (isset($u[SYNC_GAL_PHONE])) {
-							self::$encoder->startTag(SYNC_GAL_PHONE);
-							self::$encoder->content($u[SYNC_GAL_PHONE]);
-							self::$encoder->endTag();
-						}
-
-						if (isset($u[SYNC_GAL_OFFICE])) {
-							self::$encoder->startTag(SYNC_GAL_OFFICE);
-							self::$encoder->content($u[SYNC_GAL_OFFICE]);
-							self::$encoder->endTag();
-						}
-
-						if (isset($u[SYNC_GAL_TITLE])) {
-							self::$encoder->startTag(SYNC_GAL_TITLE);
-							self::$encoder->content($u[SYNC_GAL_TITLE]);
-							self::$encoder->endTag();
-						}
-
-						if (isset($u[SYNC_GAL_COMPANY])) {
-							self::$encoder->startTag(SYNC_GAL_COMPANY);
-							self::$encoder->content($u[SYNC_GAL_COMPANY]);
-							self::$encoder->endTag();
-						}
-
-						if (isset($u[SYNC_GAL_ALIAS])) {
-							self::$encoder->startTag(SYNC_GAL_ALIAS);
-							self::$encoder->content($u[SYNC_GAL_ALIAS]);
-							self::$encoder->endTag();
-						}
-
-						// Always send the firstname, even empty. Nokia needs this to display the entry
-						self::$encoder->startTag(SYNC_GAL_FIRSTNAME);
-						self::$encoder->content($u[SYNC_GAL_FIRSTNAME] ?? "");
-						self::$encoder->endTag();
-
-						self::$encoder->startTag(SYNC_GAL_LASTNAME);
-						self::$encoder->content($u[SYNC_GAL_LASTNAME] ?? "No name");
-						self::$encoder->endTag();
-
-						if (isset($u[SYNC_GAL_HOMEPHONE])) {
-							self::$encoder->startTag(SYNC_GAL_HOMEPHONE);
-							self::$encoder->content($u[SYNC_GAL_HOMEPHONE]);
-							self::$encoder->endTag();
-						}
-
-						if (isset($u[SYNC_GAL_MOBILEPHONE])) {
-							self::$encoder->startTag(SYNC_GAL_MOBILEPHONE);
-							self::$encoder->content($u[SYNC_GAL_MOBILEPHONE]);
-							self::$encoder->endTag();
-						}
-
-						self::$encoder->startTag(SYNC_GAL_EMAILADDRESS);
-						self::$encoder->content($u[SYNC_GAL_EMAILADDRESS] ?? "");
-						self::$encoder->endTag();
-
-						if (isset($u[SYNC_GAL_STATUS])) {
-							self::$encoder->startTag(SYNC_GAL_PICTURE);
-							self::$encoder->startTag(SYNC_GAL_STATUS);
-							self::$encoder->content($u[SYNC_GAL_STATUS]);
-							self::$encoder->endTag(); // SYNC_GAL_STATUS
-
-							if (isset($u[SYNC_GAL_PICTURE])) {
-								self::$encoder->startTag(SYNC_GAL_DATA);
-								self::$encoder->contentStream($u[SYNC_GAL_PICTURE], false, true);
-								self::$encoder->endTag(); // SYNC_GAL_DATA
-							}
-							self::$encoder->endTag(); // SYNC_GAL_PICTURE
-						}
+						self::encodeGALProperties($u);
 
 						self::$encoder->endTag(); // result
 						self::$encoder->endTag(); // properties
@@ -470,9 +396,7 @@ class Search extends RequestProcessor {
 			}
 			elseif ($searchname == ISearchProvider::SEARCH_MAILBOX) {
 				foreach ($rows as $u) {
-					// TODO: unclear if any clients *require* the folder id where the message is located (it's not available anymore)
-					// $folderid = self::$deviceManager->GetFolderIdForBackendId($u['folderid']);
-
+					// the search provider does not return the folder of a message, so the searched folder id is sent if known
 					self::$encoder->startTag(SYNC_SEARCH_RESULT);
 					self::$encoder->startTag(SYNC_FOLDERTYPE);
 					self::$encoder->content($u['class']);

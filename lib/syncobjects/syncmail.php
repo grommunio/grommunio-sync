@@ -216,7 +216,6 @@ class SyncMail extends SyncObject {
 				self::STREAMER_ARRAY => SYNC_POOMMAIL_CATEGORY,
 				self::STREAMER_RONOTIFY => true,
 			];
-			// TODO bodypart, accountid
 		}
 
 		if (Request::GetProtocolVersion() >= 14.1) {

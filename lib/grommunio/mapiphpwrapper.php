@@ -18,10 +18,14 @@
  * convert the data into WBXML which is streamed to the PDA.
  */
 class PHPWrapper {
+	// ImportMessageDeletion() flag of php-mapi for messages which left the sync restriction
+	private const SYNC_SOFT_DELETE = 0x01;
+
 	private $importer;
 	private $mapiprovider;
 	private $contentparameters;
 	private $prefix;
+	private $folderSourceKey;
 
 	/**
 	 * Constructor of the PHPWrapper.
@@ -35,6 +39,7 @@ class PHPWrapper {
 		$this->importer = &$importer;
 		$this->mapiprovider = new MAPIProvider($session, $this->store);
 		$this->prefix = '';
+		$this->folderSourceKey = $this->folderid;
 
 		if ($this->folderid) {
 			$folderidHex = bin2hex($this->folderid);
@@ -150,12 +155,15 @@ class PHPWrapper {
 	 */
 	public function ImportMessageDeletion($flags, $sourcekeys) {
 		$amount = count($sourcekeys);
-		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): Received %d remove requests from ICS", $amount));
+		// soft deletions are messages which still exist but are outside the sync window now,
+		// but ICS also flags messages which were deleted without DELETE_HARD_DELETE
+		$asSoftDelete = ($flags & self::SYNC_SOFT_DELETE) !== 0;
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): Received %d %s requests from ICS", $amount, $asSoftDelete ? "soft delete" : "remove"));
 
 		foreach ($sourcekeys as $sourcekey) {
-			// TODO if we would know that ICS is removing the message because it's outside the sync interval, we could send a $asSoftDelete = true to the importer. Could they pass that via $flags?
-			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey));
-			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): delete for :'%s'", $this->prefix . bin2hex((string) $sourcekey)));
+			$softDelete = $asSoftDelete && $this->messageExists($sourcekey);
+			$this->importer->ImportMessageDeletion($this->prefix . bin2hex((string) $sourcekey), $softDelete);
+			SLog::Write(LOGLEVEL_DEBUG, sprintf("PHPWrapper->ImportMessageDeletion(): %s for :'%s'", $softDelete ? "soft delete" : "delete", $this->prefix . bin2hex((string) $sourcekey)));
 		}
 	}
 
@@ -215,5 +223,24 @@ class PHPWrapper {
 		}
 
 		return 0;
+	}
+
+	/**
+	 * Checks if a message can still be opened, i.e. was not deleted.
+	 *
+	 * @param string $sourcekey
+	 *
+	 * @return bool
+	 */
+	private function messageExists($sourcekey) {
+		if (!$this->folderSourceKey) {
+			return false;
+		}
+		$entryid = @mapi_msgstore_entryidfromsourcekey($this->store, $this->folderSourceKey, $sourcekey);
+		if (!$entryid) {
+			return false;
+		}
+
+		return @mapi_msgstore_openentry($this->store, $entryid) !== false;
 	}
 }

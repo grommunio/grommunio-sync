@@ -68,7 +68,7 @@ class SyncTaskRecurrence extends SyncObject {
 				],
 				self::STREAMER_RONOTIFY => true,
 			],
-			// TODO: check iOS5 sends deadoccur inside of the recurrence
+			// iOS sends deadoccur inside of the recurrence, see MAPIProvider->setTask()
 			SYNC_POOMTASKS_DEADOCCUR => [
 				self::STREAMER_VAR => "deadoccur",
 				self::STREAMER_RONOTIFY => true,
@@ -84,7 +84,7 @@ class SyncTaskRecurrence extends SyncObject {
 			//   8 = Wednesday
 			//  16 = Thursday
 			//  32 = Friday
-			//  62 = Weekdays  // TODO check: value set by WA with daily weekday recurrence
+			//  62 = Weekdays (Monday to Friday), used for daily weekday recurrences
 			//  64 = Saturday
 			// 127 = The last day of the month. Value valid only in monthly or yearly recurrences.
 			SYNC_POOMTASKS_DAYOFWEEK => [
