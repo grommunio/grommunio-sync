@@ -1614,6 +1614,17 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$userstore = $this->openMessageStore($user);
 			$rootfolder = mapi_msgstore_openentry($userstore);
 			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
+			// Search folders are never synchronized, but their content counts are calculated from the search results
+			// on every query, which gets very expensive with many (stale) search folders. Leave them out of the table.
+			$restriction = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_NE,
+					ULPROPTAG => PR_FOLDER_TYPE,
+					VALUE => [PR_FOLDER_TYPE => FOLDER_SEARCH],
+				],
+			];
+			mapi_table_restrict($hierarchy, $restriction, TBL_BATCH);
 			$rows = mapi_table_queryallrows($hierarchy, [PR_SOURCE_KEY, PR_LOCAL_COMMIT_TIME_MAX, PR_CONTENT_COUNT, PR_CONTENT_UNREAD, PR_DELETED_MSG_COUNT]);
 
 			if (count($rows) == 0) {
