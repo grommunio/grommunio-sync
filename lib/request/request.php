@@ -462,7 +462,7 @@ class Request {
 	/**
 	 * Returns the command code which is being executed.
 	 *
-	 * @return bool|string false if not available
+	 * @return false|int false if not available
 	 */
 	public static function GetCommandCode() {
 		if (isset(self::$command)) {

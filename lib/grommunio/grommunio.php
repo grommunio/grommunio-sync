@@ -2997,7 +2997,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param int    $maxAmbiguousRecipients
 	 * @param bool   $expandDistlist
 	 *
-	 * @return array|bool
+	 * @return array|false the recipients, false if none was found or the GAL could not be opened
 	 */
 	private function resolveRecipientGAL($to, $maxAmbiguousRecipients, $expandDistlist = true) {
 		SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientGAL(): Resolving recipient '%s' in GAL", $to));
@@ -3078,7 +3078,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @param string $to
 	 * @param int    $maxAmbiguousRecipients
 	 *
-	 * @return array|bool
+	 * @return array|false
 	 */
 	private function resolveRecipientContact($to, $maxAmbiguousRecipients) {
 		SLog::Write(LOGLEVEL_WBXML, sprintf("Grommunio->resolveRecipientContact(): Resolving recipient '%s' in user's contacts", $to));

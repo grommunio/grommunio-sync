@@ -402,7 +402,7 @@ class MAPIProvider {
 	 *
 	 * @return array
 	 */
-	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = null) {
+	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = false) {
 		$stored = true;
 		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
 			return TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
@@ -661,10 +661,9 @@ class MAPIProvider {
 				break; // months / weeks
 
 			case 13:
-				$syncRecurrence->interval = ($syncRecurrence->type) < 5 ?
-					(int) ($recurrence->recur["everyn"] / 12) :
-					(int) $recurrence->recur["everyn"]; // years
-				break; // months
+				// mapi-header-php keeps the period of a yearly recurrence in years
+				$syncRecurrence->interval = (int) $recurrence->recur["everyn"];
+				break;
 		}
 
 		if (isset($recurrence->recur["weekdays"])) {
@@ -2781,35 +2780,28 @@ class MAPIProvider {
 	 */
 
 	/**
-	 * Returns the timestamp offset.
+	 * UTC time of the timestamp, with the keys of localtime($time, true).
 	 *
-	 * @param string $ts
-	 *
-	 * @return long
-	 */
-	private function GetTZOffset($ts) {
-		$Offset = date("O", $ts);
-
-		$Parity = $Offset < 0 ? -1 : 1;
-		$Offset *= $Parity;
-		$Offset = ($Offset - ($Offset % 100)) / 100 * 60 + $Offset % 100;
-
-		return $Parity * $Offset;
-	}
-
-	/**
-	 * UTC time of the timestamp.
-	 *
-	 * @param long $time
+	 * @param int $time
 	 *
 	 * @return array
 	 */
 	private function gmtime($time) {
-		$TZOffset = $this->GetTZOffset($time);
+		// shifting the timestamp by the server offset for localtime() is
+		// wrong around the daylight saving changes of the server timezone
+		[$sec, $min, $hour, $mday, $mon, $year, $wday, $yday] = array_map('intval', explode(' ', gmdate('s i G j n Y w z', $time)));
 
-		$t_time = $time - $TZOffset * 60; # Counter adjust for localtime()
-
-		return localtime($t_time, 1);
+		return [
+			'tm_sec' => $sec,
+			'tm_min' => $min,
+			'tm_hour' => $hour,
+			'tm_mday' => $mday,
+			'tm_mon' => $mon - 1,
+			'tm_year' => $year - 1900,
+			'tm_wday' => $wday,
+			'tm_yday' => $yday,
+			'tm_isdst' => 0,
+		];
 	}
 
 	/**
@@ -3183,23 +3175,24 @@ class MAPIProvider {
 				break;
 
 			case 4:
+				// mapi-header-php keeps the period of a yearly recurrence in years
 				$recur["type"] = 13;
 				$recur["subtype"] = 1;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 
 			case 5:
 				$recur["type"] = 13;
 				$recur["subtype"] = 2;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 
 			case 6:
 				$recur["type"] = 13;
 				$recur["subtype"] = 3;
-				$recur["everyn"] = $message->recurrence->interval * 12;
+				$recur["everyn"] = $message->recurrence->interval;
 				$recur["recurrencetype"] = 4;
 				break;
 		}
@@ -3261,9 +3254,9 @@ class MAPIProvider {
 	/**
 	 * Returns the message body for a required format.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param int         $bpReturnType
-	 * @param SyncObject  $message
+	 * @param mixed      $mapimessage
+	 * @param int        $bpReturnType
+	 * @param SyncObject $message
 	 *
 	 * @return bool
 	 */
@@ -3345,13 +3338,13 @@ class MAPIProvider {
 	/**
 	 * Build a filereference key by the clientid.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param mixed       $clientid
-	 * @param mixed       $entryid
-	 * @param mixed       $parentSourcekey
-	 * @param mixed       $exceptionBasedate
+	 * @param mixed $mapimessage
+	 * @param mixed $clientid
+	 * @param mixed $entryid
+	 * @param mixed $parentSourcekey
+	 * @param mixed $exceptionBasedate
 	 *
-	 * @return string/bool
+	 * @return false|string
 	 */
 	private function getFileReferenceForClientId($mapimessage, $clientid, $entryid = 0, $parentSourcekey = 0, $exceptionBasedate = 0) {
 		if (!$entryid || !$parentSourcekey) {
@@ -3378,8 +3371,8 @@ class MAPIProvider {
 	/**
 	 * A wrapper for mapi_inetmapi_imtoinet function.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param SyncObject  $message
+	 * @param mixed      $mapimessage
+	 * @param SyncObject $message
 	 *
 	 * @return bool
 	 */
@@ -3417,11 +3410,11 @@ class MAPIProvider {
 	/**
 	 * Returns the body preference type to send a message with.
 	 *
-	 * @param MAPIMessage       $mapimessage
+	 * @param mixed             $mapimessage
 	 * @param ContentParameters $contentparameters
 	 *
-	 * @return array|bool the type and the BodyPreference options to apply,
-	 *                    false if the client did not send a body preference
+	 * @return array|false the type and the BodyPreference options to apply,
+	 *                     false if the client did not send a body preference
 	 */
 	private function getBodyPreferenceType($mapimessage, $contentparameters) {
 		// get the available body preference types
@@ -3457,10 +3450,10 @@ class MAPIProvider {
 	/**
 	 * Sets the message body.
 	 *
-	 * @param MAPIMessage       $mapimessage
+	 * @param mixed             $mapimessage
 	 * @param ContentParameters $contentparameters
 	 * @param SyncObject        $message
-	 * @param null|array|bool   $bodyPreference    result of getBodyPreferenceType(), determined if null
+	 * @param null|array|false  $bodyPreference    result of getBodyPreferenceType(), determined if null
 	 */
 	private function setMessageBody($mapimessage, $contentparameters, &$message, $bodyPreference = null) {
 		if ($bodyPreference === null) {
@@ -3673,9 +3666,9 @@ class MAPIProvider {
 	/**
 	 * Update attachments of a mapimessage based on asattachments received.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param array       $asattachments
-	 * @param SyncObject  $response
+	 * @param mixed      $mapimessage
+	 * @param array      $asattachments
+	 * @param SyncObject $response
 	 *
 	 * @throws StatusException
 	 */
@@ -3797,9 +3790,9 @@ class MAPIProvider {
 	/**
 	 * Gets information from a MAPI message and applies it to a SyncLocation object.
 	 *
-	 * @param MAPIMessage $mapimessage
-	 * @param SyncObject  $aslocation
-	 * @param array       $appointmentprops
+	 * @param mixed      $mapimessage
+	 * @param SyncObject $aslocation
+	 * @param array      $appointmentprops
 	 */
 	private function getASlocation($mapimessage, &$aslocation, $appointmentprops) {
 		$props = mapi_getprops($mapimessage, [$appointmentprops["locations"], $appointmentprops["location"]]);
