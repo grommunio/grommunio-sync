@@ -1637,6 +1637,10 @@ class MAPIProvider {
 			if (!($isAs16 && $isAllday)) {
 				$props[$appointmentprops["timezonetag"]] = TimezoneUtil::GetTimezoneStructFromTz($tz);
 			}
+			// all-day events keep their tzdef* properties at UTC, see below
+			if (!$isAllday) {
+				$this->setTimezoneDefinitions($mapimessage, $appointment, $tz, $props, $appointmentprops, $oldProps);
+			}
 		}
 
 		if (isset($appointment->recurrence)) {
@@ -1935,6 +1939,72 @@ class MAPIProvider {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Sets the PidLidAppointmentTimeZoneDefinition* properties to the timezone
+	 * the device sent, so that other clients show and export the appointment
+	 * in that timezone. The display timezones are only set for a new
+	 * appointment or new times, the one of a series also when the timezone
+	 * changed. A definition the appointment already has is kept if its
+	 * effective rule is the same, and the end keeps its own timezone unless
+	 * the start's is replaced.
+	 *
+	 * @param mixed $mapimessage
+	 * @param mixed $appointment
+	 * @param array $tz
+	 * @param array $props            properties to be set
+	 * @param array $appointmentprops
+	 * @param array $oldProps         properties before the update
+	 */
+	private function setTimezoneDefinitions($mapimessage, $appointment, $tz, &$props, $appointmentprops, $oldProps) {
+		// unusable Timezone element of the device
+		if (!is_array($tz) || !isset($tz["bias"])) {
+			return;
+		}
+		$timesChanged = !isset($oldProps[$appointmentprops["starttime"]], $oldProps[$appointmentprops["endtime"]]) ||
+			$oldProps[$appointmentprops["starttime"]] != $appointment->starttime ||
+			$oldProps[$appointmentprops["endtime"]] != $appointment->endtime;
+		// the series follows PidLidTimeZoneStruct, which is set from every update of the device
+		$recurChanged = isset($appointment->recurrence) && ($timesChanged ||
+			($oldProps[$appointmentprops["timezonetag"]] ?? null) !== ($props[$appointmentprops["timezonetag"]] ?? null));
+		if (!$timesChanged && !$recurChanged) {
+			return;
+		}
+
+		$old = [];
+		$tzdef = null;
+		foreach (["tzdefstart", "tzdefend", "tzdefrecur"] as $prop) {
+			$old[$prop] = readMapiProp($mapimessage, $appointmentprops[$prop], $oldProps);
+			if ($tzdef === null && TimezoneUtil::IsTimezoneDefinitionOf($old[$prop], $tz)) {
+				$tzdef = $old[$prop];
+			}
+		}
+		$tzdef ??= TimezoneUtil::GetTimezoneDefinitionForTz($tz);
+
+		$tzdefdisplay = TimezoneUtil::SetTimezoneDefinitionFlags($tzdef, TZRULE_FLAG_EFFECTIVE_TZREG);
+		if ($tzdefdisplay === false) {
+			return;
+		}
+		if ($timesChanged) {
+			if (!TimezoneUtil::IsTimezoneDefinitionOf($old["tzdefstart"], $tz)) {
+				$props[$appointmentprops["tzdefstart"]] = $tzdefdisplay;
+				if (!TimezoneUtil::IsTimezoneDefinitionOf($old["tzdefend"], $tz)) {
+					$props[$appointmentprops["tzdefend"]] = $tzdefdisplay;
+				}
+			}
+			elseif (empty($old["tzdefend"])) {
+				$props[$appointmentprops["tzdefend"]] = $tzdefdisplay;
+			}
+		}
+
+		// MS-OXOCAL 2.2.1.41.2: the effective rule, which matches PidLidTimeZoneStruct, is flagged for the series
+		if ($recurChanged) {
+			$tzdefrecur = TimezoneUtil::SetTimezoneDefinitionFlags($tzdef, TZRULE_FLAG_EFFECTIVE_TZREG | TZRULE_FLAG_RECUR_CURRENT_TZREG);
+			if ($tzdefrecur !== $old["tzdefrecur"]) {
+				$props[$appointmentprops["tzdefrecur"]] = $tzdefrecur;
+			}
+		}
 	}
 
 	/**
