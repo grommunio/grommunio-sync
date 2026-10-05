@@ -183,8 +183,7 @@ class MAPIProvider {
 			$message->uid = bin2hex((string) $messageprops[$appointmentprops["sourcekey"]]);
 		}
 		else {
-			// if no embedded vCal-Uid is found use hexed GOID
-			$message->uid = getUidFromGoid($message->uid) ?? strtoupper(bin2hex($message->uid));
+			$message->uid = $this->getUidOfGoid($message->uid);
 		}
 
 		// Always set organizer information because some devices do not work properly without it
@@ -197,22 +196,9 @@ class MAPIProvider {
 			$message->organizername = $messageprops[$appointmentprops["representingname"]];
 		}
 
-		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
-			$tz = TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
+		$tz = $this->getAppointmentTz($messageprops, $appointmentprops, $tzStored);
+		if ($tzStored) {
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		elseif (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
-			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
-			$tz = TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
-			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		elseif (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
-			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($messageprops[$appointmentprops["timezonedesc"]]));
-			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
-		}
-		else {
-			// set server default timezone (correct timezone should be configured!)
-			$tz = TimezoneUtil::GetFullTZ();
 		}
 
 		if (isset($messageprops[$appointmentprops["isrecurring"]]) && $messageprops[$appointmentprops["isrecurring"]]) {
@@ -228,7 +214,7 @@ class MAPIProvider {
 		// Do attendees
 		$reciptable = mapi_message_getrecipienttable($mapimessage);
 		// Only get first 256 recipients, to prevent possible load issues.
-		$rows = mapi_table_queryrows($reciptable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_ADDRTYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TYPE, PR_SEARCH_KEY], 0, 256);
+		$rows = mapi_table_queryrows($reciptable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS, PR_ADDRTYPE, PR_RECIPIENT_TRACKSTATUS, PR_RECIPIENT_TYPE, PR_SEARCH_KEY, PR_RECIPIENT_PROPOSED, PR_RECIPIENT_PROPOSEDSTARTTIME, PR_RECIPIENT_PROPOSEDENDTIME], 0, 256);
 
 		// Exception: we do not synchronize appointments with more than 250 attendees
 		if (count($rows) > 250) {
@@ -279,7 +265,13 @@ class MAPIProvider {
 				$attendee->attendeestatus = $row[PR_RECIPIENT_TRACKSTATUS];
 			}
 			if (isset($row[PR_RECIPIENT_TYPE])) {
-				$attendee->attendeetype = $row[PR_RECIPIENT_TYPE];
+				// the organizer row has MAPI_ORIG (0), which is no valid AttendeeType
+				$attendee->attendeetype = $row[PR_RECIPIENT_TYPE] == MAPI_ORIG ? MAPI_TO : $row[PR_RECIPIENT_TYPE];
+			}
+			// the attendee proposed a new time
+			if (!empty($row[PR_RECIPIENT_PROPOSED]) && isset($row[PR_RECIPIENT_PROPOSEDSTARTTIME], $row[PR_RECIPIENT_PROPOSEDENDTIME])) {
+				$attendee->proposedstarttime = $row[PR_RECIPIENT_PROPOSEDSTARTTIME];
+				$attendee->proposedendtime = $row[PR_RECIPIENT_PROPOSEDENDTIME];
 			}
 			// Some attendees have no email or name (eg resources), and if you
 			// don't send one of those fields, the phone will give an error ... so
@@ -310,7 +302,18 @@ class MAPIProvider {
 					array_push($message->attendees, $attendee);
 				}
 			}
+		}
+
+		// always send the response status, also 1 for the organizer of the meeting
+		if (isset($messageprops[$appointmentprops["responsestatus"]])) {
 			$message->responsetype = $messageprops[$appointmentprops["responsestatus"]];
+		}
+		if (isset($messageprops[$appointmentprops["appointmentreplytime"]])) {
+			$message->appointmentreplytime = $messageprops[$appointmentprops["appointmentreplytime"]];
+		}
+		// new time proposals are allowed if the property is missing
+		if (!isset($message->disallownewtimeprop)) {
+			$message->disallownewtimeprop = 0;
 		}
 
 		// If it's an appointment which doesn't have any attendees, we have to make sure that
@@ -335,7 +338,8 @@ class MAPIProvider {
 		}
 
 		// If the user is working from a location other than the office the busystatus should be interpreted as free.
-		if (isset($message->busystatus) && $message->busystatus == fbWorkingElsewhere) {
+		// AS 16 supports working elsewhere (MS-ASCAL 2.2.2.9)
+		if (isset($message->busystatus) && $message->busystatus == fbWorkingElsewhere && Request::GetProtocolVersion() < 16.0) {
 			$message->busystatus = fbFree;
 		}
 
@@ -390,6 +394,61 @@ class MAPIProvider {
 	}
 
 	/**
+	 * Returns the timezone of an appointment as it is sent to the device.
+	 *
+	 * @param array $messageprops     properties of the appointment
+	 * @param array $appointmentprops property definitions
+	 * @param bool  $stored           set to false if the server timezone is used
+	 *
+	 * @return array
+	 */
+	private function getAppointmentTz($messageprops, $appointmentprops, &$stored = null) {
+		$stored = true;
+		if (!empty($messageprops[$appointmentprops["timezonetag"]])) {
+			return TimezoneUtil::GetTzFromTimezoneStruct($messageprops[$appointmentprops["timezonetag"]]);
+		}
+		if (!empty($messageprops[$appointmentprops["tzdefstart"]])) {
+			$tzDefStart = parseTimezoneDefinition($messageprops[$appointmentprops["tzdefstart"]]);
+
+			return TimezoneUtil::GetTzFromTimezoneDef($tzDefStart);
+		}
+		if (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
+			return TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($messageprops[$appointmentprops["timezonedesc"]]));
+		}
+
+		// set server default timezone (correct timezone should be configured!)
+		$stored = false;
+
+		return TimezoneUtil::GetFullTZ();
+	}
+
+	/**
+	 * Returns the UID of an appointment as it is sent to the device.
+	 *
+	 * @param string $goid PidLidGlobalObjectId
+	 *
+	 * @return string
+	 */
+	private function getUidOfGoid($goid) {
+		// if no embedded vCal-Uid is found use hexed GOID
+		return getUidFromGoid((string) $goid) ?? strtoupper(bin2hex((string) $goid));
+	}
+
+	/**
+	 * Creates an Outlook compatible PidLidGlobalObjectId.
+	 *
+	 * @return string
+	 */
+	private function createGoid() {
+		// MS-OXOCAL 2.2.1.27: class id, instance date (none), creation time, reserved, size and random data
+		$filetime = (time() + 11644473600) * 10000000;
+
+		return hex2bin("040000008200E00074C5B7101A82E00800000000") .
+			pack("VV", $filetime & 0xFFFFFFFF, $filetime >> 32) . str_repeat("\0", 8) .
+			pack("V", 16) . random_bytes(16);
+	}
+
+	/**
 	 * Reads recurrence information from MAPI.
 	 *
 	 * @param mixed      $mapimessage
@@ -407,6 +466,132 @@ class MAPIProvider {
 			$recurrence = new Recurrence($this->store, $mapimessage);
 		}
 
+		$this->getRecurrencePattern($recurrence, $recurprops, $syncRecurrence);
+
+		// Correct 'alldayevent' because outlook fails to set it on recurring items of 24 hours or longer
+		if (isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && ($recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440)) {
+			$syncMessage->alldayevent = true;
+		}
+
+		// All changed exceptions are appointments within the 'exceptions' array. They contain the same items as a normal appointment
+		foreach ($recurrence->recur["changed_occurrences"] as $change) {
+			$exceptIsAllday = (isset($change["alldayevent"])) ?
+				$change["alldayevent"] : $syncMessage->alldayevent;
+
+			$exception = new SyncAppointmentException();
+
+			// start, end, basedate, subject, remind_before, reminderset, location, busystatus, alldayevent, label
+			if (isset($change["start"])) {
+				$exception->starttime = $exceptIsAllday ?
+					$change["start"] : TimezoneUtil::GetUtcTimeByTz($change["start"], $tz);
+			}
+			if (isset($change["end"])) {
+				$exception->endtime = $exceptIsAllday ?
+					$change["end"] : TimezoneUtil::GetUtcTimeByTz($change["end"], $tz);
+			}
+			if (isset($change["basedate"])) {
+				// depending on the AS version the streamer is going to send the correct value
+				// the original start follows the series, also for an all-day exception of a timed series
+				$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
+					$this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60 :
+					TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
+
+				// open body because getting only property might not work because of memory limit
+				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
+				if ($exceptionatt) {
+					$exceptionobj = mapi_attach_openobj($exceptionatt, 0);
+					$this->setMessageBodyForType($exceptionobj, SYNC_BODYPREFERENCE_PLAIN, $exception);
+					if (Request::GetProtocolVersion() >= 16.0) {
+						// add attachment
+						$data = mapi_message_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_SOURCE_KEY]);
+						$this->setAttachment($exceptionobj, $exception, bin2hex((string) $data[PR_ENTRYID]), bin2hex((string) $data[PR_PARENT_SOURCE_KEY]), bin2hex($change["basedate"]));
+						// add location
+						$exception->location2 = new SyncLocation();
+						$this->getASlocation($exceptionobj, $exception->location2, $appointmentprops);
+					}
+				}
+			}
+			if (isset($change["subject"])) {
+				$exception->subject = $change["subject"];
+			}
+			if (isset($change["reminder_before"]) && $change["reminder_before"]) {
+				$exception->reminder = $change["remind_before"];
+			}
+			if (isset($change["location"])) {
+				$exception->location = $change["location"];
+			}
+			if (isset($change["busystatus"])) {
+				$exception->busystatus = $change["busystatus"];
+			}
+			if (isset($change["alldayevent"])) {
+				$exception->alldayevent = $change["alldayevent"];
+			}
+
+			// set some data from the original appointment, an exception only has these in AS 2.5 (MS-ASCAL 2.2.2.21)
+			if (Request::GetProtocolVersion() < 12.0) {
+				if (isset($syncMessage->uid)) {
+					$exception->uid = $syncMessage->uid;
+				}
+				if (isset($syncMessage->organizername)) {
+					$exception->organizername = $syncMessage->organizername;
+				}
+				if (isset($syncMessage->organizeremail)) {
+					$exception->organizeremail = $syncMessage->organizeremail;
+				}
+			}
+
+			if (!isset($syncMessage->exceptions)) {
+				$syncMessage->exceptions = [];
+			}
+
+			// If the user is working from a location other than the office the busystatus should be interpreted as free.
+			if (isset($exception->busystatus) && $exception->busystatus == fbWorkingElsewhere && Request::GetProtocolVersion() < 16.0) {
+				$exception->busystatus = fbFree;
+			}
+
+			// If the busystatus has the value of -1, we should be interpreted as tentative (1)
+			if (isset($exception->busystatus) && $exception->busystatus == -1) {
+				$exception->busystatus = fbTentative;
+			}
+
+			// if an exception lasts 24 hours and the series are an allday events, set also the exception to allday event,
+			// otherwise it will be a 24 hour long event on some mobiles.
+			if (isset($exception->starttime, $exception->endtime) && ($exception->endtime - $exception->starttime == 86400) && $syncMessage->alldayevent) {
+				$exception->alldayevent = 1;
+			}
+			array_push($syncMessage->exceptions, $exception);
+		}
+
+		// Deleted appointments contain only the original date (basedate) and a 'deleted' tag
+		foreach ($recurrence->recur["deleted_occurrences"] as $deleted) {
+			$exception = new SyncAppointmentException();
+
+			// depending on the AS version the streamer is going to send the correct value
+			$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
+				$this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60 :
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
+			$exception->deleted = "1";
+
+			if (!isset($syncMessage->exceptions)) {
+				$syncMessage->exceptions = [];
+			}
+
+			array_push($syncMessage->exceptions, $exception);
+		}
+
+		if (isset($syncMessage->complete) && $syncMessage->complete) {
+			$syncRecurrence->complete = $syncMessage->complete;
+		}
+	}
+
+	/**
+	 * Reads the recurrence pattern from MAPI.
+	 *
+	 * @param BaseRecurrence $recurrence
+	 * @param array          $recurprops
+	 * @param SyncObject     $syncRecurrence the recurrence message
+	 */
+	private function getRecurrencePattern($recurrence, $recurprops, $syncRecurrence) {
 		switch ($recurrence->recur["type"]) {
 			case 10: // daily
 				switch ($recurrence->recur["subtype"]) {
@@ -462,11 +647,6 @@ class MAPIProvider {
 				break;
 		}
 
-		// Correct 'alldayevent' because outlook fails to set it on recurring items of 24 hours or longer
-		if (isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && ($recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440)) {
-			$syncMessage->alldayevent = true;
-		}
-
 		// Interval is different according to the type/subtype
 		switch ($recurrence->recur["type"]) {
 			case 10:
@@ -499,113 +679,6 @@ class MAPIProvider {
 		if (isset($recurrence->recur["monthday"])) {
 			$syncRecurrence->dayofmonth = $recurrence->recur["monthday"];
 		} // day of month (1-31)
-
-		// All changed exceptions are appointments within the 'exceptions' array. They contain the same items as a normal appointment
-		foreach ($recurrence->recur["changed_occurrences"] as $change) {
-			$exceptIsAllday = (isset($change["alldayevent"])) ?
-				$change["alldayevent"] : $syncMessage->alldayevent;
-
-			$exception = new SyncAppointmentException();
-
-			// start, end, basedate, subject, remind_before, reminderset, location, busystatus, alldayevent, label
-			if (isset($change["start"])) {
-				$exception->starttime = $exceptIsAllday ?
-					$change["start"] : TimezoneUtil::GetUtcTimeByTz($change["start"], $tz);
-			}
-			if (isset($change["end"])) {
-				$exception->endtime = $exceptIsAllday ?
-					$change["end"] : TimezoneUtil::GetUtcTimeByTz($change["end"], $tz);
-			}
-			if (isset($change["basedate"])) {
-				// depending on the AS version the streamer is going to send the correct value
-				$exception->exceptionstarttime = $exception->instanceid = $exceptIsAllday ?
-					$this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60 :
-					TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($change["basedate"]) + $recurrence->recur["startocc"] * 60, $tz);
-
-				// open body because getting only property might not work because of memory limit
-				$exceptionatt = $recurrence->getExceptionAttachment($change["basedate"]);
-				if ($exceptionatt) {
-					$exceptionobj = mapi_attach_openobj($exceptionatt, 0);
-					$this->setMessageBodyForType($exceptionobj, SYNC_BODYPREFERENCE_PLAIN, $exception);
-					if (Request::GetProtocolVersion() >= 16.0) {
-						// add attachment
-						$data = mapi_message_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_SOURCE_KEY]);
-						$this->setAttachment($exceptionobj, $exception, bin2hex((string) $data[PR_ENTRYID]), bin2hex((string) $data[PR_PARENT_SOURCE_KEY]), bin2hex($change["basedate"]));
-						// add location
-						$exception->location2 = new SyncLocation();
-						$this->getASlocation($exceptionobj, $exception->location2, $appointmentprops);
-					}
-				}
-			}
-			if (isset($change["subject"])) {
-				$exception->subject = $change["subject"];
-			}
-			if (isset($change["reminder_before"]) && $change["reminder_before"]) {
-				$exception->reminder = $change["remind_before"];
-			}
-			if (isset($change["location"])) {
-				$exception->location = $change["location"];
-			}
-			if (isset($change["busystatus"])) {
-				$exception->busystatus = $change["busystatus"];
-			}
-			if (isset($change["alldayevent"])) {
-				$exception->alldayevent = $change["alldayevent"];
-			}
-
-			// set some data from the original appointment
-			if (isset($syncMessage->uid)) {
-				$exception->uid = $syncMessage->uid;
-			}
-			if (isset($syncMessage->organizername)) {
-				$exception->organizername = $syncMessage->organizername;
-			}
-			if (isset($syncMessage->organizeremail)) {
-				$exception->organizeremail = $syncMessage->organizeremail;
-			}
-
-			if (!isset($syncMessage->exceptions)) {
-				$syncMessage->exceptions = [];
-			}
-
-			// If the user is working from a location other than the office the busystatus should be interpreted as free.
-			if (isset($exception->busystatus) && $exception->busystatus == fbWorkingElsewhere) {
-				$exception->busystatus = fbFree;
-			}
-
-			// If the busystatus has the value of -1, we should be interpreted as tentative (1)
-			if (isset($exception->busystatus) && $exception->busystatus == -1) {
-				$exception->busystatus = fbTentative;
-			}
-
-			// if an exception lasts 24 hours and the series are an allday events, set also the exception to allday event,
-			// otherwise it will be a 24 hour long event on some mobiles.
-			if (isset($exception->starttime, $exception->endtime) && ($exception->endtime - $exception->starttime == 86400) && $syncMessage->alldayevent) {
-				$exception->alldayevent = 1;
-			}
-			array_push($syncMessage->exceptions, $exception);
-		}
-
-		// Deleted appointments contain only the original date (basedate) and a 'deleted' tag
-		foreach ($recurrence->recur["deleted_occurrences"] as $deleted) {
-			$exception = new SyncAppointmentException();
-
-			// depending on the AS version the streamer is going to send the correct value
-			$exception->exceptionstarttime = $exception->instanceid = $syncMessage->alldayevent ?
-				$this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60 :
-				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($deleted) + $recurrence->recur["startocc"] * 60, $tz);
-			$exception->deleted = "1";
-
-			if (!isset($syncMessage->exceptions)) {
-				$syncMessage->exceptions = [];
-			}
-
-			array_push($syncMessage->exceptions, $exception);
-		}
-
-		if (isset($syncMessage->complete) && $syncMessage->complete) {
-			$syncRecurrence->complete = $syncMessage->complete;
-		}
 	}
 
 	/**
@@ -700,6 +773,25 @@ class MAPIProvider {
 			// Get the GOID
 			if (isset($props[$meetingrequestproperties["goidtag"]])) {
 				$message->meetingrequest->globalobjid = base64_encode($props[$meetingrequestproperties["goidtag"]]);
+			}
+
+			// AS 16.0: calendar:UID and airsyncbase:Location replace GlobalObjId and Location
+			if (Request::GetProtocolVersion() >= 16.0) {
+				// the clean GOID is the same for all occurrences, like the UID of the calendar item
+				$goid = $props[$meetingrequestproperties["goid2tag"]] ?? $props[$meetingrequestproperties["goidtag"]] ?? null;
+				if (isset($goid)) {
+					$message->meetingrequest->uid = getUidFromGoid($goid) ?? strtoupper(bin2hex((string) $goid));
+				}
+				$locationprops = array_intersect_key(MAPIMapping::GetAppointmentProperties(), ["location" => true, "locations" => true]);
+				$locationprops = $this->getPropIdsFromStrings($locationprops);
+				$message->meetingrequest->location2 = new SyncLocation();
+				$this->getASlocation($mapimessage, $message->meetingrequest->location2, $locationprops);
+			}
+
+			// AS 16.1: the new time an attendee proposed with the response
+			if (!empty($props[$meetingrequestproperties["counterproposal"]]) && isset($props[$meetingrequestproperties["proposedstarttime"]], $props[$meetingrequestproperties["proposedendtime"]])) {
+				$message->meetingrequest->proposedstarttime = $props[$meetingrequestproperties["proposedstarttime"]];
+				$message->meetingrequest->proposedendtime = $props[$meetingrequestproperties["proposedendtime"]];
 			}
 
 			// Set Timezone
@@ -1281,23 +1373,40 @@ class MAPIProvider {
 		// flag specific properties to be set
 		$props = $delprops = [];
 
+		// AS 16: a new draft or a draft change may come without a body, e.g. only changing the recipients
+		$hasBody = isset($message->asbody) && $message->asbody instanceof SyncBaseBody;
+		$isNew = isset($message->flags) && $message->flags === SYNC_NEWMESSAGE;
+		$isDraft = $hasBody;
+		if (!$isDraft && Request::GetProtocolVersion() >= 16.0) {
+			$draftprops = mapi_getprops($mapimessage, [$emailprops["messageflags"]]);
+			$isDraft = $isNew || (($draftprops[$emailprops["messageflags"]] ?? 0) & MSGFLAG_UNSENT);
+		}
+
 		// save DRAFTs
-		if (isset($message->asbody) && $message->asbody instanceof SyncBaseBody) {
+		if ($isDraft) {
 			// iOS+Nine send a RFC822 message
-			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
+			if ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_MIME) {
 				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setEmail(): Use the mapi_inetmapi_imtomapi function to save draft email");
 				$mime = stream_get_contents($message->asbody->data);
 				$ab = mapi_openaddressbook($this->session);
 				mapi_inetmapi_imtomapi($this->session, $this->store, $ab, $mapimessage, $mime, []);
 			}
-			else {
+			elseif ($hasBody || $isNew) {
 				$props[$emailmap["messageclass"]] = "IPM.Note";
-				$this->setPropsInMAPI($mapimessage, $message, $emailmap);
+				// the conversation properties are set by the server
+				$this->setPropsInMAPI($mapimessage, $message, array_diff_key($emailmap, ["conversationid" => 0, "conversationindex" => 0]));
+			}
+			else {
+				// only the header fields of an existing draft are changed
+				$this->setPropsInMAPI($mapimessage, $message, ["subject" => $emailmap["subject"], "importance" => $emailmap["importance"]]);
 			}
 			$props[$emailprops["messageflags"]] = MSGFLAG_UNSENT | MSGFLAG_READ;
 
-			if (isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
+			if ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_HTML && isset($message->asbody->data)) {
 				$props[$emailprops["html"]] = stream_get_contents($message->asbody->data);
+			}
+			elseif ($hasBody && isset($message->asbody->type) && $message->asbody->type == SYNC_BODYPREFERENCE_PLAIN && isset($message->asbody->data)) {
+				$props[$emailprops["body"]] = stream_get_contents($message->asbody->data);
 			}
 
 			// Android devices send the recipients in to, cc and bcc tags
@@ -1431,22 +1540,10 @@ class MAPIProvider {
 	private function setAppointment($mapimessage, $appointment) {
 		$response = new SyncAppointmentResponse();
 
-		$isAllday = isset($appointment->alldayevent) && $appointment->alldayevent;
-		$isMeeting = isset($appointment->meetingstatus) && $appointment->meetingstatus > 0;
 		$isAs16 = Request::GetProtocolVersion() >= 16.0;
+		// AS 16: an element omitted in a change keeps its stored value
+		$isGhosted = $appointment->IsGhosted();
 		$hasAttendees = isset($appointment->attendees) && is_array($appointment->attendees);
-
-		// Get timezone info
-		if (isset($appointment->timezone)) {
-			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
-		}
-		// AS 16: doesn't sent a timezone - use server TZ
-		elseif ($isAs16 && $isAllday) {
-			$tz = TimezoneUtil::GetFullTZ();
-		}
-		else {
-			$tz = false;
-		}
 
 		$appointmentmapping = MAPIMapping::GetAppointmentMapping();
 		$appointmentprops = MAPIMapping::GetAppointmentProperties();
@@ -1454,90 +1551,51 @@ class MAPIProvider {
 
 		// AS 16: incoming instanceid means we need to create/update an appointment exception
 		if ($isAs16 && isset($appointment->instanceid) && $appointment->instanceid) {
-			// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp and get basedate from it
-			$instanceid = Utils::ParseDate($appointment->instanceid);
-			$basedate = $this->getDayStartOfTimestamp($instanceid);
-
-			// get compatible TZ data
-			$props = [$appointmentprops["timezonetag"], $appointmentprops["isrecurring"]];
-			$tzprop = $this->getProps($mapimessage, $props);
-			$tz = TimezoneUtil::GetTzFromTimezoneStruct($tzprop[$appointmentprops["timezonetag"]]);
-
-			if ($appointmentprops["isrecurring"] == false) {
-				SLog::Write(LOGLEVEL_INFO, sprintf("MAPIProvider->setAppointment(): Cannot modify exception instanceId '%s' as target appointment is not recurring. Ignoring.", $appointment->instanceid));
-
-				return false;
-			}
-			// get a recurrence object
-			$recurrence = new Recurrence($this->store, $mapimessage);
-
-			// check if the exception is to be deleted
-			if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
-				// Delete exception
-				$recurrence->createException([], $basedate, true);
-			}
-			// create or update the exception
-			else {
-				$exceptionprops = [];
-
-				if (isset($appointment->starttime)) {
-					$exceptionprops[$appointmentprops["starttime"]] = $appointment->alldayevent ?
-						TimezoneUtil::GetUtcTimeByTz($appointment->starttime, $tz) :
-						$appointment->starttime;
-				}
-				if (isset($appointment->endtime)) {
-					$exceptionprops[$appointmentprops["endtime"]] = $appointment->alldayevent ?
-						TimezoneUtil::GetUtcTimeByTz($appointment->endtime, $tz) :
-						$exceptionprops[$appointmentprops["endtime"]] = $appointment->endtime;
-				}
-				if (isset($appointment->subject)) {
-					$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
-				}
-				if (isset($appointment->location)) {
-					$exceptionprops[$appointmentprops["location"]] = $appointment->location;
-				}
-				if (isset($appointment->busystatus)) {
-					$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
-				}
-				if (isset($appointment->reminder)) {
-					$exceptionprops[$appointmentprops["reminderset"]] = 1;
-					$exceptionprops[$appointmentprops["remindertime"]] = $appointment->reminder;
-				}
-				if (isset($appointment->alldayevent)) {
-					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $appointment->alldayevent;
-				}
-				if (isset($appointment->body)) {
-					$exceptionprops[$appointmentprops["body"]] = $appointment->body;
-				}
-				if (isset($appointment->asbody)) {
-					$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
-				}
-				if (isset($appointment->location2)) {
-					$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
-				}
-
-				// modify if exists else create exception
-				if ($recurrence->isException($basedate)) {
-					$recurrence->modifyException($exceptionprops, $basedate);
-				}
-				else {
-					$recurrence->createException($exceptionprops, $basedate);
-				}
-			}
-
-			if ($hasAttendees && !empty($appointment->attendees) && $isMeeting) {
-				// instantiate the MR so we can send a updates to the attendees
-				$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
-				$mr->updateMeetingRequest($basedate);
-				$deleteException = isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true;
-				$mr->sendMeetingRequest($deleteException, false, $basedate);
-			}
-
-			return $response;
+			return $this->setAppointmentOccurrence($mapimessage, $appointment, $appointmentprops, $response);
 		}
 
 		// Save OldProps to later check which data is being changed
 		$oldProps = $this->getProps($mapimessage, $appointmentprops);
+
+		$isAllday = isset($appointment->alldayevent) ?
+			(bool) $appointment->alldayevent :
+			$isGhosted && !empty($oldProps[$appointmentprops["alldayevent"]]);
+		$isMeeting = isset($appointment->meetingstatus) ?
+			$appointment->meetingstatus > 0 :
+			$isGhosted && !empty($oldProps[$appointmentprops["meetingstatus"]]);
+		// the stored timezone properties are kept if the device did not send one
+		$keepTimezone = $isGhosted && !isset($appointment->timezone);
+
+		// Get timezone info
+		if (isset($appointment->timezone)) {
+			$tz = TimezoneUtil::GetTzFromSyncBlob(base64_decode($appointment->timezone));
+		}
+		// AS 16: doesn't sent a timezone - use the stored or the server TZ
+		elseif ($isAs16 && $isAllday) {
+			$tz = $this->getAppointmentTz($oldProps, $appointmentprops);
+		}
+		elseif ($keepTimezone) {
+			$tz = $this->getAppointmentTz($oldProps, $appointmentprops, $tzStored);
+			if (!$tzStored) {
+				$tz = false;
+			}
+		}
+		else {
+			$tz = false;
+		}
+
+		// AS 16: the times of an all-day event are dates without timezone, a series
+		// is saved at the local midnight of its timezone like the ones of other clients
+		$floatingSeries = $isAs16 && $isAllday && $tz && (isset($appointment->recurrence) ||
+			($isGhosted && !$appointment->IsEmptyContainer("recurrence") && !empty($oldProps[$appointmentprops["isrecurring"]])));
+		if ($floatingSeries) {
+			foreach (["starttime", "endtime"] as $var) {
+				if (isset($appointment->{$var})) {
+					// all-day times have no time component in AS 16, only the day counts
+					$appointment->{$var} = TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->{$var}), $tz);
+				}
+			}
+		}
 
 		// start and end time may not be set - try to get them from the existing appointment for further calculation.
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
@@ -1557,6 +1615,10 @@ class MAPIProvider {
 		}
 		if (!isset($appointment->starttime) || !isset($appointment->endtime)) {
 			throw new StatusException("MAPIProvider->setAppointment(): Error, start and/or end time not set and can not be retrieved from MAPI.", SYNC_STATUS_SYNCCANNOTBECOMPLETED);
+		}
+		// AS 16: Check() could not compare a time with the omitted stored one
+		if ($isGhosted && $appointment->starttime > $appointment->endtime) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointment(): Error, the start %s is after the end %s.", Utils::FormatDate($appointment->starttime), Utils::FormatDate($appointment->endtime)), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
 		}
 
 		// calculate duration because without it some webaccess views are broken. duration is in min
@@ -1580,14 +1642,24 @@ class MAPIProvider {
 				$appointment->uid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split($appointment->uid, 4));
 			}
 		}
-		// is the transmitted UID OL compatible?
-		if ($appointment->uid && !str_starts_with($appointment->uid, "040000008200E000")) {
-			// if not, encapsulate the transmitted uid
+		// AS 16: the server creates the UID of a new item
+		$createdUid = false;
+		if ($isAs16 && $appointment->flags === SYNC_NEWMESSAGE && !$appointment->uid) {
+			$appointment->uid = $this->createGoid();
+			$createdUid = true;
+		}
+		// a hex encoded GOID, as sent by getAppointment(), is saved as it is
+		elseif ($appointment->uid && stripos((string) $appointment->uid, "040000008200E000") === 0 &&
+				ctype_xdigit((string) $appointment->uid) && strlen((string) $appointment->uid) % 2 == 0) {
+			$appointment->uid = hex2bin((string) $appointment->uid);
+		}
+		// encapsulate the transmitted uid
+		elseif ($appointment->uid) {
 			$appointment->uid = getGoidFromUid($appointment->uid);
 		}
-		// if there was a clientuid transport the new UID to the response
-		if ($appointment->clientuid) {
-			$response->uid = bin2hex($appointment->uid);
+		// the UID of a new item is sent as the device receives it later
+		if ($appointment->clientuid || $createdUid) {
+			$response->uid = $this->getUidOfGoid($appointment->uid);
 			$response->hasResponse = true;
 		}
 
@@ -1605,19 +1677,28 @@ class MAPIProvider {
 		$props[$appointmentprops["commonstart"]] = $appointment->starttime;
 		$props[$appointmentprops["commonend"]] = $appointment->endtime;
 		$props[$appointmentprops["reminderstart"]] = $appointment->starttime;
-		// Set reminder boolean to 'true' if reminder is set
-		$props[$appointmentprops["reminderset"]] = isset($appointment->reminder) ? true : false;
 		$props[$appointmentprops["duration"]] = $duration;
-		$props[$appointmentprops["private"]] = $private;
-		$props[$appointmentprops["uid"]] = $appointment->uid;
+		if (isset($appointment->sensitivity) || !$isGhosted) {
+			$props[$appointmentprops["private"]] = $private;
+		}
+		if (isset($appointment->uid) || !$isGhosted) {
+			$props[$appointmentprops["uid"]] = $appointment->uid;
+		}
 		// Set named prop 8510, unknown property, but enables deleting a single occurrence of a recurring
 		// type in OLK2003.
 		$props[$appointmentprops["sideeffects"]] = 369;
 
 		if (isset($appointment->reminder) && $appointment->reminder >= 0) {
+			$props[$appointmentprops["reminderset"]] = true;
 			// Set 'flagdueby' to correct value (start - reminderminutes)
 			$props[$appointmentprops["flagdueby"]] = $appointment->starttime - $appointment->reminder * 60;
 			$props[$appointmentprops["remindertime"]] = $appointment->reminder;
+		}
+		// AS 16: keep the reminder, it moves with the start
+		elseif ($isGhosted && !isset($appointment->reminder)) {
+			if (!empty($oldProps[$appointmentprops["reminderset"]]) && isset($oldProps[$appointmentprops["remindertime"]])) {
+				$props[$appointmentprops["flagdueby"]] = $appointment->starttime - $oldProps[$appointmentprops["remindertime"]] * 60;
+			}
 		}
 		// unset the reminder
 		else {
@@ -1631,7 +1712,12 @@ class MAPIProvider {
 		if (isset($appointment->location2)) {
 			$this->setASlocation($appointment->location2, $props, $appointmentprops);
 		}
-		if ($tz !== false) {
+		// AS 16: an empty Location element removes the location
+		elseif ($appointment->IsEmptyContainer("location2")) {
+			$props[$appointmentprops["location"]] = "";
+			mapi_deleteprops($mapimessage, [$appointmentprops["locations"]]);
+		}
+		if ($tz !== false && !$keepTimezone) {
 			if (!($isAs16 && $isAllday)) {
 				$props[$appointmentprops["timezonetag"]] = TimezoneUtil::GetTimezoneStructFromTz($tz);
 			}
@@ -1641,7 +1727,41 @@ class MAPIProvider {
 			}
 		}
 
-		if (isset($appointment->recurrence)) {
+		// AS 16: an omitted recurrence is kept, an empty one removes it
+		$keepRecurrence = $isGhosted && !isset($appointment->recurrence) && !$appointment->IsEmptyContainer("recurrence");
+		if ($isGhosted && !empty($oldProps[$appointmentprops["isrecurring"]]) && ($keepRecurrence || (isset($appointment->recurrence) && !isset($appointment->recurrence->type)))) {
+			$storedRecurrence = new SyncRecurrence();
+			$this->getRecurrencePattern(new Recurrence($this->store, $mapimessage), $oldProps, $storedRecurrence);
+			// a series moved to other times is saved again
+			if ($keepRecurrence && !$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $floatingSeries, $tz)) {
+				$appointment->recurrence = $storedRecurrence;
+				$keepRecurrence = false;
+			}
+			// complete a recurrence sent without its type
+			elseif (isset($appointment->recurrence)) {
+				foreach ($storedRecurrence->GetStreamerVars() as $var) {
+					$appointment->recurrence->{$var} ??= $storedRecurrence->{$var};
+				}
+			}
+		}
+		if (isset($appointment->recurrence) && !isset($appointment->recurrence->type)) {
+			$appointment->recurrence->type = 0;
+		}
+
+		$recurChanged = false;
+		$exceptionsChanged = false;
+		if ($keepRecurrence) {
+			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence not sent, keeping the stored one");
+			// exceptions sent without the recurrence change the stored one
+			if (!empty($appointment->exceptions)) {
+				if (empty($oldProps[$appointmentprops["isrecurring"]])) {
+					throw new StatusException("MAPIProvider->setAppointment(): Exceptions sent for an appointment which is not recurring.", SYNC_STATUS_OBJECTNOTFOUND);
+				}
+				$recur = [];
+				$this->setAppointmentExceptions($appointment, new Recurrence($this->store, $mapimessage), $recur, $tz, $isAllday, $appointmentprops, $exceptionsChanged);
+			}
+		}
+		elseif (isset($appointment->recurrence)) {
 			// Set PR_ICON_INDEX to 1025 to show correct icon in category view
 			$props[$appointmentprops["icon"]] = 1025;
 
@@ -1658,7 +1778,8 @@ class MAPIProvider {
 			$starttime = $this->gmtime($localstart);
 
 			// set recurrence start here because it's calculated differently for tasks and appointments
-			$recur["start"] = $this->getDayStartOfTimestamp(TimezoneUtil::GetUtcTimeByTz($localstart, $tz));
+			// the recurrence starts on the local day of the first occurrence
+			$recur["start"] = $this->getDayStartOfTimestamp($localstart);
 
 			$recur["startocc"] = (($localstart % 86400) == 3600) && ($duration % 1440) == 0 ?
 				0 : $starttime["tm_hour"] * 60 + $starttime["tm_min"];
@@ -1667,88 +1788,37 @@ class MAPIProvider {
 			// only tasks can regenerate
 			$recur["regen"] = false;
 
+			// saving the recurrence removes the exceptions, keep them if the series did not change
+			$recurChanged = !$this->isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops, $floatingSeries, $tz);
+			if (!$recurChanged) {
+				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): recurrence did not change, keeping the stored one");
+			}
+			// a new or, with AS 16, changed recurrence is saved before the exceptions sent with it
+			$recurrenceSaved = $recurChanged && (empty($oldProps[$appointmentprops["isrecurring"]]) || $isGhosted);
+			if ($recurrenceSaved) {
+				$recurrence->setRecurrence($tz, $recur);
+			}
+
 			// Process exceptions. The PDA will send all exceptions for this recurring item.
-			if (isset($appointment->exceptions)) {
-				foreach ($appointment->exceptions as $exception) {
-					// we always need the base date
-					if (!isset($exception->exceptionstarttime)) {
-						continue;
-					}
-
-					$basedate = $this->getDayStartOfTimestamp($exception->exceptionstarttime);
-					if (isset($exception->deleted) && $exception->deleted) {
-						$noexceptions = false;
-						// Delete exception
-						$recurrence->createException([], $basedate, true);
-					}
-					else {
-						// Change exception
-						$mapiexception = ["basedate" => $basedate];
-						// other exception properties which are not handled in recurrence
-						$exceptionprops = [];
-
-						if (isset($exception->starttime)) {
-							$mapiexception["start"] = TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
-							$exceptionprops[$appointmentprops["starttime"]] = $exception->starttime;
-						}
-						if (isset($exception->endtime)) {
-							$mapiexception["end"] = TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
-							$exceptionprops[$appointmentprops["endtime"]] = $exception->endtime;
-						}
-						if (isset($exception->subject)) {
-							$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
-						}
-						if (isset($exception->location)) {
-							$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = $exception->location;
-						}
-						if (isset($exception->busystatus)) {
-							$exceptionprops[$appointmentprops["busystatus"]] = $mapiexception["busystatus"] = $exception->busystatus;
-						}
-						if (isset($exception->reminder)) {
-							$exceptionprops[$appointmentprops["reminderset"]] = $mapiexception["reminder_set"] = 1;
-							$exceptionprops[$appointmentprops["remindertime"]] = $mapiexception["remind_before"] = $exception->reminder;
-						}
-						if (isset($exception->alldayevent)) {
-							$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $exception->alldayevent;
-						}
-
-						if (!isset($recur["changed_occurrences"])) {
-							$recur["changed_occurrences"] = [];
-						}
-
-						if (isset($exception->body)) {
-							$exceptionprops[$appointmentprops["body"]] = $exception->body;
-						}
-
-						if (isset($exception->asbody)) {
-							$this->setASbody($exception->asbody, $exceptionprops, $appointmentprops);
-							$mapiexception["body"] = ($exceptionprops[$appointmentprops["body"]] ??= $exceptionprops[$appointmentprops["html"]] ?? "");
-						}
-
-						array_push($recur["changed_occurrences"], $mapiexception);
-
-						if (!empty($exceptionprops)) {
-							$noexceptions = false;
-							if ($recurrence->isException($basedate)) {
-								$recurrence->modifyException($exceptionprops, $basedate);
-							}
-							else {
-								$recurrence->createException($exceptionprops, $basedate);
-							}
-						}
-					}
-				}
+			if (isset($appointment->exceptions) && $this->setAppointmentExceptions($appointment, $recurrence, $recur, $tz, $isAllday, $appointmentprops, $exceptionsChanged)) {
+				$noexceptions = false;
 			}
 
 			// setRecurrence deletes the attachments from an appointment
-			if ($noexceptions) {
+			if ($noexceptions && $recurChanged && !$recurrenceSaved) {
 				$recurrence->setRecurrence($tz, $recur);
 			}
 		}
 		else {
+			$recurChanged = !empty($oldProps[$appointmentprops["isrecurring"]]);
 			$props[$appointmentprops["isrecurring"]] = false;
 			// remove recurringstate
 			mapi_deleteprops($mapimessage, [$appointmentprops["recurringstate"]]);
+		}
+		// an unchanged all-day series keeps its times, the device only sent the days
+		if ($floatingSeries && !$recurChanged) {
+			$props[$appointmentprops["starttime"]] = $props[$appointmentprops["commonstart"]] = $oldProps[$appointmentprops["starttime"]];
+			$props[$appointmentprops["endtime"]] = $props[$appointmentprops["commonend"]] = $oldProps[$appointmentprops["endtime"]];
 		}
 
 		// always set the PR_SENT_REPRESENTING_* props so that the attendee status update also works with the webaccess
@@ -1795,10 +1865,10 @@ class MAPIProvider {
 		$forceMRUpdateSend = false;
 
 		// Do attendees
-		// For AS-16 get a list of the current attendees (pre update)
+		// For AS-16 get a list of the current attendees (pre update), only sent attendees can be removed
 		$old_receips = [];
 		$old_receipkeys = [];
-		if ($isAs16 && $isMeeting) {
+		if ($isAs16 && $isMeeting && $hasAttendees) {
 			$old_recipienttable = mapi_message_getrecipienttable($mapimessage);
 			$old_receipstable = mapi_table_queryallrows(
 				$old_recipienttable,
@@ -1898,26 +1968,43 @@ class MAPIProvider {
 
 			mapi_message_modifyrecipients($mapimessage, ($appointment->clientuid) ? MODRECIP_ADD : MODRECIP_MODIFY, $recips);
 		}
+
+		// AS 16: the attendees are only informed of significant changes, not e.g. of a new reminder
+		$significant = !$isGhosted || $recurChanged || $exceptionsChanged || !empty($old_receips) ||
+			!$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $floatingSeries, $tz) ||
+			(isset($appointment->alldayevent) && (bool) $appointment->alldayevent !== !empty($oldProps[$appointmentprops["alldayevent"]])) ||
+			(isset($appointment->subject) && $appointment->subject != ($oldProps[$appointmentprops["subject"]] ?? "")) ||
+			(isset($props[$appointmentprops["location"]]) && $props[$appointmentprops["location"]] != ($oldProps[$appointmentprops["location"]] ?? "")) ||
+			$this->isBodyChanged($mapimessage, $props, $oldProps, $appointmentprops);
+
 		mapi_setprops($mapimessage, $props);
+
+		// update attachments send by the mobile, before they are sent with a meeting request
+		if (!empty($appointment->asattachments)) {
+			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
+		}
 
 		// Since AS 16 we have to take care of MeetingRequest updates
 		if ($isAs16 && $isMeeting) {
 			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
 			// Only send updates if this is a new MR or we are the organizer
-			if ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
-				// initialize MR and/or update internal counters
-				$mr->updateMeetingRequest();
-				// when updating, check for significant changes and if needed will clear the existing recipient responses
-				if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
-					$mr->checkSignificantChanges($oldProps, false, false);
-				}
-				$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
+			if (!$significant && !$forceMRUpdateSend) {
+				SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointment(): no significant change, the attendees are not informed");
 			}
-		}
-
-		// update attachments send by the mobile
-		if (!empty($appointment->asattachments)) {
-			$this->editAttachments($mapimessage, $appointment->asattachments, $response);
+			elseif ($appointment->clientuid || $mr->isLocalOrganiser() || $forceMRUpdateSend) {
+				try {
+					// initialize MR and/or update internal counters
+					$mr->updateMeetingRequest();
+					// when updating, check for significant changes and if needed will clear the existing recipient responses
+					if (!isset($appointment->clientuid) && !$forceMRUpdateSend) {
+						$mr->checkSignificantChanges($oldProps, false, $recurChanged);
+					}
+					$mr->sendMeetingRequest(false, false, false, false, array_values($old_receips));
+				}
+				catch (MAPIException $e) {
+					throw $this->getMeetingRequestStatusException($e, "setAppointment");
+				}
+			}
 		}
 
 		// Existing allday events may have tzdef* properties set,
@@ -1937,6 +2024,389 @@ class MAPIProvider {
 		}
 
 		return $response;
+	}
+
+	/**
+	 * Saves the exceptions of a series sent by the device.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param Recurrence      $recurrence
+	 * @param array           $recur            the recurrence to be saved
+	 * @param mixed           $tz               timezone of the series
+	 * @param bool            $isAllday         all-day series
+	 * @param array           $appointmentprops
+	 * @param bool            $significant      set to true if the attendees are to be informed
+	 *
+	 * @return bool true if an exception was saved
+	 */
+	private function setAppointmentExceptions($appointment, $recurrence, &$recur, $tz, $isAllday, $appointmentprops, &$significant) {
+		$saved = false;
+		foreach ($appointment->exceptions as $exception) {
+			// we always need the base date, AS 16 has the InstanceId instead of the ExceptionStartTime
+			$exceptionstart = $exception->exceptionstarttime ?? $exception->instanceid ?? null;
+			if (!isset($exceptionstart)) {
+				continue;
+			}
+
+			// the basedate is the local day of the occurrence, see getRecurrence()
+			$basedate = $this->getDayStartOfTimestamp($isAllday ? $exceptionstart : TimezoneUtil::GetLocalTimeByTz($exceptionstart, $tz));
+			if (isset($exception->deleted) && $exception->deleted) {
+				$saved = true;
+				$significant = $significant || !$recurrence->isDeleteException($basedate);
+				// Delete exception
+				$recurrence->createException([], $basedate, true);
+			}
+			else {
+				// Change exception
+				$mapiexception = ["basedate" => $basedate];
+				// other exception properties which are not handled in recurrence
+				$exceptionprops = [];
+
+				// AS 16: the times of an all-day exception are local, see setAppointmentOccurrence()
+				$floatingException = Request::GetProtocolVersion() >= 16.0 && (isset($exception->alldayevent) ? (bool) $exception->alldayevent : $isAllday);
+				if (isset($exception->starttime)) {
+					$mapiexception["start"] = $floatingException ? $this->getDayStartOfTimestamp($exception->starttime) : TimezoneUtil::GetLocalTimeByTz($exception->starttime, $tz);
+					$exceptionprops[$appointmentprops["starttime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($exception->starttime), $tz) : $exception->starttime;
+				}
+				if (isset($exception->endtime)) {
+					$mapiexception["end"] = $floatingException ? $this->getDayStartOfTimestamp($exception->endtime) : TimezoneUtil::GetLocalTimeByTz($exception->endtime, $tz);
+					$exceptionprops[$appointmentprops["endtime"]] = $floatingException ? TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($exception->endtime), $tz) : $exception->endtime;
+				}
+				if (isset($exception->subject)) {
+					$exceptionprops[$appointmentprops["subject"]] = $mapiexception["subject"] = $exception->subject;
+				}
+				if (isset($exception->location)) {
+					$exceptionprops[$appointmentprops["location"]] = $mapiexception["location"] = $exception->location;
+				}
+				if (isset($exception->busystatus)) {
+					$exceptionprops[$appointmentprops["busystatus"]] = $mapiexception["busystatus"] = $exception->busystatus;
+				}
+				if (isset($exception->reminder)) {
+					$exceptionprops[$appointmentprops["reminderset"]] = $mapiexception["reminder_set"] = 1;
+					$exceptionprops[$appointmentprops["remindertime"]] = $mapiexception["remind_before"] = $exception->reminder;
+				}
+				if (isset($exception->alldayevent)) {
+					$exceptionprops[$appointmentprops["alldayevent"]] = $mapiexception["alldayevent"] = $exception->alldayevent;
+				}
+
+				if (!isset($recur["changed_occurrences"])) {
+					$recur["changed_occurrences"] = [];
+				}
+
+				if (isset($exception->body)) {
+					$exceptionprops[$appointmentprops["body"]] = $exception->body;
+				}
+
+				if (isset($exception->asbody)) {
+					$this->setASbody($exception->asbody, $exceptionprops, $appointmentprops);
+					$mapiexception["body"] = ($exceptionprops[$appointmentprops["body"]] ??= $exceptionprops[$appointmentprops["html"]] ?? "");
+				}
+
+				array_push($recur["changed_occurrences"], $mapiexception);
+
+				// the occurrence as the attendees know it
+				$current = $recurrence->getChangeException($basedate) ?: [
+					"start" => $recurrence->fromGMT($recurrence->tz, $recurrence->getOccurrenceStart($basedate)),
+					"end" => $recurrence->fromGMT($recurrence->tz, $recurrence->getOccurrenceEnd($basedate)),
+				];
+				foreach (["subject", "location"] as $key) {
+					$current[$key] ??= $recurrence->messageprops[$recurrence->proptags[$key]] ?? "";
+				}
+				foreach (["start", "end", "subject", "location"] as $key) {
+					if (isset($mapiexception[$key]) && $mapiexception[$key] != $current[$key]) {
+						$significant = true;
+					}
+				}
+
+				if (!empty($exceptionprops)) {
+					$saved = true;
+					if ($recurrence->isException($basedate)) {
+						$recurrence->modifyException($exceptionprops, $basedate);
+					}
+					else {
+						$recurrence->createException($exceptionprops, $basedate);
+					}
+				}
+			}
+		}
+
+		return $saved;
+	}
+
+	/**
+	 * Changes or deletes an occurrence of a recurring appointment identified
+	 * by the InstanceId of an AS 16 Change or Delete.
+	 *
+	 * @param mixed                   $mapimessage
+	 * @param SyncAppointment         $appointment
+	 * @param array                   $appointmentprops
+	 * @param SyncAppointmentResponse $response
+	 *
+	 * @return SyncAppointmentResponse
+	 *
+	 * @throws StatusException if the appointment is not recurring
+	 */
+	private function setAppointmentOccurrence($mapimessage, $appointment, $appointmentprops, $response) {
+		$messageprops = $this->getProps($mapimessage, $appointmentprops);
+		if (empty($messageprops[$appointmentprops["isrecurring"]])) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Cannot modify exception instanceId '%s' as target appointment is not recurring.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
+		}
+
+		$recurrence = new Recurrence($this->store, $mapimessage);
+		$tz = $this->getAppointmentTz($messageprops, $appointmentprops);
+		$seriesAllday = !empty($messageprops[$appointmentprops["alldayevent"]]) ||
+			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
+
+		// this property wasn't decoded so use Utils->ParseDate to convert it into a timestamp
+		$instanceid = Utils::ParseDate($appointment->instanceid);
+		// without a basedate the whole series would be changed or cancelled
+		if (!$instanceid) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Invalid instanceId '%s'.", $appointment->instanceid), SYNC_COMMONSTATUS_INVALIDDATETIME);
+		}
+		// the basedate is the local day of the occurrence, see getRecurrence()
+		$basedate = $this->getDayStartOfTimestamp($seriesAllday ? $instanceid : TimezoneUtil::GetLocalTimeByTz($instanceid, $tz));
+		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): The series has no occurrence with instanceId '%s'.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
+		}
+
+		// the attendees of a meeting organized by the user are informed
+		$notify = false;
+		if (!empty($messageprops[$appointmentprops["meetingstatus"]])) {
+			$mr = new Meetingrequest($this->store, $mapimessage, $this->session);
+			$notify = $mr->isLocalOrganiser();
+		}
+
+		// check if the exception is to be deleted
+		if (isset($appointment->instanceiddelete) && $appointment->instanceiddelete === true) {
+			// the attendees were already informed
+			if ($recurrence->isDeleteException($basedate)) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->setAppointmentOccurrence(): occurrence '%s' is already deleted", $appointment->instanceid));
+
+				return $response;
+			}
+			if ($notify) {
+				// creates the deleted exception and sends the cancellation
+				try {
+					$mr->doCancelInvitation($basedate);
+				}
+				catch (MAPIException $e) {
+					throw $this->getMeetingRequestStatusException($e, "setAppointmentOccurrence");
+				}
+			}
+			else {
+				$recurrence->createException([], $basedate, true);
+			}
+
+			return $response;
+		}
+
+		if ($recurrence->isDeleteException($basedate)) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Cannot modify the deleted occurrence '%s'.", $appointment->instanceid), SYNC_STATUS_OBJECTNOTFOUND);
+		}
+
+		// the times of an all-day exception are local, the timezone of the series applies
+		$isAllday = isset($appointment->alldayevent) ? (bool) $appointment->alldayevent : $seriesAllday;
+		$exceptionprops = [];
+		if (isset($appointment->starttime)) {
+			$exceptionprops[$appointmentprops["starttime"]] = $isAllday ?
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->starttime), $tz) :
+				$appointment->starttime;
+		}
+		if (isset($appointment->endtime)) {
+			$exceptionprops[$appointmentprops["endtime"]] = $isAllday ?
+				TimezoneUtil::GetUtcTimeByTz($this->getDayStartOfTimestamp($appointment->endtime), $tz) :
+				$appointment->endtime;
+		}
+		if (isset($appointment->subject)) {
+			$exceptionprops[$appointmentprops["subject"]] = $appointment->subject;
+		}
+		if (isset($appointment->busystatus)) {
+			$exceptionprops[$appointmentprops["busystatus"]] = $appointment->busystatus;
+		}
+		if (isset($appointment->reminder)) {
+			$exceptionprops[$appointmentprops["reminderset"]] = 1;
+			$exceptionprops[$appointmentprops["remindertime"]] = $appointment->reminder;
+		}
+		if (isset($appointment->alldayevent)) {
+			$exceptionprops[$appointmentprops["alldayevent"]] = $appointment->alldayevent;
+		}
+		if (isset($appointment->asbody)) {
+			$this->setASbody($appointment->asbody, $exceptionprops, $appointmentprops);
+		}
+		if (isset($appointment->location2)) {
+			$this->setASlocation($appointment->location2, $exceptionprops, $appointmentprops);
+		}
+		elseif ($appointment->IsEmptyContainer("location2")) {
+			$exceptionprops[$appointmentprops["location"]] = "";
+			$exceptionprops[$appointmentprops["locations"]] = "";
+		}
+
+		// the occurrence before the change
+		$oldExceptionProps = [
+			$appointmentprops["starttime"] => $recurrence->getOccurrenceStart($basedate),
+			$appointmentprops["endtime"] => $recurrence->getOccurrenceEnd($basedate),
+			$appointmentprops["subject"] => $messageprops[$appointmentprops["subject"]] ?? "",
+			$appointmentprops["location"] => $messageprops[$appointmentprops["location"]] ?? "",
+			$appointmentprops["alldayevent"] => $seriesAllday,
+		];
+		$oldMessage = $mapimessage;
+		$isException = $recurrence->isException($basedate);
+		if ($isException) {
+			$exceptionatt = $recurrence->getExceptionAttachment($basedate);
+			if ($exceptionatt) {
+				$oldMessage = mapi_attach_openobj($exceptionatt, 0);
+				$oldExceptionProps = mapi_getprops($oldMessage, array_keys($oldExceptionProps)) + $oldExceptionProps;
+			}
+		}
+		// the attendees are only informed of significant changes, not e.g. of a new reminder
+		$significant = $this->isBodyChanged($oldMessage, $exceptionprops, mapi_getprops($oldMessage, [$appointmentprops["body"], $appointmentprops["html"]]), $appointmentprops);
+		foreach (["starttime", "endtime", "subject", "location", "alldayevent"] as $key) {
+			if (isset($exceptionprops[$appointmentprops[$key]]) && $exceptionprops[$appointmentprops[$key]] != $oldExceptionProps[$appointmentprops[$key]]) {
+				$significant = true;
+			}
+		}
+		// a time sent alone is compared with the stored one of the occurrence
+		$start = $exceptionprops[$appointmentprops["starttime"]] ?? $oldExceptionProps[$appointmentprops["starttime"]];
+		$end = $exceptionprops[$appointmentprops["endtime"]] ?? $oldExceptionProps[$appointmentprops["endtime"]];
+		if ($start > $end) {
+			throw new StatusException(sprintf("MAPIProvider->setAppointmentOccurrence(): Error, the start %s is after the end %s.", Utils::FormatDate($start), Utils::FormatDate($end)), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+		}
+
+		// modify if exists else create exception
+		if ($isException) {
+			$recurrence->modifyException($exceptionprops, $basedate);
+		}
+		else {
+			$recurrence->createException($exceptionprops, $basedate);
+		}
+
+		if ($notify && !$significant) {
+			SLog::Write(LOGLEVEL_DEBUG, "MAPIProvider->setAppointmentOccurrence(): no significant change, the attendees are not informed");
+		}
+		elseif ($notify) {
+			try {
+				$mr->updateMeetingRequest($basedate);
+				// clears the responses of the attendees if the time changed
+				$mr->checkSignificantChanges($oldExceptionProps, $basedate);
+				$mr->sendMeetingRequest(false, false, $basedate);
+			}
+			catch (MAPIException $e) {
+				throw $this->getMeetingRequestStatusException($e, "setAppointmentOccurrence");
+			}
+		}
+
+		return $response;
+	}
+
+	/**
+	 * Checks if the recurrence and the times of a series sent by the device
+	 * are the stored ones, as the device sends the unchanged recurrence with
+	 * every change.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param Recurrence      $recurrence       the stored recurrence
+	 * @param array           $recur            the recurrence to be saved
+	 * @param array           $oldProps         properties before the update
+	 * @param array           $appointmentprops
+	 * @param bool            $allday           AS 16 all-day series
+	 * @param mixed           $tz               timezone of the series
+	 *
+	 * @return bool
+	 */
+	private function isRecurrenceUnchanged($appointment, $recurrence, $recur, $oldProps, $appointmentprops, $allday, $tz) {
+		if (empty($oldProps[$appointmentprops["isrecurring"]]) || empty($recurrence->recur) ||
+				!$this->hasSeriesTimes($appointment, $oldProps, $appointmentprops, $allday, $tz) ||
+				$recur["startocc"] != ($recurrence->recur["startocc"] ?? null) ||
+				$recur["endocc"] != ($recurrence->recur["endocc"] ?? null)) {
+			return false;
+		}
+
+		$stored = new SyncRecurrence();
+		$this->getRecurrencePattern($recurrence, $oldProps, $stored);
+		$sent = $appointment->recurrence;
+		foreach (["type", "occurrences", "dayofweek", "dayofmonth", "weekofmonth", "monthofyear"] as $var) {
+			if ((isset($sent->{$var}) ? (int) $sent->{$var} : null) !== (isset($stored->{$var}) ? (int) $stored->{$var} : null)) {
+				return false;
+			}
+		}
+		if ((int) ($sent->interval ?? 1) !== (int) ($stored->interval ?? 1)) {
+			return false;
+		}
+		// the device may send another time of the last day
+		if (isset($sent->until) !== isset($stored->until) ||
+				(isset($sent->until) && $this->getDayStartOfTimestamp($sent->until) != $this->getDayStartOfTimestamp($stored->until))) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Returns the status of a failed meeting request update, the Meetingrequest
+	 * class throws a MAPIException e.g. without write access to the calendar.
+	 *
+	 * @param MAPIException $e
+	 * @param string        $method calling method
+	 *
+	 * @return StatusException
+	 */
+	private function getMeetingRequestStatusException($e, $method) {
+		$e->setHandled();
+
+		return new StatusException(
+			sprintf("MAPIProvider->%s(): Error, the attendees could not be informed: %s (0x%X)", $method, $e->getMessage(), $e->getCode()),
+			$e->getCode() == MAPI_E_NO_ACCESS ? SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR : SYNC_STATUS_SERVERERROR
+		);
+	}
+
+	/**
+	 * Checks if the body to be saved differs from the stored one.
+	 *
+	 * @param mixed $mapimessage      message with the stored body
+	 * @param array $props            properties to be saved
+	 * @param array $oldProps         stored properties
+	 * @param array $appointmentprops
+	 *
+	 * @return bool
+	 */
+	private function isBodyChanged($mapimessage, $props, $oldProps, $appointmentprops) {
+		foreach (["body", "html"] as $key) {
+			$tag = $appointmentprops[$key];
+			if (isset($props[$tag]) && $props[$tag] !== (string) readMapiProp($mapimessage, $tag, $oldProps)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Checks if the start and end sent by the device are the stored ones.
+	 * The days of an AS 16 all-day series are compared, as its stored times
+	 * may differ from the local midnight, e.g. in a daylight saving change.
+	 *
+	 * @param SyncAppointment $appointment
+	 * @param array           $oldProps         properties before the update
+	 * @param array           $appointmentprops
+	 * @param bool            $allday           AS 16 all-day series
+	 * @param mixed           $tz               timezone of the series
+	 *
+	 * @return bool
+	 */
+	private function hasSeriesTimes($appointment, $oldProps, $appointmentprops, $allday, $tz) {
+		foreach (["starttime", "endtime"] as $var) {
+			$stored = $oldProps[$appointmentprops[$var]] ?? null;
+			if (!isset($stored)) {
+				return false;
+			}
+			if ($allday ?
+					$this->getDayStartOfTimestamp(TimezoneUtil::GetLocalTimeByTz($appointment->{$var}, $tz)) != $this->getDayStartOfTimestamp(TimezoneUtil::GetLocalTimeByTz($stored, $tz)) :
+					$appointment->{$var} != $stored) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -3206,6 +3676,8 @@ class MAPIProvider {
 	 * @param MAPIMessage $mapimessage
 	 * @param array       $asattachments
 	 * @param SyncObject  $response
+	 *
+	 * @throws StatusException
 	 */
 	public function editAttachments($mapimessage, $asattachments, &$response) {
 		foreach ($asattachments as $att) {
@@ -3223,7 +3695,7 @@ class MAPIProvider {
 					$props = [
 						PR_ATTACH_LONG_FILENAME => $att->displayname,
 						PR_DISPLAY_NAME => $att->displayname,
-						PR_ATTACH_METHOD => $att->method, // is this correct ??
+						PR_ATTACH_METHOD => $att->method ?? ATTACH_BY_VALUE,
 						PR_ATTACH_DATA_BIN => "",
 						PR_ATTACHMENT_HIDDEN => false,
 						PR_ATTACH_EXTENSION => pathinfo((string) $att->displayname, PATHINFO_EXTENSION),
@@ -3258,9 +3730,17 @@ class MAPIProvider {
 			}
 			// attachment to be removed
 			elseif ($att instanceof SyncBaseAttachmentDelete) {
-				[$id, $attachnum, $parentEntryid, $exceptionBasedate] = explode(":", (string) $att->filereference);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Deleting attachment with num: %s", $attachnum));
-				mapi_message_deleteattach($mapimessage, (int) $attachnum);
+				$fileref = explode(":", (string) $att->filereference);
+				if (!isset($messageEntryid)) {
+					$messageprops = mapi_getprops($mapimessage, [PR_ENTRYID]);
+					$messageEntryid = isset($messageprops[PR_ENTRYID]) ? bin2hex((string) $messageprops[PR_ENTRYID]) : "";
+				}
+				// the file reference has to point to an attachment of this message, not of an exception
+				if (count($fileref) != 4 || strcasecmp($fileref[0], $messageEntryid) != 0 || !ctype_digit($fileref[1]) || !empty($fileref[3])) {
+					throw new StatusException(sprintf("MAPIProvider->editAttachments(): attachment '%s' to be deleted does not belong to this message", $att->filereference), SYNC_STATUS_CLIENTSERVERCONVERSATIONERROR);
+				}
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("MAPIProvider->editAttachments(): Deleting attachment with num: %s", $fileref[1]));
+				mapi_message_deleteattach($mapimessage, (int) $fileref[1]);
 			}
 		}
 	}
@@ -3289,6 +3769,9 @@ class MAPIProvider {
 		}
 		elseif ($aslocation->city) {
 			$props[$appointmentprops["location"]] = $aslocation->city;
+		}
+		else {
+			$props[$appointmentprops["location"]] = "";
 		}
 		$loc = [];
 		$loc["DisplayName"] = ($useStreet) ? $aslocation->street : $props[$appointmentprops["location"]];
@@ -3327,7 +3810,9 @@ class MAPIProvider {
 
 		if (isset($props[$appointmentprops["locations"]])) {
 			$loc = json_decode((string) $props[$appointmentprops["locations"]], true);
-			if (is_array($loc) && count($loc) == 1) {
+			// a location changed by a client not knowing the locations is used alone
+			if (is_array($loc) && count($loc) == 1 && (empty($aslocation->displayname) ||
+					in_array($aslocation->displayname, [$loc[0]['DisplayName'] ?? null, $loc[0]['LocationFullAddress'] ?? null], true))) {
 				$l = $loc[0];
 				if (!empty($l['DisplayName'])) {
 					$aslocation->displayname = $l['DisplayName'];
@@ -3497,6 +3982,11 @@ class MAPIProvider {
 					if (strlen($persistData) == 4 && intval($persistData) == PERSIST_SENTINEL) {
 						break;
 					}
+					if (strlen($persistData) < 8) {
+						SLog::Write(LOGLEVEL_INFO, "MAPIProvider->getSpecialFoldersData(): persistent data is truncated");
+
+						break;
+					}
 					$unpackedData = unpack("vdataSize/velementID/velDataSize", substr($persistData, 2, 6));
 					if (isset($unpackedData['dataSize'], $unpackedData['elementID']) && $unpackedData['elementID'] == RSF_ELID_ENTRYID && isset($unpackedData['elDataSize'])) {
 						$this->specialFoldersData[] = substr($persistData, 8, $unpackedData['elDataSize']);
@@ -3638,40 +4128,85 @@ class MAPIProvider {
 	/**
 	 * Submits a message for sending.
 	 *
-	 * @return bool
+	 * A copy of the message is submitted from the outbox, the message itself
+	 * is not changed, so a draft is kept if the submission fails.
+	 *
+	 * @throws StatusException
 	 */
 	public function SubmitMessage(mixed $store = null, mixed $mapimessage = null): bool {
 		if ($mapimessage === null) {
-			throw new GSyncException(sprintf("MAPIProvider->submitMessage: mapimessage must not be null"));
+			throw new StatusException("MAPIProvider->SubmitMessage(): mapimessage must not be null", SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED);
 		}
 		if ($store === null) {
 			$store = $this->store;
 		}
-		try {
-			$storeProps = $this->GetStoreProps();
-			$outbox = mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]);
-			$out = mapi_folder_createmessage($outbox);
-			mapi_copyto($mapimessage, [], [], $out, 0);
-			$recipienttable = mapi_message_getrecipienttable($mapimessage);
-			$messageRecipients = mapi_table_queryallrows($recipienttable, [PR_DISPLAY_NAME, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]);
-			mapi_message_submitmessage($out);
+
+		// a mail without or with an invalid recipient can not be sent
+		$recipienttable = mapi_message_getrecipienttable($mapimessage);
+		$recipients = $recipienttable ? mapi_table_queryallrows($recipienttable, [PR_ADDRTYPE, PR_EMAIL_ADDRESS, PR_SMTP_ADDRESS]) : false;
+		if ($recipients === false) {
+			throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): the recipients could not be read: 0x%X", mapi_last_hresult()), SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED);
 		}
-		catch (Exception $e) {
-			$props = $mapi_getprops($mapimessage, [PR_ENTRYID, PR_SUBJECT]);
-			SLog::Write(LOGLEVEL_FATAL, sprintf(
-				"MAPIProvider->submitMessage: caught Exception (0x%X) when submitting message: '%s' (entryid: %s). Exception: %s.",
-				mapi_last_hresult(), $props[PR_SUBJECT] ?? '<empty subject>', bin2hex($props[PR_ENTRYID]), $e));
-			throw new GSyncException(sprintf("MAPIProvider->submitMessage failed"));
+		if (empty($recipients)) {
+			throw new StatusException("MAPIProvider->SubmitMessage(): the message has no recipients", SYNC_COMMONSTATUS_INVALIDRECIPIENTS);
+		}
+		foreach ($recipients as $recipient) {
+			$smtp = $recipient[PR_SMTP_ADDRESS] ?? null;
+			if ($smtp === null && isset($recipient[PR_ADDRTYPE]) && $recipient[PR_ADDRTYPE] == "SMTP") {
+				$smtp = $recipient[PR_EMAIL_ADDRESS] ?? "";
+			}
+			if ($smtp !== null && filter_var($smtp, FILTER_VALIDATE_EMAIL) === false) {
+				throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): the recipient address '%s' is invalid", $smtp), SYNC_COMMONSTATUS_INVALIDRECIPIENTS);
+			}
 		}
 
-		$hr = mapi_last_hresult();
+		$outbox = $out = false;
+		$hr = NOERROR;
+
+		try {
+			// without exceptions enabled in php-mapi a failed call returns false
+			$storeProps = $this->GetStoreProps();
+			$outbox = isset($storeProps[PR_IPM_OUTBOX_ENTRYID]) ? mapi_msgstore_openentry($store, $storeProps[PR_IPM_OUTBOX_ENTRYID]) : false;
+			$out = $outbox ? mapi_folder_createmessage($outbox) : false;
+			$ok = $out && mapi_copyto($mapimessage, [], [], $out, 0);
+			// move the sent mail to the sent items folder
+			if ($ok && !empty($storeProps[PR_IPM_SENTMAIL_ENTRYID])) {
+				$ok = mapi_setprops($out, [PR_SENTMAIL_ENTRYID => $storeProps[PR_IPM_SENTMAIL_ENTRYID]]);
+			}
+			$ok = $ok && mapi_savechanges($out) && mapi_message_submitmessage($out);
+			$hr = $ok ? NOERROR : (mapi_last_hresult() ?: MAPI_E_CALL_FAILED);
+		}
+		catch (Exception $e) {
+			$hr = $e->getCode() ?: mapi_last_hresult();
+			if ($e instanceof MAPIException) {
+				$e->setHandled();
+			}
+			$props = mapi_getprops($mapimessage, [PR_SUBJECT]);
+			SLog::Write(LOGLEVEL_ERROR, sprintf(
+				"MAPIProvider->SubmitMessage(): caught exception (0x%X) when submitting message '%s': %s",
+				$hr,
+				$props[PR_SUBJECT] ?? '<empty subject>',
+				$e->getMessage()
+			));
+			if (!$hr) {
+				$hr = MAPI_E_CALL_FAILED;
+			}
+		}
+
 		if ($hr) {
+			// do not leave the unsent copy in the outbox
+			if ($outbox && $out) {
+				$outProps = mapi_getprops($out, [PR_ENTRYID]);
+				if (is_array($outProps) && isset($outProps[PR_ENTRYID])) {
+					mapi_folder_deletemessages($outbox, [$outProps[PR_ENTRYID]]);
+				}
+			}
 			$code = match ($hr) {
 				MAPI_E_STORE_FULL => SYNC_COMMONSTATUS_MAILBOXQUOTAEXCEEDED,
 				default => SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED,
 			};
 
-			throw new StatusException(sprintf("MAPIProvider->submitMessage(): Error saving/submitting the message to the Outbox: 0x%X", $hr), $code);
+			throw new StatusException(sprintf("MAPIProvider->SubmitMessage(): Error saving/submitting the message to the Outbox: 0x%X", $hr), $code);
 		}
 
 		return true;

@@ -107,6 +107,7 @@ return [
 	'SyncEmailAddresses' => $baseDir . '/lib/syncobjects/syncemailaddresses.php',
 	'SyncFindProperties' => $baseDir . '/lib/syncobjects/syncfindproperties.php',
 	'SyncFolder' => $baseDir . '/lib/syncobjects/syncfolder.php',
+	'SyncForwardee' => $baseDir . '/lib/syncobjects/syncforwardee.php',
 	'SyncItemOperationsAttachment' => $baseDir . '/lib/syncobjects/syncitemoperationsattachment.php',
 	'SyncLocation' => $baseDir . '/lib/syncobjects/synclocation.php',
 	'SyncMail' => $baseDir . '/lib/syncobjects/syncmail.php',

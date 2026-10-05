@@ -410,6 +410,11 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	 * @throws StatusException
 	 */
 	public function SendMail($sm) {
+		// AS 16: SmartForward of a calendar item to forwardees without MIME
+		if (isset($sm->forwardees) || isset($sm->asbody)) {
+			return $this->forwardCalendarItem($sm);
+		}
+
 		// Check if imtomapi function is available and use it to send the mime message.
 		// It is available since ZCP 7.0.6
 		if (!(function_exists('mapi_feature') && mapi_feature('INETMAPI_IMTOMAPI'))) {
@@ -803,10 +808,19 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		$searchForResultCalendarItem = false;
+		$basedate = false;
 		$folderClass = GSync::GetDeviceManager()->GetFolderClassFromCacheByID($fid);
 		if ($folderClass == 'Email') {
+			// the meeting request already identifies the occurrence it is for
+			if (!empty($request['instanceid'])) {
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): ignoring InstanceId '%s' of a meeting request", $requestid, $folderid, $response, $request['instanceid']));
+			}
 			// The mobile requested this on a MR, when finishing we need to search for the resulting calendar item!
 			$searchForResultCalendarItem = true;
+		}
+		// a single occurrence is answered on the calendar item itself
+		elseif (!empty($request['instanceid'])) {
+			$basedate = $this->getOccurrenceBasedate($mapimessage, $request['instanceid']);
 		}
 		// we are operating on the calendar item - try searching for the corresponding meeting request first
 		else {
@@ -872,12 +886,16 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		else {
 			$request['proposedendtime'] = false;
 		}
-		if (!isset($request['body'])) {
-			$request['body'] = false;
+		$body = false;
+		// AS-16.0: a response mail is only sent if the client requested it, with the body it sent
+		if (Request::GetProtocolVersion() >= 16.0) {
+			$sendresponse = !empty($request['sendresponse']);
+			if ($sendresponse) {
+				$body = $this->setMeetingResponseBody($meetingrequest, $request);
+			}
 		}
-
 		// from AS-14.0 we have to take care of sending out meeting request responses
-		if (Request::GetProtocolVersion() >= 14.0) {
+		elseif (Request::GetProtocolVersion() >= 14.0) {
 			$sendresponse = true;
 		}
 		else {
@@ -885,19 +903,30 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$sendresponse = false;
 		}
 
-		switch ($response) {
-			case 1:     // accept
-			default:
-				$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, false, true); // last true is the $userAction
-				break;
+		// the Meetingrequest class throws e.g. without write access to the calendar
+		try {
+			switch ($response) {
+				case 1:     // accept
+				default:
+					$entryid = $meetingrequest->doAccept(false, $sendresponse, false, false, false, $body, true, false, $basedate); // the last true is the $userAction
+					break;
 
-			case 2:        // tentative
-				$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $request['body'], true); // last true is the $userAction
-				break;
+				case 2:        // tentative
+					$entryid = $meetingrequest->doAccept(true, $sendresponse, false, $request['proposedstarttime'], $request['proposedendtime'], $body, true, false, $basedate); // the last true is the $userAction
+					break;
 
-			case 3:        // decline
-				$meetingrequest->doDecline($sendresponse);
-				break;
+				case 3:        // decline
+					if ($request['proposedstarttime'] !== false) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): a new time proposal can not be sent with a decline, declining without it", $requestid, $folderid, $response));
+					}
+					$meetingrequest->doDecline($sendresponse, $basedate, $body);
+					break;
+			}
+		}
+		catch (MAPIException $e) {
+			$e->setHandled();
+
+			throw new StatusException(sprintf("Grommunio->MeetingResponse('%s','%s', '%s'): Error, the response failed: %s (0x%X)", $requestid, $folderid, $response, $e->getMessage(), $e->getCode()), SYNC_MEETRESPSTATUS_SERVERERROR);
 		}
 
 		// We have to return the ID of the new calendar item if it was created from an email
@@ -961,6 +990,72 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		}
 
 		return $calendarid;
+	}
+
+	/**
+	 * Returns the basedate of the occurrence of a recurring calendar item for a MeetingResponse InstanceId.
+	 * The basedate is the start of the local day of the original start of the occurrence.
+	 *
+	 * @param mixed  $mapimessage the calendar item
+	 * @param string $instanceid  original start of the occurrence, UTC or local for an all-day series
+	 *
+	 * @return int
+	 *
+	 * @throws StatusException
+	 */
+	private function getOccurrenceBasedate($mapimessage, $instanceid) {
+		$props = getPropIdsFromStrings($this->store, MAPIMapping::GetMeetingRequestProperties());
+		$messageprops = mapi_getprops($mapimessage, [$props["isrecurringtag"]]);
+		if (empty($messageprops[$props["isrecurringtag"]])) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the calendar item is not recurring", $instanceid), SYNC_COMMONSTATUS_NORECURRINCAL);
+		}
+
+		$start = Utils::ParseDate($instanceid);
+		if (!$start) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, invalid InstanceId", $instanceid), SYNC_COMMONSTATUS_INVALIDDATETIME);
+		}
+
+		$recurrence = new Recurrence($this->store, $mapimessage);
+		// the InstanceId of an all-day series is the local start, see MAPIProvider->getRecurrence()
+		$allday = !empty($recurrence->messageprops[$recurrence->proptags["alldayevent"]]) ||
+			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
+		$basedate = $recurrence->dayStartOf($allday ? $start : $recurrence->fromGMT($recurrence->tz, $start));
+		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+		}
+		if ($recurrence->isDeleteException($basedate)) {
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+		}
+
+		return $basedate;
+	}
+
+	/**
+	 * Prepares the body of a meeting response mail from the SendResponse of a MeetingResponse request.
+	 * A HTML body is passed as meeting time info, which the Meetingrequest class writes to PR_HTML.
+	 *
+	 * @param Meetingrequest $meetingrequest
+	 * @param array          $request
+	 *
+	 * @return null|string plain text body, null if there is none or it was passed as HTML
+	 */
+	private function setMeetingResponseBody($meetingrequest, $request) {
+		if (!isset($request['body']) || $request['body'] === false) {
+			return null;
+		}
+		$bodytype = $request['bodytype'] ?? SYNC_BODYPREFERENCE_PLAIN;
+		if ($bodytype == SYNC_BODYPREFERENCE_HTML) {
+			$meetingrequest->setMeetingTimeInfo($request['body'], true);
+
+			return null;
+		}
+		if ($bodytype != SYNC_BODYPREFERENCE_PLAIN) {
+			SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->setMeetingResponseBody(): body type %d is not supported for meeting responses, sending the response without a body", $bodytype));
+
+			return null;
+		}
+
+		return $request['body'];
 	}
 
 	/**
@@ -2593,6 +2688,99 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
+	 * Forwards a calendar item as meeting request to the forwardees of a
+	 * SmartForward (AS 16.0+), with the body of the request prepended.
+	 *
+	 * @param SyncSendMail $sm
+	 *
+	 * @return bool
+	 *
+	 * @throws StatusException
+	 */
+	private function forwardCalendarItem($sm) {
+		if (empty($sm->forwardees) || empty($sm->source->itemid) || empty($sm->source->folderid)) {
+			throw new StatusException("Grommunio->forwardCalendarItem(): forwardees and the source item are required", SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+		// a single occurrence would have to be sent as exception
+		if (!empty($sm->source->instanceid)) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding the occurrence '%s' is not supported", $sm->source->instanceid), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+
+		$recipients = [];
+		$ab = $this->getAddressbook();
+		foreach ($sm->forwardees as $forwardee) {
+			$email = trim((string) ($forwardee->email ?? ''));
+			if (!($forwardee instanceof SyncForwardee) || filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+				throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): invalid forwardee '%s'", $email), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+			}
+			$name = !empty($forwardee->name) ? $forwardee->name : $email;
+			$recip = [
+				PR_DISPLAY_NAME => $name,
+				PR_EMAIL_ADDRESS => $email,
+				PR_SMTP_ADDRESS => $email,
+				PR_ADDRTYPE => "SMTP",
+				PR_SEARCH_KEY => "SMTP:" . strtoupper($email) . "\0",
+				PR_ENTRYID => mapi_createoneoff($name, "SMTP", $email),
+				PR_RECIPIENT_TYPE => MAPI_TO,
+				PR_RECIPIENT_FLAGS => recipSendable,
+			];
+
+			// use the address book entry of a local recipient
+			try {
+				$userinfo = mapi_ab_resolvename($ab, [[PR_DISPLAY_NAME => $email]], EMS_AB_ADDRESS_LOOKUP);
+				if (mapi_last_hresult() == NOERROR && isset($userinfo[0][PR_ENTRYID])) {
+					$recip[PR_DISPLAY_NAME] = $userinfo[0][PR_DISPLAY_NAME] ?? $name;
+					$recip[PR_EMAIL_ADDRESS] = $userinfo[0][PR_EMAIL_ADDRESS] ?? $email;
+					$recip[PR_SEARCH_KEY] = $userinfo[0][PR_SEARCH_KEY] ?? $recip[PR_SEARCH_KEY];
+					$recip[PR_ADDRTYPE] = $userinfo[0][PR_ADDRTYPE] ?? "SMTP";
+					$recip[PR_ENTRYID] = $userinfo[0][PR_ENTRYID];
+				}
+			}
+			catch (MAPIException $e) {
+				$e->setHandled();
+			}
+			$recipients[] = $recip;
+		}
+
+		// the calendar item might be in a shared folder
+		if (!$this->Setup(GSync::GetAdditionalSyncFolderStore($sm->source->folderid))) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): could not Setup() the backend for folder id '%s'", $sm->source->folderid), SYNC_COMMONSTATUS_SERVERERROR);
+		}
+		$entryid = mapi_msgstore_entryidfromsourcekey($this->store, hex2bin((string) $sm->source->folderid), hex2bin((string) $sm->source->itemid));
+		$item = $entryid ? mapi_msgstore_openentry($this->store, $entryid) : false;
+		if (!$item) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): could not open item '%s' in folder '%s': 0x%X", $sm->source->itemid, $sm->source->folderid, mapi_last_hresult()), SYNC_COMMONSTATUS_ITEMNOTFOUND);
+		}
+		$itemprops = mapi_getprops($item, [PR_MESSAGE_CLASS]);
+		$messageclass = (string) ($itemprops[PR_MESSAGE_CLASS] ?? "");
+		if (stripos($messageclass, "IPM.Appointment") !== 0 && stripos($messageclass, "IPM.Schedule.Meeting.Request") !== 0) {
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): item of class '%s' is no calendar item", $messageclass), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
+		}
+
+		try {
+			$mr = new Meetingrequest($this->store, $item, $this->session);
+			if (isset($sm->asbody->data)) {
+				$html = isset($sm->asbody->type) && $sm->asbody->type == SYNC_BODYPREFERENCE_HTML;
+				$body = stream_get_contents($sm->asbody->data);
+				$itembody = readMapiPropStream($item, $html ? PR_HTML : PR_BODY);
+				$mr->setMeetingTimeInfo($body . ($html ? "<br><br>" : "\r\n\r\n") . $itembody, $html);
+			}
+			// sends the request only to the forwardees, the changes to the calendar item are not saved
+			$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+		}
+		catch (MAPIException $e) {
+			$e->setHandled();
+			$code = $e->getCode() == MAPI_E_STORE_FULL ? SYNC_COMMONSTATUS_MAILBOXQUOTAEXCEEDED : SYNC_COMMONSTATUS_MAILSUBMISSIONFAILED;
+
+			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding failed: %s (0x%X)", $e->getMessage(), $e->getCode()), $code);
+		}
+
+		SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->forwardCalendarItem(): calendar item forwarded to %d recipients", count($recipients)));
+
+		return true;
+	}
+
+	/**
 	 * Copies attachments from one message to another.
 	 *
 	 * @param MAPIMessage $toMessage
@@ -2649,7 +2837,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	private function getSearchFoldersRoot() {
 		// check if we can create search folders
 		$storeProps = mapi_getprops($this->store, [PR_STORE_SUPPORT_MASK, PR_FINDER_ENTRYID]);
-		if (($storeProps[PR_STORE_SUPPORT_MASK] & STORE_SEARCH_OK) != STORE_SEARCH_OK) {
+		if (isset($storeProps[PR_STORE_SUPPORT_MASK]) && (($storeProps[PR_STORE_SUPPORT_MASK] & STORE_SEARCH_OK) != STORE_SEARCH_OK)) {
 			SLog::Write(LOGLEVEL_WARN, "Grommunio->getSearchFoldersRoot(): Store doesn't support search folders. Public store doesn't have FINDER_ROOT folder");
 
 			return false;

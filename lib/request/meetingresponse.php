@@ -55,34 +55,51 @@ class MeetingResponse extends RequestProcessor {
 					}
 				}
 
-				if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_SENDRESPONSE)) {
-					if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODY)) {
-						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
-							$req["bodytype"] = self::$decoder->getElementContent();
-							if (!self::$decoder->getElementEndTag()) {
-								return false;
+				if ($el = self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_SENDRESPONSE)) {
+					// an empty SendResponse also requests a response mail, just without a body
+					$req["sendresponse"] = true;
+					if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+						WBXMLDecoder::ResetInWhile("meetingResponseSendResponse");
+						while (WBXMLDecoder::InWhile("meetingResponseSendResponse")) {
+							if (($el = self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_BODY)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
+								if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_TYPE)) {
+									$req["bodytype"] = self::$decoder->getElementContent();
+									if (!self::$decoder->getElementEndTag()) {
+										return false;
+									}
+								}
+								if ($el = self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_DATA)) {
+									$req["body"] = "";
+									if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+										$req["body"] = self::$decoder->getElementContent();
+										if (!self::$decoder->getElementEndTag()) {
+											return false;
+										}
+									}
+								}
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
+							} // end body
+							if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME)) {
+								$req["proposedstarttime"] = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
 							}
-						}
-						if (self::$decoder->getElementStartTag(SYNC_AIRSYNCBASE_DATA)) {
-							$req["body"] = self::$decoder->getElementContent();
-							if (!self::$decoder->getElementEndTag()) {
-								return false;
+							if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDENDTIME)) {
+								$req["proposedendtime"] = self::$decoder->getElementContent();
+								if (!self::$decoder->getElementEndTag()) {
+									return false;
+								}
 							}
-						}
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					} // end body
-					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDSTARTTIME)) {
-						$req["proposedstarttime"] = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
-						}
-					}
-					if (self::$decoder->getElementStartTag(SYNC_MEETINGRESPONSE_PROPOSEDENDTIME)) {
-						$req["proposedendtime"] = self::$decoder->getElementContent();
-						if (!self::$decoder->getElementEndTag()) {
-							return false;
+
+							$e = self::$decoder->peek();
+							if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
+								self::$decoder->getElementEndTag();
+
+								break;
+							}
 						}
 					}
 				} // end send response
@@ -110,6 +127,24 @@ class MeetingResponse extends RequestProcessor {
 			$status = SYNC_MEETRESPSTATUS_SUCCESS;
 
 			try {
+				if (isset($req["instanceid"])) {
+					if (Request::GetProtocolVersion() < 14.1) {
+						throw new StatusException(sprintf("HandleMeetingResponse(): InstanceId is not supported with AS %s", Request::GetProtocolVersion()), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+					}
+					// the original start of the occurrence as dateTime, e.g. 2010-04-08T18:16:00.000Z
+					if (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/', (string) $req["instanceid"])) {
+						throw new StatusException(sprintf("HandleMeetingResponse(): invalid InstanceId '%s'", $req["instanceid"]), SYNC_COMMONSTATUS_INVALIDDATETIME);
+					}
+				}
+
+				// a new time proposal needs both the start and the end
+				if (isset($req["proposedstarttime"]) !== isset($req["proposedendtime"])) {
+					throw new StatusException("HandleMeetingResponse(): ProposedStartTime and ProposedEndTime have to be sent together", SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+				}
+				if (isset($req["proposedstarttime"]) && (!Utils::ParseDate($req["proposedstarttime"]) || !Utils::ParseDate($req["proposedendtime"]))) {
+					throw new StatusException(sprintf("HandleMeetingResponse(): invalid proposed time '%s' - '%s'", $req["proposedstarttime"], $req["proposedendtime"]), SYNC_COMMONSTATUS_INVALIDDATETIME);
+				}
+
 				$backendFolderId = self::$deviceManager->GetBackendIdForFolderId($req["folderid"]);
 
 				// if the source folder is an additional folder the backend has to be setup correctly
@@ -138,6 +173,11 @@ class MeetingResponse extends RequestProcessor {
 			if ($status == SYNC_MEETRESPSTATUS_SUCCESS && !empty($calendarid)) {
 				self::$encoder->startTag(SYNC_MEETINGRESPONSE_CALENDARID);
 				self::$encoder->content($calendarid);
+				self::$encoder->endTag();
+			}
+			if (isset($req["instanceid"]) && Request::GetProtocolVersion() >= 16.0) {
+				self::$encoder->startTag(SYNC_MEETINGRESPONSE_INSTANCEID);
+				self::$encoder->content($req["instanceid"]);
 				self::$encoder->endTag();
 			}
 			self::$encoder->endTag();

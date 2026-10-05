@@ -422,17 +422,59 @@ class ImportChangesICS implements IImportChanges {
 
 			$response->serverid = $this->prefix . bin2hex((string) $sourcekeyprops[PR_SOURCE_KEY]);
 
-			// AS 16.0+ draft send: setEmail() has stamped the authenticated owner as
-			// the sender (drafts from e.g. Samsung Email often carry an empty From).
-			// Submit the message and remove the draft only after a successful submit,
-			// so a failed submit never loses the mail.
-			if ($message instanceof SyncMail &&
-			    !empty($message->send) &&
-			    $this->mapiprovider->SubmitMessage($this->store, $mapimessage)) {
-				$this->ImportMessageDeletion($id, true);
-				SLog::Write(LOGLEVEL_DEBUG, sprintf(
-					"ImportChangesICS->ImportMessageChange('%s','%s'): AS16 draft submitted and removed from Drafts",
-					$id, $messageClass));
+			// AS 16.0+: the response to a new draft contains its conversation id and index
+			if (!$id && $message instanceof SyncMail && Request::GetProtocolVersion() >= 16.0) {
+				$cprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_CONVERSATION_ID, PR_CONVERSATION_INDEX]);
+				// the server sets them when saving, they might only be available in a reopened message
+				if ((!isset($cprops[PR_CONVERSATION_ID]) || !isset($cprops[PR_CONVERSATION_INDEX])) && isset($cprops[PR_ENTRYID])) {
+					$savedmessage = mapi_msgstore_openentry($this->store, $cprops[PR_ENTRYID]);
+					if ($savedmessage) {
+						$cprops = mapi_getprops($savedmessage, [PR_CONVERSATION_ID, PR_CONVERSATION_INDEX]);
+					}
+				}
+				if (isset($cprops[PR_CONVERSATION_ID])) {
+					$response->conversationid = $cprops[PR_CONVERSATION_ID];
+					$response->hasResponse = true;
+				}
+				if (isset($cprops[PR_CONVERSATION_INDEX])) {
+					$response->conversationindex = $cprops[PR_CONVERSATION_INDEX];
+					$response->hasResponse = true;
+				}
+			}
+
+			// AS 16.0+ draft send: submit a copy of the draft and remove the draft
+			// only after a successful submit, so a failed submit never loses the mail.
+			// The sender is set by the server when the mail is submitted.
+			if ($message instanceof SyncMail && isset($message->send)) {
+				try {
+					$this->mapiprovider->SubmitMessage($this->store, $mapimessage);
+				}
+				catch (StatusException $stex) {
+					if ($id) {
+						throw $stex;
+					}
+					// the new draft is saved, so return its server id along with the error
+					$response->submitstatus = $stex->getCode();
+
+					return $response;
+				}
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): draft submitted", $response->serverid, $messageClass));
+
+				// delete the draft outside of the importer, so the deletion is exported to the client
+				try {
+					$draftprops = mapi_getprops($mapimessage, [PR_ENTRYID, PR_PARENT_ENTRYID]);
+					$draftfolder = isset($draftprops[PR_ENTRYID], $draftprops[PR_PARENT_ENTRYID]) ? mapi_msgstore_openentry($this->store, $draftprops[PR_PARENT_ENTRYID]) : false;
+					if (!$draftfolder || !mapi_folder_deletemessages($draftfolder, [$draftprops[PR_ENTRYID]])) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): draft sent but not removed: 0x%X", $response->serverid, $messageClass, mapi_last_hresult()));
+					}
+				}
+				catch (Exception $e) {
+					// the mail was sent, so do not report an error which would make the client send it again
+					SLog::Write(LOGLEVEL_WARN, sprintf("ImportChangesICS->ImportMessageChange('%s','%s'): draft sent but not removed: %s", $response->serverid, $messageClass, $e->getMessage()));
+					if ($e instanceof MAPIException) {
+						$e->setHandled();
+					}
+				}
 			}
 
 			return $response;
@@ -651,7 +693,8 @@ class ImportChangesICS implements IImportChanges {
 		}
 
 		// Delete the old message
-		if (!mapi_folder_deletemessages($srcfolder, [$entryid])) {
+		// hard delete, the copy is in the destination folder and a soft deleted original would be a duplicate
+		if (!mapi_folder_deletemessages($srcfolder, [$entryid], DELETE_HARD_DELETE)) {
 			throw new StatusException(sprintf("ImportChangesICS->ImportMessageMove('%s','%s'): Error, delete of source message failed: 0x%X. Possible duplicates.", $sk, $newfolder, mapi_last_hresult()), SYNC_MOVEITEMSSTATUS_SOURCEORDESTLOCKED);
 		}
 

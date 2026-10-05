@@ -239,3 +239,34 @@ if (!function_exists('dump')) {
 		SLog::Write(LOGLEVEL_DEBUG, $message);
 	}
 }
+
+if (!function_exists('pgettext')) {
+	/**
+	 * Contextual message lookup used by mapi-header-php, e.g. for recurrence
+	 * descriptions. grommunio-sync does not translate, so the message is returned.
+	 *
+	 * @param string $msgctxt
+	 * @param string $msgid
+	 *
+	 * @return string
+	 */
+	function pgettext($msgctxt, $msgid) {
+		return $msgid;
+	}
+}
+
+if (!function_exists('npgettext')) {
+	/**
+	 * Contextual plural message lookup used by mapi-header-php.
+	 *
+	 * @param string $msgctxt
+	 * @param string $msgid
+	 * @param string $msgid_plural
+	 * @param int    $num
+	 *
+	 * @return string
+	 */
+	function npgettext($msgctxt, $msgid, $msgid_plural, $num) {
+		return $num == 1 ? $msgid : $msgid_plural;
+	}
+}

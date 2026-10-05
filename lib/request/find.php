@@ -70,7 +70,7 @@ class Find extends RequestProcessor {
 			}
 
 			$deeptraversal = false;
-			if (self::$decoder->getElementStartTag(SYNC_FIND_OPTIONS)) {
+			if (($el = self::$decoder->getElementStartTag(SYNC_FIND_OPTIONS)) && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
 				WBXMLDecoder::ResetInWhile("findOptions");
 				while (WBXMLDecoder::InWhile("findOptions")) {
 					if (self::$decoder->getElementStartTag(SYNC_FIND_RANGE)) {
@@ -81,20 +81,45 @@ class Find extends RequestProcessor {
 						}
 					}
 
-					if (self::$decoder->getElementStartTag(SYNC_FIND_DEEPTRAVERSAL)) {
+					if (($el = self::$decoder->getElementStartTag(SYNC_FIND_DEEPTRAVERSAL)) !== false) {
 						$deeptraversal = true;
-						if (($dam = self::$decoder->getElementContent()) !== false) {
-							$deeptraversal = true;
-							if (!self::$decoder->getElementEndTag()) {
+						if ($el[EN_FLAGS] & EN_FLAGS_CONTENT) {
+							self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_DEEPTRAVERSAL
 								return false;
 							}
 						}
 					}
+
+					// pictures are only returned for GAL entries, the options are ignored for mailbox searches
+					if (($el = self::$decoder->getElementStartTag(SYNC_FIND_PICTURE)) !== false && ($el[EN_FLAGS] & EN_FLAGS_CONTENT)) {
+						if (self::$decoder->getElementStartTag(SYNC_FIND_MAXSIZE)) {
+							self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_MAXSIZE
+								return false;
+							}
+						}
+						if (self::$decoder->getElementStartTag(SYNC_FIND_MAXPICTURES)) {
+							self::$decoder->getElementContent();
+							if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_MAXPICTURES
+								return false;
+							}
+						}
+						if (!self::$decoder->getElementEndTag()) { // SYNC_FIND_PICTURE
+							return false;
+						}
+					}
+
 					$e = self::$decoder->peek();
 					if ($e[EN_TYPE] == EN_TYPE_ENDTAG) {
-						self::$decoder->getElementEndTag();
+						self::$decoder->getElementEndTag(); // SYNC_FIND_OPTIONS
 
 						break;
+					}
+					if (!in_array($e[EN_TAG] ?? false, [SYNC_FIND_RANGE, SYNC_FIND_DEEPTRAVERSAL, SYNC_FIND_PICTURE])) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Find(): unexpected element '%s' in the options", $e[EN_TAG] ?? ''));
+
+						return false;
 					}
 				}
 			}
@@ -169,6 +194,11 @@ class Find extends RequestProcessor {
 
 						break;
 					}
+					if (!in_array($e[EN_TAG] ?? false, [SYNC_FIND_RANGE, SYNC_FIND_PICTURE])) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("Find(): unexpected element '%s' in the GAL options", $e[EN_TAG] ?? ''));
+
+						return false;
+					}
 				}
 			}
 
@@ -242,16 +272,17 @@ class Find extends RequestProcessor {
 			self::$encoder->content($status);
 			self::$encoder->endTag();
 
-			if (isset($rows['range'])) {
-				$searchrange = $rows['range'];
-				unset($rows['range']);
-			}
 			if (isset($rows['searchtotal'])) {
 				$searchtotal = $rows['searchtotal'];
-				unset($rows['searchtotal']);
 			}
+			unset($rows['range'], $rows['searchtotal']);
 
-			if ($searchtotal > 0 && $searchname == ISearchProvider::SEARCH_GAL) {
+			// the range of the results starts at the requested index
+			$requestedrange = $searchname == ISearchProvider::SEARCH_GAL ? $galrange : $cpo->GetFindRange();
+			$rangestart = (int) explode("-", (string) $requestedrange)[0];
+			$results = 0;
+
+			if ($status == SYNC_FINDSTATUS_SUCCESS && $searchname == ISearchProvider::SEARCH_GAL) {
 				// GAL entries have no class, server or collection id
 				foreach ($rows as $u) {
 					self::$encoder->startTag(SYNC_FIND_RESULT);
@@ -259,13 +290,25 @@ class Find extends RequestProcessor {
 					self::encodeGALProperties($u);
 					self::$encoder->endTag(); // SYNC_FIND_PROPERTIES
 					self::$encoder->endTag(); // SYNC_FIND_RESULT
+					++$results;
 				}
 			}
-			elseif ($searchtotal > 0) {
+			elseif ($status == SYNC_FINDSTATUS_SUCCESS) {
 				foreach ($rows as $u) {
-					// fetch the SyncObject for this result
-					$message = self::$backend->Fetch(false, $u['longid'], $cpo);
+					// fetch the SyncObject for this result, it might have been deleted in the meantime
+					try {
+						$message = self::$backend->Fetch(false, $u['longid'], $cpo);
+					}
+					catch (StatusException) {
+						SLog::Write(LOGLEVEL_DEBUG, sprintf("Find(): ignoring result '%s' which could not be fetched", $u['longid']));
+
+						continue;
+					}
+					// the result is in the folder of the item, which differs from the searched one on a deep traversal
 					$mfolderid = self::$deviceManager->GetFolderIdForBackendId(bin2hex((string) $message->ParentSourceKey));
+					if (!$mfolderid) {
+						$mfolderid = $cpo->GetRawFindFolderId();
+					}
 
 					self::$encoder->startTag(SYNC_FIND_RESULT);
 					self::$encoder->startTag(SYNC_FOLDERTYPE);
@@ -276,7 +319,7 @@ class Find extends RequestProcessor {
 					self::$encoder->content($mfolderid . ":" . $u['serverid']);
 					self::$encoder->endTag();
 					self::$encoder->startTag(SYNC_FOLDERID);
-					self::$encoder->content($cpo->GetRawFindFolderId());
+					self::$encoder->content($mfolderid);
 					self::$encoder->endTag();
 
 					self::$encoder->startTag(SYNC_FIND_PROPERTIES);
@@ -285,15 +328,19 @@ class Find extends RequestProcessor {
 
 					self::$encoder->endTag(); // properties
 					self::$encoder->endTag(); // result
+					++$results;
 				}
 			}
 
-			self::$encoder->startTag(SYNC_FIND_RANGE);
-			self::$encoder->content($searchname == ISearchProvider::SEARCH_GAL && isset($searchrange) ? $searchrange : "0-" . $searchtotal);
-			self::$encoder->endTag();
-			if ($searchtotal > 0) {
+			if ($status == SYNC_FINDSTATUS_SUCCESS) {
+				// the range of the returned results, e.g. 0-0 for one result, omitted without results
+				if ($results > 0) {
+					self::$encoder->startTag(SYNC_FIND_RANGE);
+					self::$encoder->content($rangestart . "-" . ($rangestart + $results - 1));
+					self::$encoder->endTag();
+				}
 				self::$encoder->startTag(SYNC_FIND_TOTAL);
-				self::$encoder->content($searchtotal); // $searchtotal);
+				self::$encoder->content((string) $searchtotal);
 				self::$encoder->endTag();
 			}
 

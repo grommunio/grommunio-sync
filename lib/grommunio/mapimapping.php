@@ -146,6 +146,8 @@ class MAPIMapping {
 			"Displaycc" => PR_DISPLAY_CC,
 			"Displaybcc" => PR_DISPLAY_BCC,
 			"ParentSourceKey" => PR_PARENT_SOURCE_KEY,
+			"conversationid" => PR_CONVERSATION_ID,
+			"conversationindex" => PR_CONVERSATION_INDEX,
 		];
 	}
 
@@ -191,12 +193,14 @@ class MAPIMapping {
 			"reminder" => "PT_LONG:PSETID_Common:0x8501",
 			"starttime" => "PT_SYSTIME:PSETID_Appointment:0x820d",
 			"sensitivity" => PR_SENSITIVITY,
+			"disallownewtimeproposal" => "PT_BOOLEAN:PSETID_Appointment:0x825A", // PidLidAppointmentNotAllowPropose
 		];
 	}
 
 	public static function GetMeetingRequestProperties() {
 		return [
 			"goidtag" => "PT_BINARY:PSETID_Meeting:0x3",
+			"goid2tag" => "PT_BINARY:PSETID_Meeting:0x23",
 			"timezonetag" => "PT_BINARY:PSETID_Appointment:0x8233",
 			"recReplTime" => "PT_SYSTIME:PSETID_Appointment:0x8228",
 			"isrecurringtag" => "PT_BOOLEAN:PSETID_Appointment:0x8223",
@@ -208,6 +212,9 @@ class MAPIMapping {
 			"remindertime" => "PT_LONG:PSETID_Common:0x8501",
 			"recurrenceend" => "PT_SYSTIME:PSETID_Appointment:0x8236",
 			"meetingType" => "PT_LONG:PSETID_Meeting:0x26",
+			"counterproposal" => "PT_BOOLEAN:PSETID_Appointment:0x8257", // PidLidAppointmentCounterProposal
+			"proposedstarttime" => "PT_SYSTIME:PSETID_Appointment:0x8250", // PidLidAppointmentProposedStartWhole
+			"proposedendtime" => "PT_SYSTIME:PSETID_Appointment:0x8251", // PidLidAppointmentProposedEndWhole
 		];
 	}
 
@@ -259,6 +266,8 @@ class MAPIMapping {
 			"starttime" => "PT_SYSTIME:PSETID_Appointment:0x820d",
 			"uid" => "PT_BINARY:PSETID_Meeting:0x3",
 			"nativebodytype" => PR_NATIVE_BODY_INFO,
+			"responserequested" => PR_RESPONSE_REQUESTED,
+			"disallownewtimeprop" => "PT_BOOLEAN:PSETID_Appointment:0x825A", // PidLidAppointmentNotAllowPropose
 		];
 	}
 
@@ -307,6 +316,7 @@ class MAPIMapping {
 			"tzdefstart" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionStartDisplay,
 			"tzdefend" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionEndDisplay,
 			"tzdefrecur" => "PT_BINARY:PSETID_Appointment:" . PidLidAppointmentTimeZoneDefinitionRecur,
+			"appointmentreplytime" => "PT_SYSTIME:PSETID_Appointment:0x8220", // PidLidAppointmentReplyTime
 		];
 	}
 

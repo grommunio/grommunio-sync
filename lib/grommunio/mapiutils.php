@@ -490,6 +490,35 @@ class MAPIUtils {
 	}
 
 	/**
+	 * Checks if a recurrence has an occurrence on a basedate, also a changed
+	 * or deleted one.
+	 *
+	 * @param Recurrence $recurrence
+	 * @param int        $basedate   start of the local day of the occurrence
+	 *
+	 * @return bool
+	 */
+	public static function IsOccurrence($recurrence, $basedate) {
+		if (empty($recurrence->recur) || !isset($recurrence->recur["start"])) {
+			return false;
+		}
+		if ($recurrence->isException($basedate)) {
+			return true;
+		}
+		// getItems() changes the recurrence data of yearly series, so a copy is used
+		$copy = clone $recurrence;
+		$daystart = $copy->dayStartOf($basedate);
+		$items = $copy->getItems($copy->toGMT($copy->tz, $daystart), $copy->toGMT($copy->tz, $daystart + 24 * 60 * 60));
+		foreach ($items as $item) {
+			if (empty($item["exception"]) && isset($item["basedate"]) && $item["basedate"] == $daystart) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
 	 * Function will be used to decode smime messages and convert it to normal messages.
 	 *
 	 * @param MAPISession    $session
