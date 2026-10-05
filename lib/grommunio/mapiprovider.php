@@ -207,9 +207,7 @@ class MAPIProvider {
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		elseif (!empty($messageprops[$appointmentprops["timezonedesc"]])) {
-			// Windows uses UTC in timezone description in opposite to mstzones in TimezoneUtil which uses GMT
-			$wintz = str_replace("UTC", "GMT", $messageprops[$appointmentprops["timezonedesc"]]);
-			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($wintz));
+			$tz = TimezoneUtil::GetFullTZFromTZName(TimezoneUtil::GetTZNameFromWinTZ($messageprops[$appointmentprops["timezonedesc"]]));
 			$message->timezone = base64_encode(TimezoneUtil::GetSyncBlobFromTZ($tz));
 		}
 		else {
