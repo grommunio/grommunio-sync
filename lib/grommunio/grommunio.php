@@ -1614,7 +1614,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			$userstore = $this->openMessageStore($user);
 			$rootfolder = mapi_msgstore_openentry($userstore);
 			$hierarchy = mapi_folder_gethierarchytable($rootfolder, CONVENIENT_DEPTH);
-			$rows = mapi_table_queryallrows($hierarchy, [PR_SOURCE_KEY, PR_LOCAL_COMMIT_TIME_MAX, PR_CONTENT_COUNT, PR_CONTENT_UNREAD, PR_DELETED_MSG_COUNT]);
+			// Search folders are never synchronized, but their content counts are calculated from the search results
+			// on every query, which gets very expensive with many (stale) search folders. Leave them out of the table.
+			$restriction = [
+				RES_PROPERTY,
+				[
+					RELOP => RELOP_NE,
+					ULPROPTAG => PR_FOLDER_TYPE,
+					VALUE => [PR_FOLDER_TYPE => FOLDER_SEARCH],
+				],
+			];
+			mapi_table_restrict($hierarchy, $restriction, TBL_BATCH);
+			$rows = mapi_table_queryallrows($hierarchy, [PR_SOURCE_KEY, PR_LOCAL_COMMIT_TIME_MAX, PR_CONTENT_COUNT, PR_CONTENT_UNREAD]);
 
 			if (count($rows) == 0) {
 				SLog::Write(LOGLEVEL_INFO, sprintf("Grommunio->GetFolderStat(): could not access folder statistics for user '%s'. Probably missing 'read' permissions on the root folder! Folders of this store will be synchronized ONCE per hour only!", $user));
@@ -1624,9 +1635,8 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$commit_time = $folder[PR_LOCAL_COMMIT_TIME_MAX] ?? "0000000000";
 				$content_count = $folder[PR_CONTENT_COUNT] ?? -1;
 				$content_unread = $folder[PR_CONTENT_UNREAD] ?? -1;
-				$content_deleted = $folder[PR_DELETED_MSG_COUNT] ?? -1;
 
-				$this->folderStatCache[$user][bin2hex((string) $folder[PR_SOURCE_KEY])] = $commit_time . "/" . $content_count . "/" . $content_unread . "/" . $content_deleted;
+				$this->folderStatCache[$user][bin2hex((string) $folder[PR_SOURCE_KEY])] = $commit_time . "/" . $content_count . "/" . $content_unread;
 			}
 			SLog::Write(LOGLEVEL_DEBUG, sprintf("Grommunio->GetFolderStat() fetched status information of %d folders for store '%s'", count($this->folderStatCache[$user]), $user));
 		}
