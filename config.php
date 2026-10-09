@@ -124,6 +124,31 @@ define('PROVISIONING', true);
 // true - allow older devices, but enforce policies on devices which support it
 define('LOOSE_PROVISIONING', false);
 
+// Device access rules, modelled after Exchange's New-ActiveSyncDeviceAccessRule.
+// The default access level applies to devices which match none of the rules:
+//   'Allow' (default) - all devices may synchronize unless a rule blocks them
+//   'Block'           - only devices allowed by a rule may synchronize
+define('DEVICE_ACCESS_DEFAULT_LEVEL', 'Allow');
+
+// Each rule consists of:
+//   'Characteristic' - 'DeviceType', 'DeviceModel', 'DeviceOS', 'UserAgent' or 'XMSWLHeader'
+//   'QueryString'    - value the characteristic must match; the match is case-insensitive
+//                      and covers the complete value. Wildcards '*' and '?' are supported.
+//   'AccessLevel'    - 'Allow' or 'Block'
+// Rules are evaluated by characteristic, from the most specific to the least specific one:
+// DeviceModel, DeviceType, DeviceOS, UserAgent, XMSWLHeader. Within a characteristic, the
+// first matching rule wins.
+// DeviceModel and DeviceOS are only known after the device sent its device information
+// (Provision or Settings command). These commands are therefore always permitted.
+// The values sent by the devices are logged on LOGLEVEL_DEBUG when the rules are evaluated,
+// blocked devices are logged on LOGLEVEL_INFO.
+// Blocked devices receive status 129 (DeviceBlockedForUser) or HTTP 403 for AS versions before 14.0.
+// Examples:
+//   ['Characteristic' => 'DeviceType', 'QueryString' => 'Android', 'AccessLevel' => 'Block'],
+//   ['Characteristic' => 'DeviceOS', 'QueryString' => 'Android*', 'AccessLevel' => 'Block'],
+//   ['Characteristic' => 'DeviceModel', 'QueryString' => 'iPhone*', 'AccessLevel' => 'Allow'],
+$deviceAccessRules = [];
+
 // Retrieve policies for a user from admin API using the following endpoint
 define('ADMIN_API_POLICY_ENDPOINT', 'http://[::1]:8080/api/v1/service/syncPolicy/');
 

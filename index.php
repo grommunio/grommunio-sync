@@ -104,6 +104,15 @@ try {
 		throw new NoPostRequestException("This is the grommunio-sync location and can only be accessed by Microsoft ActiveSync-capable devices", NoPostRequestException::GET_REQUEST);
 	}
 
+	// check the device access rules
+	if (RequestProcessor::isUserAuthenticated() && GSync::GetDeviceManager()->IsDeviceBlocked()) {
+		// AS 14.0 and later expect status 129 in the command response instead of HTTP 403
+		if (Request::GetProtocolVersion() < 14.0 || RequestProcessor::GetCommandStatusTags(Request::GetCommandCode()) === false) {
+			throw new DeviceBlockedException();
+		}
+		$deviceBlocked = true;
+	}
+
 	// Do the actual request
 	header(GSync::GetServerHeader());
 
@@ -120,7 +129,10 @@ try {
 	}
 
 	RequestProcessor::Initialize();
-	if (isset($provisioningRequired)) {
+	if (isset($deviceBlocked)) {
+		RequestProcessor::HandleDeviceBlocked();
+	}
+	elseif (isset($provisioningRequired)) {
 		RequestProcessor::HandleProvisioningRequired();
 	}
 	else {

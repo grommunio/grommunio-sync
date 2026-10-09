@@ -509,6 +509,15 @@ class Request {
 	}
 
 	/**
+	 * Returns the X-MS-WL header sent by Windows Live clients.
+	 *
+	 * @return bool|string false if not available
+	 */
+	public static function GetXMSWLHeader() {
+		return self::$headers["x-ms-wl"] ?? false;
+	}
+
+	/**
 	 * Returns policy key sent by the device.
 	 *
 	 * @return bool|int false if not available

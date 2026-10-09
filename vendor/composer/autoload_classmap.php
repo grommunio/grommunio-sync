@@ -16,6 +16,7 @@ return [
 	'Composer\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
 	'ConnectionTracking' => $baseDir . '/lib/core/connectiontracking.php',
 	'ContentParameters' => $baseDir . '/lib/core/contentparameters.php',
+	'DeviceBlockedException' => $baseDir . '/lib/exceptions/deviceblockedexception.php',
 	'DeviceManager' => $baseDir . '/lib/core/devicemanager.php',
 	'ExportChangesICS' => $baseDir . '/lib/grommunio/exporter.php',
 	'FatalException' => $baseDir . '/lib/exceptions/fatalexception.php',

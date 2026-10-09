@@ -149,6 +149,27 @@ abstract class RequestProcessor {
 	 * @return bool
 	 */
 	public static function HandleProvisioningRequired() {
+		return self::sendCommandStatus(SYNC_COMMONSTATUS_DEVICENOTPROVISIONED);
+	}
+
+	/**
+	 * Answers the command with status 129 (DeviceBlockedForUser), which
+	 * AS 14.0 and later expect instead of HTTP 403.
+	 *
+	 * @return bool
+	 */
+	public static function HandleDeviceBlocked() {
+		return self::sendCommandStatus(SYNC_COMMONSTATUS_DEVICEBLOCKEDFORUSER);
+	}
+
+	/**
+	 * Answers the command with only a command-level status.
+	 *
+	 * @param int $status
+	 *
+	 * @return bool
+	 */
+	private static function sendCommandStatus($status) {
 		$tags = self::GetCommandStatusTags(Request::GetCommandCode());
 		if ($tags === false) {
 			return false;
@@ -158,7 +179,7 @@ abstract class RequestProcessor {
 		self::$encoder->startWBXML();
 		self::$encoder->startTag($roottag);
 		self::$encoder->startTag($statustag);
-		self::$encoder->content(SYNC_COMMONSTATUS_DEVICENOTPROVISIONED);
+		self::$encoder->content($status);
 		self::$encoder->endTag(); // status
 		self::$encoder->endTag(); // command
 

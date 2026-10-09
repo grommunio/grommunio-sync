@@ -1040,6 +1040,7 @@ define("SYNC_COMMONSTATUS_ONEORMOREEXCEPTIONSFAILED", 184); // Since 16.0
 
 define("HTTP_CODE_200", 200);
 define("HTTP_CODE_401", 401);
+define("HTTP_CODE_403", 403);
 define("HTTP_CODE_449", 449);
 define("HTTP_CODE_500", 500);
 define("HTTP_CODE_503", 503);

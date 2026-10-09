@@ -284,7 +284,7 @@ class GSync {
 	 * @throws FatalMisconfigurationException
 	 */
 	public static function CheckAdvancedConfig() {
-		global $specialLogUsers, $additionalFolders;
+		global $specialLogUsers, $additionalFolders, $deviceAccessRules;
 
 		if (!is_array($specialLogUsers)) {
 			throw new FatalMisconfigurationException("The WBXML log users is not an array.");
@@ -315,6 +315,31 @@ class GSync {
 		}
 		if (PING_HIGHER_BOUND_LIFETIME !== false && PING_LOWER_BOUND_LIFETIME !== false && PING_HIGHER_BOUND_LIFETIME < PING_LOWER_BOUND_LIFETIME) {
 			throw new FatalMisconfigurationException("The PING_HIGHER_BOUND_LIFETIME value must be greater or equal to PING_LOWER_BOUND_LIFETIME.");
+		}
+
+		if (!defined('DEVICE_ACCESS_DEFAULT_LEVEL')) {
+			define('DEVICE_ACCESS_DEFAULT_LEVEL', 'Allow');
+		}
+		elseif (!is_string(DEVICE_ACCESS_DEFAULT_LEVEL) || !in_array(strtolower(DEVICE_ACCESS_DEFAULT_LEVEL), ['allow', 'block'])) {
+			throw new FatalMisconfigurationException("The DEVICE_ACCESS_DEFAULT_LEVEL value must be 'Allow' or 'Block'.");
+		}
+
+		if (!isset($deviceAccessRules)) {
+			$deviceAccessRules = [];
+		}
+		elseif (!is_array($deviceAccessRules)) {
+			throw new FatalMisconfigurationException("The device access rules are not an array.");
+		}
+		foreach ($deviceAccessRules as $i => $rule) {
+			if (
+				!is_array($rule) ||
+				!isset($rule['Characteristic'], $rule['QueryString'], $rule['AccessLevel']) ||
+				!is_string($rule['Characteristic']) || !in_array(strtolower($rule['Characteristic']), DeviceManager::DEVICE_ACCESS_CHARACTERISTICS) ||
+				!is_string($rule['QueryString']) || $rule['QueryString'] === '' ||
+				!is_string($rule['AccessLevel']) || !in_array(strtolower($rule['AccessLevel']), ['allow', 'block'])
+			) {
+				throw new FatalMisconfigurationException(sprintf("The device access rule %s is invalid. It requires a 'Characteristic' ('DeviceType', 'DeviceModel', 'DeviceOS', 'UserAgent' or 'XMSWLHeader'), a non-empty 'QueryString' and an 'AccessLevel' ('Allow' or 'Block').", $i));
+			}
 		}
 
 		if (!defined('RETRY_AFTER_DELAY')) {

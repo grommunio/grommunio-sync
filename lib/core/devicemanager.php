@@ -35,6 +35,9 @@ class DeviceManager extends InterProcessData {
 	public const FLD_FLAGS_TRACKSHARENAME = 2;
 	public const FLD_FLAGS_CALENDARREMINDERS = 4;
 
+	// device access rule characteristics, ordered from the most to the least specific
+	public const DEVICE_ACCESS_CHARACTERISTICS = ['devicemodel', 'devicetype', 'deviceos', 'useragent', 'xmswlheader'];
+
 	private $device;
 	private $deviceHash;
 	private $saveDevice;
@@ -209,6 +212,78 @@ class DeviceManager extends InterProcessData {
 				$this->device->__set("device" . $info, $deviceinformation->{$info});
 			}
 		}
+
+		return true;
+	}
+
+	/**
+	 * Evaluates the configured device access rules for the current device.
+	 * Provision and Settings are always permitted, as the device sends
+	 * its model and OS with these commands.
+	 *
+	 * @return bool
+	 */
+	public function IsDeviceBlocked() {
+		global $deviceAccessRules;
+
+		if (empty($deviceAccessRules) && strtolower((string) DEVICE_ACCESS_DEFAULT_LEVEL) === 'allow') {
+			return false;
+		}
+
+		$commandCode = Request::GetCommandCode();
+		if ($commandCode === GSync::COMMAND_PROVISION || $commandCode === GSync::COMMAND_SETTINGS) {
+			return false;
+		}
+
+		$values = [
+			'devicemodel' => [$this->device->devicemodel],
+			'devicetype' => [Request::GetDeviceType()],
+			'deviceos' => [$this->device->deviceos],
+			'useragent' => [Request::GetUserAgent(), $this->device->GetDeviceUserAgent()],
+			'xmswlheader' => [Request::GetXMSWLHeader()],
+		];
+
+		$accessLevel = strtolower((string) DEVICE_ACCESS_DEFAULT_LEVEL);
+		$matchedRule = false;
+		foreach (self::DEVICE_ACCESS_CHARACTERISTICS as $characteristic) {
+			foreach ($deviceAccessRules as $rule) {
+				if (strtolower((string) $rule['Characteristic']) !== $characteristic) {
+					continue;
+				}
+				// the query string must match the complete value, only '*' and '?' are wildcards
+				$pattern = '/^' . str_replace(['\*', '\?'], ['.*', '.'], preg_quote((string) $rule['QueryString'], '/')) . '$/is';
+				foreach ($values[$characteristic] as $value) {
+					if (is_string($value) && $value !== '' && $value !== Request::UNKNOWN && preg_match($pattern, $value)) {
+						$accessLevel = strtolower((string) $rule['AccessLevel']);
+						$matchedRule = sprintf("%s '%s' matched '%s'", $rule['Characteristic'], $rule['QueryString'], $value);
+
+						break 3;
+					}
+				}
+			}
+		}
+
+		SLog::Write(LOGLEVEL_DEBUG, sprintf(
+			"DeviceManager->IsDeviceBlocked(): DeviceModel '%s' DeviceType '%s' DeviceOS '%s' UserAgent '%s' XMSWLHeader '%s' - %s - access level '%s'",
+			$values['devicemodel'][0] ?? '',
+			$values['devicetype'][0],
+			$values['deviceos'][0] ?? '',
+			$values['useragent'][0],
+			Utils::PrintAsString($values['xmswlheader'][0]),
+			$matchedRule ?: "no rule matched, using DEVICE_ACCESS_DEFAULT_LEVEL",
+			$accessLevel
+		));
+
+		if ($accessLevel !== 'block') {
+			return false;
+		}
+
+		SLog::Write(LOGLEVEL_INFO, sprintf(
+			"Device '%s' of user '%s' is blocked by the device access rules: %s",
+			self::$devid,
+			Request::GetGETUser(),
+			$matchedRule ?: "no rule matched and DEVICE_ACCESS_DEFAULT_LEVEL is 'Block'"
+		));
 
 		return true;
 	}

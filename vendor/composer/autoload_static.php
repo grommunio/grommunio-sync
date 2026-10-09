@@ -23,6 +23,7 @@ class ComposerStaticInit153a56a781a72686b71399955d98204f
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'ConnectionTracking' => __DIR__ . '/../..' . '/lib/core/connectiontracking.php',
         'ContentParameters' => __DIR__ . '/../..' . '/lib/core/contentparameters.php',
+        'DeviceBlockedException' => __DIR__ . '/../..' . '/lib/exceptions/deviceblockedexception.php',
         'DeviceManager' => __DIR__ . '/../..' . '/lib/core/devicemanager.php',
         'ExportChangesICS' => __DIR__ . '/../..' . '/lib/grommunio/exporter.php',
         'FatalException' => __DIR__ . '/../..' . '/lib/exceptions/fatalexception.php',
