@@ -993,17 +993,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
-	 * Returns the basedate of the occurrence of a recurring calendar item for a MeetingResponse InstanceId.
+	 * Returns the basedate of the occurrence of a recurring calendar item for an InstanceId.
 	 * The basedate is the start of the local day of the original start of the occurrence.
 	 *
 	 * @param mixed  $mapimessage the calendar item
 	 * @param string $instanceid  original start of the occurrence, UTC or local for an all-day series
+	 * @param int    $status      status if the series has no such occurrence
 	 *
 	 * @return int
 	 *
 	 * @throws StatusException
 	 */
-	private function getOccurrenceBasedate($mapimessage, $instanceid) {
+	private function getOccurrenceBasedate($mapimessage, $instanceid, $status = SYNC_MEETRESPSTATUS_INVALIDMEETREQ) {
 		$props = getPropIdsFromStrings($this->store, MAPIMapping::GetMeetingRequestProperties());
 		$messageprops = mapi_getprops($mapimessage, [$props["isrecurringtag"]]);
 		if (empty($messageprops[$props["isrecurringtag"]])) {
@@ -1021,10 +1022,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
 		$basedate = $recurrence->dayStartOf($allday ? $start : $recurrence->fromGMT($recurrence->tz, $start));
 		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
-			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), $status);
 		}
 		if ($recurrence->isDeleteException($basedate)) {
-			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), $status);
 		}
 
 		return $basedate;
