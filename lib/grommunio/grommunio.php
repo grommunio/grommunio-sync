@@ -993,17 +993,18 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 	}
 
 	/**
-	 * Returns the basedate of the occurrence of a recurring calendar item for a MeetingResponse InstanceId.
+	 * Returns the basedate of the occurrence of a recurring calendar item for an InstanceId.
 	 * The basedate is the start of the local day of the original start of the occurrence.
 	 *
 	 * @param mixed  $mapimessage the calendar item
 	 * @param string $instanceid  original start of the occurrence, UTC or local for an all-day series
+	 * @param int    $status      status if the series has no such occurrence
 	 *
 	 * @return int
 	 *
 	 * @throws StatusException
 	 */
-	private function getOccurrenceBasedate($mapimessage, $instanceid) {
+	private function getOccurrenceBasedate($mapimessage, $instanceid, $status = SYNC_MEETRESPSTATUS_INVALIDMEETREQ) {
 		$props = getPropIdsFromStrings($this->store, MAPIMapping::GetMeetingRequestProperties());
 		$messageprops = mapi_getprops($mapimessage, [$props["isrecurringtag"]]);
 		if (empty($messageprops[$props["isrecurringtag"]])) {
@@ -1021,10 +1022,10 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 			(isset($recurrence->recur["endocc"], $recurrence->recur["startocc"]) && $recurrence->recur["endocc"] - $recurrence->recur["startocc"] >= 1440);
 		$basedate = $recurrence->dayStartOf($allday ? $start : $recurrence->fromGMT($recurrence->tz, $start));
 		if (!MAPIUtils::IsOccurrence($recurrence, $basedate)) {
-			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the series has no such occurrence", $instanceid), $status);
 		}
 		if ($recurrence->isDeleteException($basedate)) {
-			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), SYNC_MEETRESPSTATUS_INVALIDMEETREQ);
+			throw new StatusException(sprintf("Grommunio->getOccurrenceBasedate('%s'): Error, the occurrence was deleted", $instanceid), $status);
 		}
 
 		return $basedate;
@@ -2701,8 +2702,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (empty($sm->forwardees) || empty($sm->source->itemid) || empty($sm->source->folderid)) {
 			throw new StatusException("Grommunio->forwardCalendarItem(): forwardees and the source item are required", SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
-		// a single occurrence would have to be sent as exception
-		if (!empty($sm->source->instanceid)) {
+		// a single occurrence is sent as exception by forwardMeetingRequest()
+		$forward = method_exists('Meetingrequest', 'forwardMeetingRequest');
+		if (!empty($sm->source->instanceid) && !$forward) {
 			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding the occurrence '%s' is not supported", $sm->source->instanceid), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
 
@@ -2756,6 +2758,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (stripos($messageclass, "IPM.Appointment") !== 0 && stripos($messageclass, "IPM.Schedule.Meeting.Request") !== 0) {
 			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): item of class '%s' is no calendar item", $messageclass), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
+		$basedate = !empty($sm->source->instanceid) ? $this->getOccurrenceBasedate($item, $sm->source->instanceid, SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS) : false;
 
 		try {
 			$mr = new Meetingrequest($this->store, $item, $this->session);
@@ -2765,8 +2768,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$itembody = readMapiPropStream($item, $html ? PR_HTML : PR_BODY);
 				$mr->setMeetingTimeInfo($body . ($html ? "<br><br>" : "\r\n\r\n") . $itembody, $html);
 			}
-			// sends the request only to the forwardees, the changes to the calendar item are not saved
-			$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+			// keeps the organizer and notifies them of the forward
+			if ($forward) {
+				$mr->forwardMeetingRequest($recipients, "FW: ", $basedate);
+			}
+			else {
+				// sends the request only to the forwardees, the changes to the calendar item are not saved
+				$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+			}
 		}
 		catch (MAPIException $e) {
 			$e->setHandled();
