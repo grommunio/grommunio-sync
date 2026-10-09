@@ -2702,8 +2702,9 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (empty($sm->forwardees) || empty($sm->source->itemid) || empty($sm->source->folderid)) {
 			throw new StatusException("Grommunio->forwardCalendarItem(): forwardees and the source item are required", SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
-		// a single occurrence would have to be sent as exception
-		if (!empty($sm->source->instanceid)) {
+		// a single occurrence is sent as exception by forwardMeetingRequest()
+		$forward = method_exists('Meetingrequest', 'forwardMeetingRequest');
+		if (!empty($sm->source->instanceid) && !$forward) {
 			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): forwarding the occurrence '%s' is not supported", $sm->source->instanceid), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
 
@@ -2757,6 +2758,7 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 		if (stripos($messageclass, "IPM.Appointment") !== 0 && stripos($messageclass, "IPM.Schedule.Meeting.Request") !== 0) {
 			throw new StatusException(sprintf("Grommunio->forwardCalendarItem(): item of class '%s' is no calendar item", $messageclass), SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS);
 		}
+		$basedate = !empty($sm->source->instanceid) ? $this->getOccurrenceBasedate($item, $sm->source->instanceid, SYNC_COMMONSTATUS_INVALIDSMARTFORWARDPARAMETERS) : false;
 
 		try {
 			$mr = new Meetingrequest($this->store, $item, $this->session);
@@ -2766,8 +2768,14 @@ class Grommunio extends InterProcessData implements IBackend, ISearchProvider, I
 				$itembody = readMapiPropStream($item, $html ? PR_HTML : PR_BODY);
 				$mr->setMeetingTimeInfo($body . ($html ? "<br><br>" : "\r\n\r\n") . $itembody, $html);
 			}
-			// sends the request only to the forwardees, the changes to the calendar item are not saved
-			$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+			// keeps the organizer and notifies them of the forward
+			if ($forward) {
+				$mr->forwardMeetingRequest($recipients, "FW: ", $basedate);
+			}
+			else {
+				// sends the request only to the forwardees, the changes to the calendar item are not saved
+				$mr->submitMeetingRequest($item, false, "FW: ", false, false, true, $recipients);
+			}
 		}
 		catch (MAPIException $e) {
 			$e->setHandled();
