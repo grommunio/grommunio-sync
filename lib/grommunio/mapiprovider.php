@@ -89,12 +89,25 @@ class MAPIProvider {
 			// Add attachments
 			$attachtable = mapi_message_getattachmenttable($mapimessage);
 			mapi_table_restrict($attachtable, MAPIUtils::GetContactPicRestriction());
-			$rows = mapi_table_queryallrows($attachtable, [PR_ATTACH_NUM, PR_ATTACH_SIZE]);
+			$rows = mapi_table_queryallrows($attachtable, [PR_ATTACH_NUM]);
 
 			foreach ($rows as $row) {
 				if (isset($row[PR_ATTACH_NUM])) {
 					$mapiattach = mapi_message_openattach($mapimessage, $row[PR_ATTACH_NUM]);
-					$message->picture = base64_encode(mapi_attach_openbin($mapiattach, PR_ATTACH_DATA_BIN));
+					$stream = mapi_openproperty($mapiattach, PR_ATTACH_DATA_BIN, IID_IStream, 0, 0);
+					if (!$stream) {
+						continue;
+					}
+					// PR_ATTACH_SIZE covers the whole attachment, so take the size of the data itself
+					$size = mapi_stream_stat($stream)['cb'];
+					$b64size = 4 * intdiv($size + 2, 3);
+					// a picture above the limit would make SyncObject->Check() drop the whole contact
+					if ($b64size > SYNC_CONTACTS_MAXPICTURESIZE) {
+						SLog::Write(LOGLEVEL_WARN, sprintf("MAPIProvider->getContact(): contact picture is %d bytes (base64), above SYNC_CONTACTS_MAXPICTURESIZE (%d). Contact is synchronized without picture.", $b64size, SYNC_CONTACTS_MAXPICTURESIZE));
+
+						continue;
+					}
+					$message->picture = base64_encode(mapi_stream_read($stream, $size));
 				}
 			}
 		}
