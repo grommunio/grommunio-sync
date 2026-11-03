@@ -1976,6 +1976,7 @@ class MAPIProvider {
 			(isset($props[$appointmentprops["location"]]) && $props[$appointmentprops["location"]] != ($oldProps[$appointmentprops["location"]] ?? "")) ||
 			$this->isBodyChanged($mapimessage, $props, $oldProps, $appointmentprops);
 
+		$this->deleteStaleRtf($mapimessage, $props, $appointmentprops);
 		mapi_setprops($mapimessage, $props);
 
 		// update attachments send by the mobile, before they are sent with a meeting request
@@ -2635,6 +2636,7 @@ class MAPIProvider {
 			SLog::Write(LOGLEVEL_DEBUG, "FILEAS_ORDER not defined");
 		}
 
+		$this->deleteStaleRtf($mapimessage, $props, $contactprops);
 		mapi_setprops($mapimessage, $props);
 
 		return $response;
@@ -2730,6 +2732,7 @@ class MAPIProvider {
 				$props[$taskprops["owner"]] = $userinfo["fullname"];
 			}
 		}
+		$this->deleteStaleRtf($mapimessage, $props, $taskprops);
 		mapi_setprops($mapimessage, $props);
 
 		return $response;
@@ -2770,6 +2773,7 @@ class MAPIProvider {
 		}
 
 		$props[$noteprops["internetcpid"]] = INTERNET_CPID_UTF8;
+		$this->deleteStaleRtf($mapimessage, $props, $noteprops);
 		mapi_setprops($mapimessage, $props);
 
 		return $response;
@@ -3522,6 +3526,23 @@ class MAPIProvider {
 		$message->flag = new SyncMailFlags();
 
 		$this->getPropsFromMAPI($message->flag, $mapimessage, MAPIMapping::GetMailFlagsMapping());
+	}
+
+	/**
+	 * Deletes the RTF body of a MAPI message if the device sent a plain or
+	 * HTML body. gromox keeps a native RTF body (e.g. written by Outlook)
+	 * when PR_BODY or PR_HTML are set, so Outlook would still show the old
+	 * body after it was changed or cleared on the device.
+	 *
+	 * @param mixed $mapimessage
+	 * @param array $props       properties to be saved
+	 * @param array $mapping     properties of the item type, with "body" and "html"
+	 */
+	private function deleteStaleRtf($mapimessage, $props, $mapping) {
+		$html = isset($mapping["html"]) && isset($props[$mapping["html"]]);
+		if (isset($props[$mapping["body"]]) || $html) {
+			mapi_deleteprops($mapimessage, [PR_RTF_COMPRESSED]);
+		}
 	}
 
 	/**
