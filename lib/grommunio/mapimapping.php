@@ -117,6 +117,7 @@ class MAPIMapping {
 			"businessaddress" => "PT_STRING8:PSETID_Address:0x801b",
 			"otheraddress" => "PT_STRING8:PSETID_Address:0x801c",
 			"mailingaddress" => "PT_LONG:PSETID_Address:0x8022",
+			"html" => PR_HTML,
 		];
 	}
 
