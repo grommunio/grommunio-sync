@@ -71,16 +71,20 @@ abstract class SyncObject extends Streamer implements Stringable {
 			return false;
 		}
 
-		// Some devices do not send supported tag. In such a case remove all not set properties.
-		if ($supportedFields === false || !is_array($supportedFields) || (empty($supportedFields))) {
-			if (defined('UNSET_UNDEFINED_PROPERTIES') &&
-					UNSET_UNDEFINED_PROPERTIES &&
+		// An empty <Supported/> marks all properties as ghosted, nothing is removed
+		if (is_array($supportedFields) && empty($supportedFields)) {
+			return false;
+		}
+
+		// Some devices (e.g. iOS) do not send a supported tag. In such a case remove all not set properties.
+		if (!is_array($supportedFields)) {
+			if ((!defined('UNSET_UNDEFINED_PROPERTIES') || UNSET_UNDEFINED_PROPERTIES) &&
 					(
 						$this instanceof SyncContact ||
 						$this instanceof SyncAppointment ||
 						$this instanceof SyncTask
 					)) {
-				SLog::Write(LOGLEVEL_INFO, sprintf("%s->emptySupported(): no supported list available, emptying all not set parameters", static::class));
+				SLog::Write(LOGLEVEL_DEBUG, sprintf("%s->emptySupported(): no supported list available, emptying all not set parameters", static::class));
 				$supportedFields = array_keys($this->mapping);
 			}
 			else {
