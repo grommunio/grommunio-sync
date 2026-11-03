@@ -21,6 +21,8 @@ class Ping extends RequestProcessor {
 		$pingstatus = false;
 		$fakechanges = [];
 		$foundchanges = false;
+		$invalidchanges = [];
+		$requestedFolders = null;
 
 		// Contains all requested folders (containers)
 		$sc = new SyncCollections();
@@ -33,23 +35,8 @@ class Ping extends RequestProcessor {
 			$sc->LoadAllCollections(true, true, true, true, false);
 		}
 		catch (StateInvalidException) {
-			// if no params are present, indicate to send params, else do hierarchy sync
-			if (!$params_present) {
-				$pingstatus = SYNC_PINGSTATUS_FAILINGPARAMS;
-				self::$topCollector->AnnounceInformation("StateInvalidException: require PingParameters", true);
-			}
-			elseif (self::$deviceManager->IsHierarchySyncRequired()) {
-				// we could be in a looping  - see LoopDetection->ProcessLoopDetectionIsHierarchySyncAdvised()
-				$pingstatus = SYNC_PINGSTATUS_FOLDERHIERSYNCREQUIRED;
-				self::$topCollector->AnnounceInformation("Potential loop detection: require HierarchySync", true);
-			}
-			else {
-				// we do not have a ping status for this, but SyncCollections should have generated fake changes for the folders which are broken
-				$fakechanges = $sc->GetChangedFolderIds();
-				$foundchanges = true;
-
-				self::$topCollector->AnnounceInformation("StateInvalidException: force sync", true);
-			}
+			// Defer recovery until the effective Ping folder list is known.
+			$invalidchanges = $sc->GetChangedFolderIds();
 		}
 		catch (StatusException) {
 			$pingstatus = SYNC_PINGSTATUS_FOLDERHIERSYNCREQUIRED;
@@ -71,6 +58,7 @@ class Ping extends RequestProcessor {
 			if (($el = self::$decoder->getElementStartTag(SYNC_PING_FOLDERS)) && $el[EN_FLAGS] & EN_FLAGS_CONTENT) {
 				// cache requested (pingable) folderids
 				$pingable = [];
+				$requestedFolders = [];
 
 				while (self::$decoder->getElementStartTag(SYNC_PING_FOLDER)) {
 					WBXMLDecoder::ResetInWhile("pingFolder");
@@ -92,6 +80,7 @@ class Ping extends RequestProcessor {
 						}
 					}
 
+					$requestedFolders[$folderid] = true;
 					$spa = $sc->GetCollection($folderid);
 					if (!$spa) {
 						// The requested collection is not synchronized.
@@ -159,6 +148,28 @@ class Ping extends RequestProcessor {
 				SLog::Write(LOGLEVEL_DEBUG, sprintf("HandlePing(): ping lifetime not between bound (higher bound:'%d' lower bound:'%d' current lifetime:'%d'. Returning SYNC_PINGSTATUS_FAILINGPARAMS.", PING_HIGHER_BOUND_LIFETIME, PING_LOWER_BOUND_LIFETIME, $sc->GetLifetime()));
 			}
 		}
+
+		$invalidMonitored = false;
+		if (!$pingstatus) {
+			foreach ($invalidchanges as $folderid => $changecount) {
+				$spa = $sc->GetCollection($folderid);
+				$monitored = $requestedFolders !== null
+					? isset($requestedFolders[$folderid])
+					: ($spa && $spa->GetPingableFlag() == true);
+				if ($monitored) {
+					$fakechanges[$folderid] = $changecount;
+					$invalidMonitored = true;
+				}
+				else {
+					SLog::Write(LOGLEVEL_INFO, sprintf("HandlePing(): ignoring invalid synchronization state for unmonitored folder '%s'", $folderid));
+				}
+			}
+			if ($invalidMonitored && self::$deviceManager->IsHierarchySyncRequired()) {
+				$pingstatus = SYNC_PINGSTATUS_FOLDERHIERSYNCREQUIRED;
+				self::$topCollector->AnnounceInformation("Potential loop detection: require HierarchySync", true);
+			}
+		}
+		$foundchanges = !empty($fakechanges);
 
 		// Check for changes on the default LifeTime, set interval and ONLY on pingable collections
 		try {
