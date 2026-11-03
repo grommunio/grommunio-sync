@@ -204,17 +204,18 @@ define('FILEAS_ORDER', SYNC_FILEAS_LASTFIRST);
 // max: 512 - value used if mobile does not limit amount of items
 define('SYNC_MAX_ITEMS', 512);
 
-// The devices usually send a list of supported properties for calendar and contact
-// items. If a device does not includes such a supported property in Sync request,
-// it means the property's value will be deleted on the server.
-// However some devices do not send a list of supported properties. It is then impossible
-// to tell if a property was deleted or it was not set at all if it does not appear in Sync.
+// Devices may send a list of supported properties for calendar and contact items.
+// A supported property missing from a Sync change is deleted on the server, all
+// other properties are kept.
+// Some devices (e.g. iOS) do not send such a list. Like Exchange, grommunio-sync
+// then deletes every property missing from a contact, task or (before AS 16)
+// appointment change. The body and the contact picture are always kept.
 // This parameter defines grommunio-sync behaviour during Sync if a device does not issue a list with
 // supported properties.
 // Possible values:
-// false - do not unset properties which are not sent during Sync (default)
-// true  - unset properties which are not sent during Sync
-define('UNSET_UNDEFINED_PROPERTIES', false);
+// true  - unset properties which are not sent during Sync (default, Exchange behaviour)
+// false - do not unset properties which are not sent during Sync, a property cleared on such a device is not deleted on the server
+define('UNSET_UNDEFINED_PROPERTIES', true);
 
 // ActiveSync specifies that a contact photo may not exceed 48 KB. This value is checked
 // in the semantic sanity checks and contacts with larger photos are not synchronized.

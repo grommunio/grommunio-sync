@@ -179,11 +179,10 @@ class Sync extends RequestProcessor {
 
 					// SUPPORTED properties
 					if (($se = self::$decoder->getElementStartTag(SYNC_SUPPORTED)) !== false) {
-						// LG phones send an empty supported tag, so only read the contents if available here
-						// if <Supported/> is received, it's as no supported fields would have been sent at all.
-						// unsure if this is the correct approach, or if in this case some default list should be used
+						// LG phones send an empty supported tag. Like Exchange, an empty <Supported/>
+						// is stored as an empty list: all properties are ghosted and nothing is removed.
+						$supfields = [];
 						if ($se[EN_FLAGS] & EN_FLAGS_CONTENT) {
-							$supfields = [];
 							WBXMLDecoder::ResetInWhile("syncSupported");
 							while (WBXMLDecoder::InWhile("syncSupported")) {
 								$el = self::$decoder->getElement();
@@ -194,8 +193,8 @@ class Sync extends RequestProcessor {
 
 								$supfields[] = $el[EN_TAG];
 							}
-							self::$deviceManager->SetSupportedFields($spa->GetFolderId(), $supfields);
 						}
+						self::$deviceManager->SetSupportedFields($spa->GetFolderId(), $supfields);
 					}
 
 					// Deletes as moves can be an empty tag as well as have value
